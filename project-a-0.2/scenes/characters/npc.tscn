@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/characters/character_base.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/npc/npc_controller.gd" id="2_npc"]
+
+[node name="NPC" instance=ExtResource("1_base")]
+collision_layer = 3
+collision_mask = 1
+script = ExtResource("2_npc")
+
+[node name="NameLabel" type="Label" parent="."]
+offset_left = -30.0
+offset_top = -62.0
+offset_right = 30.0
+offset_bottom = -42.0
+theme_override_colors/font_color = Color(1, 1, 1, 0.9)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 9
+text = "NPC"
+horizontal_alignment = 1
+

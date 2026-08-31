@@ -1,0 +1,273 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/test_world.tscn" id="1_world"]
+[ext_resource type="PackedScene" path="res://scenes/characters/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/characters/npc.tscn" id="3_npc"]
+[ext_resource type="Script" path="res://scripts/simulation/simulation_population.gd" id="4_spawner"]
+[ext_resource type="Script" path="res://scripts/ui/world_map_ui.gd" id="5_map_ui"]
+[ext_resource type="Texture2D" path="res://data/maps/tinggen_city_layout.png" id="6_map_texture"]
+[ext_resource type="PackedScene" path="res://scenes/ui/simulation_ui.tscn" id="7_sim_ui"]
+[ext_resource type="PackedScene" path="res://scenes/ui/interface_settings_ui.tscn" id="8_interface_ui"]
+
+[node name="IntegrationTest" type="Node2D"]
+
+[node name="SimulationUI" parent="." instance=ExtResource("7_sim_ui")]
+
+[node name="InterfaceSettingsUI" parent="." instance=ExtResource("8_interface_ui")]
+
+[node name="TestWorld" parent="." instance=ExtResource("1_world")]
+
+[node name="Characters" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Player" parent="Characters" instance=ExtResource("2_player")]
+position = Vector2(11744, 5056)
+
+[node name="NPCs" type="Node2D" parent="Characters"]
+y_sort_enabled = true
+script = ExtResource("4_spawner")
+npc_scene = ExtResource("3_npc")
+max_visible_npcs = 220
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("5_map_ui")
+
+[node name="Instructions" type="Label" parent="UI"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 920.0
+offset_bottom = 84.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 18
+text = "廷根城 0.2 · LLM 世界模拟接入版\nWASD：移动　M：地图　E：地图矫正　Q：人物列表"
+
+[node name="MapPanel" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Dimmer" type="ColorRect" parent="UI/MapPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.025, 0.035, 0.04, 0.92)
+
+[node name="Frame" type="Panel" parent="UI/MapPanel"]
+custom_minimum_size = Vector2(720, 530)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -265.0
+offset_right = 360.0
+offset_bottom = 265.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="UI/MapPanel/Frame"]
+offset_left = 20.0
+offset_top = 10.0
+offset_right = 700.0
+offset_bottom = 42.0
+theme_override_font_sizes/font_size = 22
+text = "廷根城地图"
+horizontal_alignment = 1
+
+[node name="MapViewport" type="Control" parent="UI/MapPanel/Frame"]
+offset_left = 25.0
+offset_top = 48.0
+offset_right = 475.0
+offset_bottom = 498.0
+clip_contents = true
+mouse_filter = 1
+
+[node name="MapImage" type="TextureRect" parent="UI/MapPanel/Frame/MapViewport"]
+offset_right = 450.0
+offset_bottom = 450.0
+texture = ExtResource("6_map_texture")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="PlayerMarker" type="ColorRect" parent="UI/MapPanel/Frame/MapViewport/MapImage"]
+custom_minimum_size = Vector2(14, 14)
+offset_right = 14.0
+offset_bottom = 14.0
+mouse_filter = 2
+color = Color(1, 0.82, 0.12, 1)
+
+[node name="MarkerCenter" type="ColorRect" parent="UI/MapPanel/Frame/MapViewport/MapImage/PlayerMarker"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 10.0
+offset_bottom = 10.0
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="Coordinates" type="Label" parent="UI/MapPanel/Frame"]
+offset_left = 25.0
+offset_top = 501.0
+offset_right = 335.0
+offset_bottom = 526.0
+text = "玩家位置"
+
+[node name="CloseHint" type="Label" parent="UI/MapPanel/Frame"]
+offset_left = 550.0
+offset_top = 501.0
+offset_right = 695.0
+offset_bottom = 526.0
+text = "按 M 关闭"
+horizontal_alignment = 2
+
+[node name="EditMode" type="Button" parent="UI/MapPanel/Frame"]
+offset_left = 490.0
+offset_top = 48.0
+offset_right = 700.0
+offset_bottom = 84.0
+text = "进入矫正 (E)"
+
+[node name="ZoomOut" type="Button" parent="UI/MapPanel/Frame"]
+offset_left = 490.0
+offset_top = 8.0
+offset_right = 530.0
+offset_bottom = 40.0
+text = "−"
+
+[node name="ZoomLabel" type="Label" parent="UI/MapPanel/Frame"]
+offset_left = 534.0
+offset_top = 12.0
+offset_right = 592.0
+offset_bottom = 38.0
+text = "100%"
+horizontal_alignment = 1
+
+[node name="ZoomIn" type="Button" parent="UI/MapPanel/Frame"]
+offset_left = 596.0
+offset_top = 8.0
+offset_right = 636.0
+offset_bottom = 40.0
+text = "+"
+
+[node name="ResetView" type="Button" parent="UI/MapPanel/Frame"]
+offset_left = 642.0
+offset_top = 8.0
+offset_right = 700.0
+offset_bottom = 40.0
+text = "复位"
+
+[node name="EditorBar" type="Control" parent="UI/MapPanel/Frame"]
+layout_mode = 0
+offset_left = 490.0
+offset_top = 92.0
+offset_right = 700.0
+offset_bottom = 492.0
+
+[node name="TypeTitle" type="Label" parent="UI/MapPanel/Frame/EditorBar"]
+offset_right = 210.0
+offset_bottom = 26.0
+text = "格子类型"
+
+[node name="Road" type="Button" parent="UI/MapPanel/Frame/EditorBar"]
+offset_top = 30.0
+offset_right = 100.0
+offset_bottom = 64.0
+text = "道路"
+
+[node name="Building" type="Button" parent="UI/MapPanel/Frame/EditorBar"]
+offset_left = 108.0
+offset_top = 30.0
+offset_right = 210.0
+offset_bottom = 64.0
+text = "建筑"
+
+[node name="Garden" type="Button" parent="UI/MapPanel/Frame/EditorBar"]
+offset_top = 70.0
+offset_right = 100.0
+offset_bottom = 104.0
+text = "花园"
+
+[node name="Water" type="Button" parent="UI/MapPanel/Frame/EditorBar"]
+offset_left = 108.0
+offset_top = 70.0
+offset_right = 210.0
+offset_bottom = 104.0
+text = "水域"
+
+[node name="Land" type="Button" parent="UI/MapPanel/Frame/EditorBar"]
+offset_top = 110.0
+offset_right = 210.0
+offset_bottom = 144.0
+text = "普通地块"
+
+[node name="BrushTitle" type="Label" parent="UI/MapPanel/Frame/EditorBar"]
+offset_top = 158.0
+offset_right = 210.0
+offset_bottom = 184.0
+text = "画笔尺寸"
+
+[node name="Brush1" type="Button" parent="UI/MapPanel/Frame/EditorBar"]
+offset_top = 188.0
+offset_right = 64.0
+offset_bottom = 222.0
+text = "1×1"
+
+[node name="Brush3" type="Button" parent="UI/MapPanel/Frame/EditorBar"]
+offset_left = 72.0
+offset_top = 188.0
+offset_right = 138.0
+offset_bottom = 222.0
+text = "3×3"
+
+[node name="Brush5" type="Button" parent="UI/MapPanel/Frame/EditorBar"]
+offset_left = 146.0
+offset_top = 188.0
+offset_right = 210.0
+offset_bottom = 222.0
+text = "5×5"
+
+[node name="Undo" type="Button" parent="UI/MapPanel/Frame/EditorBar"]
+offset_top = 238.0
+offset_right = 100.0
+offset_bottom = 272.0
+text = "撤销"
+
+[node name="Redo" type="Button" parent="UI/MapPanel/Frame/EditorBar"]
+offset_left = 108.0
+offset_top = 238.0
+offset_right = 210.0
+offset_bottom = 272.0
+text = "重做"
+
+[node name="Save" type="Button" parent="UI/MapPanel/Frame/EditorBar"]
+offset_top = 282.0
+offset_right = 210.0
+offset_bottom = 322.0
+text = "保存修改  Ctrl+S"
+
+[node name="Help" type="Label" parent="UI/MapPanel/Frame/EditorBar"]
+offset_top = 330.0
+offset_right = 210.0
+offset_bottom = 370.0
+text = "左键绘制 · 滚轮缩放\n右键/中键拖动地图"
+autowrap_mode = 2
+
+[node name="Status" type="Label" parent="UI/MapPanel/Frame/EditorBar"]
+offset_top = 374.0
+offset_right = 210.0
+offset_bottom = 400.0
+theme_override_colors/font_color = Color(1, 0.82, 0.25, 1)
+text = "已进入矫正模式"
+autowrap_mode = 2

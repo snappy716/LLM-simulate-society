@@ -1,0 +1,27 @@
+# Godot generated files
+**/.godot/
+**/*.import
+
+# Python generated files
+**/__pycache__/
+**/*.py[cod]
+
+# Local settings and secrets
+**/.env
+**/config.local.json
+**/llm_interfaces.cfg
+
+# Generated simulation state and logs
+emergent_town_demo/runs/*
+!emergent_town_demo/runs/.gitkeep
+project-a-0.2/data/simulation/live/*
+!project-a-0.2/data/simulation/live/.gitkeep
+
+# Map reference screenshots are not required at runtime
+project-a-0.2/assets/maps/references/*
+!project-a-0.2/assets/maps/references/README.md
+project-a-0.2/assets/maps/blueprints/tinggen.png
+project-a-0.2/assets/maps/blueprints/tinggen_no_icons.png
+
+# Local captures
+**/*_capture.png
