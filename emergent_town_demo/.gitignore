@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.env
+config.local.json
+runs/latest/
+runs/structure_smoke/
