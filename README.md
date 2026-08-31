@@ -1,2 +1,196 @@
-# LLM-simulate-society
-“诡秘之主” society simulated by LLM
+# Project A
+
+Project A 是一个正在开发中的 2D 等距视角城镇 RPG 原型，目标是把可探索的 Godot 游戏世界与持续运行的 LLM/规则驱动社会模拟结合起来。
+
+当前版本重点验证以下流程：在等距城市地图中控制玩家、生成并显示 200 名具有稳定外观的 NPC、按时间段推进世界、查看 NPC 的状态与计划，以及将模拟人物放置到带有语义标签的城市区域中。
+
+> 当前处于 `0.2` 原型阶段，并非完整游戏。战斗、任务、对话、建筑内部和正式美术仍在后续规划中。
+
+## 当前功能
+
+- 64×32 等距 Tile 城市地图与临时 Terrain。
+- 玩家移动、碰撞和镜头跟随。
+- 分层人物换装：皮肤、头发、衣服、裤装、鞋和武器。
+- `idle` 与 `run` 分层动画。
+- 基于 `npc_id + world_seed` 的确定性 NPC 外观。
+- 200 名 NPC 的职业、关系、记忆、愿望、计划和场景位置。
+- Morning、Afternoon、Evening、Late Night 四时段世界推进。
+- Q 键人物名册、人物详情、idle 第一帧预览与快速定位。
+- M 键世界地图、玩家位置显示、缩放和平移。
+- Godot 内置地图矫正模式，可同步修改正交蓝图和游戏 Tile。
+- Esc 键 LLM 接口配置面板。
+- 离线规则、DeepSeek、DeepSeek 兼容服务和本地 Ollama。
+- 21 个公共场景与私人住宅区域的地图语义映射。
+
+## 项目结构
+
+```text
+ProjectA-GitHub/
+├── emergent_town_demo/       # Python 世界模拟系统
+│   ├── town_demo.py          # 模拟入口与主循环
+│   ├── emergent_town/        # 行为、欲望、情报与剧情模块
+│   ├── docs/                 # 系统设定、NPC 名册和关系数据
+│   ├── tests/                # Python 自动化测试
+│   └── runs/                 # 运行时生成，不提交结果
+└── project-a-0.2/            # Godot 4 游戏项目
+    ├── assets/               # 人物、地图、Tile 与蓝图
+    ├── data/                 # 外观目录、地图布局和场景映射
+    ├── scenes/               # 玩家、NPC、UI、世界及测试场景
+    ├── scripts/              # Godot 游戏逻辑
+    ├── tools/simulation/     # Godot 与 Python 的本地桥接服务
+    └── project.godot
+```
+
+两个项目必须保持同级。Godot 的本地桥接程序会通过相对路径加载 `emergent_town_demo`。
+
+## 环境要求
+
+- Godot 4.7 或兼容的 Godot 4.x 版本。
+- Python 3.10 或更高版本。
+- Windows、Linux 或 macOS；Python 命令需要能从系统 PATH 中调用。
+- 可选：Ollama，或可用的 DeepSeek/兼容接口。
+
+离线规则模式不需要 API Key，也不会访问外部 LLM。
+
+## 快速开始
+
+1. 克隆或下载仓库。
+2. 确认 `project-a-0.2` 与 `emergent_town_demo` 保持同级。
+3. 确认终端能够执行：
+
+   ```text
+   python --version
+   ```
+
+4. 使用 Godot 打开：
+
+   ```text
+   project-a-0.2/project.godot
+   ```
+
+5. 运行项目。主场景已配置为：
+
+   ```text
+   res://scenes/debug/integration_test.tscn
+   ```
+
+Godot 第一次打开时会导入 PNG 人物图集和地图资源，首次加载会比后续运行稍慢。
+
+## 游戏操作
+
+| 操作 | 按键 |
+|---|---|
+| 移动 | `WASD` 或方向键 |
+| 随机更换玩家外观 | `R` |
+| 打开/关闭世界地图 | `M` |
+| 打开/关闭 NPC 名册 | `Q` |
+| 打开/关闭接口面板 | `Esc` |
+| 进入/退出地图矫正 | 地图打开时按 `E` |
+
+世界时间通过画面上的“下一时间段”按钮推进。
+
+### 世界地图
+
+- 鼠标滚轮或界面按钮：缩放地图。
+- 鼠标右键/中键拖动：平移地图。
+- 地图上的标记显示玩家当前位置。
+
+### 地图矫正模式
+
+- 左键绘制当前选择的地图类型。
+- `Ctrl+Z`：撤销。
+- `Ctrl+Y`：重做。
+- `Ctrl+S`：保存，并同步更新正交蓝图和游戏地图。
+
+矫正前建议单独备份地图数据。协作时尽量避免多人同时修改同一份地图布局文件。
+
+## NPC 与世界时间
+
+按 `Q` 打开人物名册后，可以：
+
+- 浏览所有模拟 NPC。
+- 查看人物状态、职业、记忆、愿望和当前计划。
+- 查看由其分层外观组成的 idle 第一帧。
+- 点击“到达这个人的位置”，传送到该 NPC 附近。
+
+每名 NPC 会根据当前时段计划中的 `scene_id` 出现在对应地图区域。当前版本只改变人物出现位置，暂未实现 NPC 在地图上的连续动作和交互动画。
+
+## LLM 接口
+
+按 `Esc` 打开接口配置面板，可以新建并保存多个本地配置：
+
+- `规则模式（离线）`：完全本地运行。
+- `DeepSeek`：使用 DeepSeek API。
+- `DeepSeek兼容接口`：连接采用同类请求格式的服务。
+- `Ollama（本地）`：连接本机 Ollama 模型。
+
+点击“保存并应用”只会切换接口，不会立即产生外部请求。所选接口会在下一次日终规划时使用。
+
+接口配置保存在 Godot 的：
+
+```text
+user://llm_interfaces.cfg
+```
+
+API Key 不会写入项目仓库，但该本地配置文件本身没有加密。不要提交密钥、`.env` 或 `config.local.json`。
+
+详细说明见 [`project-a-0.2/SIMULATION_INTEGRATION.md`](project-a-0.2/SIMULATION_INTEGRATION.md)。
+
+## 单独运行世界模拟
+
+在 `emergent_town_demo` 目录中执行离线模拟：
+
+```powershell
+python town_demo.py --days 3 --llm rule
+```
+
+运行测试：
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
+模拟产生的快照、人物日志和事件追踪会写入 `runs/`，该目录中的运行结果默认不提交 Git。
+
+## 数据与确定性
+
+- 相同的世界种子与 NPC ID 会产生相同人物外观。
+- NPC 的公共场景到城市区域映射位于 `project-a-0.2/data/simulation/scene_regions.json`。
+- 人物美术目录位于 `project-a-0.2/data/appearance_catalog.json`。
+- 地图逻辑布局与人工修正数据位于 `project-a-0.2/data/maps/`。
+
+修改数据结构时，应同步检查 Godot 桥接脚本与 Python 快照格式。
+
+## 美术素材与许可
+
+本协作仓库包含游戏运行所需的人物分层动画素材。项目所有者已确认素材作者允许项目协作者使用和通过本项目仓库共享。使用者仍须阅读并遵守：
+
+```text
+project-a-0.2/assets/characters/gandalf_hardcore/READ ME.txt
+```
+
+不要把人物素材从本项目中单独提取、重新打包、转售或用于原许可禁止的用途。
+
+仅用于制作地图时参考、且游戏运行不需要的第三方地图截图未包含在仓库中。确定性地图蓝图、道路数据和临时 Tile 已保留。
+
+## 协作约定
+
+- 不提交 API Key、个人配置和本地接口文件。
+- 不提交 `.godot/`、`__pycache__/`、`.import` 和运行日志。
+- 新增 NPC 字段时，同时更新 Python 快照输出、Godot bridge 和人物详情 UI。
+- 新增地图语义区域时，同时更新地图布局和 `scene_regions.json`。
+- 提交前至少运行 Python 测试，并在 Godot 中启动一次主测试场景。
+
+## 当前开发方向
+
+- NPC 地图移动与行为表现。
+- 即时/回合制模式切换。
+- 技能、装备、背包和任务系统。
+- 仪式、炼金与神秘学系统。
+- 组织、人际关系、信使、日记与图鉴。
+- 建筑入口与场景切换。
+- LLM 生成故事与玩家行为反馈闭环。
+
+## 版本
+
+当前公开协作版本：`project-a-0.2`
