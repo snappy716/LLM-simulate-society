@@ -4,6 +4,7 @@ signal snapshot_updated(snapshot: Dictionary)
 signal connection_state_changed(connected: bool, message: String)
 signal advance_state_changed(busy: bool)
 signal interface_configured(success: bool, result: Dictionary)
+signal trade_completed(success: bool, result: Dictionary)
 
 const BASE_URL := "http://127.0.0.1:8765"
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
@@ -60,6 +61,25 @@ func configure_interface(config: Dictionary) -> void:
 		interface_configured.emit(false, {"error": "无法发送接口配置：%s" % error})
 
 
+func trade(shop_id: String, item_id: String, direction: String, quantity: int = 1) -> void:
+	if busy or not connected:
+		trade_completed.emit(false, {"trade": {"message": "模拟服务尚未连接或正在处理其他行动"}})
+		return
+	busy = true
+	_pending_operation = "trade"
+	var body := JSON.stringify({
+		"actor_id": "player",
+		"shop_id": shop_id,
+		"item_id": item_id,
+		"direction": direction,
+		"quantity": quantity,
+	})
+	var error := _request.request(BASE_URL + "/trade", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, body)
+	if error != OK:
+		busy = false
+		trade_completed.emit(false, {"trade": {"message": "无法发送交易请求：%s" % error}})
+
+
 func phase_display_name(phase: String) -> String:
 	return {"morning": "上午", "afternoon": "下午", "evening": "晚间", "late_night": "深夜"}.get(phase, phase)
 
@@ -95,8 +115,13 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
 			interface_configured.emit(false, error_payload if error_payload is Dictionary else {"error": "HTTP %d" % response_code})
 		elif operation == "step":
 			_finish_with_error("模拟推进失败，HTTP %d" % response_code)
+		elif operation == "trade":
+			busy = false
+			var trade_error = JSON.parse_string(body.get_string_from_utf8())
+			trade_completed.emit(false, trade_error if trade_error is Dictionary else {"trade": {"message": "交易失败，HTTP %d" % response_code}})
 		else:
 			connected = false
+			return
 		return
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if not parsed is Dictionary:
@@ -105,6 +130,14 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
 	if operation == "configure":
 		busy = false
 		interface_configured.emit(true, parsed)
+		return
+	if operation == "trade":
+		busy = false
+		var trade_snapshot = parsed.get("snapshot", {})
+		if trade_snapshot is Dictionary:
+			snapshot = trade_snapshot
+			snapshot_updated.emit(snapshot)
+		trade_completed.emit(bool(parsed.get("ok", false)), parsed)
 		return
 	snapshot = parsed
 	connected = true

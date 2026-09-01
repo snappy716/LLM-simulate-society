@@ -145,3 +145,122 @@ offset_right = 530.0
 offset_bottom = 428.0
 text = "人物不会执行动作。\n推进时间后按计划重新放置。"
 horizontal_alignment = 1
+
+[node name="TradePanel" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dimmer" type="ColorRect" parent="TradePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.025, 0.03, 0.94)
+
+[node name="Window" type="Panel" parent="TradePanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -430.0
+offset_top = -245.0
+offset_right = 430.0
+offset_bottom = 245.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Header" type="Label" parent="TradePanel/Window"]
+offset_left = 14.0
+offset_top = 10.0
+offset_right = 330.0
+offset_bottom = 38.0
+theme_override_font_sizes/font_size = 22
+text = "物品与交易（文字测试）"
+
+[node name="CloseHint" type="Label" parent="TradePanel/Window"]
+offset_left = 690.0
+offset_top = 14.0
+offset_right = 842.0
+offset_bottom = 36.0
+text = "按 I 关闭"
+horizontal_alignment = 2
+
+[node name="Summary" type="Label" parent="TradePanel/Window"]
+offset_left = 350.0
+offset_top = 14.0
+offset_right = 680.0
+offset_bottom = 36.0
+text = "资金与负重"
+horizontal_alignment = 1
+
+[node name="ShopHeader" type="Label" parent="TradePanel/Window"]
+offset_left = 14.0
+offset_top = 48.0
+offset_right = 224.0
+offset_bottom = 72.0
+text = "商店"
+
+[node name="StockHeader" type="Label" parent="TradePanel/Window"]
+offset_left = 238.0
+offset_top = 48.0
+offset_right = 534.0
+offset_bottom = 72.0
+text = "商店库存与报价"
+
+[node name="InventoryHeader" type="Label" parent="TradePanel/Window"]
+offset_left = 548.0
+offset_top = 48.0
+offset_right = 844.0
+offset_bottom = 72.0
+text = "玩家背包"
+
+[node name="ShopList" type="ItemList" parent="TradePanel/Window"]
+offset_left = 14.0
+offset_top = 74.0
+offset_right = 224.0
+offset_bottom = 390.0
+theme_override_font_sizes/font_size = 11
+
+[node name="StockList" type="ItemList" parent="TradePanel/Window"]
+offset_left = 238.0
+offset_top = 74.0
+offset_right = 534.0
+offset_bottom = 390.0
+theme_override_font_sizes/font_size = 11
+
+[node name="InventoryList" type="ItemList" parent="TradePanel/Window"]
+offset_left = 548.0
+offset_top = 74.0
+offset_right = 844.0
+offset_bottom = 390.0
+theme_override_font_sizes/font_size = 11
+
+[node name="Status" type="Label" parent="TradePanel/Window"]
+offset_left = 14.0
+offset_top = 398.0
+offset_right = 844.0
+offset_bottom = 426.0
+text = "选择商店与物品。每次按钮操作交易 1 件。"
+horizontal_alignment = 1
+
+[node name="BuyButton" type="Button" parent="TradePanel/Window"]
+offset_left = 238.0
+offset_top = 434.0
+offset_right = 534.0
+offset_bottom = 476.0
+text = "购买所选物品 × 1"
+
+[node name="SellButton" type="Button" parent="TradePanel/Window"]
+offset_left = 548.0
+offset_top = 434.0
+offset_right = 844.0
+offset_bottom = 476.0
+text = "出售所选物品 × 1"

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "shops": [
+    {
+      "id": "market_general_store",
+      "name": "廷根市场杂货铺",
+      "scene_id": "market",
+      "keeper_occupations": ["杂货商", "摊贩"],
+      "cash": 900,
+      "buy_markup": 1.0,
+      "sell_ratio": 0.55,
+      "open_phases": ["morning", "afternoon", "evening"],
+      "accepted_categories": ["food", "drink", "supply", "tool", "document", "weapon", "equipment"],
+      "accepted_legalities": ["legal"],
+      "tags": ["public", "general"],
+      "stock": {"bread_loaf":30,"dried_meat":14,"coffee_tin":8,"lamp_oil":18,"church_candle":20,"hemp_rope":8,"crowbar":4,"sewing_kit":5,"newspaper_issue":25,"blank_notebook":12,"walking_cane":3,"leather_gloves":6}
+    },
+    {
+      "id": "hospital_apothecary",
+      "name": "廷根医院药房",
+      "scene_id": "hospital",
+      "keeper_occupations": ["药剂师", "医生", "护士"],
+      "cash": 1100,
+      "buy_markup": 1.08,
+      "sell_ratio": 0.45,
+      "open_phases": ["morning", "afternoon", "evening", "late_night"],
+      "accepted_categories": ["medicine"],
+      "accepted_legalities": ["legal"],
+      "tags": ["public", "medical"],
+      "stock": {"bandage_roll":24,"pain_tonic":12,"smelling_salts":10,"antiseptic_bottle":12}
+    },
+    {
+      "id": "red_moon_tavern_counter",
+      "name": "红月亮街酒馆柜台",
+      "scene_id": "tavern",
+      "keeper_occupations": ["酒保", "酒馆侍者"],
+      "cash": 650,
+      "buy_markup": 1.0,
+      "sell_ratio": 0.35,
+      "open_phases": ["afternoon", "evening", "late_night"],
+      "accepted_categories": ["food", "drink"],
+      "accepted_legalities": ["legal"],
+      "tags": ["public", "food", "social"],
+      "stock": {"beer_bottle":32,"restaurant_meal":10,"dried_meat":8,"coffee_tin":5}
+    },
+    {
+      "id": "opera_costume_counter",
+      "name": "歌剧院服装与道具柜",
+      "scene_id": "opera_house",
+      "keeper_occupations": ["舞台工", "歌剧演员", "售票员"],
+      "cash": 500,
+      "buy_markup": 1.12,
+      "sell_ratio": 0.5,
+      "open_phases": ["afternoon", "evening"],
+      "accepted_categories": ["tool", "equipment", "weapon"],
+      "accepted_legalities": ["legal"],
+      "tags": ["public", "costume"],
+      "stock": {"makeup_kit":5,"sewing_kit":8,"padded_coat":3,"leather_gloves":5,"walking_cane":4}
+    },
+    {
+      "id": "underground_occult_stall",
+      "name": "地下市场隐秘摊位",
+      "scene_id": "underground_market",
+      "keeper_occupations": ["占卜师", "杂货商", "摊贩"],
+      "cash": 1600,
+      "buy_markup": 1.25,
+      "sell_ratio": 0.65,
+      "open_phases": ["evening", "late_night"],
+      "accepted_categories": ["tool", "document", "weapon", "ammunition", "ritual_material"],
+      "accepted_legalities": ["legal", "restricted", "contraband"],
+      "tags": ["secret", "black_market", "occult"],
+      "stock": {"lockpick_set":3,"forged_identity_papers":2,"rusted_knife":4,"revolver_ammunition":3,"silver_charm":5,"ritual_chalk":8,"gray_ritual_powder":3,"sleeping_flower_extract":3}
+    }
+  ]
+}

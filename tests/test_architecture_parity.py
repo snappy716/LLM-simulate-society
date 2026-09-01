@@ -68,9 +68,10 @@ class ArchitectureParityTests(unittest.TestCase):
                 {field: getattr(after, field) for field in fields},
                 npc_id,
             )
-        self.assertEqual(
-            legacy_world.action_registry.ids(), current_world.action_registry.ids()
-        )
+        legacy_actions = set(legacy_world.action_registry.ids())
+        current_actions = set(current_world.action_registry.ids())
+        self.assertTrue(legacy_actions.issubset(current_actions))
+        self.assertEqual({"BUY_ITEM", "SELL_ITEM"}, current_actions - legacy_actions)
 
     def test_rule_plans_match_legacy(self):
         legacy_world, current_world = self._worlds(seed=7)

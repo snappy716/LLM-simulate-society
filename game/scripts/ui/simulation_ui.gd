@@ -11,20 +11,41 @@ extends CanvasLayer
 @onready var detail_text: RichTextLabel = $RosterPanel/Window/DetailText
 @onready var locate_button: Button = $RosterPanel/Window/LocateButton
 @onready var preview_viewport: SubViewport = $RosterPanel/Window/PreviewContainer/PreviewViewport
+@onready var trade_panel: Control = $TradePanel
+@onready var trade_summary: Label = $TradePanel/Window/Summary
+@onready var shop_list: ItemList = $TradePanel/Window/ShopList
+@onready var stock_list: ItemList = $TradePanel/Window/StockList
+@onready var inventory_list: ItemList = $TradePanel/Window/InventoryList
+@onready var buy_button: Button = $TradePanel/Window/BuyButton
+@onready var sell_button: Button = $TradePanel/Window/SellButton
+@onready var trade_status: Label = $TradePanel/Window/Status
 
 var roster_ids: Array[String] = []
 var selected_npc_id := ""
+var shop_ids: Array[String] = []
+var stock_item_ids: Array[String] = []
+var inventory_item_ids: Array[String] = []
+var selected_shop_id := ""
+var selected_stock_item_id := ""
+var selected_inventory_item_id := ""
 
 
 func _ready() -> void:
 	roster_panel.visible = false
+	trade_panel.visible = false
 	advance_button.disabled = true
 	advance_button.pressed.connect(SimulationBridge.advance_time)
 	roster_list.item_selected.connect(_select_npc)
 	locate_button.pressed.connect(_locate_selected_npc)
+	shop_list.item_selected.connect(_select_shop)
+	stock_list.item_selected.connect(_select_stock_item)
+	inventory_list.item_selected.connect(_select_inventory_item)
+	buy_button.pressed.connect(_buy_selected_item)
+	sell_button.pressed.connect(_sell_selected_item)
 	SimulationBridge.snapshot_updated.connect(_apply_snapshot)
 	SimulationBridge.connection_state_changed.connect(_connection_changed)
 	SimulationBridge.advance_state_changed.connect(_advance_state_changed)
+	SimulationBridge.trade_completed.connect(_trade_completed)
 	if not SimulationBridge.snapshot.is_empty():
 		_apply_snapshot(SimulationBridge.snapshot)
 
@@ -32,6 +53,14 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_roster"):
 		roster_panel.visible = not roster_panel.visible
+		if roster_panel.visible:
+			trade_panel.visible = false
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("toggle_trade"):
+		trade_panel.visible = not trade_panel.visible
+		if trade_panel.visible:
+			roster_panel.visible = false
+			_rebuild_trade_panel(SimulationBridge.snapshot)
 		get_viewport().set_input_as_handled()
 
 
@@ -53,6 +82,7 @@ func _apply_snapshot(snapshot: Dictionary) -> void:
 	service_label.text = "世界版本 %d · NPC %d 人" % [int(snapshot.get("revision", 0)), (snapshot.get("npcs", {}) as Dictionary).size()]
 	advance_button.disabled = false
 	_rebuild_roster(snapshot.get("npcs", {}))
+	_rebuild_trade_panel(snapshot)
 	if not selected_npc_id.is_empty() and (snapshot.get("npcs", {}) as Dictionary).has(selected_npc_id):
 		_show_npc(selected_npc_id)
 
@@ -158,3 +188,104 @@ func _scene_name(scene_id: String) -> String:
 
 func _layer_name(layer: String) -> String:
 	return {"ordinary": "普通人", "official_beyonder": "官方非凡者", "wild_beyonder": "野生非凡者", "hostile_beyonder": "敌对非凡者"}.get(layer, layer)
+
+
+func _rebuild_trade_panel(snapshot: Dictionary) -> void:
+	if snapshot.is_empty():
+		return
+	var player: Dictionary = snapshot.get("player", {})
+	trade_summary.text = "资金 %d %s　负重 %.1f / %.1f" % [
+		int(player.get("wealth", 0)), String(player.get("currency", "便士")),
+		float(player.get("inventory_weight", 0.0)), float(player.get("inventory_capacity", 0.0))]
+	var previous_shop := selected_shop_id
+	shop_list.clear()
+	shop_ids.clear()
+	var shops: Dictionary = snapshot.get("shops", {})
+	var ids: Array = shops.keys()
+	ids.sort()
+	for shop_id in ids:
+		var shop: Dictionary = shops[shop_id]
+		shop_ids.append(String(shop_id))
+		var state := "营业" if bool(shop.get("is_open", false)) else "打烊"
+		shop_list.add_item("%s\n%s · %s" % [shop.get("name", shop_id), _scene_name(String(shop.get("scene_id", ""))), state])
+	if not previous_shop.is_empty() and shop_ids.has(previous_shop):
+		selected_shop_id = previous_shop
+	elif not shop_ids.is_empty():
+		selected_shop_id = shop_ids[0]
+	if not selected_shop_id.is_empty() and shop_ids.has(selected_shop_id):
+		shop_list.select(shop_ids.find(selected_shop_id))
+	_rebuild_shop_stock()
+	_rebuild_player_inventory(player)
+
+
+func _rebuild_shop_stock() -> void:
+	stock_list.clear()
+	stock_item_ids.clear()
+	selected_stock_item_id = ""
+	var shops: Dictionary = SimulationBridge.snapshot.get("shops", {})
+	var shop: Dictionary = shops.get(selected_shop_id, {})
+	for raw_entry in shop.get("stock", []):
+		var entry: Dictionary = raw_entry
+		stock_item_ids.append(String(entry.get("id", "")))
+		stock_list.add_item("%s × %d\n买 %d / 卖 %d 便士" % [entry.get("name", ""), int(entry.get("quantity", 0)), int(entry.get("buy_price", 0)), int(entry.get("sell_price", 0))])
+	buy_button.disabled = true
+	sell_button.disabled = selected_inventory_item_id.is_empty() or not bool(shop.get("is_open", false))
+	if not shop.is_empty():
+		trade_status.text = "%s　店主：%s" % ["营业中" if bool(shop.get("is_open", false)) else "当前时段未营业", shop.get("keeper_name", "无人值守")]
+
+
+func _rebuild_player_inventory(player: Dictionary) -> void:
+	inventory_list.clear()
+	inventory_item_ids.clear()
+	selected_inventory_item_id = ""
+	for raw_entry in player.get("inventory", []):
+		var entry: Dictionary = raw_entry
+		inventory_item_ids.append(String(entry.get("id", "")))
+		inventory_list.add_item("%s × %d\n%s" % [entry.get("name", ""), int(entry.get("quantity", 0)), entry.get("category", "")])
+	sell_button.disabled = true
+
+
+func _select_shop(index: int) -> void:
+	if index < 0 or index >= shop_ids.size():
+		return
+	selected_shop_id = shop_ids[index]
+	_rebuild_shop_stock()
+
+
+func _select_stock_item(index: int) -> void:
+	if index < 0 or index >= stock_item_ids.size():
+		return
+	selected_stock_item_id = stock_item_ids[index]
+	var shop: Dictionary = (SimulationBridge.snapshot.get("shops", {}) as Dictionary).get(selected_shop_id, {})
+	buy_button.disabled = not bool(shop.get("is_open", false))
+
+
+func _select_inventory_item(index: int) -> void:
+	if index < 0 or index >= inventory_item_ids.size():
+		return
+	selected_inventory_item_id = inventory_item_ids[index]
+	var shop: Dictionary = (SimulationBridge.snapshot.get("shops", {}) as Dictionary).get(selected_shop_id, {})
+	sell_button.disabled = not bool(shop.get("is_open", false))
+
+
+func _buy_selected_item() -> void:
+	if selected_shop_id.is_empty() or selected_stock_item_id.is_empty():
+		return
+	trade_status.text = "正在结算购买……"
+	buy_button.disabled = true
+	sell_button.disabled = true
+	SimulationBridge.trade(selected_shop_id, selected_stock_item_id, "buy", 1)
+
+
+func _sell_selected_item() -> void:
+	if selected_shop_id.is_empty() or selected_inventory_item_id.is_empty():
+		return
+	trade_status.text = "正在结算出售……"
+	buy_button.disabled = true
+	sell_button.disabled = true
+	SimulationBridge.trade(selected_shop_id, selected_inventory_item_id, "sell", 1)
+
+
+func _trade_completed(success: bool, result: Dictionary) -> void:
+	var trade: Dictionary = result.get("trade", {})
+	trade_status.text = ("成功：" if success else "失败：") + String(trade.get("message", "未知交易结果"))

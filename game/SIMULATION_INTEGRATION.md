@@ -3,6 +3,7 @@
 ## 运行时操作
 
 - `Q`：打开或关闭完整 NPC 列表。
+- `I`：打开或关闭物品与交易文字测试面板。
 - 在列表中选择 NPC：查看状态、愿望、四时段计划、近期记忆和 idle 第一帧外观。
 - `到达这个人的位置`：将玩家传送到该 NPC 附近。
 - `下一时间段`：依次推进 `morning -> afternoon -> evening -> late_night -> 次日 morning`。
@@ -47,3 +48,9 @@ data/simulation/scene_regions.json
 ```
 
 私人场景 `home_001` 至 `home_200` 暂时映射到 `home_quarter`。隐藏地点和不可进入的室内地点使用其外部入口区域。
+
+## 物品与交易接口
+
+世界快照包含 `player`、`items`、`shops`，每名 NPC 还包含自己的 `inventory`。
+Godot 通过本地 `POST /trade` 发送买卖请求；Python 在同一个锁中完成报价校验、
+资金与库存结算、事件记录和快照更新。交易失败会返回具体原因，不会改变余额或库存。

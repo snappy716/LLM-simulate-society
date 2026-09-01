@@ -4,7 +4,7 @@
   "title": "Godot world snapshot",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schema_version", "revision", "day", "weekday", "phase", "busy", "player_scene", "scenes", "npcs", "new_events"],
+  "required": ["schema_version", "revision", "day", "weekday", "phase", "busy", "player_scene", "player", "items", "shops", "scenes", "npcs", "new_events"],
   "properties": {
     "schema_version": {"const": 1},
     "revision": {"type": "integer", "minimum": 1},
@@ -13,6 +13,20 @@
     "phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
     "busy": {"type": "boolean"},
     "player_scene": {"type": "string"},
+    "player": {
+      "type": "object",
+      "required": ["id", "wealth", "currency", "inventory_weight", "inventory_capacity", "inventory"],
+      "properties": {
+        "id": {"const": "player"},
+        "wealth": {"type": "integer", "minimum": 0},
+        "currency": {"type": "string"},
+        "inventory_weight": {"type": "number", "minimum": 0},
+        "inventory_capacity": {"type": "number", "minimum": 0},
+        "inventory": {"type": "array"}
+      }
+    },
+    "items": {"type": "object", "minProperties": 30, "maxProperties": 50},
+    "shops": {"type": "object"},
     "scenes": {"type": "object"},
     "npcs": {"type": "object"},
     "new_events": {"type": "array"}

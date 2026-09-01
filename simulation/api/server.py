@@ -113,13 +113,41 @@ class SimulationBridge:
                 "daily_plan": {key: asdict(value) for key, value in npc.daily_plan.items()},
                 "relationships": meaningful_relations,
                 "long_term_goal_ids": npc.long_term_goal_ids,
+                "inventory": self.world.economy.public_inventory(npc_id),
                 "appearance": self._appearance(npc_id),
             }
+        shops = {}
+        for shop_id, shop in self.world.shops.items():
+            stock = []
+            for entry in self.world.economy.public_inventory(shop.inventory_id):
+                item = self.world.item_catalog[entry["id"]]
+                stock.append({
+                    **entry,
+                    "buy_price": self.world.economy._unit_price(shop, item, "buy"),
+                    "sell_price": self.world.economy._unit_price(shop, item, "sell"),
+                })
+            keeper = self.world.npcs.get(shop.keeper_id) if shop.keeper_id else None
+            shops[shop_id] = {
+                **asdict(shop),
+                "keeper_name": keeper.name if keeper else "无人值守",
+                "is_open": self.world.phase.value in shop.open_phases,
+                "stock": stock,
+            }
+        player_inventory = self.world.inventories["player"]
         return {
             "schema_version": 1, "revision": self.revision,
             "day": self.world.day, "weekday": (self.world.day - 1) % 7,
             "phase": self.world.phase.value, "busy": self.busy,
             "player_scene": self.world.player_scene,
+            "player": {
+                "id": "player", "wealth": self.world.player_wealth,
+                "currency": self.world.economy.currency,
+                "inventory_weight": player_inventory.total_weight(self.world.item_catalog),
+                "inventory_capacity": player_inventory.max_weight,
+                "inventory": self.world.economy.public_inventory("player"),
+            },
+            "items": {item_id: asdict(item) for item_id, item in self.world.item_catalog.items()},
+            "shops": shops,
             "scenes": public_scenes, "npcs": npcs,
             "new_events": self.last_events[-50:],
         }
@@ -171,6 +199,38 @@ class SimulationBridge:
             self.busy = False
             self.lock.release()
 
+    def trade(self, payload: dict) -> dict:
+        if not self.lock.acquire(blocking=False):
+            raise RuntimeError("simulation is already advancing")
+        self.busy = True
+        try:
+            day = self.world.day
+            before = len(self.world.events_by_day[day])
+            receipt = sim.execute_trade(
+                self.world,
+                actor_id=str(payload.get("actor_id", "player")),
+                shop_id=str(payload.get("shop_id", "")),
+                item_id=str(payload.get("item_id", "")),
+                quantity=payload.get("quantity", 1),
+                direction=str(payload.get("direction", "buy")),
+            )
+            if receipt.success:
+                produced = self.world.events_by_day[day][before:]
+                self.last_events = [{
+                    "event_id": event.event_id, "day": event.day, "phase": event.phase,
+                    "event_type": event.event_type, "scene_id": event.scene_id,
+                    "actor_ids": event.actor_ids, "message": event.description,
+                    "tags": event.tags, "level": event.level,
+                } for event in produced]
+                self.revision += 1
+                snapshot = self._write_snapshot()
+            else:
+                snapshot = self.snapshot()
+            return {"ok": receipt.success, "trade": asdict(receipt), "snapshot": snapshot}
+        finally:
+            self.busy = False
+            self.lock.release()
+
 
 class Handler(BaseHTTPRequestHandler):
     bridge: SimulationBridge
@@ -191,7 +251,7 @@ class Handler(BaseHTTPRequestHandler):
             self._reply(404, {"error": "not found"})
 
     def do_POST(self) -> None:
-        if self.path not in {"/step", "/configure"}:
+        if self.path not in {"/step", "/configure", "/trade"}:
             self._reply(404, {"error": "not found"})
             return
         try:
@@ -200,7 +260,11 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 length = int(self.headers.get("Content-Length", "0"))
                 payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
-                self._reply(200, self.bridge.configure_interface(payload))
+                if self.path == "/configure":
+                    self._reply(200, self.bridge.configure_interface(payload))
+                else:
+                    result = self.bridge.trade(payload)
+                    self._reply(200 if result["ok"] else 400, result)
         except Exception as exc:
             self._reply(500, {"error": f"{type(exc).__name__}: {exc}"})
 

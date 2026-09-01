@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/trade_request.schema.json",
+  "title": "Trade request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["actor_id", "shop_id", "item_id", "quantity", "direction"],
+  "properties": {
+    "actor_id": {"type": "string", "minLength": 1},
+    "shop_id": {"type": "string", "minLength": 1},
+    "item_id": {"type": "string", "minLength": 1},
+    "quantity": {"type": "integer", "minimum": 1},
+    "direction": {"enum": ["buy", "sell"]}
+  }
+}

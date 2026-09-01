@@ -23,6 +23,8 @@ from simulation.systems import relationships as relationship_system
 from simulation.systems import economy as economy_system
 
 
+REPOSITORY_DIR = Path(__file__).resolve().parents[1]
+
 # Canonical implementations live under simulation.domain and persistence.
 Phase = domain_entities.Phase
 PHASES = domain_entities.PHASES
@@ -325,6 +327,13 @@ class World:
         self.objects["object:church_community_meal"].quantity=60
         self.objects["object:rusted_knife"].legality="restricted"
         self.objects["object:occult_powder"].legality="contraband"
+
+        # The data-driven inventory/trade system is additive. Legacy WorldObjects
+        # remain available while new gameplay uses canonical catalog definitions.
+        self.economy = economy_system.initialize_economy(self, REPOSITORY_DIR / "content")
+        self.item_catalog = self.economy.catalog
+        self.inventories = self.economy.inventories
+        self.shops = self.economy.shops
 
         self.scheduled_events = [{
             "day":2, "phase":"afternoon", "scene_id":"east_dock",
@@ -1638,14 +1647,54 @@ def resolve_opposed_check(world,check_type,actor,opponent,actor_skill,opponent_s
     return result
 
 
+def execute_trade(world, *, actor_id, shop_id, item_id, quantity=1, direction="buy"):
+    receipt = world.economy.trade(
+        world, actor_id=actor_id, shop_id=shop_id, item_id=item_id,
+        quantity=quantity, direction=direction,
+    )
+    shop = world.shops.get(shop_id)
+    item = world.item_catalog.get(item_id)
+    if not receipt.success:
+        world.ledger.emit(
+            day=world.day, phase=world.phase.value, system="trade_system",
+            event_type="TRADE_REJECTED", message=receipt.message,
+            actor_ids=[actor_id], scene_id=shop.scene_id if shop else None,
+            payload=asdict(receipt),
+        )
+        return receipt
+    actor_name = "玩家" if actor_id == "player" else world.npcs[actor_id].name
+    verb = "购买" if direction == "buy" else "出售"
+    receipt.message = (
+        f"{actor_name}在{shop.name}{verb}了 {quantity} × {item.name}，"
+        f"共计 {receipt.total_price} {world.economy.currency}。"
+    )
+    actor_ids = [actor_id] + ([shop.keeper_id] if shop.keeper_id else [])
+    event = make_event(
+        world, "ITEM_TRADED", receipt.message, actor_ids, shop.scene_id,
+        severity=1, emotion=1, tags=["trade", "economy", item.category],
+        object_ids=[item.id], level=EventLevel.BACKGROUND.value,
+    )
+    receipt.event_id = event.event_id
+    world.ledger.emit(
+        day=world.day, phase=world.phase.value, system="trade_system",
+        event_type="TRADE_SETTLED", message=receipt.message,
+        actor_ids=actor_ids, scene_id=shop.scene_id, payload=asdict(receipt),
+        trace_id=event.trace_id, parent_id=event.event_id,
+    )
+    return receipt
+
+
 def action_context(world,scene):
     def emit(event_type,message,actor_ids,scene_id,**kwargs):
         return make_event(world,event_type,message,actor_ids,scene_id,**kwargs)
     def opposed(actor,opponent,actor_skill,opponent_skill,label):
         return resolve_opposed_check(world,label,actor,opponent,actor_skill,opponent_skill,
                                      scene_id=scene.id)
+    def trade(**kwargs):
+        return execute_trade(world, **kwargs)
     return {"world":world,"scene_id":scene.id,"make_event":emit,
-            "opposed_check":opposed,"intelligence":world.intelligence}
+            "opposed_check":opposed,"intelligence":world.intelligence,
+            "trade":trade}
 
 
 def discover_trace_evidence(world,npc,scene):
@@ -3239,6 +3288,12 @@ def plan_tomorrow(world):
 def save_snapshot(world):
     data={
         "day":world.day,"player_scene":world.player_scene,
+        "player":{"wealth":world.player_wealth,
+                  "inventory":world.economy.public_inventory("player")},
+        "item_catalog":{item_id:asdict(item) for item_id,item in world.item_catalog.items()},
+        "inventories":{owner_id:asdict(inventory)
+                       for owner_id,inventory in world.inventories.items()},
+        "shops":{shop_id:asdict(shop) for shop_id,shop in world.shops.items()},
         "long_term_goals":{gid:asdict(goal) for gid,goal in world.long_term_goals.items()},
         "scenes":{sid:asdict(scene) for sid,scene in world.scenes.items()},
         "objects":{oid:asdict(obj) for oid,obj in world.objects.items()},

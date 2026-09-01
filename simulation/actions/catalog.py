@@ -82,6 +82,20 @@ def _steal(*, npc, context, target=None, **_):
     return ActionResult(True, "success", event.description, event.event_id)
 
 
+def _trade(*, npc, context, direction, shop_id=None, item_id=None, quantity=1, **_):
+    if not shop_id or not item_id:
+        return ActionResult(False, "missing_trade_target", "交易缺少商店或物品。")
+    receipt = context["trade"](
+        actor_id=npc.id, shop_id=shop_id, item_id=item_id,
+        quantity=quantity, direction=direction,
+    )
+    wealth_delta = (-receipt.total_price if direction == "buy" else receipt.total_price)
+    return ActionResult(
+        receipt.success, receipt.code, receipt.message, receipt.event_id,
+        state_changes={"wealth": wealth_delta} if receipt.success else {},
+    )
+
+
 def _generic(*, npc, context, action_label="行动", target=None, **_):
     event = _event(context, "ACTION_COMPLETED", f"{npc.name} 完成了{action_label}。", npc,
                    target=target, tags=["action"], severity=2)
@@ -104,6 +118,12 @@ def build_action_registry() -> ActionRegistry:
                          required_skills=["deception"]),
         ActionDefinition("STEAL_ITEM", "crime", ["gain_money", "obtain_money_illegally"], _steal,
                          required_target="npc", required_skills=["stealth"], energy_cost=8, legal_risk=12),
+        ActionDefinition("BUY_ITEM", "economy", ["solve_hunger", "obtain_supply"],
+                         lambda **kw: _trade(direction="buy", **kw), required_target="shop",
+                         energy_cost=1, tags=["trade", "item"]),
+        ActionDefinition("SELL_ITEM", "economy", ["gain_money"],
+                         lambda **kw: _trade(direction="sell", **kw), required_target="shop",
+                         energy_cost=1, tags=["trade", "item"]),
     ]
     generic = {
         "OBSERVE_SCENE":("investigation", ["perform_duty"], 3),

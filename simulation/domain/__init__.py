@@ -28,6 +28,13 @@ from simulation.domain.planning import (
     ShortPlan,
     TraceEvidence,
 )
+from simulation.domain.inventory import (
+    Inventory,
+    ItemDefinition,
+    Shop,
+    TradeQuote,
+    TradeReceipt,
+)
 
 __all__ = [
     "CaseFile",
@@ -37,6 +44,8 @@ __all__ = [
     "Faction",
     "FollowupPlan",
     "IntelFact",
+    "Inventory",
+    "ItemDefinition",
     "LongTermGoal",
     "Memory",
     "NPC",
@@ -48,10 +57,13 @@ __all__ = [
     "Relationship",
     "Scene",
     "ShortPlan",
+    "Shop",
     "SimEvent",
     "StoryThread",
     "Task",
     "TraceEvidence",
+    "TradeQuote",
+    "TradeReceipt",
     "WorldConflict",
     "WorldObject",
 ]
