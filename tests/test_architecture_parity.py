@@ -71,18 +71,28 @@ class ArchitectureParityTests(unittest.TestCase):
         legacy_actions = set(legacy_world.action_registry.ids())
         current_actions = set(current_world.action_registry.ids())
         self.assertTrue(legacy_actions.issubset(current_actions))
-        self.assertEqual({"BUY_ITEM", "SELL_ITEM"}, current_actions - legacy_actions)
+        self.assertEqual({"BUY_ITEM", "SELL_ITEM", "TRADE_WITH_NPC", "USE_ITEM",
+                          "GIVE_ITEM","DROP_ITEM","PICK_UP_ITEM",
+                          "EQUIP_ITEM","UNEQUIP_ITEM","PICK_LOCK",
+                          "FORCE_OPEN","UNLOCK_WITH_KEY","CLIMB_WITH_ROPE",
+                          "TRAVERSE_PASSAGE","PRESENT_IDENTITY","RECORD_INTELLIGENCE",
+                          "THREATEN_WITH_WEAPON","PERFORM_LEGAL_RITUAL"},
+                         current_actions - legacy_actions)
 
     def test_rule_plans_match_legacy(self):
         legacy_world, current_world = self._worlds(seed=7)
         for npc_id in legacy_world.npcs:
             before = self.legacy.rule_plan_for_npc(legacy_world, legacy_world.npcs[npc_id])
             after = current.rule_plan_for_npc(current_world, current_world.npcs[npc_id])
-            self.assertEqual(
-                {phase: asdict(plan) for phase, plan in before.items()},
-                {phase: asdict(plan) for phase, plan in after.items()},
-                npc_id,
-            )
+            for phase in before:
+                if asdict(before[phase]) == asdict(after[phase]):
+                    continue
+                # The only intentional planner divergence is proactive food
+                # shopping at moderate satiety; all other legacy plans remain equal.
+                npc=current_world.npcs[npc_id]
+                self.assertLess(npc.states.get("satiety",70),60,npc_id)
+                self.assertEqual("SHOP",after[phase].behavior,npc_id)
+                self.assertIn(after[phase].scene_id,{"market","tavern"},npc_id)
 
     def test_one_phase_matches_legacy(self):
         legacy_world, current_world = self._worlds(seed=9)
@@ -124,7 +134,7 @@ class ArchitectureParityTests(unittest.TestCase):
             (REPOSITORY_DIR / "contracts" / "world_snapshot.schema.json").read_text(encoding="utf-8")
         )
         self.assertTrue(set(schema["required"]).issubset(snapshot))
-        self.assertEqual(1, snapshot["schema_version"])
+        self.assertEqual(2, snapshot["schema_version"])
         self.assertEqual(200, len(snapshot["npcs"]))
         self.assertNotIn("home_001", snapshot["scenes"])
         updated = bridge.step()
@@ -140,7 +150,10 @@ class ArchitectureParityTests(unittest.TestCase):
     def test_snapshot_migration_rejects_unknown_versions(self):
         payload = {"schema_version": 1, "day": 1}
         migrated = migrate_snapshot(payload)
-        self.assertEqual(payload, migrated)
+        self.assertEqual(2,migrated["schema_version"])
+        self.assertEqual({},migrated["item_instances"])
+        self.assertEqual({},migrated["scene_inventories"])
+        self.assertEqual({},migrated["container_inventories"])
         self.assertIsNot(payload, migrated)
         with self.assertRaises(ValueError):
             migrate_snapshot({"schema_version": 999})

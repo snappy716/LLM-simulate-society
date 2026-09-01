@@ -21,6 +21,16 @@ from simulation.persistence.snapshot import atomic_write_json
 from simulation.systems import population as population_system
 from simulation.systems import relationships as relationship_system
 from simulation.systems import economy as economy_system
+from simulation.systems import items as item_system
+from simulation.systems import item_instances as item_instance_system
+from simulation.systems.item_actions import ItemActionSystem
+from simulation.systems.item_effects import ItemEffectSystem
+from simulation.systems.equipment import EquipmentSystem
+from simulation.systems.action_resolution import ActionConsequenceSystem, EnvironmentCheckSystem
+from simulation.systems.passages import initialize_passages
+from simulation.systems.identity import IdentitySystem
+from simulation.systems.weapons import WeaponActionSystem, equipped_weapon
+from simulation.systems.rituals import RitualMaterialSystem
 
 
 REPOSITORY_DIR = Path(__file__).resolve().parents[1]
@@ -49,6 +59,8 @@ Faction = domain_entities.Faction
 WorldConflict = domain_entities.WorldConflict
 ResponseDrive = domain_entities.ResponseDrive
 ActionCheckResult = domain_entities.ActionCheckResult
+EnvironmentCheckResult = domain_entities.EnvironmentCheckResult
+ActionConsequences = domain_entities.ActionConsequences
 NPC = domain_entities.NPC
 SimEvent = domain_entities.SimEvent
 StoryThread = domain_entities.StoryThread
@@ -215,6 +227,21 @@ class World:
         self.deepseek = DeepSeekClient(cfg.deepseek_url,cfg.deepseek_model,
                                        cfg.deepseek_api_key,self.ledger)
         self.player_scene = "evernight_church"
+        self.player_health = 100
+        self.player_sanity = 100
+        self.player_states = {"energy":100,"satiety":100,"stress":0,"fear":0,"pain":0,
+                              "alertness":70,"morale":70,"legal_risk":0}
+        self.player_item_effects = {}
+        self.player_item_effect_records = []
+        self.player_equipped_item_ids = []
+        self.player_equipment_slots = {}
+        self.player_knowledge = []
+        self.player_skills = {
+            "observation":8,"tracking":6,"stealth":6,"counter_tracking":6,
+            "investigation":8,"deception":6,"insight":8,"combat":6,
+            "ritual":4,"mysticism":4,"willpower":8,
+            "lockpicking":5,"force_entry":6,"climbing":6,
+        }
         total = cfg.core_npcs + cfg.simple_npcs
         for i in range(total):
             self.npcs[f"npc_{i:03d}"] = make_npc(i, "core" if i < cfg.core_npcs else "simple", self.rng)
@@ -334,6 +361,18 @@ class World:
         self.item_catalog = self.economy.catalog
         self.inventories = self.economy.inventories
         self.shops = self.economy.shops
+        self.item_uses = item_system.initialize_item_uses(self, REPOSITORY_DIR / "content")
+        self.item_instances = item_instance_system.initialize_item_instances(
+            self, REPOSITORY_DIR / "content")
+        self.item_actions = ItemActionSystem()
+        self.item_effect_system = ItemEffectSystem()
+        self.equipment = EquipmentSystem()
+        self.environment_checks = EnvironmentCheckSystem()
+        self.action_consequences = ActionConsequenceSystem()
+        self.passages = initialize_passages(self,REPOSITORY_DIR / "content")
+        self.identity = IdentitySystem()
+        self.weapon_actions = WeaponActionSystem()
+        self.ritual_materials = RitualMaterialSystem()
 
         self.scheduled_events = [{
             "day":2, "phase":"afternoon", "scene_id":"east_dock",
@@ -1106,12 +1145,16 @@ def free_time_plan(world,npc,phase_name,planned_day):
     if npc.health<65 or npc.states.get("pain",0)>45:
         return PhasePlan("hospital","自由时间：前往医院治疗身体问题",priority=75,behavior="SEEK_HELP")
     if npc.states.get("satiety",70)<40:
-        return PhasePlan("restaurant","自由时间：前往餐厅满足饮食需求",priority=72,behavior="SHOP")
+        scene_id=preferred_shop_scene(world,npc,phase_name,{"food"}) or "market"
+        return PhasePlan(scene_id,"自由时间：前往营业中的商店购买食物",priority=72,behavior="SHOP")
     if npc.sanity<55 or npc.states.get("fear",0)>65:
         return PhasePlan("evernight_church","自由时间：前往教堂祈祷并寻求安定",priority=74,behavior="PRAY")
     if npc.wealth<12 or npc.needs.get("financial_pressure",0)>82:
         return PhasePlan("market","自由时间：寻找临时工作或便宜物资",priority=70,
                          behavior="SEEK_TEMPORARY_WORK")
+    if npc.states.get("satiety",70)<60:
+        scene_id=preferred_shop_scene(world,npc,phase_name,{"food"}) or "market"
+        return PhasePlan(scene_id,"自由时间：补充未来两天所需的食物",priority=66,behavior="SHOP")
     choices=[
         ("opera_house","自由时间：观看歌剧放松压力"),
         ("tavern","自由时间：在酒馆社交和打听消息"),
@@ -1358,6 +1401,11 @@ def build_decision_context(world, npc):
         "recent_important_memories":npc.relevant_memories(10),
         "important_relationships":rels,"known_story_threads":known_threads,
         "known_objects":known_objects,
+        "inventory":world.economy.public_inventory(npc.id),
+        "item_effects":dict(npc.item_effects),
+        "equipped_item_ids":list(npc.equipped_item_ids),
+        "recent_trade_memories":[asdict(memory)
+                                 for memory in world.economy.recent_memories(npc.id,12)],
         "unreported_observations":[asdict(o) for o in pending_report_observations(world,npc)[:5]],
         "assigned_cases":[asdict(c) for c in world.cases.values()
                           if npc.id in c.assigned_officer_ids and c.status=="open"],
@@ -1622,16 +1670,36 @@ def check_outcome(margin):
     return "critical_failure"
 
 
+def item_skill_modifier(npc,skill):
+    effects=npc.item_effects
+    relevant={
+        "combat":["melee_bonus","firearm_bonus"],
+        "stealth":["trace_avoidance_bonus","disguise_bonus"],
+        "counter_tracking":["trace_avoidance_bonus","disguise_bonus"],
+        "deception":["disguise_bonus","false_identity_bonus"],
+        "investigation":["recording_bonus","light"],
+        "observation":["light","recording_bonus"],
+        "ritual":["ritual_bonus","ritual_focus"],
+        "mysticism":["ritual_bonus","occult_resistance"],
+    }.get(skill,[])
+    values=sorted((max(0,int(effects.get(key,0))) for key in relevant),reverse=True)
+    # The strongest prepared tool applies fully and a second complementary aid
+    # applies at half strength. This prevents unlimited equipment stacking.
+    return min(40,(values[0] if values else 0)+(values[1]//2 if len(values)>1 else 0))
+
+
 def resolve_opposed_check(world,check_type,actor,opponent,actor_skill,opponent_skill,
                            actor_context=0,opponent_context=0,scene_id=None):
     actor_roll=world.rng.randint(1,100)
     opponent_roll=world.rng.randint(1,100)
     actor_modifiers={"skill":actor.skills.get(actor_skill,0),
                      "sequence":sequence_modifier(actor,actor_skill),
+                     "items":item_skill_modifier(actor,actor_skill),
                      "context":actor_context,
                      "health":health_action_modifier(actor)}
     opponent_modifiers={"skill":opponent.skills.get(opponent_skill,0),
                         "sequence":sequence_modifier(opponent,opponent_skill),
+                        "items":item_skill_modifier(opponent,opponent_skill),
                         "context":opponent_context,
                         "health":health_action_modifier(opponent)}
     actor_total=actor_roll+sum(actor_modifiers.values())
@@ -1645,6 +1713,56 @@ def resolve_opposed_check(world,check_type,actor,opponent,actor_skill,opponent_s
                       message=f"{actor.name} 对 {opponent.name} 的{check_type}检定：{result.outcome}（差值 {margin}）。",
                       actor_ids=[actor.id,opponent.id],scene_id=scene_id,payload=asdict(result))
     return result
+
+
+def resolve_environment_action(world,*,actor_id,scene_id,target_id,check_type,skill,
+                               difficulty,item_effect_names=None,context_modifier=0,
+                               direct_item_modifiers=None,
+                               base_legal_risk=0,base_noise=0,trace_type=None,
+                               trace_discoverability=45,tool_instance_id=None,
+                               always_trace=False):
+    if actor_id!="player" and actor_id not in world.npcs:
+        raise KeyError(f"unknown actor: {actor_id}")
+    actual_scene=world.player_scene if actor_id=="player" else world.npcs[actor_id].current_scene
+    if actual_scene!=scene_id:
+        raise ValueError("actor is not at the requested scene")
+    actor=world.npcs.get(actor_id)
+    sequence=sequence_modifier(actor,skill) if actor else 0
+    effects=list(item_effect_names or [])
+    check=world.environment_checks.resolve(
+        world,actor_id=actor_id,check_type=check_type,skill=skill,
+        difficulty=difficulty,target_id=target_id,context_modifier=context_modifier,
+        sequence_modifier=sequence,item_effect_names=effects,
+        direct_item_modifiers=direct_item_modifiers)
+    if effects:
+        world.item_effect_system.consume_charge(world,actor_id,effects)
+    consequences=world.action_consequences.apply(
+        world,check=check,scene_id=scene_id,base_legal_risk=base_legal_risk,
+        base_noise=base_noise,trace_type=trace_type,
+        trace_discoverability=trace_discoverability,
+        tool_instance_id=tool_instance_id,always_trace=always_trace)
+    actor_name="玩家" if actor_id=="player" else world.npcs[actor_id].name
+    outcome_names={
+        "complete_success":"完全成功","success":"成功","partial":"部分成功",
+        "failure":"失败","critical_failure":"严重失败",
+    }
+    message=(f"{actor_name}执行{check_type}：{outcome_names[check.outcome]}"
+             f"（检定 {check.total} / 难度 {difficulty}）。")
+    event=make_event(
+        world,"ENVIRONMENT_ACTION_RESOLVED",message,[actor_id],scene_id,
+        severity=max(1,2+consequences.noise//20+consequences.legal_risk_delta//8),
+        conflict=consequences.legal_risk_delta//3,
+        danger=2 if check.outcome=="critical_failure" else 0,
+        secret=max(0,8-consequences.noise//12),emotion=2,
+        tags=["action","environment",skill,check.outcome],
+        object_ids=([tool_instance_id] if tool_instance_id else [])+consequences.trace_ids,
+        level=EventLevel.BACKGROUND.value)
+    if consequences.noise>=30 or consequences.detected:
+        occupants=[npc for npc in world.npcs.values()
+                   if npc.id!=actor_id and npc_can_act(npc) and npc.current_scene==scene_id]
+        if occupants:
+            create_observations(world,event,occupants)
+    return check,consequences,event
 
 
 def execute_trade(world, *, actor_id, shop_id, item_id, quantity=1, direction="buy"):
@@ -1692,9 +1810,647 @@ def action_context(world,scene):
                                      scene_id=scene.id)
     def trade(**kwargs):
         return execute_trade(world, **kwargs)
+    def peer_offer(**kwargs):
+        return create_peer_trade_offer(world, **kwargs)
+    def peer_trade_response(**kwargs):
+        return respond_peer_trade_offer(world, **kwargs)
+    def use_item(**kwargs):
+        return execute_item_use(world,scene_id=scene.id,**kwargs)
+    def item_transfer(**kwargs):
+        return execute_item_transfer(world,scene_id=scene.id,**kwargs)
+    def equipment_action(**kwargs):
+        return execute_equipment_action(world,scene_id=scene.id,**kwargs)
+    def environment_action(**kwargs):
+        return resolve_environment_action(world,scene_id=scene.id,**kwargs)
+    def passage_action(**kwargs):
+        return execute_passage_action(world,scene_id=scene.id,**kwargs)
+    def identity_action(**kwargs):
+        return execute_identity_action(world,scene_id=scene.id,**kwargs)
+    def intel_action(**kwargs):
+        return execute_intelligence_record(world,scene_id=scene.id,**kwargs)
+    def weapon_action(**kwargs):
+        return execute_weapon_threat(world,scene_id=scene.id,**kwargs)
+    def ritual_action(**kwargs):
+        return execute_item_ritual(world,scene_id=scene.id,**kwargs)
     return {"world":world,"scene_id":scene.id,"make_event":emit,
             "opposed_check":opposed,"intelligence":world.intelligence,
-            "trade":trade}
+            "trade":trade,"peer_offer":peer_offer,
+            "peer_trade_response":peer_trade_response,"use_item":use_item,
+            "item_transfer":item_transfer,"equipment_action":equipment_action,
+            "environment_action":environment_action,"passage_action":passage_action,
+            "identity_action":identity_action,"intel_action":intel_action,
+            "weapon_action":weapon_action,"ritual_action":ritual_action}
+
+
+def execute_item_ritual(world,*,actor_id,illegal=False,difficulty_override=None,scene_id=None):
+    actual_scene=(world.player_scene if actor_id=="player" else
+                  world.npcs.get(actor_id).current_scene if actor_id in world.npcs else "")
+    requested_scene=actual_scene if scene_id is None else scene_id
+    receipt=world.ritual_materials.perform(
+        world,actor_id=actor_id,scene_id=requested_scene,illegal=bool(illegal),
+        difficulty_override=difficulty_override,
+        resolver=lambda **kwargs:resolve_environment_action(
+            world,scene_id=actual_scene,**kwargs))
+    if receipt.check is None:
+        event_type=("RITUAL_BLOCKED_MISSING_MATERIAL" if receipt.code=="missing_materials"
+                    else "RITUAL_ACTION_REJECTED")
+        event=make_event(
+            world,event_type,receipt.message,[actor_id],actual_scene,
+            severity=2,secret=6,tags=["ritual","blocked",receipt.code],
+            object_ids=list(receipt.missing_items),level=EventLevel.BACKGROUND.value)
+        receipt.event_id=event.event_id
+        world.ledger.emit(
+            day=world.day,phase=world.phase.value,system="ritual_material_system",
+            event_type=event_type,message=receipt.message,actor_ids=[actor_id],
+            scene_id=actual_scene,payload=asdict(receipt),trace_id=event.trace_id,
+            parent_id=event.event_id)
+        return receipt
+    event=make_event(
+        world,"RITUAL_PERFORMED" if receipt.ritual_succeeded else "RITUAL_FAILED",
+        receipt.message,[actor_id],actual_scene,
+        severity=8 if receipt.illegal else 4,conflict=7 if receipt.illegal else 1,
+        danger=7 if receipt.illegal else 3,secret=9 if receipt.illegal else 3,
+        emotion=6,tags=["ritual","illegal" if receipt.illegal else "legal","occult"],
+        object_ids=list(receipt.consumed_items)+receipt.consequences.trace_ids,
+        parent_id=receipt.event_id,level=EventLevel.SIGNIFICANT.value,
+        conflict_ids=["conflict:tingen_occult_war"] if receipt.illegal else [])
+    receipt.event_id=event.event_id
+    world.ledger.emit(
+        day=world.day,phase=world.phase.value,system="ritual_material_system",
+        event_type="RITUAL_ACTION_RESOLVED",message=receipt.message,
+        actor_ids=[actor_id],scene_id=actual_scene,payload=asdict(receipt),
+        trace_id=event.trace_id,parent_id=event.event_id)
+    return receipt
+
+
+def execute_weapon_threat(world,*,actor_id,target_id,difficulty_override=None,scene_id=None):
+    actual_scene=(world.player_scene if actor_id=="player" else
+                  world.npcs.get(actor_id).current_scene if actor_id in world.npcs else "")
+    if scene_id is not None and scene_id!=actual_scene:
+        from simulation.domain.interactions import WeaponThreatReceipt
+        return WeaponThreatReceipt(
+            False,"location_mismatch","行动者不在请求地点。",actor_id,target_id)
+    receipt=world.weapon_actions.threaten(
+        world,actor_id=actor_id,target_id=target_id,
+        difficulty_override=difficulty_override,
+        resolver=lambda **kwargs:resolve_environment_action(
+            world,scene_id=actual_scene,**kwargs))
+    if receipt.check is None:
+        world.ledger.emit(
+            day=world.day,phase=world.phase.value,system="weapon_action_system",
+            event_type="WEAPON_THREAT_REJECTED",message=receipt.message,
+            actor_ids=[actor_id,target_id],scene_id=actual_scene,payload=asdict(receipt))
+        return receipt
+    event=make_event(
+        world,"WEAPON_THREAT_SUCCEEDED" if receipt.target_yielded else "WEAPON_THREAT_FAILED",
+        receipt.message,[actor_id,target_id],actual_scene,severity=6,conflict=7,danger=6,
+        secret=2,emotion=7,tags=["weapon","threat","crime",receipt.code],
+        object_ids=[receipt.instance_id]+receipt.consequences.trace_ids,
+        parent_id=receipt.event_id,level=EventLevel.SIGNIFICANT.value,
+        conflict_ids=["conflict:public_incident"])
+    receipt.event_id=event.event_id
+    instance=world.item_instances.instances.get(receipt.instance_id)
+    if instance:
+        instance.provenance_event_ids.append(event.event_id)
+    world.ledger.emit(
+        day=world.day,phase=world.phase.value,system="weapon_action_system",
+        event_type="WEAPON_THREAT_RESOLVED",message=receipt.message,
+        actor_ids=[actor_id,target_id],scene_id=actual_scene,payload=asdict(receipt),
+        trace_id=event.trace_id,parent_id=event.event_id)
+    return receipt
+
+
+def execute_intelligence_record(world,*,actor_id,fact_id,item_id="blank_notebook",scene_id=None):
+    actual_scene=(world.player_scene if actor_id=="player" else
+                  world.npcs.get(actor_id).current_scene if actor_id in world.npcs else "")
+    if scene_id is not None and scene_id!=actual_scene:
+        from simulation.domain.interactions import IntelRecordReceipt
+        return IntelRecordReceipt(
+            False,"location_mismatch","行动者不在请求地点。",actor_id,fact_id,item_id)
+    receipt=world.intelligence.record(
+        world,actor_id=actor_id,fact_id=fact_id,item_id=item_id)
+    if not receipt.success:
+        world.ledger.emit(
+            day=world.day,phase=world.phase.value,system="intelligence_system",
+            event_type="INTELLIGENCE_RECORD_REJECTED",message=receipt.message,
+            actor_ids=[actor_id],scene_id=actual_scene,payload=asdict(receipt))
+        return receipt
+    event=make_event(
+        world,"INTELLIGENCE_RECORDED",receipt.message,[actor_id],actual_scene,
+        severity=1,secret=4,tags=["information","notebook","record"],
+        object_ids=[fact_id,receipt.instance_id],level=EventLevel.BACKGROUND.value)
+    receipt.event_id=event.event_id
+    instance=world.item_instances.instances.get(receipt.instance_id)
+    if instance:
+        instance.provenance_event_ids.append(event.event_id)
+    world.ledger.emit(
+        day=world.day,phase=world.phase.value,system="intelligence_system",
+        event_type="INTELLIGENCE_RECORD_RESOLVED",message=receipt.message,
+        actor_ids=[actor_id],scene_id=actual_scene,payload=asdict(receipt),
+        trace_id=event.trace_id,parent_id=event.event_id)
+    return receipt
+
+
+def execute_identity_action(world,*,actor_id,inspector_id,item_id,
+                            difficulty_override=None,scene_id=None):
+    actual_scene=(world.player_scene if actor_id=="player" else
+                  world.npcs.get(actor_id).current_scene if actor_id in world.npcs else "")
+    if scene_id is not None and scene_id!=actual_scene:
+        from simulation.domain.interactions import IdentityCheckReceipt
+        return IdentityCheckReceipt(
+            False,"location_mismatch","行动者不在请求地点。",actor_id,inspector_id,item_id)
+    receipt=world.identity.inspect(
+        world,actor_id=actor_id,inspector_id=inspector_id,item_id=item_id,
+        difficulty_override=difficulty_override,
+        resolver=lambda **kwargs:resolve_environment_action(
+            world,scene_id=actual_scene,**kwargs))
+    if receipt.check is None:
+        world.ledger.emit(
+            day=world.day,phase=world.phase.value,system="identity_system",
+            event_type="IDENTITY_CHECK_REJECTED",message=receipt.message,
+            actor_ids=[actor_id,inspector_id],scene_id=actual_scene,payload=asdict(receipt))
+        return receipt
+    event=make_event(
+        world,"IDENTITY_ACCEPTED" if receipt.accepted else "IDENTITY_REJECTED",
+        receipt.message,[actor_id,inspector_id],actual_scene,
+        severity=2 if receipt.accepted else 5,
+        conflict=0 if receipt.accepted else 4,danger=0,
+        secret=5 if receipt.accepted else 1,
+        tags=["identity","inspection",receipt.code],
+        object_ids=[receipt.instance_id]+receipt.consequences.trace_ids,
+        parent_id=receipt.event_id,level=EventLevel.BACKGROUND.value)
+    receipt.event_id=event.event_id
+    instance=world.item_instances.instances.get(receipt.instance_id)
+    if instance:
+        instance.provenance_event_ids.append(event.event_id)
+    world.ledger.emit(
+        day=world.day,phase=world.phase.value,system="identity_system",
+        event_type="IDENTITY_CHECK_RESOLVED",message=receipt.message,
+        actor_ids=[actor_id,inspector_id],scene_id=actual_scene,payload=asdict(receipt),
+        trace_id=event.trace_id,parent_id=event.event_id)
+    return receipt
+
+
+def execute_passage_action(world,*,action_id,actor_id,passage_id,scene_id=None):
+    actual_scene=(world.player_scene if actor_id=="player" else
+                  world.npcs.get(actor_id).current_scene if actor_id in world.npcs else "")
+    if scene_id is not None and actual_scene!=scene_id:
+        from simulation.domain.interactions import PassageActionReceipt
+        return PassageActionReceipt(
+            False,"location_mismatch","行动者不在请求地点。",action_id,actor_id,passage_id)
+    receipt=world.passages.act(
+        world,action_id=action_id,actor_id=actor_id,passage_id=passage_id,
+        resolver=lambda **kwargs:resolve_environment_action(
+            world,scene_id=actual_scene,**kwargs))
+    if not receipt.success and receipt.check is None:
+        world.ledger.emit(
+            day=world.day,phase=world.phase.value,system="passage_system",
+            event_type="PASSAGE_ACTION_REJECTED",message=receipt.message,
+            actor_ids=[actor_id],scene_id=actual_scene,payload=asdict(receipt))
+        return receipt
+    event=make_event(
+        world,"PASSAGE_ACTION_RESOLVED",receipt.message,[actor_id],actual_scene,
+        severity=2+(1 if receipt.check and receipt.check.outcome in {"failure","critical_failure"} else 0),
+        conflict=receipt.consequences.legal_risk_delta//3 if receipt.consequences else 0,
+        danger=3 if receipt.check and receipt.check.outcome=="critical_failure" else 0,
+        secret=4,tags=["passage","item_action",action_id.lower()],
+        object_ids=[passage_id]+([receipt.instance_id] if receipt.instance_id else []),
+        parent_id=receipt.event_id,level=EventLevel.BACKGROUND.value)
+    receipt.event_id=event.event_id
+    world.ledger.emit(
+        day=world.day,phase=world.phase.value,system="passage_system",
+        event_type="PASSAGE_STATE_RECORDED",message=receipt.message,
+        actor_ids=[actor_id],scene_id=actual_scene,payload=asdict(receipt),
+        trace_id=event.trace_id,parent_id=event.event_id)
+    return receipt
+
+
+def execute_equipment_action(world,*,action_id,actor_id,item_id=None,
+                             instance_id=None,slot=None,scene_id=None):
+    actual_scene=(world.player_scene if actor_id=="player" else
+                  world.npcs.get(actor_id).current_scene if actor_id in world.npcs else "")
+    if scene_id is not None and scene_id!=actual_scene:
+        from simulation.domain.item_use import EquipmentReceipt
+        return EquipmentReceipt(
+            False,"location_mismatch","行动者不在请求的地点。",action_id,
+            actor_id,item_id or "",instance_id or "",slot or "")
+    if action_id=="EQUIP_ITEM":
+        receipt=world.equipment.equip(
+            world,actor_id=actor_id,item_id=item_id or "",instance_id=instance_id)
+    elif action_id=="UNEQUIP_ITEM":
+        receipt=world.equipment.unequip(
+            world,actor_id=actor_id,item_id=item_id,instance_id=instance_id,slot=slot)
+    else:
+        from simulation.domain.item_use import EquipmentReceipt
+        receipt=EquipmentReceipt(
+            False,"invalid_action","未知的装备动作。",action_id,actor_id,item_id or "")
+    if not receipt.success:
+        world.ledger.emit(
+            day=world.day,phase=world.phase.value,system="equipment_system",
+            event_type="EQUIPMENT_ACTION_REJECTED",message=receipt.message,
+            actor_ids=[actor_id],scene_id=actual_scene,payload=asdict(receipt))
+        return receipt
+    event_type="ITEM_EQUIPPED" if action_id=="EQUIP_ITEM" else "ITEM_UNEQUIPPED"
+    event=make_event(
+        world,event_type,receipt.message,[actor_id],actual_scene,severity=1,
+        tags=["item","equipment",receipt.slot],object_ids=[receipt.instance_id],
+        level=EventLevel.BACKGROUND.value)
+    receipt.event_id=event.event_id
+    instance=world.item_instances.instances.get(receipt.instance_id)
+    if instance:
+        instance.provenance_event_ids.append(event.event_id)
+    world.ledger.emit(
+        day=world.day,phase=world.phase.value,system="equipment_system",
+        event_type="EQUIPMENT_ACTION_RESOLVED",message=receipt.message,
+        actor_ids=[actor_id],scene_id=actual_scene,payload=asdict(receipt),
+        trace_id=event.trace_id,parent_id=event.event_id)
+    return receipt
+
+
+def execute_item_transfer(world,*,action_id,actor_id,item_id,quantity=1,
+                          target_id=None,container_id=None,scene_id=None):
+    actual_scene=(world.player_scene if actor_id=="player" else
+                  world.npcs.get(actor_id).current_scene if actor_id in world.npcs else "")
+    if scene_id is not None and scene_id!=actual_scene:
+        from simulation.domain.inventory import ItemTransferReceipt
+        return ItemTransferReceipt(
+            False,"location_mismatch","行动者不在请求的地点。",action_id,
+            actor_id,item_id,quantity)
+    if action_id=="GIVE_ITEM":
+        receipt=world.item_actions.give(
+            world,actor_id=actor_id,target_id=target_id or "",
+            item_id=item_id,quantity=quantity)
+    elif action_id=="DROP_ITEM":
+        receipt=world.item_actions.drop(
+            world,actor_id=actor_id,item_id=item_id,quantity=quantity)
+    elif action_id=="PICK_UP_ITEM":
+        receipt=world.item_actions.pick_up(
+            world,actor_id=actor_id,item_id=item_id,quantity=quantity,
+            container_id=container_id)
+    else:
+        from simulation.domain.inventory import ItemTransferReceipt
+        receipt=ItemTransferReceipt(
+            False,"invalid_action","未知的物品转移动作。",action_id,
+            actor_id,item_id,quantity)
+    if not receipt.success:
+        world.ledger.emit(
+            day=world.day,phase=world.phase.value,system="item_action_system",
+            event_type="ITEM_TRANSFER_REJECTED",message=receipt.message,
+            actor_ids=[actor_id],scene_id=actual_scene,payload=asdict(receipt))
+        return receipt
+    event_types={"GIVE_ITEM":"ITEM_GIVEN","DROP_ITEM":"ITEM_DROPPED",
+                 "PICK_UP_ITEM":"ITEM_PICKED_UP"}
+    actor_ids=[actor_id]+([receipt.target_id] if receipt.target_id else [])
+    event=make_event(
+        world,event_types[action_id],receipt.message,actor_ids,actual_scene,
+        severity=2 if receipt.legal_risk_delta else 1,
+        conflict=2 if receipt.legal_risk_delta else 0,
+        secret=3 if receipt.legal_risk_delta else 0,
+        tags=["item","transfer",action_id.lower()],object_ids=receipt.instance_ids or [item_id],
+        level=EventLevel.BACKGROUND.value)
+    receipt.event_id=event.event_id
+    for instance_id in receipt.instance_ids:
+        instance=world.item_instances.instances.get(instance_id)
+        if instance:
+            instance.provenance_event_ids.append(event.event_id)
+    world.ledger.emit(
+        day=world.day,phase=world.phase.value,system="item_action_system",
+        event_type="ITEM_TRANSFER_RESOLVED",message=receipt.message,
+        actor_ids=actor_ids,scene_id=actual_scene,payload=asdict(receipt),
+        trace_id=event.trace_id,parent_id=event.event_id)
+    return receipt
+
+
+def execute_item_use(world,*,actor_id,item_id,scene_id=None):
+    scene_id=scene_id or (world.player_scene if actor_id=="player" else
+                          world.npcs.get(actor_id).current_scene if actor_id in world.npcs else "")
+    receipt=world.item_uses.use(
+        world,actor_id=actor_id,item_id=item_id,scene_id=scene_id)
+    item=world.item_catalog.get(item_id)
+    if not receipt.success:
+        world.ledger.emit(
+            day=world.day,phase=world.phase.value,system="item_use_system",
+            event_type="ITEM_USE_REJECTED",message=receipt.message,
+            actor_ids=[actor_id],scene_id=scene_id,payload=asdict(receipt))
+        return receipt
+    event_type="DANGEROUS_ITEM_USED" if receipt.mode=="dangerous" else "ITEM_USED"
+    event=make_event(
+        world,event_type,receipt.message,[actor_id],scene_id,severity=5 if receipt.mode=="dangerous" else 1,
+        danger=7 if receipt.mode=="dangerous" else 0,
+        secret=8 if receipt.mode=="dangerous" else 0,
+        tags=["item","use",receipt.mode]+([item.category] if item else []),
+        object_ids=[item_id],level=(EventLevel.SIGNIFICANT.value
+                                   if receipt.mode=="dangerous" else EventLevel.BACKGROUND.value))
+    receipt.event_id=event.event_id
+    world.ledger.emit(
+        day=world.day,phase=world.phase.value,system="item_use_system",
+        event_type="ITEM_USE_RESOLVED",message=receipt.message,
+        actor_ids=[actor_id],scene_id=scene_id,payload=asdict(receipt),
+        trace_id=event.trace_id,parent_id=event.event_id)
+    return receipt
+
+
+def preferred_shop_scene(world,npc,phase_name,categories=None):
+    """Choose an affordable, stocked shop scene for a planned phase."""
+    categories=set(categories or [])
+    choices=[]
+    for shop in world.shops.values():
+        if phase_name not in shop.open_phases:
+            continue
+        inventory=world.inventories[shop.inventory_id]
+        prices=[]
+        for item_id,quantity in inventory.quantities.items():
+            item=world.item_catalog.get(item_id)
+            if (quantity>0 and item and item.tradeable
+                    and (not categories or item.category in categories)):
+                prices.append(world.economy._unit_price(shop,item,"buy"))
+        affordable=[price for price in prices if price<=npc.wealth]
+        if affordable:
+            choices.append((min(affordable),shop.id,shop.scene_id))
+    return min(choices,default=(0,"",None))[2]
+
+
+def npc_item_need_score(npc,item):
+    """Return how useful one item is to this NPC right now (0-140)."""
+    satiety=npc.states.get("satiety",70)
+    energy=npc.states.get("energy",70)
+    pain=npc.states.get("pain",0)
+    loneliness=npc.states.get("loneliness",30)
+    score=0
+    if item.category=="food":
+        score=max(score,int((100-satiety)*1.35))
+    if item.category=="medicine":
+        score=max(score,max(0,100-npc.health),pain)
+    if item.category=="drink":
+        score=max(score,max(0,55-energy),loneliness//2)
+    if "alertness" in item.tags:
+        score=max(score,max(0,65-energy))
+    if item.category=="ritual_material":
+        occult_need=100-npc.special_needs.get("occult_supply",100)
+        score=max(score,occult_need)
+    if "daily" in item.tags or item.id in {"church_candle","lamp_oil"}:
+        score=max(score,24)
+    if item.category=="document":
+        score=max(score,18)
+    if item.category in {"tool","equipment","weapon"}:
+        score=max(score,12)
+    if item.legality!="legal" and npc.personality.get("morality",50)>=55:
+        score-=35
+    return max(0,min(140,int(score)))
+
+
+def npc_trade_budget(npc,urgent=False):
+    pressure=npc.needs.get("financial_pressure",max(0,100-npc.wealth))
+    reserve=0 if urgent else max(4,min(20,pressure//5))
+    return max(0,int(npc.wealth)-reserve)
+
+
+def npc_item_reserve(world,npc,item):
+    """Quantity this NPC will not sell because it serves work or immediate needs."""
+    reserve=world.item_uses.protected_quantity(npc,item.id)
+    if item.category=="food" and npc.states.get("satiety",70)<60:
+        reserve=max(reserve,1)
+    if item.category=="medicine" and (npc.health<85 or npc.states.get("pain",0)>20):
+        reserve=max(reserve,1)
+    if item.category=="ritual_material" and npc.special_needs.get("occult_supply",100)<45:
+        reserve=max(reserve,1)
+    if item.id in npc.equipped_item_ids:
+        reserve=max(reserve,1)
+    return reserve
+
+
+def choose_npc_shop_purchase(world,npc,scene):
+    choices=[]
+    for shop in world.shops.values():
+        if shop.scene_id!=scene.id or world.phase.value not in shop.open_phases:
+            continue
+        inventory=world.inventories[shop.inventory_id]
+        for item_id,quantity in inventory.quantities.items():
+            item=world.item_catalog.get(item_id)
+            if not item or quantity<=0 or not item.tradeable:
+                continue
+            need=npc_item_need_score(npc,item)
+            if world.economy.actor_inventory(npc.id).quantity(item_id)>0 and not item.consumable:
+                need-=30
+            urgent=need>=65
+            price=world.economy._unit_price(shop,item,"buy")
+            if need>=20 and price<=npc_trade_budget(npc,urgent):
+                choices.append((-need,price,shop.id,item_id))
+    if not choices:
+        return None
+    _,_,shop_id,item_id=min(choices)
+    return shop_id,item_id,1
+
+
+def choose_npc_shop_sale(world,npc,scene):
+    pressure=npc.needs.get("financial_pressure",max(0,100-npc.wealth))
+    if pressure<70 and npc.wealth>=12:
+        return None
+    choices=[]
+    inventory=world.economy.actor_inventory(npc.id)
+    for item_id,quantity in inventory.quantities.items():
+        item=world.item_catalog.get(item_id)
+        if (not item or quantity<=npc_item_reserve(world,npc,item) or not item.tradeable
+                or npc_item_need_score(npc,item)>=55):
+            continue
+        for shop in world.shops.values():
+            if shop.scene_id!=scene.id or world.phase.value not in shop.open_phases:
+                continue
+            quote,error=world.economy.quote(
+                world,actor_id=npc.id,shop_id=shop.id,item_id=item_id,
+                quantity=1,direction="sell")
+            if quote and error is None and shop.cash>=quote.total_price:
+                choices.append((-quote.total_price,shop.id,item_id))
+    if not choices:
+        return None
+    _,shop_id,item_id=min(choices)
+    return shop_id,item_id,1
+
+
+def choose_peer_trade_candidate(world,buyer,scene):
+    """Find a colocated non-shop transaction worth negotiating."""
+    buyer_inventory=world.economy.actor_inventory(buyer.id)
+    choices=[]
+    for seller in world.npcs.values():
+        if seller.id==buyer.id or not npc_can_act(seller) or seller.current_scene!=scene.id:
+            continue
+        seller_inventory=world.economy.actor_inventory(seller.id)
+        seller_relation=seller.relationships.get(buyer.id,Relationship())
+        for item_id,quantity in seller_inventory.quantities.items():
+            item=world.item_catalog.get(item_id)
+            if not item or quantity<=0 or not item.tradeable:
+                continue
+            need=npc_item_need_score(buyer,item)
+            buyer_is_trader=world.economy.is_professional_trader(world,buyer.id)
+            seller_is_trader=world.economy.is_professional_trader(world,seller.id)
+            if buyer_is_trader and buyer_inventory.quantity(item_id)<2:
+                need=max(need,30)
+            if (buyer_inventory.quantity(item_id)>0 and not item.consumable
+                    and not buyer_is_trader):
+                need-=30
+            seller_need=npc_item_need_score(seller,item)
+            seller_pressure=seller.needs.get("financial_pressure",max(0,100-seller.wealth))
+            surplus=quantity-npc_item_reserve(world,seller,item)
+            seller_score=(seller_pressure*0.62+seller_relation.trust*0.25
+                          +seller.personality.get("social",50)*0.10
+                          +max(0,surplus-1)*14-seller_relation.suspicion*0.75-seller_need*0.48)
+            if seller_is_trader:
+                seller_score+=38
+            if item.legality!="legal" and seller.personality.get("morality",50)>60:
+                seller_score-=35
+            if (need<22 or surplus<=0 or seller_score<36
+                    or world.economy.peer_trade_cooldown_remaining(world,seller.id,item_id)
+                    or world.economy.peer_trade_cooldown_remaining(world,buyer.id,item_id)
+                    or world.economy.peer_quote_recent(world,seller.id,buyer.id,item_id)):
+                continue
+            remembered=world.economy.recent_accepted_unit_price(seller.id,item_id) or item.base_price
+            markup=(14-seller_pressure*0.12+seller_relation.suspicion*0.20
+                    -seller_relation.trust*0.08+seller.personality.get("ambition",50)*0.05)
+            reference=(item.base_price*2+remembered)/3
+            unit_price=max(1,round(reference*(1.0+markup/100)))
+            if unit_price<=buyer.wealth:
+                choices.append((-need,unit_price,seller.id,item_id))
+    if not choices:
+        return None
+    _,unit_price,seller_id,item_id=min(choices)
+    return seller_id,item_id,1,unit_price
+
+
+def create_peer_trade_offer(world,*,seller_id,buyer_id,item_id,quantity,unit_price):
+    offer,error=world.economy.create_peer_offer(
+        world,seller_id=seller_id,buyer_id=buyer_id,item_id=item_id,
+        quantity=quantity,unit_price=unit_price)
+    if error is not None:
+        return None,error,None
+    seller=world.npcs[seller_id]; buyer=world.npcs[buyer_id]
+    item=world.item_catalog[item_id]
+    event=make_event(
+        world,"PEER_TRADE_OFFERED",
+        f"{seller.name} 向 {buyer.name} 报价：{quantity} × {item.name}，"
+        f"共 {offer.total_price} {world.economy.currency}。",
+        [seller_id,buyer_id],offer.scene_id,severity=1,emotion=1,
+        tags=["trade","peer_trade","offer"],object_ids=[item_id],
+        level=EventLevel.BACKGROUND.value)
+    return offer,None,event
+
+
+def respond_peer_trade_offer(world,*,offer_id,responder_id,accept,reason=""):
+    offer=world.economy.peer_offers.get(offer_id)
+    receipt=world.economy.respond_peer_offer(
+        world,offer_id=offer_id,responder_id=responder_id,accept=accept,reason=reason)
+    if offer is None:
+        return receipt,None
+    seller=world.npcs.get(offer.seller_id); buyer=world.npcs.get(offer.buyer_id)
+    item=world.item_catalog.get(offer.item_id)
+    if receipt.success:
+        event=make_event(
+            world,"PEER_TRADE_ACCEPTED",receipt.message,
+            [offer.seller_id,offer.buyer_id],offer.scene_id,severity=1,emotion=2,
+            tags=["trade","peer_trade","accepted"],object_ids=[offer.item_id],
+            level=EventLevel.BACKGROUND.value)
+        receipt.event_id=event.event_id
+        offer.settled_event_id=event.event_id
+        world.ledger.emit(
+            day=world.day,phase=world.phase.value,system="peer_trade_system",
+            event_type="PEER_TRADE_SETTLED",message=receipt.message,
+            actor_ids=[offer.seller_id,offer.buyer_id],scene_id=offer.scene_id,
+            payload=asdict(receipt),trace_id=event.trace_id,parent_id=event.event_id)
+        return receipt,event
+    event=make_event(
+        world,"PEER_TRADE_REJECTED",
+        f"{buyer.name if buyer else responder_id} 拒绝了 "
+        f"{seller.name if seller else offer.seller_id} 对 {item.name if item else offer.item_id} 的报价："
+        f"{receipt.message}",
+        [offer.seller_id,offer.buyer_id],offer.scene_id,severity=1,emotion=1,
+        tags=["trade","peer_trade","rejected"],object_ids=[offer.item_id],
+        level=EventLevel.BACKGROUND.value)
+    receipt.event_id=event.event_id
+    return receipt,event
+
+
+def use_purchased_item(world,npc,item_id,source_event):
+    item=world.item_catalog[item_id]
+    should_use=(item.category=="food" and npc.states.get("satiety",70)<70)
+    should_use|=(item.category=="medicine" and (npc.health<90 or npc.states.get("pain",0)>20))
+    should_use|=("alertness" in item.tags and npc.states.get("energy",70)<45)
+    if not item.consumable or not should_use:
+        return source_event
+    receipt=execute_item_use(world,actor_id=npc.id,item_id=item_id,scene_id=npc.current_scene)
+    return next((event for event in reversed(world.events_by_day[world.day])
+                 if event.event_id==receipt.event_id),source_event)
+
+
+def execute_npc_shopping(world,npc,scene):
+    """Spend this phase's SHOP action on one shop or peer transaction."""
+    purchase=choose_npc_shop_purchase(world,npc,scene)
+    urgent=False
+    if purchase:
+        urgent=npc_item_need_score(npc,world.item_catalog[purchase[1]])>=65
+    sale=choose_npc_shop_sale(world,npc,scene)
+    if sale and not urgent:
+        shop_id,item_id,quantity=sale
+        action_id="SELL_ITEM"
+        result=world.action_registry.execute(
+            action_id,npc=npc,context=action_context(world,scene),
+            shop_id=shop_id,item_id=item_id,quantity=quantity)
+        world.ledger.emit(
+            day=world.day,phase=world.phase.value,system="action_registry",
+            event_type="REGISTERED_ACTION_RESOLVED",message=result.message,
+            actor_ids=[npc.id],scene_id=scene.id,payload=asdict(result))
+        return next((event for event in reversed(world.events_by_day[world.day])
+                     if event.event_id==result.event_id),None)
+
+    peer=choose_peer_trade_candidate(world,npc,scene)
+    if peer:
+        seller_id,item_id,quantity,unit_price=peer
+        item=world.item_catalog[item_id]
+        need=npc_item_need_score(npc,item)
+        relation=npc.relationships.get(seller_id,Relationship())
+        remembered=world.economy.recent_accepted_unit_price(npc.id,item_id) or item.base_price
+        willingness=max(1,round(remembered*(0.88+need/110+relation.trust/600)))
+        affordable=unit_price*quantity<=npc_trade_budget(npc,need>=65)
+        premium=max(0,(unit_price-remembered)*100/max(1,remembered))
+        variation=((sum(ord(char) for char in npc.id+seller_id+item_id)+world.day*17)%21)-10
+        acceptance=(need*0.75+relation.trust*0.30+npc.personality.get("social",50)*0.10
+                    +npc.personality.get("risk",50)*0.08-relation.suspicion*0.75
+                    -npc.needs.get("financial_pressure",0)*0.30-premium*0.60+variation)
+        if world.economy.is_professional_trader(world,npc.id):
+            acceptance+=18
+        accepted=(affordable and unit_price<=willingness and acceptance>=28
+                  and relation.suspicion<75)
+        reason=("价格和当前需求可以接受" if accepted else
+                "资金不足或报价超过当前愿付价格")
+        seller=world.npcs[seller_id]
+        result=world.action_registry.execute(
+            "TRADE_WITH_NPC",npc=npc,context=action_context(world,scene),
+            target=seller,item_id=item_id,quantity=quantity,
+            unit_price=unit_price,accept=accepted,reason=reason)
+        world.ledger.emit(
+            day=world.day,phase=world.phase.value,system="action_registry",
+            event_type="REGISTERED_ACTION_RESOLVED",message=result.message,
+            actor_ids=[seller_id,npc.id],scene_id=scene.id,payload=asdict(result))
+        event=next((event for event in reversed(world.events_by_day[world.day])
+                    if event.event_id==result.event_id),None)
+        return use_purchased_item(world,npc,item_id,event) if result.outcome=="success" else event
+
+    if purchase:
+        shop_id,item_id,quantity=purchase
+        result=world.action_registry.execute(
+            "BUY_ITEM",npc=npc,context=action_context(world,scene),
+            shop_id=shop_id,item_id=item_id,quantity=quantity)
+        world.ledger.emit(
+            day=world.day,phase=world.phase.value,system="action_registry",
+            event_type="REGISTERED_ACTION_RESOLVED",message=result.message,
+            actor_ids=[npc.id],scene_id=scene.id,payload=asdict(result))
+        event=next((event for event in reversed(world.events_by_day[world.day])
+                    if event.event_id==result.event_id),None)
+        return use_purchased_item(world,npc,item_id,event) if result.success else event
+
+    return make_event(
+        world,"NPC_TRADE_SKIPPED",
+        f"{npc.name} 在 {scene.name} 没有找到营业中、买得起且符合当前需求的交易。",
+        [npc.id],scene.id,severity=1,tags=["trade","no_transaction"],
+        level=EventLevel.BACKGROUND.value)
 
 
 def discover_trace_evidence(world,npc,scene):
@@ -1831,13 +2587,17 @@ def stop_illegal_ritual(world,npc,scene):
     return event
 
 
-def create_crime_trace(world,npc,scene,crime_type):
+def create_crime_trace(world,npc,scene,crime_type,weapon_instance=None):
+    payload={"suspect_id":npc.id,"crime_type":crime_type}
+    if weapon_instance is not None:
+        payload.update({"item_id":weapon_instance.item_id,
+                        "instance_id":weapon_instance.id})
     trace=TraceEvidence(
         id=f"trace_evidence_{uuid.uuid4().hex[:10]}",trace_type=crime_type,
         scene_id=scene.id,created_day=world.day,created_phase=world.phase.value,
         source_action_id=crime_type.upper(),source_actor_ids=[npc.id],
         discoverability=world.rng.randint(35,80),occult=False,
-        payload={"suspect_id":npc.id,"crime_type":crime_type})
+        payload=payload)
     world.ritual_engine.traces[trace.id]=trace
     return trace
 
@@ -1889,10 +2649,12 @@ def execute_special_need_behavior(world,npc,scene,plan):
             present=[other for other in world.npcs.values()
                      if npc_can_act(other) and other.id!=npc.id and other.current_scene==scene.id]
             victim=max(present,key=lambda item:item.wealth,default=None)
-        trace=create_crime_trace(world,npc,scene,b.lower())
+        weapon_instance=equipped_weapon(world,npc.id) if b=="COMMIT_ASSAULT" else None
+        trace=create_crime_trace(world,npc,scene,b.lower(),weapon_instance)
         difficulty=58+scene.security//4
         skill="combat" if b=="COMMIT_ASSAULT" else "stealth"
-        total=world.rng.randint(1,100)+npc.skills.get(skill,0)+sequence_modifier(npc,skill)
+        total=(world.rng.randint(1,100)+npc.skills.get(skill,0)+sequence_modifier(npc,skill)
+               +item_skill_modifier(npc,skill))
         success=total>=difficulty and victim is not None
         labels={"COMMIT_BURGLARY":"入室盗窃","COMMIT_PICKPOCKET":"扒窃",
                 "COMMIT_ASSAULT":"暴力勒索"}
@@ -1906,7 +2668,12 @@ def execute_special_need_behavior(world,npc,scene,plan):
                 f"{npc.name} 对 {victim.name} 实施{labels[b]}并取得价值 {amount} 的财物。",
                 [npc.id,victim.id],scene.id,severity=7,conflict=8,danger=7,
                 secret=7,emotion=8,tags=["crime",b.lower(),"consequence"],
-                object_ids=[trace.id])
+                object_ids=[trace.id]+([weapon_instance.id] if weapon_instance else []))
+            if weapon_instance is not None:
+                evidence_tag=f"assault_day_{world.day}"
+                if evidence_tag not in weapon_instance.evidence_tags:
+                    weapon_instance.evidence_tags.append(evidence_tag)
+                weapon_instance.provenance_event_ids.append(event.event_id)
             npc.special_needs["crime_control"]=min(100,npc.special_needs.get("crime_control",0)+65)
             change_state(world,npc,"legal_risk",8,"犯罪留下可调查痕迹",event)
             if b=="COMMIT_ASSAULT":
@@ -1929,7 +2696,12 @@ def execute_special_need_behavior(world,npc,scene,plan):
             f"{npc.name} 尝试{labels[b]}失败，被受害者或现场人员察觉。",
             [npc.id]+([victim.id] if victim else []),scene.id,severity=7,conflict=8,
             danger=6,secret=3,emotion=8,tags=["crime","exposure","witness"],
-            object_ids=[trace.id])
+            object_ids=[trace.id]+([weapon_instance.id] if weapon_instance else []))
+        if weapon_instance is not None:
+            evidence_tag=f"assault_attempt_day_{world.day}"
+            if evidence_tag not in weapon_instance.evidence_tags:
+                weapon_instance.evidence_tags.append(evidence_tag)
+            weapon_instance.provenance_event_ids.append(event.event_id)
         npc.special_needs["crime_control"]=min(100,npc.special_needs.get("crime_control",0)+35)
         change_state(world,npc,"legal_risk",32,"犯罪未遂被目击",event)
         case=CaseFile(f"case_{len(world.cases)+1:03d}",b.lower(),"open",[],[],[trace.id],
@@ -1958,22 +2730,17 @@ def execute_special_need_behavior(world,npc,scene,plan):
         return event
     if b in {"PERFORM_LEGAL_RITUAL","PERFORM_INDEPENDENT_RITUAL"}:
         illegal=b=="PERFORM_INDEPENDENT_RITUAL"
-        total=world.rng.randint(1,100)+npc.skills.get("ritual",0)+sequence_modifier(npc,"ritual")
-        success=total>=72
-        trace=TraceEvidence(
-            f"trace_evidence_{uuid.uuid4().hex[:10]}","spiritual_residue",scene.id,
-            world.day,world.phase.value,b,[npc.id],65 if illegal else 25,True,
-            payload={"legal":not illegal,"success":success})
-        world.ritual_engine.traces[trace.id]=trace
-        event=make_event(world,"RITUAL_PERFORMED" if success else "RITUAL_FAILED",
-            f"{npc.name} 举行了{'非法秘密' if illegal else '受监管的合法'}仪式，结果为{'成功' if success else '失败'}。",
-            [npc.id],scene.id,severity=8 if illegal else 4,conflict=7 if illegal else 1,
-            danger=7 if illegal else 3,secret=9 if illegal else 3,emotion=6,
-            tags=["ritual","illegal" if illegal else "legal","occult"],object_ids=[trace.id],
-            conflict_ids=["conflict:tingen_occult_war"] if illegal else [])
+        receipt=execute_item_ritual(
+            world,actor_id=npc.id,illegal=illegal,scene_id=scene.id)
+        event=next(
+            (candidate for candidate in reversed(world.events_by_day[world.day])
+             if candidate.event_id==receipt.event_id),None)
+        if event is None:
+            raise RuntimeError("ritual action did not create an event")
+        if receipt.check is None:
+            return event
         npc.special_needs["ritual_stability"]=min(100,npc.special_needs.get("ritual_stability",0)+70)
-        if illegal: change_state(world,npc,"legal_risk",18,"非法仪式留下灵性痕迹",event)
-        if not success:
+        if not receipt.ritual_succeeded:
             npc.sanity=max(1,npc.sanity-world.rng.randint(3,12))
         return event
     if b=="SEARCH_OCCULT_ITEM":
@@ -2083,16 +2850,7 @@ def execute_behavior(world,npc,scene,plan):
         change_state(world,npc,"loneliness",-18,"与他人共同活动")
         change_state(world,npc,"stress",-5,"社交活动缓解压力")
     elif b=="SHOP":
-        if npc.wealth>5:
-            food=world.objects["object:market_food_crate"]
-            price=max(1,food.value)
-            npc.wealth -= price
-            food.quantity=max(0,food.quantity-1)
-            purchase=make_event(world,"ITEM_BOUGHT_AND_USED",
-                                f"{npc.name} 在 {scene.name} 购买并食用了一份 {food.name} 中的食物。",
-                                [npc.id],scene.id,severity=1,emotion=2,tags=["trade","food"],
-                                object_ids=[food.id],level=EventLevel.BACKGROUND.value)
-            change_state(world,npc,"satiety",50,"购买并食用食物",purchase)
+        return execute_npc_shopping(world,npc,scene)
     elif b=="INVESTIGATE_LOCATION":
         before={obj.id for obj in world.objects.values() if npc.id in obj.discovered_by}
         search_hidden_objects(world,npc,scene)
@@ -2538,14 +3296,43 @@ def advance_illegal_operations(world,phase):
                         and npc.layer==target_layer]
             if candidates:
                 operation.target_id=world.rng.choice(candidates).id
+        consumed_materials={}
+        material_bonus=0
+        if action_id=="PERFORM_SECRET_RITUAL":
+            consumed_materials,missing=world.ritual_materials.consume_required(
+                world,leader.id,True)
+            if missing:
+                names="、".join(
+                    f"{world.item_catalog[item_id].name}×{quantity}"
+                    for item_id,quantity in missing.items())
+                event=make_event(
+                    world,"RITUAL_BLOCKED_MISSING_MATERIAL",
+                    f"{leader.name} 的长期秘密仪式因缺少 {names} 而无法开始。",
+                    [leader.id],operation.scene_id,severity=5,conflict=4,danger=2,
+                    secret=8,tags=["ritual","illegal_operation","blocked","materials"],
+                    object_ids=list(missing),organization_ids=[operation.owner_faction_id],
+                    conflict_ids=["conflict:tingen_occult_war"])
+                operation.result_event_ids.append(event.event_id)
+                world.ledger.emit(
+                    day=world.day,phase=phase.value,system="plot_module",
+                    event_type="OPERATION_STAGE_BLOCKED",message=event.description,
+                    actor_ids=[leader.id],scene_id=operation.scene_id,
+                    payload={"operation_id":operation.id,"stage":stage.id,
+                             "missing_items":missing})
+                continue
+            material_bonus=world.ritual_materials.material_bonus(world,True)
+            world.ritual_materials.apply_material_side_effects(world,leader.id,True)
         roll=world.rng.randint(1,100)
         modifier=(leader.skills.get("ritual",0)+sequence_modifier(leader,"ritual")
-                  +leader.skills.get("stealth",0)//2)
+                  +leader.skills.get("stealth",0)//2+material_bonus)
         difficulty=[45,55,65,75,60][operation.current_stage_index]
         margin=roll+modifier-difficulty
         outcome=check_outcome(margin)
         trace=world.ritual_engine.advance(operation,day=world.day,phase=phase.value,
                                           action_id=action_id,actor_ids=[leader.id],outcome=outcome)
+        if trace and consumed_materials:
+            trace.payload["consumed_items"]=dict(consumed_materials)
+            trace.payload["material_bonus"]=material_bonus
         descriptions={
             "SELECT_RITUAL_TARGET":"秘密筛选适合仪式的目标",
             "COLLECT_RITUAL_MATERIALS":"通过隐蔽渠道收集仪式材料",
@@ -2558,7 +3345,8 @@ def advance_illegal_operations(world,phase):
             [leader.id],operation.scene_id,severity=6 if action_id!="PERFORM_SECRET_RITUAL" else 9,
             conflict=7,danger=8 if action_id=="PERFORM_SECRET_RITUAL" else 4,secret=9,emotion=6,
             tags=["hostile_beyonder","illegal_operation","ritual",action_id.lower()],
-            object_ids=[trace.id] if trace else [],organization_ids=[operation.owner_faction_id],
+            object_ids=([trace.id] if trace else [])+list(consumed_materials),
+            organization_ids=[operation.owner_faction_id],
             conflict_ids=["conflict:tingen_occult_war"])
         operation.result_event_ids.append(event.event_id)
         world.ledger.emit(day=world.day,phase=phase.value,system="plot_module",
@@ -2566,7 +3354,9 @@ def advance_illegal_operations(world,phase):
                           actor_ids=[leader.id],scene_id=operation.scene_id,
                           payload={"operation_id":operation.id,"stage":stage.id,"roll":roll,
                                    "modifier":modifier,"difficulty":difficulty,"margin":margin,
-                                   "outcome":outcome,"trace_id":trace.id if trace else None})
+                                   "outcome":outcome,"trace_id":trace.id if trace else None,
+                                   "consumed_items":consumed_materials,
+                                   "material_bonus":material_bonus})
         if operation.status=="completed":
             operation.outcome_type="ritual_succeeded"
             resolve_operation_consequences(world,operation)
@@ -2747,6 +3537,14 @@ def simulate_scene(world,scene,occupants,detailed):
 
 def simulate_phase(world,phase):
     world.phase=phase
+    for effect in world.item_effect_system.expire(world):
+        actor_scene=(world.player_scene if effect.actor_id=="player" else
+                     world.npcs[effect.actor_id].current_scene)
+        world.ledger.emit(
+            day=world.day,phase=phase.value,system="item_effect_system",
+            event_type="ITEM_EFFECT_EXPIRED",
+            message=f"{effect.source_item_id} 提供的 {effect.effect} 效果已经结束。",
+            actor_ids=[effect.actor_id],scene_id=actor_scene,payload=asdict(effect))
     phase_event_start=len(world.events_by_day[world.day])
     if world.cfg.verbose: print(f"\n=== Day {world.day} / {phase.value} ===")
     fire_scheduled_phase_events(world,phase)
@@ -3100,12 +3898,27 @@ def resolve_end_of_day(world):
     world.ledger.emit(day=world.day,phase="night_resolution",system="night_resolution",
                       event_type="DAY_RESOLUTION_START",message=f"开始结算 Day {world.day}，共 {len(events)} 条白天事件。")
     write_memories_from_events(world,events)
+    decayed_intel=world.intelligence.decay_day(world.day)
+    if decayed_intel:
+        world.ledger.emit(
+            day=world.day,phase="night_resolution",system="intelligence_system",
+            event_type="INTELLIGENCE_RECALL_DECAYED",
+            message=f"日终处理了 {len(decayed_intel)} 份角色情报记忆；笔记记录享受较慢衰减。",
+            payload={"count":len(decayed_intel),
+                     "recorded_count":sum(1 for _,_,recorded in decayed_intel if recorded)})
     update_beliefs_from_events(world,events)
     update_story_threads_from_events(world,events)
     for case in world.cases.values():
         advance_case_stage(world,case)
     maintain_case_backlog(world)
     restock_essential_supplies(world)
+    expired_offers=world.economy.expire_peer_offers(world)
+    if expired_offers:
+        world.ledger.emit(
+            day=world.day,phase="night_resolution",system="peer_trade_system",
+            event_type="PEER_TRADE_OFFERS_EXPIRED",
+            message=f"{len(expired_offers)} 份未成交的 NPC 报价在日终失效。",
+            payload={"offer_ids":expired_offers})
     for npc in world.npcs.values():
         if npc.alive:
             update_daily_character_states(world,npc)
@@ -3287,13 +4100,28 @@ def plan_tomorrow(world):
 
 def save_snapshot(world):
     data={
-        "day":world.day,"player_scene":world.player_scene,
+        "schema_version":2,"day":world.day,"player_scene":world.player_scene,
         "player":{"wealth":world.player_wealth,
+                  "health":world.player_health,"sanity":world.player_sanity,
+                  "states":world.player_states,"item_effects":world.player_item_effects,
+                  "item_effect_records":[asdict(effect) for effect in world.player_item_effect_records],
+                  "equipped_item_ids":world.player_equipped_item_ids,
+                  "equipment_slots":world.player_equipment_slots,
+                  "knowledge":world.player_knowledge,
+                  "skills":world.player_skills,
                   "inventory":world.economy.public_inventory("player")},
         "item_catalog":{item_id:asdict(item) for item_id,item in world.item_catalog.items()},
         "inventories":{owner_id:asdict(inventory)
                        for owner_id,inventory in world.inventories.items()},
+        "item_instances":world.item_instances.public_instances(),
+        "passages":{passage_id:asdict(passage)
+                    for passage_id,passage in world.passages.passages.items()},
         "shops":{shop_id:asdict(shop) for shop_id,shop in world.shops.items()},
+        "peer_trade_offers":{offer_id:asdict(offer)
+                             for offer_id,offer in world.economy.peer_offers.items()},
+        "trade_memories":[asdict(memory) for memory in world.economy.trade_memories[-1000:]],
+        "peer_trade_cooldowns":dict(world.economy.last_peer_trade_day),
+        "peer_trade_daily_counts":dict(world.economy.peer_trade_daily_counts),
         "long_term_goals":{gid:asdict(goal) for gid,goal in world.long_term_goals.items()},
         "scenes":{sid:asdict(scene) for sid,scene in world.scenes.items()},
         "objects":{oid:asdict(obj) for oid,obj in world.objects.items()},
@@ -3331,7 +4159,12 @@ def save_snapshot(world):
             "dominant_desires":[asdict(d) for d in world.desire_engine.dominant(n,world)],
             "memories":[asdict(m) for m in n.memories[-20:]],
             "daily_plan":{k:asdict(v) for k,v in n.daily_plan.items()},
-            "action_chain":n.action_chain,"long_term_goal_ids":n.long_term_goal_ids
+            "action_chain":n.action_chain,"long_term_goal_ids":n.long_term_goal_ids,
+            "item_effects":n.item_effects,
+            "item_effect_records":[asdict(effect) for effect in n.item_effect_records],
+            "equipped_item_ids":n.equipped_item_ids,"equipment_slots":n.equipment_slots,
+            "recent_trade_memories":[asdict(memory)
+                                     for memory in world.economy.recent_memories(n.id,12)]
         } for nid,n in world.npcs.items()},
         "story_threads":{k:asdict(v) for k,v in world.story_threads.items()},
         "commissions":[asdict(c) for c in world.commissions]

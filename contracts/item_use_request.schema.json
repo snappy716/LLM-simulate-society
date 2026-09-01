@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/item_use_request.schema.json",
+  "title": "Item use request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["actor_id", "item_id"],
+  "properties": {
+    "actor_id": {"type": "string", "minLength": 1},
+    "item_id": {"type": "string", "minLength": 1}
+  }
+}

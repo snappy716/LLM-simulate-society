@@ -18,6 +18,9 @@ extends CanvasLayer
 @onready var inventory_list: ItemList = $TradePanel/Window/InventoryList
 @onready var buy_button: Button = $TradePanel/Window/BuyButton
 @onready var sell_button: Button = $TradePanel/Window/SellButton
+@onready var use_button: Button = $TradePanel/Window/UseButton
+@onready var equip_button: Button = $TradePanel/Window/EquipButton
+@onready var drop_button: Button = $TradePanel/Window/DropButton
 @onready var trade_status: Label = $TradePanel/Window/Status
 
 var roster_ids: Array[String] = []
@@ -42,10 +45,15 @@ func _ready() -> void:
 	inventory_list.item_selected.connect(_select_inventory_item)
 	buy_button.pressed.connect(_buy_selected_item)
 	sell_button.pressed.connect(_sell_selected_item)
+	use_button.pressed.connect(_use_selected_item)
+	equip_button.pressed.connect(_equip_selected_item)
+	drop_button.pressed.connect(_drop_selected_item)
 	SimulationBridge.snapshot_updated.connect(_apply_snapshot)
 	SimulationBridge.connection_state_changed.connect(_connection_changed)
 	SimulationBridge.advance_state_changed.connect(_advance_state_changed)
 	SimulationBridge.trade_completed.connect(_trade_completed)
+	SimulationBridge.item_use_completed.connect(_item_use_completed)
+	SimulationBridge.action_completed.connect(_action_completed)
 	if not SimulationBridge.snapshot.is_empty():
 		_apply_snapshot(SimulationBridge.snapshot)
 
@@ -243,6 +251,10 @@ func _rebuild_player_inventory(player: Dictionary) -> void:
 		inventory_item_ids.append(String(entry.get("id", "")))
 		inventory_list.add_item("%s × %d\n%s" % [entry.get("name", ""), int(entry.get("quantity", 0)), entry.get("category", "")])
 	sell_button.disabled = true
+	use_button.disabled = true
+	equip_button.disabled = true
+	drop_button.disabled = true
+	equip_button.text = "装备所选物品"
 
 
 func _select_shop(index: int) -> void:
@@ -266,6 +278,14 @@ func _select_inventory_item(index: int) -> void:
 	selected_inventory_item_id = inventory_item_ids[index]
 	var shop: Dictionary = (SimulationBridge.snapshot.get("shops", {}) as Dictionary).get(selected_shop_id, {})
 	sell_button.disabled = not bool(shop.get("is_open", false))
+	var uses: Dictionary = SimulationBridge.snapshot.get("item_uses", {})
+	var use_definition: Dictionary = uses.get(selected_inventory_item_id, {})
+	var equipped: Array = (SimulationBridge.snapshot.get("player", {}) as Dictionary).get("equipped_item_ids", [])
+	var is_equipped := equipped.has(selected_inventory_item_id)
+	use_button.disabled = String(use_definition.get("mode", "")) == "equip"
+	equip_button.disabled = not is_equipped and String(use_definition.get("mode", "")) != "equip"
+	equip_button.text = "卸下所选装备" if is_equipped else "装备所选物品"
+	drop_button.disabled = is_equipped
 
 
 func _buy_selected_item() -> void:
@@ -274,6 +294,9 @@ func _buy_selected_item() -> void:
 	trade_status.text = "正在结算购买……"
 	buy_button.disabled = true
 	sell_button.disabled = true
+	use_button.disabled = true
+	equip_button.disabled = true
+	drop_button.disabled = true
 	SimulationBridge.trade(selected_shop_id, selected_stock_item_id, "buy", 1)
 
 
@@ -283,9 +306,60 @@ func _sell_selected_item() -> void:
 	trade_status.text = "正在结算出售……"
 	buy_button.disabled = true
 	sell_button.disabled = true
+	use_button.disabled = true
+	equip_button.disabled = true
+	drop_button.disabled = true
 	SimulationBridge.trade(selected_shop_id, selected_inventory_item_id, "sell", 1)
+
+
+func _use_selected_item() -> void:
+	if selected_inventory_item_id.is_empty():
+		return
+	trade_status.text = "正在使用物品……"
+	buy_button.disabled = true
+	sell_button.disabled = true
+	use_button.disabled = true
+	equip_button.disabled = true
+	drop_button.disabled = true
+	SimulationBridge.use_item(selected_inventory_item_id)
+
+
+func _equip_selected_item() -> void:
+	if selected_inventory_item_id.is_empty():
+		return
+	var equipped: Array = (SimulationBridge.snapshot.get("player", {}) as Dictionary).get("equipped_item_ids", [])
+	var action_id := "UNEQUIP_ITEM" if equipped.has(selected_inventory_item_id) else "EQUIP_ITEM"
+	trade_status.text = "正在结算装备行动……"
+	equip_button.disabled = true
+	drop_button.disabled = true
+	use_button.disabled = true
+	SimulationBridge.perform_action(action_id, {"item_id": selected_inventory_item_id})
+
+
+func _drop_selected_item() -> void:
+	if selected_inventory_item_id.is_empty():
+		return
+	trade_status.text = "正在把物品放到当前场景……"
+	equip_button.disabled = true
+	drop_button.disabled = true
+	use_button.disabled = true
+	SimulationBridge.perform_action("DROP_ITEM", {
+		"item_id": selected_inventory_item_id,
+		"quantity": 1,
+	})
 
 
 func _trade_completed(success: bool, result: Dictionary) -> void:
 	var trade: Dictionary = result.get("trade", {})
 	trade_status.text = ("成功：" if success else "失败：") + String(trade.get("message", "未知交易结果"))
+
+
+func _item_use_completed(success: bool, result: Dictionary) -> void:
+	var item_use: Dictionary = result.get("item_use", {})
+	trade_status.text = ("成功：" if success else "失败：") + String(item_use.get("message", "未知使用结果"))
+
+
+func _action_completed(success: bool, result: Dictionary) -> void:
+	var action: Dictionary = result.get("action", {})
+	var prefix := "成功：" if success else ("已执行但未成功：" if bool(result.get("performed", false)) else "失败：")
+	trade_status.text = prefix + String(action.get("message", "未知行动结果"))

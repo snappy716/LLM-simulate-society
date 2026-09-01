@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "placements": [
+    {"inventory_id": "scene:east_dock", "item_id": "hemp_rope", "quantity": 1, "legal_owner_id": "dock_authority"},
+    {"inventory_id": "scene:warehouse_3", "item_id": "warehouse_3_key", "quantity": 1, "legal_owner_id": "aurora_order_tingen"},
+    {"inventory_id": "scene:police_station", "item_id": "police_evidence_key", "quantity": 1, "legal_owner_id": "police_authority"},
+    {"inventory_id": "scene:red_moon_street", "item_id": "rusted_knife", "quantity": 1},
+    {"inventory_id": "scene:home_quarter", "item_id": "mystery_letter", "quantity": 1},
+    {"inventory_id": "scene:warehouse_3", "item_id": "sealed_music_box", "quantity": 1}
+  ]
+}

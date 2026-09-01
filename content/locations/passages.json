@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "passages": [
+    {
+      "id": "warehouse_3_side_door",
+      "name": "三号仓库侧门",
+      "scene_a": "east_dock",
+      "scene_b": "warehouse_3",
+      "state": "locked",
+      "allowed_methods": ["key", "lockpick", "force"],
+      "key_item_id": "warehouse_3_key",
+      "lock_difficulty": 82,
+      "force_difficulty": 62,
+      "force_noise": 72,
+      "legal_risk": 18,
+      "owner_id": "aurora_order_tingen",
+      "authorized_occupations": ["仓库管理员"]
+    },
+    {
+      "id": "warehouse_3_roof_entry",
+      "name": "三号仓库屋顶入口",
+      "scene_a": "east_dock",
+      "scene_b": "warehouse_3",
+      "state": "inaccessible",
+      "allowed_methods": ["rope"],
+      "climb_difficulty": 76,
+      "force_noise": 18,
+      "legal_risk": 14,
+      "owner_id": "aurora_order_tingen",
+      "authorized_occupations": ["仓库管理员"]
+    }
+  ]
+}

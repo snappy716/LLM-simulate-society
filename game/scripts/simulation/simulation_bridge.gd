@@ -5,6 +5,8 @@ signal connection_state_changed(connected: bool, message: String)
 signal advance_state_changed(busy: bool)
 signal interface_configured(success: bool, result: Dictionary)
 signal trade_completed(success: bool, result: Dictionary)
+signal item_use_completed(success: bool, result: Dictionary)
+signal action_completed(success: bool, result: Dictionary)
 
 const BASE_URL := "http://127.0.0.1:8765"
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
@@ -80,6 +82,36 @@ func trade(shop_id: String, item_id: String, direction: String, quantity: int = 
 		trade_completed.emit(false, {"trade": {"message": "无法发送交易请求：%s" % error}})
 
 
+func use_item(item_id: String) -> void:
+	if busy or not connected:
+		item_use_completed.emit(false, {"item_use": {"message": "模拟服务尚未连接或正在处理其他行动"}})
+		return
+	busy = true
+	_pending_operation = "use_item"
+	var body := JSON.stringify({"actor_id": "player", "item_id": item_id})
+	var error := _request.request(BASE_URL + "/use-item", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, body)
+	if error != OK:
+		busy = false
+		item_use_completed.emit(false, {"item_use": {"message": "无法发送物品使用请求：%s" % error}})
+
+
+func perform_action(action_id: String, parameters: Dictionary = {}) -> void:
+	if busy or not connected:
+		action_completed.emit(false, {"action": {"message": "模拟服务尚未连接或正在处理其他行动"}})
+		return
+	busy = true
+	_pending_operation = "action"
+	var payload := parameters.duplicate(true)
+	payload["actor_id"] = String(payload.get("actor_id", "player"))
+	payload["action_id"] = action_id
+	var error := _request.request(
+		BASE_URL + "/action", PackedStringArray(["Content-Type: application/json"]),
+		HTTPClient.METHOD_POST, JSON.stringify(payload))
+	if error != OK:
+		busy = false
+		action_completed.emit(false, {"action": {"message": "无法发送行动请求：%s" % error}})
+
+
 func phase_display_name(phase: String) -> String:
 	return {"morning": "上午", "afternoon": "下午", "evening": "晚间", "late_night": "深夜"}.get(phase, phase)
 
@@ -119,6 +151,19 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
 			busy = false
 			var trade_error = JSON.parse_string(body.get_string_from_utf8())
 			trade_completed.emit(false, trade_error if trade_error is Dictionary else {"trade": {"message": "交易失败，HTTP %d" % response_code}})
+		elif operation == "use_item":
+			busy = false
+			var use_error = JSON.parse_string(body.get_string_from_utf8())
+			item_use_completed.emit(false, use_error if use_error is Dictionary else {"item_use": {"message": "使用失败，HTTP %d" % response_code}})
+		elif operation == "action":
+			busy = false
+			var action_error = JSON.parse_string(body.get_string_from_utf8())
+			if action_error is Dictionary:
+				var failed_action_snapshot = action_error.get("snapshot", {})
+				if failed_action_snapshot is Dictionary:
+					snapshot = failed_action_snapshot
+					snapshot_updated.emit(snapshot)
+			action_completed.emit(false, action_error if action_error is Dictionary else {"action": {"message": "行动失败，HTTP %d" % response_code}})
 		else:
 			connected = false
 			return
@@ -138,6 +183,22 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
 			snapshot = trade_snapshot
 			snapshot_updated.emit(snapshot)
 		trade_completed.emit(bool(parsed.get("ok", false)), parsed)
+		return
+	if operation == "use_item":
+		busy = false
+		var use_snapshot = parsed.get("snapshot", {})
+		if use_snapshot is Dictionary:
+			snapshot = use_snapshot
+			snapshot_updated.emit(snapshot)
+		item_use_completed.emit(bool(parsed.get("ok", false)), parsed)
+		return
+	if operation == "action":
+		busy = false
+		var action_snapshot = parsed.get("snapshot", {})
+		if action_snapshot is Dictionary:
+			snapshot = action_snapshot
+			snapshot_updated.emit(snapshot)
+		action_completed.emit(bool(parsed.get("ok", false)), parsed)
 		return
 	snapshot = parsed
 	connected = true

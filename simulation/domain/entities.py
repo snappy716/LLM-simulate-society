@@ -286,6 +286,32 @@ class ActionCheckResult:
 
 
 @dataclass
+class EnvironmentCheckResult:
+    check_type: str
+    actor_id: str
+    target_id: Optional[str]
+    skill: str
+    difficulty: int
+    roll: int
+    modifiers: Dict[str, int]
+    total: int
+    margin: int
+    outcome: str
+
+
+@dataclass
+class ActionConsequences:
+    actor_id: str
+    scene_id: str
+    outcome: str
+    legal_risk_delta: int = 0
+    noise: int = 0
+    trace_ids: List[str] = field(default_factory=list)
+    item_condition_delta: int = 0
+    detected: bool = False
+
+
+@dataclass
 class NPC:
     id: str
     name: str
@@ -320,6 +346,10 @@ class NPC:
     daily_plan: Dict[str, PhasePlan] = field(default_factory=dict)
     action_chain: List[Dict[str, Any]] = field(default_factory=list)
     long_term_goal_ids: List[str] = field(default_factory=list)
+    item_effects: Dict[str, int] = field(default_factory=dict)
+    item_effect_records: List[Any] = field(default_factory=list)
+    equipped_item_ids: List[str] = field(default_factory=list)
+    equipment_slots: Dict[str, str] = field(default_factory=dict)
     alive: bool = True
     wealth: int = 50
     sanity: int = 80

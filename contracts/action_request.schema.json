@@ -9,8 +9,18 @@
     "actor_id": {"type": "string", "minLength": 1},
     "action_id": {"type": "string", "minLength": 1},
     "target_id": {"type": ["string", "null"]},
+    "inspector_id": {"type": ["string", "null"]},
     "object_id": {"type": ["string", "null"]},
     "scene_id": {"type": ["string", "null"]},
+    "item_id": {"type": ["string", "null"]},
+    "instance_id": {"type": ["string", "null"]},
+    "quantity": {"type": "integer", "minimum": 1, "default": 1},
+    "container_id": {"type": ["string", "null"]},
+    "passage_id": {"type": ["string", "null"]},
+    "slot": {"type": ["string", "null"]},
+    "fact_id": {"type": ["string", "null"]},
+    "difficulty_override": {"type": ["integer", "null"], "minimum": 1, "maximum": 200},
+    "illegal": {"type": "boolean", "default": false},
     "intent": {"type": "string", "default": ""}
   }
 }

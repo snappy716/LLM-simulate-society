@@ -30,6 +30,10 @@ class IntelFact:
     evidence_ids: List[str] = field(default_factory=list)
     contradicted_by: List[str] = field(default_factory=list)
     summary: str = ""
+    recorded_by: List[str] = field(default_factory=list)
+    record_source_instance_ids: Dict[str, str] = field(default_factory=dict)
+    recall_confidence: Dict[str, float] = field(default_factory=dict)
+    recall_distortion: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass

@@ -171,9 +171,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -430.0
-offset_top = -245.0
+offset_top = -275.0
 offset_right = 430.0
-offset_bottom = 245.0
+offset_bottom = 275.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -258,9 +258,30 @@ offset_right = 534.0
 offset_bottom = 476.0
 text = "购买所选物品 × 1"
 
+[node name="UseButton" type="Button" parent="TradePanel/Window"]
+offset_left = 14.0
+offset_top = 434.0
+offset_right = 224.0
+offset_bottom = 476.0
+text = "使用背包物品"
+
 [node name="SellButton" type="Button" parent="TradePanel/Window"]
 offset_left = 548.0
 offset_top = 434.0
 offset_right = 844.0
 offset_bottom = 476.0
 text = "出售所选物品 × 1"
+
+[node name="EquipButton" type="Button" parent="TradePanel/Window"]
+offset_left = 14.0
+offset_top = 486.0
+offset_right = 264.0
+offset_bottom = 528.0
+text = "装备所选物品"
+
+[node name="DropButton" type="Button" parent="TradePanel/Window"]
+offset_left = 278.0
+offset_top = 486.0
+offset_right = 528.0
+offset_bottom = 528.0
+text = "丢到当前场景"

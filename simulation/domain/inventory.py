@@ -30,6 +30,9 @@ class Inventory:
     owner_id: str
     max_weight: float = 30.0
     quantities: Dict[str, int] = field(default_factory=dict)
+    # Durable/story-bearing items keep stable instance ids while aggregate
+    # quantities remain the compatibility source for stacking and weight.
+    instance_ids: Dict[str, List[str]] = field(default_factory=dict)
 
     def quantity(self, item_id: str) -> int:
         return max(0, int(self.quantities.get(item_id, 0)))
@@ -88,6 +91,37 @@ class Shop:
     tags: List[str] = field(default_factory=list)
 
 
+@dataclass
+class ItemInstance:
+    """Mutable identity for a durable, equippable, or story-bearing item."""
+    id: str
+    item_id: str
+    inventory_id: str
+    condition: int = 100
+    created_day: int = 1
+    legal_owner_id: Optional[str] = None
+    equipped_slot: Optional[str] = None
+    evidence_tags: List[str] = field(default_factory=list)
+    provenance_event_ids: List[str] = field(default_factory=list)
+
+
+@dataclass
+class ItemTransferReceipt:
+    success: bool
+    code: str
+    message: str
+    action_id: str
+    actor_id: str
+    item_id: str
+    quantity: int
+    source_inventory_id: str = ""
+    destination_inventory_id: str = ""
+    target_id: Optional[str] = None
+    instance_ids: List[str] = field(default_factory=list)
+    legal_risk_delta: int = 0
+    event_id: Optional[str] = None
+
+
 @dataclass(frozen=True)
 class TradeQuote:
     direction: str
@@ -117,6 +151,65 @@ class TradeReceipt:
     event_id: Optional[str] = None
 
 
+@dataclass
+class PeerTradeOffer:
+    """A time-limited quote from one NPC to another.
+
+    Creating an offer never reserves or moves assets. Ownership, funds,
+    co-location and capacity are checked again when the recipient accepts it.
+    """
+
+    id: str
+    seller_id: str
+    buyer_id: str
+    item_id: str
+    quantity: int
+    unit_price: int
+    total_price: int
+    currency: str
+    scene_id: str
+    created_day: int
+    created_phase: str
+    expires_day: int
+    status: str = "pending"
+    response_reason: str = ""
+    settled_event_id: Optional[str] = None
+
+
+@dataclass
+class PeerTradeReceipt:
+    success: bool
+    code: str
+    message: str
+    offer_id: str
+    seller_id: str = ""
+    buyer_id: str = ""
+    item_id: str = ""
+    quantity: int = 0
+    unit_price: int = 0
+    total_price: int = 0
+    seller_balance: int = 0
+    buyer_balance: int = 0
+    event_id: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class TradeMemory:
+    actor_id: str
+    counterparty_id: str
+    kind: str
+    direction: str
+    item_id: str
+    quantity: int
+    unit_price: int
+    total_price: int
+    day: int
+    phase: str
+    status: str
+    offer_id: Optional[str] = None
+
+
 __all__ = [
-    "Inventory", "ItemDefinition", "Shop", "TradeQuote", "TradeReceipt",
+    "Inventory", "ItemDefinition", "PeerTradeOffer", "PeerTradeReceipt",
+    "Shop", "TradeMemory", "TradeQuote", "TradeReceipt",
 ]

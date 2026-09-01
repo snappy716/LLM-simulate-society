@@ -114,6 +114,13 @@ class SimulationBridge:
                 "relationships": meaningful_relations,
                 "long_term_goal_ids": npc.long_term_goal_ids,
                 "inventory": self.world.economy.public_inventory(npc_id),
+                "item_effects": npc.item_effects,
+                "item_effect_records":[asdict(effect) for effect in npc.item_effect_records],
+                "equipped_item_ids": npc.equipped_item_ids,
+                "equipment_slots":npc.equipment_slots,
+                "recent_trade_memories": [
+                    asdict(memory) for memory in self.world.economy.recent_memories(npc_id, 12)
+                ],
                 "appearance": self._appearance(npc_id),
             }
         shops = {}
@@ -134,20 +141,56 @@ class SimulationBridge:
                 "stock": stock,
             }
         player_inventory = self.world.inventories["player"]
+        scene_inventories = {
+            scene_id:self.world.economy.public_inventory(f"scene:{scene_id}")
+            for scene_id in public_scenes
+        }
+        container_inventories = {
+            object_id:self.world.economy.public_inventory(f"container:{object_id}")
+            for object_id,obj in self.world.objects.items()
+            if obj.object_type=="container"
+        }
         return {
-            "schema_version": 1, "revision": self.revision,
+            "schema_version": 2, "revision": self.revision,
             "day": self.world.day, "weekday": (self.world.day - 1) % 7,
             "phase": self.world.phase.value, "busy": self.busy,
             "player_scene": self.world.player_scene,
             "player": {
                 "id": "player", "wealth": self.world.player_wealth,
+                "health": self.world.player_health, "sanity": self.world.player_sanity,
+                "states": self.world.player_states,
+                "item_effects": self.world.player_item_effects,
+                "item_effect_records":[asdict(effect) for effect in self.world.player_item_effect_records],
+                "equipped_item_ids": self.world.player_equipped_item_ids,
+                "equipment_slots":self.world.player_equipment_slots,
+                "knowledge": self.world.player_knowledge,
+                "skills":self.world.player_skills,
                 "currency": self.world.economy.currency,
                 "inventory_weight": player_inventory.total_weight(self.world.item_catalog),
                 "inventory_capacity": player_inventory.max_weight,
                 "inventory": self.world.economy.public_inventory("player"),
             },
             "items": {item_id: asdict(item) for item_id, item in self.world.item_catalog.items()},
+            "item_uses": {item_id: asdict(definition)
+                          for item_id, definition in self.world.item_uses.definitions.items()},
+            "item_instances":self.world.item_instances.public_instances(),
+            "scene_inventories":scene_inventories,
+            "container_inventories":container_inventories,
+            "passages":{passage_id:asdict(passage)
+                        for passage_id,passage in self.world.passages.passages.items()},
+            "available_actions":self.world.action_registry.ids(),
+            "player_intelligence":[
+                asdict(fact) for fact in self.world.intelligence.known_facts("player")
+            ],
             "shops": shops,
+            "peer_trade_offers": {
+                offer_id: asdict(offer)
+                for offer_id, offer in self.world.economy.peer_offers.items()
+            },
+            "recent_trade_memories": [
+                asdict(memory) for memory in self.world.economy.trade_memories[-200:]
+            ],
+            "peer_trade_daily_counts": dict(self.world.economy.peer_trade_daily_counts),
             "scenes": public_scenes, "npcs": npcs,
             "new_events": self.last_events[-50:],
         }
@@ -231,6 +274,114 @@ class SimulationBridge:
             self.busy = False
             self.lock.release()
 
+    def use_item(self, payload: dict) -> dict:
+        if not self.lock.acquire(blocking=False):
+            raise RuntimeError("simulation is already advancing")
+        self.busy = True
+        try:
+            day = self.world.day
+            before = len(self.world.events_by_day[day])
+            receipt = sim.execute_item_use(
+                self.world,
+                actor_id=str(payload.get("actor_id", "player")),
+                item_id=str(payload.get("item_id", "")),
+            )
+            if receipt.success:
+                produced = self.world.events_by_day[day][before:]
+                self.last_events = [{
+                    "event_id": event.event_id, "day": event.day, "phase": event.phase,
+                    "event_type": event.event_type, "scene_id": event.scene_id,
+                    "actor_ids": event.actor_ids, "message": event.description,
+                    "tags": event.tags, "level": event.level,
+                } for event in produced]
+                self.revision += 1
+                snapshot = self._write_snapshot()
+            else:
+                snapshot = self.snapshot()
+            return {"ok": receipt.success, "item_use": asdict(receipt), "snapshot": snapshot}
+        finally:
+            self.busy = False
+            self.lock.release()
+
+    def action(self,payload: dict) -> dict:
+        if not self.lock.acquire(blocking=False):
+            raise RuntimeError("simulation is already advancing")
+        self.busy=True
+        try:
+            day=self.world.day
+            before=len(self.world.events_by_day[day])
+            action_id=str(payload.get("action_id",""))
+            actor_id=str(payload.get("actor_id","player"))
+            item_id=str(payload.get("item_id",""))
+            target_id=payload.get("target_id")
+            difficulty=payload.get("difficulty_override")
+            passage_actions={
+                "PICK_LOCK","FORCE_OPEN","UNLOCK_WITH_KEY",
+                "CLIMB_WITH_ROPE","TRAVERSE_PASSAGE",
+            }
+            if action_id=="USE_ITEM":
+                receipt=sim.execute_item_use(self.world,actor_id=actor_id,item_id=item_id)
+            elif action_id in {"GIVE_ITEM","DROP_ITEM","PICK_UP_ITEM"}:
+                receipt=sim.execute_item_transfer(
+                    self.world,action_id=action_id,actor_id=actor_id,item_id=item_id,
+                    quantity=payload.get("quantity",1),target_id=target_id,
+                    container_id=payload.get("container_id"))
+            elif action_id in {"EQUIP_ITEM","UNEQUIP_ITEM"}:
+                receipt=sim.execute_equipment_action(
+                    self.world,action_id=action_id,actor_id=actor_id,
+                    item_id=item_id or None,instance_id=payload.get("instance_id"),
+                    slot=payload.get("slot"))
+            elif action_id in passage_actions:
+                receipt=sim.execute_passage_action(
+                    self.world,action_id=action_id,actor_id=actor_id,
+                    passage_id=str(payload.get("passage_id","")))
+            elif action_id=="PRESENT_IDENTITY":
+                receipt=sim.execute_identity_action(
+                    self.world,actor_id=actor_id,
+                    inspector_id=str(payload.get("inspector_id") or target_id or ""),
+                    item_id=item_id,difficulty_override=difficulty)
+            elif action_id=="RECORD_INTELLIGENCE":
+                receipt=sim.execute_intelligence_record(
+                    self.world,actor_id=actor_id,fact_id=str(payload.get("fact_id","")),
+                    item_id=item_id or "blank_notebook")
+            elif action_id=="THREATEN_WITH_WEAPON":
+                receipt=sim.execute_weapon_threat(
+                    self.world,actor_id=actor_id,target_id=str(target_id or ""),
+                    difficulty_override=difficulty)
+            elif action_id in {"PERFORM_LEGAL_RITUAL","PERFORM_SECRET_RITUAL"}:
+                receipt=sim.execute_item_ritual(
+                    self.world,actor_id=actor_id,
+                    illegal=action_id=="PERFORM_SECRET_RITUAL",
+                    difficulty_override=difficulty)
+            else:
+                return {
+                    "ok":False,"performed":False,
+                    "action":{"action_id":action_id,"code":"invalid_action",
+                              "message":f"统一接口不支持行动：{action_id}"},
+                    "snapshot":self.snapshot(),
+                }
+            produced=self.world.events_by_day[day][before:]
+            performed=bool(receipt.success or getattr(receipt,"check",None) is not None)
+            changed=performed or bool(produced)
+            if changed:
+                self.last_events=[{
+                    "event_id":event.event_id,"day":event.day,"phase":event.phase,
+                    "event_type":event.event_type,"scene_id":event.scene_id,
+                    "actor_ids":event.actor_ids,"message":event.description,
+                    "tags":event.tags,"level":event.level,
+                } for event in produced]
+                self.revision+=1
+                snapshot=self._write_snapshot()
+            else:
+                snapshot=self.snapshot()
+            return {
+                "ok":bool(receipt.success),"performed":performed,
+                "action_id":action_id,"action":asdict(receipt),"snapshot":snapshot,
+            }
+        finally:
+            self.busy=False
+            self.lock.release()
+
 
 class Handler(BaseHTTPRequestHandler):
     bridge: SimulationBridge
@@ -251,7 +402,7 @@ class Handler(BaseHTTPRequestHandler):
             self._reply(404, {"error": "not found"})
 
     def do_POST(self) -> None:
-        if self.path not in {"/step", "/configure", "/trade"}:
+        if self.path not in {"/step", "/configure", "/trade", "/use-item", "/action"}:
             self._reply(404, {"error": "not found"})
             return
         try:
@@ -262,6 +413,12 @@ class Handler(BaseHTTPRequestHandler):
                 payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
                 if self.path == "/configure":
                     self._reply(200, self.bridge.configure_interface(payload))
+                elif self.path == "/use-item":
+                    result = self.bridge.use_item(payload)
+                    self._reply(200 if result["ok"] else 400, result)
+                elif self.path == "/action":
+                    result=self.bridge.action(payload)
+                    self._reply(200 if result["performed"] else 400,result)
                 else:
                     result = self.bridge.trade(payload)
                     self._reply(200 if result["ok"] else 400, result)

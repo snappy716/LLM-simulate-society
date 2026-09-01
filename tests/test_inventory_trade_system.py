@@ -116,6 +116,7 @@ class InventoryTradeSystemTests(unittest.TestCase):
 
     def test_npc_and_player_use_same_trade_service(self):
         npc = self.world.npcs["npc_003"]
+        npc.current_scene = "market"
         before = self.world.inventories[npc.id].quantity("bread_loaf")
         before_energy = npc.states["energy"]
         result = self.world.action_registry.execute(
@@ -126,6 +127,222 @@ class InventoryTradeSystemTests(unittest.TestCase):
         self.assertTrue(result.success)
         self.assertEqual(before + 1, self.world.inventories[npc.id].quantity("bread_loaf"))
         self.assertEqual(before_energy - 1, npc.states["energy"])
+
+    def test_npc_shop_trade_requires_colocation(self):
+        npc = self.world.npcs["npc_003"]
+        npc.current_scene = npc.home_scene
+        before = (npc.wealth,
+                  self.world.inventories[npc.id].quantity("bread_loaf"),
+                  self.world.inventories["shop:market_general_store"].quantity("bread_loaf"))
+        receipt = self.world.economy.trade(
+            self.world, actor_id=npc.id, shop_id="market_general_store",
+            item_id="bread_loaf", quantity=1, direction="buy",
+        )
+        self.assertEqual("location_mismatch", receipt.code)
+        self.assertEqual(before, (
+            npc.wealth,
+            self.world.inventories[npc.id].quantity("bread_loaf"),
+            self.world.inventories["shop:market_general_store"].quantity("bread_loaf"),
+        ))
+
+    def test_shop_behavior_uses_new_trade_and_consumes_one_phase_action(self):
+        npc = self.world.npcs["npc_003"]
+        self.world.phase = sim.Phase.AFTERNOON
+        npc.current_scene = "market"
+        npc.states["satiety"] = 15
+        npc.wealth = 40
+        before_energy = npc.states["energy"]
+        before_stock = self.world.inventories["shop:market_general_store"].quantity("bread_loaf")
+        sim.execute_behavior(
+            self.world, npc, self.world.scenes["market"],
+            sim.PhasePlan("market", "购买食物", behavior="SHOP"),
+        )
+        event_types = [event.event_type for event in self.world.events_by_day[1]]
+        self.assertIn("ITEM_TRADED", event_types)
+        self.assertIn("ITEM_USED", event_types)
+        self.assertNotIn("ITEM_BOUGHT_AND_USED", event_types)
+        self.assertEqual(before_stock - 1,
+                         self.world.inventories["shop:market_general_store"].quantity("bread_loaf"))
+        self.assertEqual(before_energy - 1, npc.states["energy"])
+        self.assertGreater(npc.states["satiety"], 15)
+
+    def test_peer_offer_acceptance_is_atomic(self):
+        seller = self.world.npcs["npc_003"]
+        buyer = self.world.npcs["npc_004"]
+        seller.current_scene = buyer.current_scene = "market"
+        bread = self.world.item_catalog["bread_loaf"]
+        self.world.inventories[seller.id].add(bread, 2, self.world.item_catalog)
+        buyer.wealth = 50
+        before = (seller.wealth, buyer.wealth,
+                  self.world.inventories[seller.id].quantity(bread.id),
+                  self.world.inventories[buyer.id].quantity(bread.id))
+        offer, error, _ = sim.create_peer_trade_offer(
+            self.world, seller_id=seller.id, buyer_id=buyer.id,
+            item_id=bread.id, quantity=1, unit_price=5,
+        )
+        self.assertIsNone(error)
+        receipt, _ = sim.respond_peer_trade_offer(
+            self.world, offer_id=offer.id, responder_id=buyer.id,
+            accept=True, reason="需要食物",
+        )
+        self.assertTrue(receipt.success)
+        self.assertEqual("accepted", offer.status)
+        self.assertEqual((before[0] + 5, before[1] - 5, before[2] - 1, before[3] + 1), (
+            seller.wealth, buyer.wealth,
+            self.world.inventories[seller.id].quantity(bread.id),
+            self.world.inventories[buyer.id].quantity(bread.id),
+        ))
+        self.assertEqual([], self.world.economy.validate_invariants(self.world))
+
+    def test_peer_offer_rejection_and_failed_acceptance_do_not_mutate(self):
+        seller = self.world.npcs["npc_003"]
+        buyer = self.world.npcs["npc_004"]
+        seller.current_scene = buyer.current_scene = "market"
+        bread = self.world.item_catalog["bread_loaf"]
+        self.world.inventories[seller.id].add(bread, 1, self.world.item_catalog)
+        before = (seller.wealth, buyer.wealth,
+                  self.world.inventories[seller.id].quantity(bread.id),
+                  self.world.inventories[buyer.id].quantity(bread.id))
+        rejected, error = self.world.economy.create_peer_offer(
+            self.world, seller_id=seller.id, buyer_id=buyer.id,
+            item_id=bread.id, quantity=1, unit_price=5,
+        )
+        self.assertIsNone(error)
+        receipt = self.world.economy.respond_peer_offer(
+            self.world, offer_id=rejected.id, responder_id=buyer.id,
+            accept=False, reason="价格太高",
+        )
+        self.assertEqual("rejected", receipt.code)
+        self.assertEqual("rejected", rejected.status)
+        self.assertEqual(before, (seller.wealth, buyer.wealth,
+                                  self.world.inventories[seller.id].quantity(bread.id),
+                                  self.world.inventories[buyer.id].quantity(bread.id)))
+
+        buyer.wealth = 0
+        pending, error = self.world.economy.create_peer_offer(
+            self.world, seller_id=seller.id, buyer_id=buyer.id,
+            item_id=bread.id, quantity=1, unit_price=5,
+        )
+        self.assertIsNone(error)
+        before_failed = (seller.wealth, buyer.wealth,
+                         self.world.inventories[seller.id].quantity(bread.id),
+                         self.world.inventories[buyer.id].quantity(bread.id))
+        failed = self.world.economy.respond_peer_offer(
+            self.world, offer_id=pending.id, responder_id=buyer.id, accept=True,
+        )
+        self.assertEqual("insufficient_funds", failed.code)
+        self.assertEqual("pending", pending.status)
+        self.assertEqual(before_failed, (seller.wealth, buyer.wealth,
+                                         self.world.inventories[seller.id].quantity(bread.id),
+                                         self.world.inventories[buyer.id].quantity(bread.id)))
+
+    def test_nonmerchant_npcs_autonomously_quote_and_settle(self):
+        keeper_ids = {shop.keeper_id for shop in self.world.shops.values()}
+        participants = [npc for npc in self.world.npcs.values() if npc.id not in keeper_ids]
+        buyer, seller = participants[:2]
+        self.world.phase = sim.Phase.AFTERNOON
+        buyer.current_scene = seller.current_scene = "market"
+        buyer.states["satiety"] = 20
+        buyer.wealth = 60
+        seller.states["satiety"] = 90
+        seller.needs["financial_pressure"] = 80
+        bread = self.world.item_catalog["bread_loaf"]
+        self.world.inventories[seller.id].add(bread, 1, self.world.item_catalog)
+        seller_before = seller.wealth
+        buyer_energy = buyer.states["energy"]
+        sim.execute_behavior(
+            self.world, buyer, self.world.scenes["market"],
+            sim.PhasePlan("market", "向附近居民购买食物", behavior="SHOP"),
+        )
+        event_types = [event.event_type for event in self.world.events_by_day[1]]
+        self.assertIn("PEER_TRADE_OFFERED", event_types)
+        self.assertIn("PEER_TRADE_ACCEPTED", event_types)
+        self.assertNotIn("ITEM_TRADED", event_types)
+        self.assertGreater(seller.wealth, seller_before)
+        self.assertEqual(buyer_energy - 1, buyer.states["energy"])
+
+    def test_dynamic_story_npc_gets_inventory_lazily(self):
+        npc = self.world.npcs["npc_003"]
+        self.world.inventories.pop(npc.id)
+        self.assertEqual([], self.world.economy.public_inventory(npc.id))
+        self.assertIn(npc.id, self.world.inventories)
+        self.assertEqual(25.0, self.world.inventories[npc.id].max_weight)
+
+    def test_ordinary_peer_trade_has_stable_two_to_four_day_cooldown(self):
+        seller=self.world.npcs["npc_003"]; buyer=self.world.npcs["npc_004"]
+        seller.current_scene=buyer.current_scene="market"
+        bread=self.world.item_catalog["bread_loaf"]
+        self.world.inventories[seller.id].add(bread,3,self.world.item_catalog)
+        offer,error=self.world.economy.create_peer_offer(
+            self.world,seller_id=seller.id,buyer_id=buyer.id,item_id=bread.id,
+            quantity=1,unit_price=4)
+        self.assertIsNone(error)
+        self.assertTrue(self.world.economy.respond_peer_offer(
+            self.world,offer_id=offer.id,responder_id=buyer.id,accept=True).success)
+        cooldown=self.world.economy.peer_trade_cooldown_days(buyer.id,bread.id)
+        self.assertIn(cooldown,{2,3,4})
+        blocked,error=self.world.economy.create_peer_offer(
+            self.world,seller_id=seller.id,buyer_id=buyer.id,item_id=bread.id,
+            quantity=1,unit_price=4)
+        self.assertIsNone(blocked)
+        self.assertEqual("trade_cooldown",error.code)
+        self.world.day+=cooldown
+        allowed,error=self.world.economy.create_peer_offer(
+            self.world,seller_id=seller.id,buyer_id=buyer.id,item_id=bread.id,
+            quantity=1,unit_price=4)
+        self.assertIsNotNone(allowed)
+        self.assertIsNone(error)
+
+    def test_professional_trader_can_turn_over_same_item_multiple_times(self):
+        seller=self.world.npcs["npc_003"]
+        seller.occupation="杂货商"; seller.current_scene="market"
+        bread=self.world.item_catalog["bread_loaf"]
+        self.world.inventories[seller.id].add(bread,5,self.world.item_catalog)
+        buyers=[self.world.npcs[f"npc_{index:03d}"] for index in (4,5,6,7)]
+        for buyer in buyers:
+            buyer.current_scene="market"; buyer.wealth=50
+        for buyer in buyers[:3]:
+            offer,error=self.world.economy.create_peer_offer(
+                self.world,seller_id=seller.id,buyer_id=buyer.id,item_id=bread.id,
+                quantity=1,unit_price=4)
+            self.assertIsNone(error)
+            self.assertTrue(self.world.economy.respond_peer_offer(
+                self.world,offer_id=offer.id,responder_id=buyer.id,accept=True).success)
+        blocked,error=self.world.economy.create_peer_offer(
+            self.world,seller_id=seller.id,buyer_id=buyers[3].id,item_id=bread.id,
+            quantity=1,unit_price=4)
+        self.assertIsNone(blocked)
+        self.assertEqual("trade_cooldown",error.code)
+
+    def test_profession_tool_reserve_and_trade_price_memory(self):
+        doctor=self.world.npcs["npc_003"]; buyer=self.world.npcs["npc_004"]
+        doctor.occupation="医生"; doctor.current_scene=buyer.current_scene="market"
+        buyer.health=50; buyer.wealth=100
+        bandage=self.world.item_catalog["bandage_roll"]
+        self.world.inventories[doctor.id].quantities={bandage.id:1}
+        self.world.inventories[buyer.id].quantities={}
+        self.assertIsNone(sim.choose_peer_trade_candidate(
+            self.world,buyer,self.world.scenes["market"]))
+
+        self.world.inventories[doctor.id].add(bandage,1,self.world.item_catalog)
+        doctor.needs["financial_pressure"]=80
+        doctor.relationships[buyer.id]=sim.Relationship(trust=10,suspicion=100)
+        self.assertIsNone(sim.choose_peer_trade_candidate(
+            self.world,buyer,self.world.scenes["market"]))
+        doctor.relationships[buyer.id]=sim.Relationship(trust=90,suspicion=0)
+        candidate=sim.choose_peer_trade_candidate(self.world,buyer,self.world.scenes["market"])
+        self.assertIsNotNone(candidate)
+        self.assertEqual(bandage.id,candidate[1])
+        offer,error=self.world.economy.create_peer_offer(
+            self.world,seller_id=doctor.id,buyer_id=buyer.id,item_id=bandage.id,
+            quantity=1,unit_price=13)
+        self.assertIsNone(error)
+        receipt=self.world.economy.respond_peer_offer(
+            self.world,offer_id=offer.id,responder_id=buyer.id,accept=True)
+        self.assertTrue(receipt.success)
+        self.assertEqual(13,self.world.economy.recent_accepted_unit_price(buyer.id,bandage.id))
+        statuses=[memory.status for memory in self.world.economy.recent_memories(buyer.id)]
+        self.assertEqual(["accepted","offered"],statuses[:2])
 
     def test_bridge_snapshot_and_trade_response_are_text_ready(self):
         output = tempfile.TemporaryDirectory()
