@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/world_snapshot.schema.json",
+  "title": "Godot world snapshot",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "revision", "day", "weekday", "phase", "busy", "player_scene", "scenes", "npcs", "new_events"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "revision": {"type": "integer", "minimum": 1},
+    "day": {"type": "integer", "minimum": 1},
+    "weekday": {"type": "integer", "minimum": 0, "maximum": 6},
+    "phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+    "busy": {"type": "boolean"},
+    "player_scene": {"type": "string"},
+    "scenes": {"type": "object"},
+    "npcs": {"type": "object"},
+    "new_events": {"type": "array"}
+  }
+}

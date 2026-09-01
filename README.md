@@ -26,22 +26,18 @@ Project A 是一个正在开发中的 2D 等距视角城镇 RPG 原型，目标�
 
 ```text
 ProjectA-GitHub/
-├── emergent_town_demo/       # Python 世界模拟系统
-│   ├── town_demo.py          # 模拟入口与主循环
-│   ├── emergent_town/        # 行为、欲望、情报与剧情模块
-│   ├── docs/                 # 系统设定、NPC 名册和关系数据
-│   ├── tests/                # Python 自动化测试
-│   └── runs/                 # 运行时生成，不提交结果
-└── project-a-0.2/            # Godot 4 游戏项目
-    ├── assets/               # 人物、地图、Tile 与蓝图
-    ├── data/                 # 外观目录、地图布局和场景映射
-    ├── scenes/               # 玩家、NPC、UI、世界及测试场景
-    ├── scripts/              # Godot 游戏逻辑
-    ├── tools/simulation/     # Godot 与 Python 的本地桥接服务
-    └── project.godot
+├── game/                     # 当前 Godot 4 项目入口
+├── simulation/               # 领域、行动、系统、认知、叙事、存档与 API
+├── content/                  # 地点、NPC、组织、物品、行动与故事数据
+├── contracts/                # Godot/Python JSON Schema
+├── tests/                    # 新架构回归和新旧等价性测试
+├── design/                   # 架构设计
+├── production/               # 发布验证清单
+├── emergent_town_demo/       # 保留的原 Python 实现，用于对照与回退
+└── project-a-0.2/            # 保留的原 Godot 工程，用于对照与回退
 ```
 
-两个项目必须保持同级。Godot 的本地桥接程序会通过相对路径加载 `emergent_town_demo`。
+新开发入口为 `game/` 与 `simulation/`。原版目录暂不删除；重构期间持续用自动化测试验证二者行为一致。详细依赖规则见 [`design/ARCHITECTURE.md`](design/ARCHITECTURE.md)。
 
 ## 环境要求
 
@@ -55,7 +51,7 @@ ProjectA-GitHub/
 ## 快速开始
 
 1. 克隆或下载仓库。
-2. 确认 `project-a-0.2` 与 `emergent_town_demo` 保持同级。
+2. 确认 `game` 与 `simulation` 保持在仓库根目录。
 3. 确认终端能够执行：
 
    ```text
@@ -65,7 +61,7 @@ ProjectA-GitHub/
 4. 使用 Godot 打开：
 
    ```text
-   project-a-0.2/project.godot
+   game/project.godot
    ```
 
 5. 运行项目。主场景已配置为：
@@ -134,20 +130,20 @@ user://llm_interfaces.cfg
 
 API Key 不会写入项目仓库，但该本地配置文件本身没有加密。不要提交密钥、`.env` 或 `config.local.json`。
 
-详细说明见 [`project-a-0.2/SIMULATION_INTEGRATION.md`](project-a-0.2/SIMULATION_INTEGRATION.md)。
+详细说明见 [`game/SIMULATION_INTEGRATION.md`](game/SIMULATION_INTEGRATION.md)。
 
 ## 单独运行世界模拟
 
-在 `emergent_town_demo` 目录中执行离线模拟：
+在仓库根目录执行离线模拟：
 
 ```powershell
-python town_demo.py --days 3 --llm rule
+python3 -m simulation --days 3 --llm rule
 ```
 
 运行测试：
 
 ```powershell
-python -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -v
 ```
 
 模拟产生的快照、人物日志和事件追踪会写入 `runs/`，该目录中的运行结果默认不提交 Git。
@@ -155,9 +151,9 @@ python -m unittest discover -s tests -v
 ## 数据与确定性
 
 - 相同的世界种子与 NPC ID 会产生相同人物外观。
-- NPC 的公共场景到城市区域映射位于 `project-a-0.2/data/simulation/scene_regions.json`。
-- 人物美术目录位于 `project-a-0.2/data/appearance_catalog.json`。
-- 地图逻辑布局与人工修正数据位于 `project-a-0.2/data/maps/`。
+- NPC 的公共场景到城市区域映射位于 `game/data/simulation/scene_regions.json`。
+- 人物美术目录位于 `game/data/appearance_catalog.json`。
+- 地图逻辑布局与人工修正数据位于 `game/data/maps/`。
 
 修改数据结构时，应同步检查 Godot 桥接脚本与 Python 快照格式。
 
@@ -166,7 +162,7 @@ python -m unittest discover -s tests -v
 本协作仓库包含游戏运行所需的人物分层动画素材。项目所有者已确认素材作者允许项目协作者使用和通过本项目仓库共享。使用者仍须阅读并遵守：
 
 ```text
-project-a-0.2/assets/characters/gandalf_hardcore/READ ME.txt
+game/assets/characters/gandalf_hardcore/READ ME.txt
 ```
 
 不要把人物素材从本项目中单独提取、重新打包、转售或用于原许可禁止的用途。
@@ -193,4 +189,4 @@ project-a-0.2/assets/characters/gandalf_hardcore/READ ME.txt
 
 ## 版本
 
-当前公开协作版本：`project-a-0.2`
+当前重构分支入口：`game/` + `simulation/`；原 `project-a-0.2/` 与 `emergent_town_demo/` 保留。

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/simulation_event.schema.json",
+  "title": "Simulation event",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["event_id", "day", "phase", "event_type", "actor_ids", "message"],
+  "properties": {
+    "event_id": {"type": "string", "minLength": 1},
+    "day": {"type": "integer", "minimum": 1},
+    "phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+    "event_type": {"type": "string", "minLength": 1},
+    "scene_id": {"type": ["string", "null"]},
+    "actor_ids": {"type": "array", "items": {"type": "string"}},
+    "message": {"type": "string"},
+    "tags": {"type": "array", "items": {"type": "string"}},
+    "level": {"type": "string"}
+  }
+}

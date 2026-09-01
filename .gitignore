@@ -16,6 +16,10 @@ emergent_town_demo/runs/*
 !emergent_town_demo/runs/.gitkeep
 project-a-0.2/data/simulation/live/*
 !project-a-0.2/data/simulation/live/.gitkeep
+game/data/simulation/live/*
+!game/data/simulation/live/.gitkeep
+simulation/runs/*
+runs/
 
 # Map reference screenshots are not required at runtime
 project-a-0.2/assets/maps/references/*

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/action_request.schema.json",
+  "title": "Simulation action request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["actor_id", "action_id"],
+  "properties": {
+    "actor_id": {"type": "string", "minLength": 1},
+    "action_id": {"type": "string", "minLength": 1},
+    "target_id": {"type": ["string", "null"]},
+    "object_id": {"type": ["string", "null"]},
+    "scene_id": {"type": ["string", "null"]},
+    "intent": {"type": "string", "default": ""}
+  }
+}

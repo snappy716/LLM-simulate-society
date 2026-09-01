@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/characters/character_base.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="2_player"]
+
+[node name="Player" groups=["player"] instance=ExtResource("1_base")]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("2_player")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(1, 1)
+position_smoothing_enabled = true
+position_smoothing_speed = 8.0
+limit_left = 0
+limit_top = 0
+limit_right = 25600
+limit_bottom = 12900
