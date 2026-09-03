@@ -2,6 +2,7 @@
 
 - 旧版测试：`cd emergent_town_demo && python3 -m unittest discover -s tests -v`
 - 新版测试：`python3 -m unittest discover -s tests -v`
+- 校园架构专项：`python3 -m unittest tests.test_campus_demo_architecture -v`
 - 离线启动：`python3 -m simulation --days 0 --llm rule --quiet`
 - API 冒烟：实例化 `simulation.api.server.SimulationBridge` 并验证快照。
 - 交易冒烟：验证 `/trade` 买卖、资金/库存原子更新和失败不变性。
@@ -20,6 +21,8 @@
   武器威慑与证据、合法/秘密仪式的完整配方原子消耗。
 - NPC 交易长跑：至少模拟 14 天；普通重复交易者平均间隔必须在 2～4 天且同日重复为 0，
   职业交易者必须能够在每日额度内完成多笔交易。
+- 校园系统长跑：逐项接入后先运行 7～14 天，四阶段接入完成后运行完整 28 天；
+  检查任务锁、行动次数、NPC 地点、觉醒槽位、夜间参与人数和主线锚点不变量。
 
 本轮固定种子 42 的 14 天结果：共 16,385 个事件，497 笔商店成交、264 笔私人成交、
 236 次统一物品使用；普通重复交易者平均间隔 3.71 天、最短 2 天且同日重复为 0；

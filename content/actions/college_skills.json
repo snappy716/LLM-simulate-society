@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "colleges": [
+    {
+      "id": "math_physics",
+      "name": "数理学院",
+      "common_skills": ["precise_calculation", "pattern_detection", "probability_adjustment", "error_control"],
+      "specializations": ["mathematical_modeling", "physics_experiment", "statistical_inference"]
+    },
+    {
+      "id": "bio_chemistry",
+      "name": "生化学院",
+      "common_skills": ["sample_collection", "condition_detection", "reagent_handling", "pollution_purification"],
+      "specializations": ["biological_observation", "chemical_preparation", "ecology_toxicology"]
+    },
+    {
+      "id": "earth_space",
+      "name": "天地学院",
+      "common_skills": ["environment_observation", "lunar_phase_reading", "route_survey", "hazard_warning"],
+      "specializations": ["astronomy", "geology", "atmosphere_geography"]
+    },
+    {
+      "id": "artificial_intelligence",
+      "name": "AI学院",
+      "common_skills": ["data_scan", "pattern_recognition", "device_control", "information_trace"],
+      "specializations": ["algorithms", "network_security", "robotics_hardware"]
+    },
+    {
+      "id": "psychology",
+      "name": "心理学院",
+      "common_skills": ["emotion_observation", "focus_stabilization", "cognitive_analysis", "supportive_communication"],
+      "specializations": ["cognitive_psychology", "social_psychology", "development_support"]
+    },
+    {
+      "id": "humanities",
+      "name": "人文学院",
+      "common_skills": ["source_criticism", "language_interpretation", "narrative_detection", "identity_witness"],
+      "specializations": ["history_archives", "literature_language", "journalism_communication"]
+    },
+    {
+      "id": "medicine",
+      "name": "医学院",
+      "common_skills": ["injury_assessment", "first_aid", "condition_removal", "recovery_assessment"],
+      "specializations": ["clinical_foundations", "pharmacology", "public_health"]
+    },
+    {
+      "id": "sports",
+      "name": "体育学院",
+      "common_skills": ["physical_training", "ally_guard", "pursuit", "team_coordination"],
+      "specializations": ["strength", "speed_technique", "sports_rehabilitation"]
+    }
+  ]
+}

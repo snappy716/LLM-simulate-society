@@ -1,5 +1,9 @@
 # 项目架构
 
+> 校园 Demo 的目标架构、模块职责、API、存档与四个月迁移顺序见
+> [`CAMPUS_DEMO_ARCHITECTURE.md`](CAMPUS_DEMO_ARCHITECTURE.md)。本文件继续记录
+> 已完成的第一轮目录迁移和现有可运行边界。
+
 本次迁移采用并行目录，不删除或覆盖 `project-a-0.2/` 与
 `emergent_town_demo/`。新目录是后续开发入口，旧目录用于行为对照和回退。
 

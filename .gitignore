@@ -1,6 +1,8 @@
 # Godot generated files
 **/.godot/
 **/*.import
+.DS_Store
+**/.DS_Store
 
 # Python generated files
 **/__pycache__/

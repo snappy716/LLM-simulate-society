@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "clubs": [
+    {"id": "psychology_reading", "name": "心理学读书会", "surface_skill": "case_annotation", "night_skill": "focus_stabilization", "task_tags": ["books", "rumor", "support"]},
+    {"id": "campus_press", "name": "校园记者团", "surface_skill": "structured_interview", "night_skill": "testimony_contradiction", "task_tags": ["interview", "missing_person", "news"]},
+    {"id": "photography", "name": "摄影社", "surface_skill": "event_documentation", "night_skill": "anomaly_capture", "task_tags": ["photography", "equipment", "evidence"]},
+    {"id": "astronomy", "name": "天文社", "surface_skill": "instrument_calibration", "night_skill": "pollution_forecast", "task_tags": ["observation", "equipment", "moonlight"]},
+    {"id": "theatre", "name": "话剧社", "surface_skill": "stage_performance", "night_skill": "identity_misdirection", "task_tags": ["recruitment", "props", "rehearsal"]},
+    {"id": "debate", "name": "辩论社", "surface_skill": "argument_building", "night_skill": "coherence_break", "task_tags": ["research", "speech", "dispute"]},
+    {"id": "computer_robotics", "name": "计算机与机器人社", "surface_skill": "device_repair", "night_skill": "system_intrusion", "task_tags": ["repair", "competition", "account_trace"]},
+    {"id": "volunteer_service", "name": "志愿服务协会", "surface_skill": "community_support", "night_skill": "safe_escort", "task_tags": ["delivery", "care", "escort"]},
+    {"id": "martial_fitness", "name": "武术与体能社", "surface_skill": "conditioning", "night_skill": "counter_guard", "task_tags": ["training", "escort", "competition"]},
+    {"id": "outdoor_orienteering", "name": "户外与定向社", "surface_skill": "route_planning", "night_skill": "emergency_extraction", "task_tags": ["search", "route", "outdoor"]},
+    {"id": "music", "name": "音乐社", "surface_skill": "ensemble_performance", "night_skill": "group_rhythm", "task_tags": ["performance", "recruitment", "instrument"]},
+    {"id": "moot_court", "name": "模拟法庭与社会实践社", "surface_skill": "policy_argument", "night_skill": "rule_exception", "task_tags": ["mediation", "policy", "appeal"]}
+  ]
+}

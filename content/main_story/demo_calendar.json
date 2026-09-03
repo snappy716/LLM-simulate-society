@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "total_days": 28,
+  "stages": [
+    {"id": "misnaming", "name": "错名", "start_day": 1, "end_day": 7, "reading_id": "freud_everyday_life", "deadline_id": "student_record_backup"},
+    {"id": "substitute_dream", "name": "代梦", "start_day": 8, "end_day": 14, "reading_id": "freud_dreams", "deadline_id": "dream_research_archive"},
+    {"id": "mirror_person", "name": "镜中之人", "start_day": 15, "end_day": 21, "reading_id": "lacan_mirror", "deadline_id": "professor_identity_recognition"},
+    {"id": "who_remembers", "name": "谁在记得我", "start_day": 22, "end_day": 28, "reading_id": "james_self_memory", "deadline_id": "polluted_full_moon"}
+  ],
+  "stage_day_roles": ["opening", "investigation", "investigation", "midpoint", "escalation", "preparation", "deadline"]
+}

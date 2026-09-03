@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/forum_task.schema.json",
+  "title": "Surface or night forum task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "forum", "issuer_id", "title", "action_id", "scene_id", "created_day", "expires_day", "state", "lock_revision"],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1},
+    "forum": {"enum": ["surface", "night"]},
+    "issuer_id": {"type": "string", "minLength": 1},
+    "title": {"type": "string", "minLength": 1},
+    "action_id": {"type": "string", "minLength": 1},
+    "scene_id": {"type": "string", "minLength": 1},
+    "created_day": {"type": "integer", "minimum": 1, "maximum": 28},
+    "expires_day": {"type": "integer", "minimum": 1, "maximum": 28},
+    "state": {"enum": ["open", "viewed", "considering", "locked", "in_progress", "completed", "failed", "abandoned", "expired"]},
+    "assignee_id": {"type": ["string", "null"]},
+    "lock_revision": {"type": "integer", "minimum": 0},
+    "viewer_ids": {"type": "array", "items": {"type": "string"}},
+    "considering_ids": {"type": "array", "items": {"type": "string"}},
+    "helper_ids": {"type": "array", "items": {"type": "string"}},
+    "required_skill_ids": {"type": "array", "items": {"type": "string"}},
+    "required_item_ids": {"type": "array", "items": {"type": "string"}},
+    "reward": {"type": "object", "additionalProperties": {"type": "integer"}},
+    "tags": {"type": "array", "items": {"type": "string"}}
+  }
+}

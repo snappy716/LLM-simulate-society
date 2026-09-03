@@ -19,9 +19,13 @@ from simulation.systems.rituals import RitualMaterialSystem
 from simulation.systems.population import make_npc, make_scenes
 from simulation.systems.relationships import build_initial_relationship_network
 from simulation.systems.time import PHASES, Phase, next_phase
+from simulation.systems.decision_scoring import DecisionFactors, DecisionScore, score_action
+from simulation.systems.task_board import TaskBoard, TaskConflictError
 
 __all__ = [
     "DesireEngine",
+    "DecisionFactors",
+    "DecisionScore",
     "IntelligenceSystem",
     "ItemUseSystem",
     "ItemInstanceSystem",
@@ -38,6 +42,8 @@ __all__ = [
     "PHASES",
     "Phase",
     "TradingSystem",
+    "TaskBoard",
+    "TaskConflictError",
     "build_initial_relationship_network",
     "make_npc",
     "make_scenes",
@@ -49,4 +55,5 @@ __all__ = [
     "load_economy_content",
     "load_item_uses",
     "restock_essential_supplies",
+    "score_action",
 ]

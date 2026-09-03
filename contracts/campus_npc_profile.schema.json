@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/campus_npc_profile.schema.json",
+  "title": "Campus persistent NPC profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["npc_id", "occupation_id", "attributes", "personality", "simulation_tier", "night_access"],
+  "properties": {
+    "npc_id": {"type": "string", "minLength": 1},
+    "college_id": {"type": ["string", "null"]},
+    "occupation_id": {"type": "string", "minLength": 1},
+    "attributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["physique", "dexterity", "focus", "insight", "empathy", "expression"],
+      "properties": {
+        "physique": {"type": "integer", "minimum": 1, "maximum": 10},
+        "dexterity": {"type": "integer", "minimum": 1, "maximum": 10},
+        "focus": {"type": "integer", "minimum": 1, "maximum": 10},
+        "insight": {"type": "integer", "minimum": 1, "maximum": 10},
+        "empathy": {"type": "integer", "minimum": 1, "maximum": 10},
+        "expression": {"type": "integer", "minimum": 1, "maximum": 10}
+      }
+    },
+    "personality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["extraversion", "agreeableness", "conscientiousness", "openness", "emotional_sensitivity", "risk_tolerance", "rule_alignment", "altruism"],
+      "properties": {
+        "extraversion": {"type": "integer", "minimum": 0, "maximum": 100},
+        "agreeableness": {"type": "integer", "minimum": 0, "maximum": 100},
+        "conscientiousness": {"type": "integer", "minimum": 0, "maximum": 100},
+        "openness": {"type": "integer", "minimum": 0, "maximum": 100},
+        "emotional_sensitivity": {"type": "integer", "minimum": 0, "maximum": 100},
+        "risk_tolerance": {"type": "integer", "minimum": 0, "maximum": 100},
+        "rule_alignment": {"type": "integer", "minimum": 0, "maximum": 100},
+        "altruism": {"type": "integer", "minimum": 0, "maximum": 100}
+      }
+    },
+    "simulation_tier": {"enum": ["background", "persistent", "focused"]},
+    "night_access": {"enum": ["unaware", "sensitive", "capable", "willing"]},
+    "specialization_id": {"type": ["string", "null"]},
+    "club_ids": {"type": "array", "items": {"type": "string"}, "maxItems": 2},
+    "core_values": {"type": "array", "items": {"type": "string"}, "maxItems": 3},
+    "moral_boundaries": {"type": "array", "items": {"type": "string"}},
+    "identity_anchor_ids": {"type": "array", "items": {"type": "string"}},
+    "awakened_by_player": {"type": "boolean"}
+  }
+}

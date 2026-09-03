@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/combat_command.schema.json",
+  "title": "Turn-based combat command",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["battle_id", "revision", "actor_id", "command", "target_ids"],
+  "properties": {
+    "battle_id": {"type": "string", "minLength": 1},
+    "revision": {"type": "integer", "minimum": 1},
+    "actor_id": {"type": "string", "minLength": 1},
+    "command": {"enum": ["attack", "combat_skill", "knowledge_skill", "collaboration_skill", "use_item", "guard", "talk", "escape"]},
+    "skill_id": {"type": ["string", "null"]},
+    "item_instance_id": {"type": ["string", "null"]},
+    "target_ids": {"type": "array", "items": {"type": "string"}},
+    "evidence_id": {"type": ["string", "null"]},
+    "client_request_id": {"type": ["string", "null"]}
+  }
+}

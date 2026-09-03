@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "persistent_population": 200,
+  "background_population": 5800,
+  "student_population": 4000,
+  "staff_population": 2000,
+  "focused_slots": 20,
+  "player_awakened_slots": 6,
+  "night_population_targets": {
+    "sensitive": 60,
+    "capable": 40,
+    "willing_min": 20,
+    "willing_max": 25,
+    "active_per_night_min": 6,
+    "active_per_night_max": 12
+  },
+  "base_attribute": {"minimum": 1, "ordinary": 5, "trained": 7, "maximum": 10},
+  "personality_range": {"minimum": 0, "maximum": 100},
+  "required_identity_fields": ["npc_id", "occupation_id", "home_scene_id", "schedule_id"],
+  "required_character_fields": ["core_values", "moral_boundaries", "fear_id", "obsession_id", "contradiction_id"],
+  "generation_order": [
+    "identity_and_living_conditions",
+    "college_job_and_specialization",
+    "attributes_and_proficiencies",
+    "personality_values_fear_obsession",
+    "schedule_economy_inventory",
+    "clubs_and_relationships",
+    "night_sensitivity_and_willingness",
+    "secrets_anchors_and_contradiction"
+  ]
+}
