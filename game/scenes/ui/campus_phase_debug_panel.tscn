@@ -3,10 +3,14 @@
 [ext_resource type="Script" path="res://scripts/ui/campus_phase_debug_panel.gd" id="1_panel"]
 
 [node name="CampusPhaseDebugPanel" type="PanelContainer"]
-offset_left = 930.0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -350.0
 offset_top = 18.0
-offset_right = 1260.0
+offset_right = -20.0
 offset_bottom = 196.0
+grow_horizontal = 0
 script = ExtResource("1_panel")
 
 [node name="Margin" type="MarginContainer" parent="."]

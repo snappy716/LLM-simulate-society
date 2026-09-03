@@ -160,7 +160,7 @@ func _make_svg() -> String:
 			svg += _text(MARGIN - 35, position + 15, str(coordinate), 14)
 
 	for boundary in [32, 64]:
-		var position := MARGIN + boundary * CELL
+		var position: int = MARGIN + int(boundary) * CELL
 		svg += '<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="#ffd166" stroke-width="5"/>' % [position, MARGIN, position, MARGIN + MAP_SIZE * CELL]
 		svg += '<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="#ffd166" stroke-width="5"/>' % [MARGIN, position, MARGIN + MAP_SIZE * CELL, position]
 

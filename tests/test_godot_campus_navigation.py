@@ -9,6 +9,12 @@ GAME_DIR = REPOSITORY_DIR / "game"
 
 
 class GodotCampusNavigationSourceTests(unittest.TestCase):
+    def test_existing_blueprint_tool_has_explicit_boundary_position_type(self):
+        generator = (
+            GAME_DIR / "tools/generate_full_city_orthographic_blueprint.gd"
+        ).read_text(encoding="utf-8")
+        self.assertIn("var position: int = MARGIN + int(boundary) * CELL", generator)
+
     def test_project_registers_navigation_without_replacing_legacy_main_scene(self):
         project = (GAME_DIR / "project.godot").read_text(encoding="utf-8")
         self.assertIn('run/main_scene="res://scenes/debug/integration_test.tscn"', project)
@@ -29,6 +35,30 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
     def test_player_is_identifiable_by_transition_triggers(self):
         player = (GAME_DIR / "scripts/player/player_controller.gd").read_text(encoding="utf-8")
         self.assertIn('add_to_group("player")', player)
+
+    def test_debug_scenes_reuse_player_camera_without_duplicate_child(self):
+        outdoors = (GAME_DIR / "scenes/debug/campus_navigation_test.tscn").read_text(
+            encoding="utf-8"
+        )
+        lobby = (GAME_DIR / "scenes/debug/campus_lobby_test.tscn").read_text(
+            encoding="utf-8"
+        )
+        outdoor_script = (
+            GAME_DIR / "scripts/world/campus_navigation_graybox.gd"
+        ).read_text(encoding="utf-8")
+        lobby_script = (GAME_DIR / "scripts/world/campus_lobby_graybox.gd").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn('[node name="Camera2D"', outdoors)
+        self.assertNotIn('[node name="Camera2D"', lobby)
+        self.assertIn('get_node_or_null("Player/Camera2D")', outdoor_script)
+        self.assertIn('get_node_or_null("Player/Camera2D")', lobby_script)
+
+    def test_navigation_camera_looks_ahead_toward_boundary_traffic(self):
+        script = (GAME_DIR / "scripts/world/campus_navigation_graybox.gd").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("camera.position = Vector2(0, -180)", script)
 
     def test_bridge_exposes_authoritative_phase_advance(self):
         bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
@@ -57,6 +87,10 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertTrue(panel_scene.is_file())
         self.assertTrue(panel_script.is_file())
         script = panel_script.read_text(encoding="utf-8")
+        scene = panel_scene.read_text(encoding="utf-8")
+        self.assertIn("anchor_left = 1.0", scene)
+        self.assertIn("anchor_right = 1.0", scene)
+        self.assertIn("offset_right = -20.0", scene)
         self.assertIn("主要行动剩余", script)
         self.assertIn("聊天 / 购物 / 吃饭 / 普通移动：免费", script)
         self.assertIn('call("advance_campus_phase")', script)

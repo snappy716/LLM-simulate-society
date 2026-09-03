@@ -14,10 +14,6 @@ script = ExtResource("1_world")
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector2(740, 610)
 
-[node name="Camera2D" type="Camera2D" parent="Player"]
-position = Vector2(0, -20)
-enabled = true
-
 [node name="NpcMovementLayer" type="Node2D" parent="."]
 script = ExtResource("6_npc_movement")
 npc_scene = ExtResource("7_npc")

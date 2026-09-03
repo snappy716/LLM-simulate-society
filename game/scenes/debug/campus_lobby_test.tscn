@@ -12,9 +12,6 @@ script = ExtResource("1_world")
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector2(640, 540)
 
-[node name="Camera2D" type="Camera2D" parent="Player"]
-enabled = true
-
 [node name="StudentCenterInsideArrival" parent="." instance=ExtResource("4_anchor")]
 position = Vector2(640, 535)
 anchor_id = "inside:student_center:entrance"

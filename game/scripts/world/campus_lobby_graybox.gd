@@ -5,6 +5,9 @@ const LOBBY_SCENE := "res://scenes/debug/campus_lobby_test.tscn"
 
 
 func _ready() -> void:
+	var camera := get_node_or_null("Player/Camera2D") as Camera2D
+	if camera != null:
+		camera.enabled = true
 	var navigation := get_node("/root/CampusNavigation")
 	navigation.call("register_presentation_scene", "campus_outdoor", OUTDOOR_SCENE)
 	navigation.call("register_presentation_scene", "interior_building_lobby", LOBBY_SCENE)
