@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "passages": [
+    {"id": "road_gate_to_student_life", "from_id": "south_gate_region", "to_id": "student_life_region", "travel_minutes": 10, "transition_kind": "continuous_boundary", "tags": ["campus_road", "public"]},
+    {"id": "road_student_life_to_central", "from_id": "student_life_region", "to_id": "central_region", "travel_minutes": 8, "tags": ["campus_road", "public"]},
+    {"id": "road_central_to_humanities", "from_id": "central_region", "to_id": "humanities_psychology_region", "travel_minutes": 10, "tags": ["campus_road", "public"]},
+    {"id": "road_central_to_science", "from_id": "central_region", "to_id": "science_teaching_region", "travel_minutes": 11, "tags": ["campus_road", "public"]},
+    {"id": "road_science_to_research", "from_id": "science_teaching_region", "to_id": "research_innovation_region", "travel_minutes": 12, "tags": ["campus_road", "public"]},
+    {"id": "road_humanities_to_sports", "from_id": "humanities_psychology_region", "to_id": "sports_health_region", "travel_minutes": 11, "tags": ["campus_road", "public"]},
+    {"id": "road_research_to_service", "from_id": "research_innovation_region", "to_id": "service_logistics_region", "travel_minutes": 10, "tags": ["campus_road", "public"]},
+    {"id": "road_student_life_to_east_dorm", "from_id": "student_life_region", "to_id": "east_dorm_region", "travel_minutes": 9, "tags": ["campus_road", "public"]},
+    {"id": "road_student_life_to_west_dorm", "from_id": "student_life_region", "to_id": "west_dorm_region", "travel_minutes": 9, "tags": ["campus_road", "public"]},
+    {"id": "road_west_dorm_to_sports", "from_id": "west_dorm_region", "to_id": "sports_health_region", "travel_minutes": 12, "tags": ["campus_road", "public"]},
+    {"id": "road_east_dorm_to_service", "from_id": "east_dorm_region", "to_id": "service_logistics_region", "travel_minutes": 12, "tags": ["campus_road", "public"]},
+    {"id": "lakeside_path_humanities_to_student_life", "from_id": "humanities_psychology_region", "to_id": "student_life_region", "travel_minutes": 12, "tags": ["footpath", "public", "lakeside"]},
+    {"id": "lakeside_path_science_to_student_life", "from_id": "science_teaching_region", "to_id": "student_life_region", "travel_minutes": 12, "tags": ["footpath", "public", "lakeside"]}
+  ]
+}

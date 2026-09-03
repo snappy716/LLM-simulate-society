@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "regions": [
+    {"id": "south_gate_region", "name": "南门与公共交通区", "map_cell": [200, 365], "tags": ["gate", "public", "transit"]},
+    {"id": "central_region", "name": "中央校务与镜湖区", "map_cell": [200, 235], "tags": ["central", "public", "lake"]},
+    {"id": "humanities_psychology_region", "name": "人文与心理教学区", "map_cell": [118, 180], "tags": ["education", "humanities", "psychology"]},
+    {"id": "science_teaching_region", "name": "基础科学教学区", "map_cell": [282, 178], "tags": ["education", "science"]},
+    {"id": "research_innovation_region", "name": "科研与创新区", "map_cell": [258, 78], "tags": ["research", "laboratory", "restricted"]},
+    {"id": "student_life_region", "name": "学生生活与社团区", "map_cell": [195, 300], "tags": ["student_life", "commerce", "clubs"]},
+    {"id": "east_dorm_region", "name": "东侧宿舍区", "map_cell": [315, 292], "tags": ["residential", "student"]},
+    {"id": "west_dorm_region", "name": "西侧宿舍区", "map_cell": [82, 292], "tags": ["residential", "student", "staff"]},
+    {"id": "sports_health_region", "name": "体育与健康区", "map_cell": [72, 98], "tags": ["sports", "medical", "public"]},
+    {"id": "service_logistics_region", "name": "安保与后勤区", "map_cell": [335, 105], "tags": ["security", "logistics", "service"]}
+  ]
+}

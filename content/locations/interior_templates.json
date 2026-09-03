@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "templates": [
+    {"id": "building_lobby", "name": "建筑门厅与走廊", "presentation_key": "interior_building_lobby", "interaction_slots": ["entrance", "directory", "corridor", "stairs"]},
+    {"id": "classroom_standard", "name": "标准教室", "presentation_key": "interior_classroom_standard", "interaction_slots": ["lectern", "blackboard", "student_seats", "notice_board"]},
+    {"id": "seminar_room", "name": "研讨室", "presentation_key": "interior_seminar_room", "interaction_slots": ["meeting_table", "whiteboard", "bookshelf"]},
+    {"id": "dorm_room", "name": "学生宿舍", "presentation_key": "interior_dorm_room", "interaction_slots": ["beds", "desks", "wardrobes", "balcony"]},
+    {"id": "office_standard", "name": "办公室", "presentation_key": "interior_office_standard", "interaction_slots": ["work_desks", "filing_cabinet", "visitor_seats"]},
+    {"id": "laboratory_standard", "name": "标准实验室", "presentation_key": "interior_laboratory_standard", "interaction_slots": ["workbench", "instruments", "sample_storage", "safety_station"]},
+    {"id": "library_hall", "name": "图书馆大厅", "presentation_key": "interior_library_hall", "interaction_slots": ["service_desk", "reading_tables", "catalog_terminal", "shelves"]},
+    {"id": "archive_room", "name": "档案室", "presentation_key": "interior_archive_room", "interaction_slots": ["archive_shelves", "records_terminal", "worktable"]},
+    {"id": "clinic", "name": "校园诊疗室", "presentation_key": "interior_clinic", "interaction_slots": ["triage_desk", "consultation_bed", "medicine_cabinet"]},
+    {"id": "shop_standard", "name": "校园商店", "presentation_key": "interior_shop_standard", "interaction_slots": ["counter", "shelves", "storage_door"]},
+    {"id": "club_room", "name": "社团活动室", "presentation_key": "interior_club_room", "interaction_slots": ["activity_area", "storage", "notice_board"]},
+    {"id": "security_room", "name": "安保值班室", "presentation_key": "interior_security_room", "interaction_slots": ["duty_desk", "radio", "monitor_wall", "evidence_locker"]},
+    {"id": "residence_standard", "name": "教师住宅", "presentation_key": "interior_residence_standard", "interaction_slots": ["living_room", "study", "bedroom", "storage"]},
+    {"id": "sports_hall", "name": "室内运动场", "presentation_key": "interior_sports_hall", "interaction_slots": ["court", "training_area", "equipment_storage"]},
+    {"id": "canteen_hall", "name": "食堂大厅", "presentation_key": "interior_canteen_hall", "interaction_slots": ["food_windows", "tables", "dish_return"]},
+    {"id": "auditorium", "name": "报告厅", "presentation_key": "interior_auditorium", "interaction_slots": ["stage", "seating", "control_room"]}
+  ]
+}

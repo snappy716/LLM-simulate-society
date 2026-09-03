@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/campus_lobby_graybox.gd" id="1_world"]
+[ext_resource type="PackedScene" path="res://scenes/characters/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/world/components/campus_transition_trigger.tscn" id="3_trigger"]
+[ext_resource type="PackedScene" path="res://scenes/world/components/campus_arrival_anchor.tscn" id="4_anchor"]
+
+[node name="CampusLobbyGraybox" type="Node2D"]
+script = ExtResource("1_world")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(640, 540)
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+enabled = true
+
+[node name="StudentCenterInsideArrival" parent="." instance=ExtResource("4_anchor")]
+position = Vector2(640, 535)
+anchor_id = "inside:student_center:entrance"
+
+[node name="StudentCenterExit" parent="." instance=ExtResource("3_trigger")]
+position = Vector2(640, 620)
+scale = Vector2(2, 1)
+passage_id = "parent:student_center"
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Instructions" type="Label" parent="UI"]
+offset_left = 18.0
+offset_top = 16.0
+offset_right = 620.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(0.12, 0.16, 0.18, 1)
+theme_override_font_sizes/font_size = 18
+text = "学生中心大厅 · 向下走到门口即可返回原楼梯"

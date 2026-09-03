@@ -44,6 +44,7 @@
     "core_values": {"type": "array", "items": {"type": "string"}, "maxItems": 3},
     "moral_boundaries": {"type": "array", "items": {"type": "string"}},
     "identity_anchor_ids": {"type": "array", "items": {"type": "string"}},
+    "contradiction_id": {"type": ["string", "null"]},
     "awakened_by_player": {"type": "boolean"}
   }
 }

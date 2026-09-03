@@ -6,6 +6,7 @@ var appearance_seed := 1001
 
 func _ready() -> void:
 	super._ready()
+	add_to_group("player")
 	apply_appearance(AppearanceGenerator.generate("female", appearance_seed))
 
 
@@ -20,4 +21,3 @@ func _physics_process(_delta: float) -> void:
 	velocity = direction * move_speed
 	move_and_slide()
 	set_move_direction(direction)
-

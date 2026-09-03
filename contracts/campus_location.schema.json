@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/campus_location.schema.json",
+  "title": "Campus building or enterable location",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "kind", "region_id", "parent_id", "capacity", "open_phases"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "name": {"type": "string", "minLength": 1},
+    "kind": {"enum": ["building", "fixed_interior", "room_group", "outdoor_point"]},
+    "region_id": {"type": "string", "minLength": 1},
+    "parent_id": {"type": "string", "minLength": 1},
+    "map_cell": {
+      "type": "array",
+      "prefixItems": [
+        {"type": "integer", "minimum": 0, "maximum": 399},
+        {"type": "integer", "minimum": 0, "maximum": 399}
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "capacity": {"type": "integer", "minimum": 1},
+    "entry_minutes": {"type": "integer", "minimum": 0},
+    "open_phases": {
+      "type": "array",
+      "items": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "access_tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "interior_template_id": {"type": ["string", "null"]},
+    "instance_policy": {"enum": ["fixed", "pooled"]},
+    "pool_size": {"type": "integer", "minimum": 1},
+    "supports_night_layer": {"type": "boolean"},
+    "entrance_style": {"enum": ["level", "stairs", "ramp", "secured"]}
+  }
+}

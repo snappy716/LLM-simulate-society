@@ -17,7 +17,56 @@ GAME_DIR = REPOSITORY_DIR / "game"
 sys.path.insert(0, str(REPOSITORY_DIR))
 
 from simulation import runtime as sim  # noqa: E402
+from simulation.api.commands import (  # noqa: E402
+    CommandParseError,
+    command_result_view,
+    parse_simulation_command,
+)
+from simulation.api.views import campus_world_view  # noqa: E402
+from simulation.domain import WorldState  # noqa: E402
 from simulation.persistence import atomic_write_json  # noqa: E402
+from simulation.systems import (  # noqa: E402
+    CampusPopulationGenerator,
+    ContentRegistry,
+    DeterministicRngPool,
+    WorldKernel,
+    DuplicateCommandError,
+    RevisionConflictError,
+    install_campus_places,
+    install_campus_population,
+    load_campus_location_graph,
+    make_traverse_location_handler,
+)
+
+
+class CampusKernelBridge:
+    """Side-by-side Godot bridge for the new campus kernel."""
+
+    def __init__(self, master_seed: int) -> None:
+        registry = ContentRegistry.load_default(REPOSITORY_DIR / "content")
+        graph = load_campus_location_graph(registry)
+        rng_pool = DeterministicRngPool(master_seed)
+        state = WorldState(content_version=registry.content_version, master_seed=master_seed)
+        install_campus_places(state, graph)
+        records = CampusPopulationGenerator(registry, graph, rng_pool).generate()
+        install_campus_population(state, records)
+        self.kernel = WorldKernel(state, rng=rng_pool)
+        self.kernel.register_handler(
+            "TRAVERSE_LOCATION_PASSAGE",
+            make_traverse_location_handler(graph),
+        )
+
+    def snapshot(self) -> dict:
+        return campus_world_view(self.kernel.state)
+
+    def execute(self, payload: dict) -> dict:
+        command = parse_simulation_command(payload)
+        result = self.kernel.execute(command)
+        return {
+            "ok": result.success,
+            "result": command_result_view(result),
+            "snapshot": self.snapshot(),
+        }
 
 
 class SimulationBridge:
@@ -39,6 +88,7 @@ class SimulationBridge:
             llm_concurrency=int(settings.get("llm_concurrency", 5)),
             log_dir=str(output_dir), verbose=False,
         ))
+        self.campus = CampusKernelBridge(self.world.cfg.seed)
         for npc in self.world.npcs.values():
             npc.daily_plan = sim.rule_plan_for_npc(self.world, npc)
         sim.arrange_social_invitations(self.world, self.world.day)
@@ -73,6 +123,12 @@ class SimulationBridge:
             "model": model, "api_key_configured": bool(api_key),
             "message": "接口已应用；将在下次日终规划时使用。",
         }
+
+    def campus_snapshot(self) -> dict:
+        return self.campus.snapshot()
+
+    def campus_command(self, payload: dict) -> dict:
+        return self.campus.execute(payload)
 
     def _appearance(self, npc_id: str) -> dict:
         digest = hashlib.sha256(f"{self.world.cfg.seed}:{npc_id}".encode()).digest()
@@ -395,14 +451,21 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self) -> None:
-        if self.path in ("/health", "/snapshot"):
-            payload = {"ok": True} if self.path == "/health" else self.bridge.snapshot()
+        if self.path in ("/health", "/snapshot", "/kernel/campus-snapshot"):
+            if self.path == "/health":
+                payload = {"ok": True}
+            elif self.path == "/kernel/campus-snapshot":
+                payload = self.bridge.campus_snapshot()
+            else:
+                payload = self.bridge.snapshot()
             self._reply(200, payload)
         else:
             self._reply(404, {"error": "not found"})
 
     def do_POST(self) -> None:
-        if self.path not in {"/step", "/configure", "/trade", "/use-item", "/action"}:
+        if self.path not in {
+            "/step", "/configure", "/trade", "/use-item", "/action", "/kernel/command"
+        }:
             self._reply(404, {"error": "not found"})
             return
         try:
@@ -413,6 +476,8 @@ class Handler(BaseHTTPRequestHandler):
                 payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
                 if self.path == "/configure":
                     self._reply(200, self.bridge.configure_interface(payload))
+                elif self.path == "/kernel/command":
+                    self._reply(200, self.bridge.campus_command(payload))
                 elif self.path == "/use-item":
                     result = self.bridge.use_item(payload)
                     self._reply(200 if result["ok"] else 400, result)
@@ -422,6 +487,10 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     result = self.bridge.trade(payload)
                     self._reply(200 if result["ok"] else 400, result)
+        except CommandParseError as exc:
+            self._reply(400, {"error": exc.message, "code": exc.code})
+        except (DuplicateCommandError, RevisionConflictError) as exc:
+            self._reply(409, {"error": str(exc), "code": type(exc).__name__})
         except Exception as exc:
             self._reply(500, {"error": f"{type(exc).__name__}: {exc}"})
 

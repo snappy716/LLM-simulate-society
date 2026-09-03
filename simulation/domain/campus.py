@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 ATTRIBUTE_NAMES = ("physique", "dexterity", "focus", "insight", "empathy", "expression")
@@ -187,6 +187,7 @@ class CampusNPCProfile:
     moral_boundaries: List[str] = field(default_factory=list)
     fear_id: Optional[str] = None
     obsession_id: Optional[str] = None
+    contradiction_id: Optional[str] = None
     identity_anchor_ids: List[str] = field(default_factory=list)
     awakened_by_player: bool = False
 
@@ -195,13 +196,82 @@ class CampusNPCProfile:
             raise ValueError("npc_id is required")
         if len(self.core_values) > 3:
             raise ValueError("at most three ordered core values are allowed")
+        if len(self.club_ids) > 2:
+            raise ValueError("at most two club memberships are allowed")
+        for field_name in (
+            "club_ids", "relationship_skill_ids", "core_values",
+            "moral_boundaries", "identity_anchor_ids",
+        ):
+            values = getattr(self, field_name)
+            if len(set(values)) != len(values):
+                raise ValueError(f"{field_name} must be unique")
         if self.awakened_by_player and self.simulation_tier != SimulationTier.FOCUSED:
             raise ValueError("a player-awakened NPC must remain in the focused tier")
+
+
+@dataclass
+class CampusNPCRecord:
+    """Persistent identity plus the simulation profile used by all NPC tiers."""
+
+    profile: CampusNPCProfile
+    display_name: str
+    role_kind: str
+    home_location_id: str
+    home_room_key: str
+    primary_location_id: str
+    current_location_id: str
+    schedule_id: str
+    skill_ids: List[str]
+    access_tags: List[str]
+    appearance_seed: int
+    wealth: int
+
+    def __post_init__(self) -> None:
+        if self.role_kind not in {"student", "staff"}:
+            raise ValueError(f"invalid campus role kind: {self.role_kind}")
+        for value_name in (
+            "display_name", "home_location_id", "home_room_key",
+            "primary_location_id", "current_location_id", "schedule_id",
+        ):
+            if not getattr(self, value_name):
+                raise ValueError(f"{value_name} is required")
+        if self.appearance_seed < 0:
+            raise ValueError("appearance_seed must be non-negative")
+        if self.wealth < 0:
+            raise ValueError("wealth must be non-negative")
+        if len(set(self.skill_ids)) != len(self.skill_ids):
+            raise ValueError("skill_ids must be unique")
+        if len(set(self.access_tags)) != len(self.access_tags):
+            raise ValueError("access_tags must be unique")
+
+    @property
+    def npc_id(self) -> str:
+        return self.profile.npc_id
+
+    def to_state_dict(self) -> Dict[str, Any]:
+        profile = asdict(self.profile)
+        profile["simulation_tier"] = self.profile.simulation_tier.value
+        profile["night_access"] = self.profile.night_access.value
+        return {
+            "npc_id": self.npc_id,
+            "display_name": self.display_name,
+            "role_kind": self.role_kind,
+            "home_location_id": self.home_location_id,
+            "home_room_key": self.home_room_key,
+            "primary_location_id": self.primary_location_id,
+            "current_location_id": self.current_location_id,
+            "schedule_id": self.schedule_id,
+            "skill_ids": list(self.skill_ids),
+            "access_tags": list(self.access_tags),
+            "appearance_seed": self.appearance_seed,
+            "wealth": self.wealth,
+            **profile,
+        }
 
 
 __all__ = [
     "ATTRIBUTE_NAMES", "PERSONALITY_NAMES", "RELATIONSHIP_NAMES",
     "BaseAttributes", "PersonalityTraits", "RelationshipDimensions",
     "NeedState", "EmotionState", "DerivedStats", "derive_stats",
-    "SimulationTier", "NightAccess", "CampusNPCProfile",
+    "SimulationTier", "NightAccess", "CampusNPCProfile", "CampusNPCRecord",
 ]

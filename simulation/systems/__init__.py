@@ -21,11 +21,35 @@ from simulation.systems.relationships import build_initial_relationship_network
 from simulation.systems.time import PHASES, Phase, next_phase
 from simulation.systems.decision_scoring import DecisionFactors, DecisionScore, score_action
 from simulation.systems.task_board import TaskBoard, TaskConflictError
+from simulation.systems.content_registry import (
+    ContentRegistry,
+    ContentSource,
+    ContentValidationError,
+)
+from simulation.systems.campus_locations import (
+    install_campus_places,
+    load_campus_location_graph,
+    make_traverse_location_handler,
+)
+from simulation.systems.campus_population import (
+    CampusPopulationError,
+    CampusPopulationGenerator,
+    install_campus_population,
+)
 
 __all__ = [
     "DesireEngine",
     "DecisionFactors",
     "DecisionScore",
+    "ContentRegistry",
+    "ContentSource",
+    "ContentValidationError",
+    "install_campus_places",
+    "load_campus_location_graph",
+    "make_traverse_location_handler",
+    "CampusPopulationError",
+    "CampusPopulationGenerator",
+    "install_campus_population",
     "IntelligenceSystem",
     "ItemUseSystem",
     "ItemInstanceSystem",
@@ -56,4 +80,19 @@ __all__ = [
     "load_item_uses",
     "restock_essential_supplies",
     "score_action",
+    "DeterministicRngPool",
+    "DuplicateCommandError",
+    "RevisionConflictError",
+    "TransactionContext",
+    "TransactionOutcome",
+    "WorldKernel",
 ]
+
+from simulation.systems.randomness import DeterministicRngPool
+from simulation.systems.transactions import (
+    DuplicateCommandError,
+    RevisionConflictError,
+    TransactionContext,
+    TransactionOutcome,
+    WorldKernel,
+)

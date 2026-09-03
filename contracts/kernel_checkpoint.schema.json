@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/kernel_checkpoint.schema.json",
+  "title": "Campus simulation kernel checkpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["checkpoint_format", "kernel_checkpoint_version", "world", "rng", "content", "checksum"],
+  "properties": {
+    "checkpoint_format": {"const": "campus-kernel"},
+    "kernel_checkpoint_version": {"const": 1},
+    "world": {"type": "object"},
+    "rng": {
+      "type": "object",
+      "required": ["master_seed", "namespace", "streams"],
+      "properties": {
+        "master_seed": {"type": "integer"},
+        "namespace": {"type": "string", "minLength": 1},
+        "streams": {"type": "object"}
+      }
+    },
+    "content": {
+      "type": "object",
+      "required": ["version", "manifest"],
+      "properties": {
+        "version": {"type": "string", "minLength": 1},
+        "manifest": {"type": "object"}
+      }
+    },
+    "checksum": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

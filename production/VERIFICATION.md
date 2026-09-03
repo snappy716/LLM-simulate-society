@@ -3,12 +3,17 @@
 - 旧版测试：`cd emergent_town_demo && python3 -m unittest discover -s tests -v`
 - 新版测试：`python3 -m unittest discover -s tests -v`
 - 校园架构专项：`python3 -m unittest tests.test_campus_demo_architecture -v`
+- 程序底座专项：`python3 -m unittest tests.test_world_kernel tests.test_content_registry tests.test_kernel_persistence tests.test_kernel_api_contracts -v`
+- 校园地点与人口专项：`python3 -m unittest tests.test_campus_locations tests.test_campus_population tests.test_campus_kernel_bridge tests.test_godot_campus_navigation -v`
+- Python 编译：`python3 -m compileall -q simulation tests`
+- 补丁格式：`git diff --check`
 - 离线启动：`python3 -m simulation --days 0 --llm rule --quiet`
 - API 冒烟：实例化 `simulation.api.server.SimulationBridge` 并验证快照。
 - 交易冒烟：验证 `/trade` 买卖、资金/库存原子更新和失败不变性。
 - 统一行动冒烟：验证 `/action` 的丢弃→拾取、装备→卸下，以及
   `performed=true / ok=false` 的有效检定失败。
 - Godot 4.7 导入：`Godot --headless --editor --path game --quit`
+- Godot 校园导航端到端：`Godot --headless --path game --script res://tools/test_campus_navigation_flow.gd`，必须输出 `CAMPUS_NAVIGATION_FLOW_OK`。
 - Godot 运行：启动 `game/project.godot`，确认后端连接、200 NPC 首个快照与城市地图加载。
 - Windows 目标检查：Windows 使用 `python`，macOS/Linux 使用 `python3`；不得提交平台绝对路径。
 - 目录保护：确认 `project-a-0.2/`、`emergent_town_demo/` 与原 ZIP 仍存在。
@@ -23,6 +28,18 @@
   职业交易者必须能够在每日额度内完成多笔交易。
 - 校园系统长跑：逐项接入后先运行 7～14 天，四阶段接入完成后运行完整 28 天；
   检查任务锁、行动次数、NPC 地点、觉醒槽位、夜间参与人数和主线锚点不变量。
+- 程序底座检查点：验证校验和、内容版本、随机流续接和读档后的命令幂等。
+- 程序底座事件日志：验证重开不截断、事件序号连续、日志失败时世界事务回滚。
+
+第一阶段程序底座验收：当前工程 175 项、旧版工程 46 项测试通过；固定种子 42 的
+规则模式 28 天模拟完成；Godot 4.7.2 编辑器导入和主场景连接本地服务均通过。
+公共 Godot 快照仍为 v2，内核检查点独立使用 `kernel_checkpoint_version=1`。
+
+校园地点与人口阶段验收：当前工程 204 项、旧版工程 46 项测试通过；Godot 4.7.2
+组件实例测试输出 `CAMPUS_COMPONENTS_OK`；导航端到端测试实际完成道路连续跨区、楼梯进楼、
+室内出门及返回原楼梯锚点并输出 `CAMPUS_NAVIGATION_FLOW_OK`。主场景与校园导航灰盒均可
+无界面启动，并已在 Godot 图形界面检查灰盒构图。校园内核
+通过独立 `/kernel/campus-snapshot` v1 与 `/kernel/command` 并行接入，未替换旧快照 v2。
 
 本轮固定种子 42 的 14 天结果：共 16,385 个事件，497 笔商店成交、264 笔私人成交、
 236 次统一物品使用；普通重复交易者平均间隔 3.71 天、最短 2 天且同日重复为 0；

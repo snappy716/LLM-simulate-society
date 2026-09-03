@@ -58,6 +58,7 @@ from simulation.domain.interactions import (
 )
 from simulation.domain.campus import (
     BaseAttributes,
+    CampusNPCRecord,
     CampusNPCProfile,
     DerivedStats,
     EmotionState,
@@ -69,11 +70,27 @@ from simulation.domain.campus import (
     derive_stats,
 )
 from simulation.domain.tasks import CampusTask, ForumKind, TaskState
+from simulation.domain.events import EventDraft, SimulationEvent
+from simulation.domain.world_state import AGGREGATE_NAMES, ClockState, WorldState
+from simulation.domain.locations import (
+    CampusLocation,
+    CampusLocationGraph,
+    CampusPassage,
+    CampusRegion,
+    CampusRoute,
+    EntranceStyle,
+    InstancePolicy,
+    InteriorTemplate,
+    LocationKind,
+    RouteStep,
+    TransitionKind,
+)
 
 __all__ = [
     "CaseFile",
     "BaseAttributes",
     "CampusNPCProfile",
+    "CampusNPCRecord",
     "CampusTask",
     "ActionConsequences",
     "Commission",
@@ -127,6 +144,22 @@ __all__ = [
     "TradeReceipt",
     "ForumKind",
     "TaskState",
+    "AGGREGATE_NAMES",
+    "ClockState",
+    "EventDraft",
+    "SimulationEvent",
+    "WorldState",
+    "CampusLocation",
+    "CampusLocationGraph",
+    "CampusPassage",
+    "CampusRegion",
+    "CampusRoute",
+    "EntranceStyle",
+    "InstancePolicy",
+    "InteriorTemplate",
+    "LocationKind",
+    "RouteStep",
+    "TransitionKind",
     "WorldConflict",
     "WorldObject",
     "derive_stats",

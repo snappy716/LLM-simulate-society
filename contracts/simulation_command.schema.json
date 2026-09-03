@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/simulation_command.schema.json",
+  "title": "Authoritative simulation command",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["command_id", "actor_id", "action_id", "target_ids", "parameters", "expected_world_revision", "issued_day", "issued_phase", "issued_minute", "source"],
+  "properties": {
+    "command_id": {"type": "string", "minLength": 1},
+    "actor_id": {"type": "string", "minLength": 1},
+    "action_id": {"type": "string", "minLength": 1},
+    "target_ids": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "parameters": {"type": "object"},
+    "expected_world_revision": {"type": "integer", "minimum": 1},
+    "issued_day": {"type": "integer", "minimum": 1},
+    "issued_phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+    "issued_minute": {"type": "integer", "minimum": 0, "maximum": 359},
+    "source": {"enum": ["player", "rule", "llm", "narrative"]}
+  }
+}

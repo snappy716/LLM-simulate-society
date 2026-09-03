@@ -1,0 +1,52 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/campus_navigation_graybox.gd" id="1_world"]
+[ext_resource type="PackedScene" path="res://scenes/characters/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/world/components/campus_transition_trigger.tscn" id="3_trigger"]
+[ext_resource type="PackedScene" path="res://scenes/world/components/campus_arrival_anchor.tscn" id="4_anchor"]
+
+[node name="CampusNavigationGraybox" type="Node2D"]
+script = ExtResource("1_world")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(740, 610)
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+position = Vector2(0, -20)
+enabled = true
+
+[node name="RoadBoundary" parent="." instance=ExtResource("3_trigger")]
+position = Vector2(740, 350)
+scale = Vector2(3, 1)
+passage_id = "road_gate_to_student_life"
+
+[node name="StudentCenterEntrance" parent="." instance=ExtResource("3_trigger")]
+position = Vector2(301, 245)
+scale = Vector2(2, 1)
+passage_id = "parent:student_center"
+
+[node name="SouthRoadArrival" parent="." instance=ExtResource("4_anchor")]
+position = Vector2(740, 390)
+anchor_id = "region:south_gate_region:entry:road_gate_to_student_life"
+
+[node name="StudentRoadArrival" parent="." instance=ExtResource("4_anchor")]
+position = Vector2(740, 310)
+anchor_id = "region:student_life_region:entry:road_gate_to_student_life"
+
+[node name="StudentCenterOutdoorArrival" parent="." instance=ExtResource("4_anchor")]
+position = Vector2(301, 280)
+anchor_id = "outside:student_center:entrance"
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Instructions" type="Label" parent="UI"]
+offset_left = 18.0
+offset_top = 16.0
+offset_right = 650.0
+offset_bottom = 82.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 18
+text = "校园导航程序灰盒 · WASD 移动\n沿右侧道路向上跨区；进入上区后走左侧楼梯进学生中心"

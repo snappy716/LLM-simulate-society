@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/campus_population_record.schema.json",
+  "title": "Generated persistent campus NPC record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "npc_id", "display_name", "role_kind", "college_id", "occupation_id",
+    "home_location_id", "home_room_key", "primary_location_id", "current_location_id",
+    "schedule_id", "skill_ids", "access_tags", "appearance_seed", "wealth",
+    "attributes", "personality", "needs", "emotions", "simulation_tier", "night_access",
+    "specialization_id", "club_ids", "personal_trait_id", "relationship_skill_ids",
+    "lost_imprint_skill_id", "core_values", "moral_boundaries", "fear_id",
+    "obsession_id", "contradiction_id", "identity_anchor_ids", "awakened_by_player"
+  ],
+  "properties": {
+    "npc_id": {"type": "string", "pattern": "^campus_(student|staff)_[0-9]{3}$"},
+    "display_name": {"type": "string", "minLength": 2},
+    "role_kind": {"enum": ["student", "staff"]},
+    "college_id": {"type": ["string", "null"]},
+    "occupation_id": {"type": "string", "minLength": 1},
+    "home_location_id": {"type": "string", "minLength": 1},
+    "home_room_key": {"type": "string", "minLength": 1},
+    "primary_location_id": {"type": "string", "minLength": 1},
+    "current_location_id": {"type": "string", "minLength": 1},
+    "schedule_id": {"type": "string", "minLength": 1},
+    "skill_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "access_tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "appearance_seed": {"type": "integer", "minimum": 0},
+    "wealth": {"type": "integer", "minimum": 0},
+    "attributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["physique", "dexterity", "focus", "insight", "empathy", "expression"],
+      "properties": {
+        "physique": {"type": "integer", "minimum": 1, "maximum": 10},
+        "dexterity": {"type": "integer", "minimum": 1, "maximum": 10},
+        "focus": {"type": "integer", "minimum": 1, "maximum": 10},
+        "insight": {"type": "integer", "minimum": 1, "maximum": 10},
+        "empathy": {"type": "integer", "minimum": 1, "maximum": 10},
+        "expression": {"type": "integer", "minimum": 1, "maximum": 10}
+      }
+    },
+    "personality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["extraversion", "agreeableness", "conscientiousness", "openness", "emotional_sensitivity", "risk_tolerance", "rule_alignment", "altruism"],
+      "properties": {
+        "extraversion": {"type": "integer", "minimum": 0, "maximum": 100},
+        "agreeableness": {"type": "integer", "minimum": 0, "maximum": 100},
+        "conscientiousness": {"type": "integer", "minimum": 0, "maximum": 100},
+        "openness": {"type": "integer", "minimum": 0, "maximum": 100},
+        "emotional_sensitivity": {"type": "integer", "minimum": 0, "maximum": 100},
+        "risk_tolerance": {"type": "integer", "minimum": 0, "maximum": 100},
+        "rule_alignment": {"type": "integer", "minimum": 0, "maximum": 100},
+        "altruism": {"type": "integer", "minimum": 0, "maximum": 100}
+      }
+    },
+    "needs": {"$ref": "#/$defs/zeroToHundredMap"},
+    "emotions": {"$ref": "#/$defs/zeroToHundredMap"},
+    "simulation_tier": {"enum": ["persistent", "focused"]},
+    "night_access": {"enum": ["unaware", "sensitive", "capable", "willing"]},
+    "specialization_id": {"type": ["string", "null"]},
+    "club_ids": {"type": "array", "items": {"type": "string"}, "maxItems": 2, "uniqueItems": true},
+    "personal_trait_id": {"type": ["string", "null"]},
+    "relationship_skill_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "lost_imprint_skill_id": {"type": ["string", "null"]},
+    "core_values": {"type": "array", "items": {"type": "string"}, "maxItems": 3, "uniqueItems": true},
+    "moral_boundaries": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "fear_id": {"type": ["string", "null"]},
+    "obsession_id": {"type": ["string", "null"]},
+    "contradiction_id": {"type": ["string", "null"]},
+    "identity_anchor_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "awakened_by_player": {"type": "boolean"}
+  },
+  "$defs": {
+    "zeroToHundredMap": {
+      "type": "object",
+      "additionalProperties": {"type": "integer", "minimum": 0, "maximum": 100}
+    }
+  }
+}

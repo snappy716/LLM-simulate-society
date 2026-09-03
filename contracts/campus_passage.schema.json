@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/campus_passage.schema.json",
+  "title": "Campus road boundary or enterable-scene passage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "from_id", "to_id", "travel_minutes"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "from_id": {"type": "string", "minLength": 1},
+    "to_id": {"type": "string", "minLength": 1},
+    "travel_minutes": {"type": "integer", "minimum": 0},
+    "bidirectional": {"type": "boolean"},
+    "open_phases": {
+      "type": "array",
+      "items": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "required_access_tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "transition_kind": {"enum": ["continuous_boundary", "building_entrance", "interior_door"]},
+    "exit_always_allowed": {"type": "boolean"},
+    "from_anchor_id": {"type": "string", "minLength": 1},
+    "to_anchor_id": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/command_result.schema.json",
+  "title": "Authoritative command result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "command_id", "accepted", "performed", "success", "code", "message", "world_revision", "events", "payload", "replayed"],
+  "properties": {
+    "contract_version": {"const": 1},
+    "command_id": {"type": "string", "minLength": 1},
+    "accepted": {"type": "boolean"},
+    "performed": {"type": "boolean"},
+    "success": {"type": "boolean"},
+    "code": {"type": "string", "minLength": 1},
+    "message": {"type": "string"},
+    "world_revision": {"type": "integer", "minimum": 1},
+    "events": {"type": "array"},
+    "payload": {"type": "object"},
+    "replayed": {"type": "boolean"}
+  }
+}

@@ -7,6 +7,8 @@ signal interface_configured(success: bool, result: Dictionary)
 signal trade_completed(success: bool, result: Dictionary)
 signal item_use_completed(success: bool, result: Dictionary)
 signal action_completed(success: bool, result: Dictionary)
+signal campus_snapshot_updated(snapshot: Dictionary)
+signal campus_traversal_completed(success: bool, result: Dictionary, passage_id: String)
 
 const BASE_URL := "http://127.0.0.1:8765"
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
@@ -16,8 +18,14 @@ var server_pid := -1
 var connected := false
 var busy := false
 var _request: HTTPRequest
+var _campus_request: HTTPRequest
 var _retry_timer: Timer
 var _pending_operation := ""
+var campus_snapshot: Dictionary = {}
+var _campus_busy := false
+var _campus_pending_operation := ""
+var _campus_pending_passage_id := ""
+var _campus_command_counter := 0
 
 
 func _ready() -> void:
@@ -25,6 +33,10 @@ func _ready() -> void:
 	_request.timeout = 180.0
 	_request.request_completed.connect(_on_request_completed)
 	add_child(_request)
+	_campus_request = HTTPRequest.new()
+	_campus_request.timeout = 30.0
+	_campus_request.request_completed.connect(_on_campus_request_completed)
+	add_child(_campus_request)
 	_retry_timer = Timer.new()
 	_retry_timer.wait_time = 1.0
 	_retry_timer.timeout.connect(_request_snapshot)
@@ -110,6 +122,54 @@ func perform_action(action_id: String, parameters: Dictionary = {}) -> void:
 	if error != OK:
 		busy = false
 		action_completed.emit(false, {"action": {"message": "无法发送行动请求：%s" % error}})
+
+
+func refresh_campus_snapshot() -> void:
+	if _campus_busy or not connected:
+		return
+	_campus_busy = true
+	_campus_pending_operation = "snapshot"
+	var error := _campus_request.request(BASE_URL + "/kernel/campus-snapshot")
+	if error != OK:
+		_campus_busy = false
+		_campus_pending_operation = ""
+
+
+func traverse_campus_passage(passage_id: String) -> void:
+	if passage_id.is_empty():
+		campus_traversal_completed.emit(false, {"error": "入口未配置 passage_id"}, passage_id)
+		return
+	if _campus_busy or not connected or campus_snapshot.is_empty():
+		campus_traversal_completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他移动"}, passage_id)
+		return
+	_campus_busy = true
+	_campus_pending_operation = "traverse"
+	_campus_pending_passage_id = passage_id
+	_campus_command_counter += 1
+	var clock: Dictionary = campus_snapshot.get("clock", {})
+	var command := {
+		"command_id": "godot-campus-%d-%d" % [Time.get_ticks_usec(), _campus_command_counter],
+		"actor_id": "player",
+		"action_id": "TRAVERSE_LOCATION_PASSAGE",
+		"target_ids": [],
+		"parameters": {"passage_id": passage_id},
+		"expected_world_revision": int(campus_snapshot.get("revision", 1)),
+		"issued_day": int(clock.get("day", 1)),
+		"issued_phase": String(clock.get("phase", "morning")),
+		"issued_minute": int(clock.get("minute", 0)),
+		"source": "player",
+	}
+	var error := _campus_request.request(
+		BASE_URL + "/kernel/command",
+		PackedStringArray(["Content-Type: application/json"]),
+		HTTPClient.METHOD_POST,
+		JSON.stringify(command)
+	)
+	if error != OK:
+		_campus_busy = false
+		_campus_pending_operation = ""
+		_campus_pending_passage_id = ""
+		campus_traversal_completed.emit(false, {"error": "无法发送校园移动请求：%s" % error}, passage_id)
 
 
 func phase_display_name(phase: String) -> String:
@@ -205,6 +265,8 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
 	_retry_timer.stop()
 	connection_state_changed.emit(true, "模拟服务已连接")
 	snapshot_updated.emit(snapshot)
+	if campus_snapshot.is_empty():
+		refresh_campus_snapshot()
 	if operation == "step":
 		busy = false
 		advance_state_changed.emit(false)
@@ -216,3 +278,31 @@ func _finish_with_error(message: String) -> void:
 	advance_state_changed.emit(false)
 	connection_state_changed.emit(false, message)
 	_retry_timer.start()
+
+
+func _on_campus_request_completed(
+	_result: int,
+	response_code: int,
+	_headers: PackedStringArray,
+	body: PackedByteArray
+) -> void:
+	var operation := _campus_pending_operation
+	var passage_id := _campus_pending_passage_id
+	_campus_pending_operation = ""
+	_campus_pending_passage_id = ""
+	_campus_busy = false
+	var parsed = JSON.parse_string(body.get_string_from_utf8())
+	if response_code != 200 or not parsed is Dictionary:
+		if operation == "traverse":
+			var error_payload: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
+			campus_traversal_completed.emit(false, error_payload, passage_id)
+		return
+	if operation == "snapshot":
+		campus_snapshot = parsed
+		campus_snapshot_updated.emit(campus_snapshot)
+		return
+	var updated_snapshot = parsed.get("snapshot", {})
+	if updated_snapshot is Dictionary:
+		campus_snapshot = updated_snapshot
+		campus_snapshot_updated.emit(campus_snapshot)
+	campus_traversal_completed.emit(bool(parsed.get("ok", false)), parsed, passage_id)

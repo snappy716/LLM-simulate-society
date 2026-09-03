@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "population": {
+    "persistent": 200,
+    "students": 134,
+    "staff": 66,
+    "focused": 20,
+    "night_access": {
+      "unaware": 78,
+      "sensitive": 60,
+      "capable": 40,
+      "willing": 22
+    }
+  },
+  "student_occupations": {
+    "undergraduate": 94,
+    "graduate_student": 32,
+    "student_assistant": 8
+  },
+  "staff_occupations": [
+    {"id": "academic_faculty", "count": 30, "college_policy": "all", "primary_policy": "college"},
+    {"id": "administration_staff", "count": 8, "primary_location_id": "administrative_office_pool"},
+    {"id": "psychology_counselor", "count": 4, "college_id": "psychology", "primary_location_id": "psychology_support_room"},
+    {"id": "librarian", "count": 4, "primary_location_id": "library_reading_hall"},
+    {"id": "medical_staff", "count": 6, "college_id": "medicine", "primary_location_id": "hospital_clinic"},
+    {"id": "campus_security", "count": 5, "primary_location_id": "security_duty_room"},
+    {"id": "campus_service_staff", "count": 4, "primary_location_id": "canteen_dining_hall"},
+    {"id": "maintenance_staff", "count": 5, "primary_location_id": "maintenance_workshop"}
+  ],
+  "college_primary_locations": {
+    "math_physics": "math_physics_building",
+    "bio_chemistry": "biochemistry_research_building",
+    "earth_space": "earth_space_building",
+    "artificial_intelligence": "ai_innovation_building",
+    "psychology": "humanities_psychology_building",
+    "humanities": "humanities_psychology_building",
+    "medicine": "campus_hospital",
+    "sports": "sports_center"
+  },
+  "college_attribute_biases": {
+    "math_physics": {"focus": 1, "insight": 1},
+    "bio_chemistry": {"dexterity": 1, "focus": 1},
+    "earth_space": {"physique": 1, "insight": 1},
+    "artificial_intelligence": {"focus": 1, "insight": 1},
+    "psychology": {"empathy": 1, "insight": 1},
+    "humanities": {"expression": 1, "empathy": 1},
+    "medicine": {"focus": 1, "empathy": 1},
+    "sports": {"physique": 2, "dexterity": 1}
+  },
+  "college_access_tags": {
+    "bio_chemistry": ["lab_access"],
+    "earth_space": ["observatory_access"],
+    "artificial_intelligence": ["ai_lab_access"],
+    "psychology": ["psychology_lab_access"],
+    "medicine": ["lab_access"]
+  },
+  "role_access_tags": {
+    "academic_faculty": ["faculty_access"],
+    "administration_staff": ["administration_access"],
+    "psychology_counselor": ["psychology_records_access"],
+    "librarian": ["archive_access"],
+    "medical_staff": ["medical_staff"],
+    "campus_security": ["security_staff"],
+    "maintenance_staff": ["maintenance_access"]
+  },
+  "schedules": {
+    "undergraduate": "student_course_weekday",
+    "graduate_student": "graduate_research_weekday",
+    "student_assistant": "student_assistant_weekday",
+    "academic_faculty": "faculty_teaching_weekday",
+    "administration_staff": "administration_day_shift",
+    "psychology_counselor": "counselor_day_shift",
+    "librarian": "library_rotating_shift",
+    "medical_staff": "medical_rotating_shift",
+    "campus_security": "security_rotating_shift",
+    "campus_service_staff": "service_rotating_shift",
+    "maintenance_staff": "maintenance_day_shift"
+  },
+  "wealth_ranges": {
+    "student": [180, 1200],
+    "staff": [1500, 8000]
+  },
+  "surnames": ["陈", "林", "周", "吴", "徐", "孙", "胡", "朱", "高", "梁", "郭", "何", "罗", "宋", "郑", "谢", "韩", "唐", "冯", "于", "董", "萧", "程", "曹", "袁", "邓", "许", "傅", "沈", "曾"],
+  "given_names": ["安然", "嘉言", "景行", "清和", "知遥", "雨澄", "星野", "书宁", "思远", "若岚", "明川", "静姝", "修远", "以宁", "子衿", "亦辰", "令仪", "予安", "怀瑾", "望舒", "云舟", "知夏", "明熙", "思齐", "清越", "嘉树", "南乔", "念初", "闻溪", "晏如", "知微", "景澄", "言蹊", "令闻", "清嘉", "修竹", "星河", "映雪", "若水", "予川"],
+  "personal_traits": ["calm_observer", "quick_learner", "patient_listener", "bold_initiator", "careful_planner", "practical_helper", "skeptical_checker", "social_connector", "resilient_mind", "creative_association"],
+  "relationship_skills": ["steady_partner", "shared_focus", "mutual_cover", "encouraging_presence", "coordinated_response"],
+  "core_values": ["truth", "belonging", "achievement", "care", "freedom", "order", "curiosity", "recognition", "justice", "security"],
+  "moral_boundaries": ["do_not_harm_bystanders", "do_not_betray_confidence", "do_not_fabricate_evidence", "do_not_abandon_companions", "do_not_abuse_authority", "do_not_exploit_the_vulnerable"],
+  "fears": ["being_forgotten", "public_failure", "loss_of_control", "social_rejection", "physical_harm", "meaninglessness", "letting_others_down"],
+  "obsessions": ["prove_theory", "protect_reputation", "find_belonging", "solve_anomaly", "master_craft", "keep_everyone_safe", "leave_a_trace"],
+  "contradictions": ["seeks_truth_but_avoids_conflict", "values_connection_but_withdraws", "obeys_rules_but_envies_rebels", "helps_others_but_fears_dependence", "pursues_excellence_but_fears_visibility", "seeks_control_but_craves_surprise"]
+}
