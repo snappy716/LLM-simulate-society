@@ -6,7 +6,7 @@
 offset_left = 930.0
 offset_top = 18.0
 offset_right = 1260.0
-offset_bottom = 174.0
+offset_bottom = 196.0
 script = ExtResource("1_panel")
 
 [node name="Margin" type="MarginContainer" parent="."]
@@ -26,7 +26,7 @@ text = "第 1 天 · 上午"
 text = "主要行动剩余：1"
 
 [node name="Status" type="Label" parent="Margin/VBox"]
-text = "聊天 / 购物 / 吃饭 / 普通移动：免费"
+text = "计划：ORIENTATION_OR_CLASS @ humanities_classroom_pool\n聊天 / 购物 / 吃饭 / 普通移动：免费"
 
 [node name="Advance" type="Button" parent="Margin/VBox"]
 text = "结束当前时段"

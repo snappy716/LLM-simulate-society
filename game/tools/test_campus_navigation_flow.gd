@@ -16,10 +16,11 @@ func _run_flow() -> void:
 		await create_timer(0.05).timeout
 	var initial_snapshot: Dictionary = bridge.get("campus_snapshot")
 	assert(not initial_snapshot.is_empty(), "campus snapshot did not connect")
-	assert(initial_snapshot.get("view_version") == 2)
+	assert(initial_snapshot.get("view_version") == 3)
 	assert(initial_snapshot.get("revision") == 1)
 	assert((initial_snapshot.get("player", {}) as Dictionary).get("current_location_id") == "south_gate_region")
 	assert(((initial_snapshot.get("player", {}) as Dictionary).get("action_budget", {}) as Dictionary).get("major_remaining") == 1)
+	assert(((initial_snapshot.get("player", {}) as Dictionary).get("current_plan", {}) as Dictionary).get("activity_id") == "ORIENTATION_OR_CLASS")
 
 	var outdoor_scene := load(OUTDOOR_SCENE) as PackedScene
 	assert(outdoor_scene != null)
@@ -88,6 +89,7 @@ func _run_flow() -> void:
 	assert((advanced_snapshot.get("clock", {}) as Dictionary).get("minute") == 0)
 	assert(((advanced_snapshot.get("player", {}) as Dictionary).get("action_budget", {}) as Dictionary).get("major_remaining") == 1)
 	assert(advanced_snapshot.get("revision") == 5)
+	assert(((advanced_snapshot.get("player", {}) as Dictionary).get("current_plan", {}) as Dictionary).get("activity_id") == "CAMPUS_EXPLORATION")
 	assert("下午" in String(phase_panel.get_node("Margin/VBox/Phase").text))
 	assert(not advance_button.disabled)
 

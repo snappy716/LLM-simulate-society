@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/campus_schedule.schema.json",
+  "title": "Campus weekly schedule templates",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "templates"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "templates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "weekday", "weekend"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "weekday": {"$ref": "#/$defs/dayPlan"},
+          "weekend": {"$ref": "#/$defs/dayPlan"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "dayPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["morning", "afternoon", "evening", "late_night"],
+      "properties": {
+        "morning": {"$ref": "#/$defs/slot"},
+        "afternoon": {"$ref": "#/$defs/slot"},
+        "evening": {"$ref": "#/$defs/slot"},
+        "late_night": {"$ref": "#/$defs/slot"}
+      }
+    },
+    "slot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["activity_id", "location", "action_class", "priority"],
+      "properties": {
+        "activity_id": {"type": "string", "minLength": 1},
+        "location": {"type": "string", "minLength": 1},
+        "action_class": {"enum": ["free", "major"]},
+        "priority": {"type": "integer", "minimum": 0, "maximum": 100}
+      }
+    }
+  }
+}

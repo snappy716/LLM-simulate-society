@@ -48,12 +48,14 @@ class CampusKernelBridgeTests(unittest.TestCase):
     def test_side_by_side_snapshot_has_campus_places_and_persistent_cast(self):
         campus = self.bridge.campus_snapshot()
         legacy = self.bridge.snapshot()
-        self.assertEqual(2, campus["view_version"])
+        self.assertEqual(3, campus["view_version"])
         self.assertEqual(200, len(campus["population"]))
         self.assertEqual(6000, campus["population_summary"]["campus_total"])
         self.assertEqual("south_gate_region", campus["player"]["current_location_id"])
         self.assertEqual(1, campus["player"]["action_budget"]["major_remaining"])
         self.assertEqual(1, campus["action_economy"]["player"]["major_remaining"])
+        self.assertEqual("ORIENTATION_OR_CLASS", campus["player"]["current_plan"]["activity_id"])
+        self.assertEqual(201, sum(campus["schedule"]["current_planned_occupancy"].values()))
         self.assertEqual(2, legacy["schema_version"])
 
     def test_strict_kernel_command_crosses_continuous_region_boundary(self):
@@ -79,6 +81,9 @@ class CampusKernelBridgeTests(unittest.TestCase):
         self.assertTrue(advanced["ok"])
         self.assertEqual("afternoon", advanced["snapshot"]["clock"]["phase"])
         self.assertEqual(1, advanced["snapshot"]["player"]["action_budget"]["major_remaining"])
+        self.assertEqual(
+            "CAMPUS_EXPLORATION", advanced["snapshot"]["player"]["current_plan"]["activity_id"]
+        )
 
     def test_remote_entrance_is_rejected_without_revision_change(self):
         result = self.bridge.campus_command(

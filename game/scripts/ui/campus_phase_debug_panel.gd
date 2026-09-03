@@ -24,9 +24,13 @@ func _render_snapshot(snapshot: Dictionary) -> void:
 	var day := int(clock.get("day", 1))
 	var player: Dictionary = snapshot.get("player", {})
 	var budget: Dictionary = player.get("action_budget", {})
+	var plan: Dictionary = player.get("current_plan", {})
 	phase_label.text = "第 %d 天 · %s" % [day, _bridge.call("phase_display_name", phase)]
 	budget_label.text = "主要行动剩余：%d" % int(budget.get("major_remaining", 0))
-	status_label.text = "聊天 / 购物 / 吃饭 / 普通移动：免费"
+	status_label.text = "计划：%s @ %s\n聊天 / 购物 / 吃饭 / 普通移动：免费" % [
+		String(plan.get("activity_id", "自由安排")),
+		String(plan.get("location_id", "未指定")),
+	]
 
 
 func _on_advance_pressed() -> void:

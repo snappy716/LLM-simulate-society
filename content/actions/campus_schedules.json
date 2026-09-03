@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "templates": [
+    {
+      "id": "new_psychology_student_weekday",
+      "weekday": {
+        "morning": {"activity_id": "ORIENTATION_OR_CLASS", "location": "college_classroom", "action_class": "major", "priority": 90},
+        "afternoon": {"activity_id": "CAMPUS_EXPLORATION", "location": "mirror_lake_square", "action_class": "major", "priority": 55},
+        "evening": {"activity_id": "READ_OR_SOCIALIZE", "location": "library", "action_class": "major", "priority": 45},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      },
+      "weekend": {
+        "morning": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20},
+        "afternoon": {"activity_id": "PERSONAL_ACTIVITY", "location": "club_or_square", "action_class": "major", "priority": 40},
+        "evening": {"activity_id": "READ_OR_SOCIALIZE", "location": "library", "action_class": "major", "priority": 35},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      }
+    },
+    {
+      "id": "student_course_weekday",
+      "weekday": {
+        "morning": {"activity_id": "ATTEND_CLASS", "location": "college_classroom", "action_class": "major", "priority": 85},
+        "afternoon": {"activity_id": "COURSEWORK", "location": "college_practical", "action_class": "major", "priority": 65},
+        "evening": {"activity_id": "CLUB_OR_SELF_STUDY", "location": "club_or_library", "action_class": "major", "priority": 45},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      },
+      "weekend": {
+        "morning": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20},
+        "afternoon": {"activity_id": "CLUB_OR_PERSONAL_ACTIVITY", "location": "club_or_square", "action_class": "major", "priority": 40},
+        "evening": {"activity_id": "SOCIAL_OR_SELF_STUDY", "location": "club_or_library", "action_class": "major", "priority": 35},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      }
+    },
+    {
+      "id": "graduate_research_weekday",
+      "weekday": {
+        "morning": {"activity_id": "RESEARCH", "location": "primary", "action_class": "major", "priority": 80},
+        "afternoon": {"activity_id": "LAB_OR_SEMINAR", "location": "college_practical", "action_class": "major", "priority": 75},
+        "evening": {"activity_id": "LITERATURE_REVIEW", "location": "library", "action_class": "major", "priority": 55},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      },
+      "weekend": {
+        "morning": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20},
+        "afternoon": {"activity_id": "OPTIONAL_RESEARCH", "location": "primary", "action_class": "major", "priority": 40},
+        "evening": {"activity_id": "PERSONAL_ACTIVITY", "location": "club_or_library", "action_class": "major", "priority": 35},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      }
+    },
+    {
+      "id": "student_assistant_weekday",
+      "weekday": {
+        "morning": {"activity_id": "ATTEND_CLASS", "location": "college_classroom", "action_class": "major", "priority": 85},
+        "afternoon": {"activity_id": "ASSIST_RESEARCH_OR_TEACHING", "location": "primary", "action_class": "major", "priority": 80},
+        "evening": {"activity_id": "PREPARE_MATERIALS", "location": "library", "action_class": "major", "priority": 50},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      },
+      "weekend": {
+        "morning": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20},
+        "afternoon": {"activity_id": "CLUB_OR_PERSONAL_ACTIVITY", "location": "club_or_square", "action_class": "major", "priority": 40},
+        "evening": {"activity_id": "SELF_STUDY", "location": "library", "action_class": "major", "priority": 35},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      }
+    },
+    {
+      "id": "faculty_teaching_weekday",
+      "weekday": {
+        "morning": {"activity_id": "TEACH_CLASS", "location": "college_classroom", "action_class": "major", "priority": 90},
+        "afternoon": {"activity_id": "RESEARCH_OR_OFFICE_HOURS", "location": "primary", "action_class": "major", "priority": 80},
+        "evening": {"activity_id": "PREPARE_OR_REVIEW", "location": "library", "action_class": "major", "priority": 45},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      },
+      "weekend": {
+        "morning": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20},
+        "afternoon": {"activity_id": "OPTIONAL_RESEARCH", "location": "primary", "action_class": "major", "priority": 35},
+        "evening": {"activity_id": "PERSONAL_ACTIVITY", "location": "home", "action_class": "major", "priority": 30},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      }
+    },
+    {
+      "id": "administration_day_shift",
+      "weekday": {
+        "morning": {"activity_id": "ADMINISTRATION_SHIFT", "location": "primary", "action_class": "major", "priority": 95},
+        "afternoon": {"activity_id": "ADMINISTRATION_SHIFT", "location": "primary", "action_class": "major", "priority": 95},
+        "evening": {"activity_id": "PERSONAL_ACTIVITY", "location": "home", "action_class": "major", "priority": 30},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      },
+      "weekend": {
+        "morning": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20},
+        "afternoon": {"activity_id": "PERSONAL_ACTIVITY", "location": "mirror_lake_square", "action_class": "major", "priority": 30},
+        "evening": {"activity_id": "PERSONAL_ACTIVITY", "location": "home", "action_class": "major", "priority": 30},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      }
+    },
+    {
+      "id": "counselor_day_shift",
+      "weekday": {
+        "morning": {"activity_id": "COUNSELING_SHIFT", "location": "primary", "action_class": "major", "priority": 95},
+        "afternoon": {"activity_id": "COUNSELING_SHIFT", "location": "primary", "action_class": "major", "priority": 95},
+        "evening": {"activity_id": "CASE_NOTES", "location": "psychology_research_lab", "action_class": "major", "priority": 55},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      },
+      "weekend": {
+        "morning": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20},
+        "afternoon": {"activity_id": "ON_CALL_SUPPORT", "location": "primary", "action_class": "major", "priority": 65},
+        "evening": {"activity_id": "PERSONAL_ACTIVITY", "location": "home", "action_class": "major", "priority": 30},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      }
+    },
+    {
+      "id": "library_rotating_shift",
+      "weekday": {
+        "morning": {"activity_id": "LIBRARY_SHIFT", "location": "primary", "action_class": "major", "priority": 90},
+        "afternoon": {"activity_id": "LIBRARY_SHIFT", "location": "primary", "action_class": "major", "priority": 90},
+        "evening": {"activity_id": "LIBRARY_SHIFT", "location": "primary", "action_class": "major", "priority": 85},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      },
+      "weekend": {
+        "morning": {"activity_id": "LIBRARY_SHIFT", "location": "primary", "action_class": "major", "priority": 80},
+        "afternoon": {"activity_id": "LIBRARY_SHIFT", "location": "primary", "action_class": "major", "priority": 80},
+        "evening": {"activity_id": "PERSONAL_ACTIVITY", "location": "home", "action_class": "major", "priority": 30},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      }
+    },
+    {
+      "id": "medical_rotating_shift",
+      "weekday": {
+        "morning": {"activity_id": "MEDICAL_SHIFT", "location": "primary", "action_class": "major", "priority": 100},
+        "afternoon": {"activity_id": "MEDICAL_SHIFT", "location": "primary", "action_class": "major", "priority": 100},
+        "evening": {"activity_id": "MEDICAL_SHIFT", "location": "primary", "action_class": "major", "priority": 95},
+        "late_night": {"activity_id": "ON_CALL_MEDICAL_SHIFT", "location": "primary", "action_class": "major", "priority": 100}
+      },
+      "weekend": {
+        "morning": {"activity_id": "MEDICAL_SHIFT", "location": "primary", "action_class": "major", "priority": 100},
+        "afternoon": {"activity_id": "MEDICAL_SHIFT", "location": "primary", "action_class": "major", "priority": 100},
+        "evening": {"activity_id": "MEDICAL_SHIFT", "location": "primary", "action_class": "major", "priority": 95},
+        "late_night": {"activity_id": "ON_CALL_MEDICAL_SHIFT", "location": "primary", "action_class": "major", "priority": 100}
+      }
+    },
+    {
+      "id": "security_rotating_shift",
+      "weekday": {
+        "morning": {"activity_id": "SECURITY_PATROL", "location": "primary", "action_class": "major", "priority": 95},
+        "afternoon": {"activity_id": "SECURITY_PATROL", "location": "primary", "action_class": "major", "priority": 95},
+        "evening": {"activity_id": "SECURITY_PATROL", "location": "primary", "action_class": "major", "priority": 100},
+        "late_night": {"activity_id": "NIGHT_SECURITY_SHIFT", "location": "primary", "action_class": "major", "priority": 100}
+      },
+      "weekend": {
+        "morning": {"activity_id": "SECURITY_PATROL", "location": "primary", "action_class": "major", "priority": 90},
+        "afternoon": {"activity_id": "SECURITY_PATROL", "location": "primary", "action_class": "major", "priority": 90},
+        "evening": {"activity_id": "SECURITY_PATROL", "location": "primary", "action_class": "major", "priority": 100},
+        "late_night": {"activity_id": "NIGHT_SECURITY_SHIFT", "location": "primary", "action_class": "major", "priority": 100}
+      }
+    },
+    {
+      "id": "service_rotating_shift",
+      "weekday": {
+        "morning": {"activity_id": "CAMPUS_SERVICE_SHIFT", "location": "primary", "action_class": "major", "priority": 90},
+        "afternoon": {"activity_id": "CAMPUS_SERVICE_SHIFT", "location": "primary", "action_class": "major", "priority": 90},
+        "evening": {"activity_id": "CAMPUS_SERVICE_SHIFT", "location": "primary", "action_class": "major", "priority": 90},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      },
+      "weekend": {
+        "morning": {"activity_id": "CAMPUS_SERVICE_SHIFT", "location": "primary", "action_class": "major", "priority": 85},
+        "afternoon": {"activity_id": "CAMPUS_SERVICE_SHIFT", "location": "primary", "action_class": "major", "priority": 85},
+        "evening": {"activity_id": "CAMPUS_SERVICE_SHIFT", "location": "primary", "action_class": "major", "priority": 85},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      }
+    },
+    {
+      "id": "maintenance_day_shift",
+      "weekday": {
+        "morning": {"activity_id": "MAINTENANCE_SHIFT", "location": "primary", "action_class": "major", "priority": 95},
+        "afternoon": {"activity_id": "MAINTENANCE_SHIFT", "location": "primary", "action_class": "major", "priority": 95},
+        "evening": {"activity_id": "ON_CALL_MAINTENANCE", "location": "primary", "action_class": "major", "priority": 65},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      },
+      "weekend": {
+        "morning": {"activity_id": "ON_CALL_MAINTENANCE", "location": "primary", "action_class": "major", "priority": 65},
+        "afternoon": {"activity_id": "PERSONAL_ACTIVITY", "location": "home", "action_class": "major", "priority": 30},
+        "evening": {"activity_id": "PERSONAL_ACTIVITY", "location": "home", "action_class": "major", "priority": 30},
+        "late_night": {"activity_id": "REST", "location": "home", "action_class": "free", "priority": 20}
+      }
+    }
+  ]
+}

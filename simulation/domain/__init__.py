@@ -77,6 +77,12 @@ from simulation.domain.action_economy import (
     PhaseActionRule,
     build_action_economy_policy,
 )
+from simulation.domain.schedules import (
+    CampusScheduleTemplate,
+    PlannedScheduleSlot,
+    ScheduleSlotTemplate,
+    parse_schedule_template,
+)
 from simulation.domain.locations import (
     CampusLocation,
     CampusLocationGraph,
@@ -153,6 +159,10 @@ __all__ = [
     "ActionEconomyPolicy",
     "PhaseActionRule",
     "build_action_economy_policy",
+    "CampusScheduleTemplate",
+    "PlannedScheduleSlot",
+    "ScheduleSlotTemplate",
+    "parse_schedule_template",
     "ClockState",
     "EventDraft",
     "SimulationEvent",

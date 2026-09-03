@@ -35,11 +35,14 @@ from simulation.systems import (  # noqa: E402
     install_campus_places,
     install_action_economy,
     install_campus_population,
+    install_campus_schedules,
     load_action_economy_policy,
     load_campus_location_graph,
+    load_campus_schedule_templates,
     make_advance_phase_handler,
     make_traverse_location_handler,
     action_economy_invariant,
+    campus_schedule_invariant,
 )
 
 
@@ -54,10 +57,13 @@ class CampusKernelBridge:
         install_campus_places(state, graph)
         records = CampusPopulationGenerator(registry, graph, rng_pool).generate()
         install_campus_population(state, records)
+        schedule_templates = load_campus_schedule_templates(registry, graph)
+        install_campus_schedules(state, graph, schedule_templates)
         action_policy = load_action_economy_policy(registry)
         install_action_economy(state, action_policy)
         self.kernel = WorldKernel(state, rng=rng_pool)
         self.kernel.add_invariant(action_economy_invariant)
+        self.kernel.add_invariant(campus_schedule_invariant)
         self.kernel.register_handler(
             "TRAVERSE_LOCATION_PASSAGE",
             make_traverse_location_handler(graph),

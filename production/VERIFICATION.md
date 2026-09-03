@@ -6,6 +6,7 @@
 - 程序底座专项：`python3 -m unittest tests.test_world_kernel tests.test_content_registry tests.test_kernel_persistence tests.test_kernel_api_contracts -v`
 - 校园地点与人口专项：`python3 -m unittest tests.test_campus_locations tests.test_campus_population tests.test_campus_kernel_bridge tests.test_godot_campus_navigation -v`
 - 四时段与主要行动专项：`python3 -m unittest tests.test_action_economy tests.test_campus_locations tests.test_campus_kernel_bridge tests.test_kernel_api_contracts -v`
+- 校园日程与容量专项：`python3 -m unittest tests.test_campus_schedules tests.test_campus_population tests.test_campus_kernel_bridge tests.test_content_registry -v`
 - Python 编译：`python3 -m compileall -q simulation tests`
 - 补丁格式：`git diff --check`
 - 离线启动：`python3 -m simulation --days 0 --llm rule --quiet`
@@ -48,6 +49,12 @@
 免费且不推进分钟；聊天、购物和吃饭也被定义为自由行动。每个角色每时段只有 1 次主要行动，
 额度彼此独立并在 `ADVANCE_PHASE` 时统一重置。校园灰盒包含可见调试面板和时段推进按钮；
 本阶段仍未启用精细分钟消耗。
+
+校园日程与容量阶段验收：当前工程 220 项、旧版工程 46 项测试通过；固定种子 42 的规则模式
+14 天模拟完成；Godot 4.7.2 项目导入及校园端到端通过。201 名角色生成 5628 个一周计划槽位，
+默认内容没有非法地点或容量改派；人工制造的 10 人争抢 8 人心理支持室场景能稳定改派 2 人。
+校园快照升级到 v3，并在灰盒面板展示随时段变化的玩家计划。计划生成不移动角色、不扣行动，
+因此下一阶段仍需实现 NPC 统一寻路与实际活动执行。
 
 本轮固定种子 42 的 14 天结果：共 16,385 个事件，497 笔商店成交、264 笔私人成交、
 236 次统一物品使用；普通重复交易者平均间隔 3.71 天、最短 2 天且同日重复为 0；

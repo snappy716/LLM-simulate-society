@@ -48,6 +48,7 @@
     "sports": {"physique": 2, "dexterity": 1}
   },
   "college_access_tags": {
+    "math_physics": ["lab_access"],
     "bio_chemistry": ["lab_access"],
     "earth_space": ["observatory_access"],
     "artificial_intelligence": ["ai_lab_access"],

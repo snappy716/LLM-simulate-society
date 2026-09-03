@@ -36,6 +36,7 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ContentSource("locations/campus_passages.json", "campus_passage", "passages"),
     ContentSource("actions/college_skills.json", "college", "colleges"),
     ContentSource("actions/action_economy.json", "configuration", singleton_id="action_economy"),
+    ContentSource("actions/campus_schedules.json", "schedule_template", "templates"),
     ContentSource("organizations/clubs.json", "club", "clubs"),
     ContentSource("npcs/generation_rules.json", "configuration", singleton_id="npc_generation"),
     ContentSource("npcs/campus_population.json", "configuration", singleton_id="campus_population"),
@@ -148,6 +149,15 @@ class ContentRegistry:
                     errors.append(
                         f"campus passage {passage.get('id')} references unknown node: {node_id}"
                     )
+        schedule_ids = set(self.ids("schedule_template"))
+        population_config = self.all("configuration").get("campus_population", {})
+        referenced_schedules = set(population_config.get("schedules", {}).values())
+        unknown_schedules = referenced_schedules - schedule_ids
+        if unknown_schedules:
+            errors.append(
+                "campus population references unknown schedules: "
+                + ", ".join(sorted(unknown_schedules))
+            )
         if errors:
             raise ContentValidationError("invalid content references: " + "; ".join(errors))
 

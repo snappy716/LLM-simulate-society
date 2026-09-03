@@ -48,6 +48,13 @@ from simulation.systems.campus_population import (
     CampusPopulationGenerator,
     install_campus_population,
 )
+from simulation.systems.campus_schedules import (
+    LOCATION_TOKENS,
+    campus_schedule_invariant,
+    current_schedule_slot,
+    install_campus_schedules,
+    load_campus_schedule_templates,
+)
 
 __all__ = [
     "DesireEngine",
@@ -62,6 +69,11 @@ __all__ = [
     "CampusPopulationError",
     "CampusPopulationGenerator",
     "install_campus_population",
+    "LOCATION_TOKENS",
+    "campus_schedule_invariant",
+    "current_schedule_slot",
+    "install_campus_schedules",
+    "load_campus_schedule_templates",
     "IntelligenceSystem",
     "ItemUseSystem",
     "ItemInstanceSystem",
