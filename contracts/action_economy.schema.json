@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/action_economy.schema.json",
+  "title": "Campus phase and action budget configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "phases", "action_classes"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "phases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "major_actions", "optional"],
+        "properties": {
+          "id": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+          "major_actions": {"type": "integer", "minimum": 0},
+          "optional": {"type": "boolean"}
+        }
+      }
+    },
+    "action_classes": {
+      "type": "object",
+      "additionalProperties": {"enum": ["free", "major"]},
+      "required": ["travel", "chat", "shopping", "meal", "committed_activity"]
+    }
+  }
+}

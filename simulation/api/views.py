@@ -8,7 +8,7 @@ from simulation.domain.world_state import WorldState
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 1
+CAMPUS_WORLD_VIEW_VERSION = 2
 
 
 def kernel_status_view(state: WorldState, *, busy: bool = False) -> Dict[str, Any]:
@@ -30,6 +30,8 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     """Project only the campus data Godot needs for movement and population UI."""
     state.require_valid()
     player = deepcopy(state.population.get("player", {}))
+    actor_budgets = state.action_economy.get("actors", {})
+    player["action_budget"] = deepcopy(actor_budgets.get("player", {}))
     cast = {
         npc_id: {
             key: deepcopy(record.get(key))
@@ -57,6 +59,10 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         "interior_templates": deepcopy(state.metadata.get("interior_templates", {})),
         "population": cast,
         "population_summary": deepcopy(state.metadata.get("campus_population", {})),
+        "action_economy": {
+            "policy": deepcopy(state.action_economy.get("policy", {})),
+            "player": deepcopy(actor_budgets.get("player", {})),
+        },
     }
 
 

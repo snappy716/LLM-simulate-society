@@ -33,9 +33,13 @@ from simulation.systems import (  # noqa: E402
     DuplicateCommandError,
     RevisionConflictError,
     install_campus_places,
+    install_action_economy,
     install_campus_population,
+    load_action_economy_policy,
     load_campus_location_graph,
+    make_advance_phase_handler,
     make_traverse_location_handler,
+    action_economy_invariant,
 )
 
 
@@ -50,10 +54,17 @@ class CampusKernelBridge:
         install_campus_places(state, graph)
         records = CampusPopulationGenerator(registry, graph, rng_pool).generate()
         install_campus_population(state, records)
+        action_policy = load_action_economy_policy(registry)
+        install_action_economy(state, action_policy)
         self.kernel = WorldKernel(state, rng=rng_pool)
+        self.kernel.add_invariant(action_economy_invariant)
         self.kernel.register_handler(
             "TRAVERSE_LOCATION_PASSAGE",
             make_traverse_location_handler(graph),
+        )
+        self.kernel.register_handler(
+            "ADVANCE_PHASE",
+            make_advance_phase_handler(action_policy),
         )
 
     def snapshot(self) -> dict:

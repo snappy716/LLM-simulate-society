@@ -186,6 +186,20 @@ class CampusContentTests(unittest.TestCase):
         self.assertEqual(8, len(enemies))
         self.assertEqual(8, len({enemy["id"] for enemy in enemies}))
 
+    def test_action_economy_is_coarse_and_only_major_actions_are_limited(self):
+        economy = self._read("content/actions/action_economy.json")
+        phases = economy["phases"]
+        self.assertEqual(
+            ["morning", "afternoon", "evening", "late_night"],
+            [phase["id"] for phase in phases],
+        )
+        self.assertTrue(all(phase["major_actions"] == 1 for phase in phases))
+        self.assertTrue(phases[-1]["optional"])
+        self.assertTrue(all(
+            economy["action_classes"][action] == "free"
+            for action in ("travel", "chat", "shopping", "meal")
+        ))
+
 
 if __name__ == "__main__":
     unittest.main()

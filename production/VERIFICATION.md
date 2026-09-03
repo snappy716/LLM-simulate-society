@@ -5,6 +5,7 @@
 - 校园架构专项：`python3 -m unittest tests.test_campus_demo_architecture -v`
 - 程序底座专项：`python3 -m unittest tests.test_world_kernel tests.test_content_registry tests.test_kernel_persistence tests.test_kernel_api_contracts -v`
 - 校园地点与人口专项：`python3 -m unittest tests.test_campus_locations tests.test_campus_population tests.test_campus_kernel_bridge tests.test_godot_campus_navigation -v`
+- 四时段与主要行动专项：`python3 -m unittest tests.test_action_economy tests.test_campus_locations tests.test_campus_kernel_bridge tests.test_kernel_api_contracts -v`
 - Python 编译：`python3 -m compileall -q simulation tests`
 - 补丁格式：`git diff --check`
 - 离线启动：`python3 -m simulation --days 0 --llm rule --quiet`
@@ -39,7 +40,14 @@
 组件实例测试输出 `CAMPUS_COMPONENTS_OK`；导航端到端测试实际完成道路连续跨区、楼梯进楼、
 室内出门及返回原楼梯锚点并输出 `CAMPUS_NAVIGATION_FLOW_OK`。主场景与校园导航灰盒均可
 无界面启动，并已在 Godot 图形界面检查灰盒构图。校园内核
-通过独立 `/kernel/campus-snapshot` v1 与 `/kernel/command` 并行接入，未替换旧快照 v2。
+最初通过独立 `/kernel/campus-snapshot` v1 与 `/kernel/command` 并行接入，未替换旧快照 v2。
+
+四时段与主要行动预算阶段验收：当前工程 214 项、旧版工程 46 项测试通过；固定种子 42
+的规则模式 14 天模拟完成；Godot 4.7.2 编辑器导入、组件测试、旧主场景启动以及校园导航和
+时段推进端到端均通过。校园快照升级为 v2，加入玩家主要行动余额和规则投影。普通移动保持
+免费且不推进分钟；聊天、购物和吃饭也被定义为自由行动。每个角色每时段只有 1 次主要行动，
+额度彼此独立并在 `ADVANCE_PHASE` 时统一重置。校园灰盒包含可见调试面板和时段推进按钮；
+本阶段仍未启用精细分钟消耗。
 
 本轮固定种子 42 的 14 天结果：共 16,385 个事件，497 笔商店成交、264 笔私人成交、
 236 次统一物品使用；普通重复交易者平均间隔 3.71 天、最短 2 天且同日重复为 0；

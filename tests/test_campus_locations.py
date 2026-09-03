@@ -160,13 +160,22 @@ class CampusTraversalTests(unittest.TestCase):
         return kernel
 
     @staticmethod
-    def request(command_id: str, passage_id: str, revision: int = 1):
+    def request(
+        command_id: str,
+        passage_id: str,
+        revision: int = 1,
+        *,
+        day: int = 1,
+        phase: str = "morning",
+    ):
         return SimulationCommand(
             command_id=command_id,
             actor_id="player",
             action_id="TRAVERSE_LOCATION_PASSAGE",
             expected_world_revision=revision,
             parameters={"passage_id": passage_id},
+            issued_day=day,
+            issued_phase=phase,
         )
 
     def test_crossing_road_keeps_outdoor_scene_continuous(self):
@@ -174,7 +183,7 @@ class CampusTraversalTests(unittest.TestCase):
         result = kernel.execute(self.request("road", "road_gate_to_student_life"))
         self.assertTrue(result.success)
         self.assertEqual("student_life_region", kernel.state.population["player"]["current_location_id"])
-        self.assertEqual(10, kernel.state.clock.minute)
+        self.assertEqual(0, kernel.state.clock.minute)
         self.assertEqual("continuous_boundary", result.payload["transition_kind"])
         self.assertFalse(result.payload["requires_scene_change"])
         self.assertEqual("campus_outdoor", result.payload["presentation_key"])
@@ -213,7 +222,9 @@ class CampusTraversalTests(unittest.TestCase):
         install_campus_places(state, self.graph)
         kernel = WorldKernel(state)
         kernel.register_handler("TRAVERSE_LOCATION_PASSAGE", make_traverse_location_handler(self.graph))
-        closed = kernel.execute(self.request("closed", "parent:registrar_office"))
+        closed = kernel.execute(self.request(
+            "closed", "parent:registrar_office", phase="evening"
+        ))
         self.assertFalse(closed.success)
         self.assertEqual("location_closed", closed.code)
         self.assertEqual(1, kernel.state.revision)
@@ -234,7 +245,9 @@ class CampusTraversalTests(unittest.TestCase):
         install_campus_places(state, self.graph)
         kernel = WorldKernel(state)
         kernel.register_handler("TRAVERSE_LOCATION_PASSAGE", make_traverse_location_handler(self.graph))
-        result = kernel.execute(self.request("exit", "parent:registrar_office"))
+        result = kernel.execute(self.request(
+            "exit", "parent:registrar_office", phase="evening"
+        ))
         self.assertTrue(result.success)
         self.assertEqual("administration_building", kernel.state.population["player"]["current_location_id"])
         self.assertEqual(
@@ -242,15 +255,25 @@ class CampusTraversalTests(unittest.TestCase):
             result.payload["arrival_anchor_id"],
         )
 
-    def test_time_exhaustion_and_remote_passage_are_rejected(self):
+    def test_free_movement_does_not_consume_phase_time_and_remote_passage_is_rejected(self):
         late = self.make_kernel("south_gate_region", minute=355)
         result = late.execute(self.request("late", "road_gate_to_student_life"))
-        self.assertEqual("phase_time_exhausted", result.code)
+        self.assertTrue(result.success)
         self.assertEqual(355, late.state.clock.minute)
 
         remote = self.make_kernel("central_region")
         result = remote.execute(self.request("remote", "road_gate_to_student_life"))
         self.assertEqual("passage_absent", result.code)
+
+    def test_stale_phase_movement_is_rejected_without_commit(self):
+        kernel = self.make_kernel("south_gate_region")
+        stale = self.request(
+            "stale-road", "road_gate_to_student_life", phase="afternoon"
+        )
+        result = kernel.execute(stale)
+        self.assertEqual("command_clock_mismatch", result.code)
+        self.assertEqual("south_gate_region", kernel.state.population["player"]["current_location_id"])
+        self.assertEqual(1, kernel.state.revision)
 
 
 if __name__ == "__main__":

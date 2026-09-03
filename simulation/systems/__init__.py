@@ -18,7 +18,19 @@ from simulation.systems.weapons import WeaponActionSystem, equipped_weapon
 from simulation.systems.rituals import RitualMaterialSystem
 from simulation.systems.population import make_npc, make_scenes
 from simulation.systems.relationships import build_initial_relationship_network
-from simulation.systems.time import PHASES, Phase, next_phase
+from simulation.systems.time import (
+    PHASES,
+    Phase,
+    MajorActionResult,
+    action_economy_invariant,
+    consume_major_action,
+    ensure_actor_budget,
+    install_action_economy,
+    load_action_economy_policy,
+    make_advance_phase_handler,
+    next_phase,
+    reset_all_actor_budgets,
+)
 from simulation.systems.decision_scoring import DecisionFactors, DecisionScore, score_action
 from simulation.systems.task_board import TaskBoard, TaskConflictError
 from simulation.systems.content_registry import (
@@ -65,6 +77,14 @@ __all__ = [
     "equipped_weapon",
     "PHASES",
     "Phase",
+    "MajorActionResult",
+    "action_economy_invariant",
+    "consume_major_action",
+    "ensure_actor_budget",
+    "install_action_economy",
+    "load_action_economy_policy",
+    "make_advance_phase_handler",
+    "reset_all_actor_budgets",
     "TradingSystem",
     "TaskBoard",
     "TaskConflictError",

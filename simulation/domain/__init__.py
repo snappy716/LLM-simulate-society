@@ -72,6 +72,11 @@ from simulation.domain.campus import (
 from simulation.domain.tasks import CampusTask, ForumKind, TaskState
 from simulation.domain.events import EventDraft, SimulationEvent
 from simulation.domain.world_state import AGGREGATE_NAMES, ClockState, WorldState
+from simulation.domain.action_economy import (
+    ActionEconomyPolicy,
+    PhaseActionRule,
+    build_action_economy_policy,
+)
 from simulation.domain.locations import (
     CampusLocation,
     CampusLocationGraph,
@@ -145,6 +150,9 @@ __all__ = [
     "ForumKind",
     "TaskState",
     "AGGREGATE_NAMES",
+    "ActionEconomyPolicy",
+    "PhaseActionRule",
+    "build_action_economy_policy",
     "ClockState",
     "EventDraft",
     "SimulationEvent",

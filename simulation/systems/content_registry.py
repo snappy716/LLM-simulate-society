@@ -35,6 +35,7 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ContentSource("locations/campus_locations.json", "campus_location", "locations"),
     ContentSource("locations/campus_passages.json", "campus_passage", "passages"),
     ContentSource("actions/college_skills.json", "college", "colleges"),
+    ContentSource("actions/action_economy.json", "configuration", singleton_id="action_economy"),
     ContentSource("organizations/clubs.json", "club", "clubs"),
     ContentSource("npcs/generation_rules.json", "configuration", singleton_id="npc_generation"),
     ContentSource("npcs/campus_population.json", "configuration", singleton_id="campus_population"),

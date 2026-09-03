@@ -121,6 +121,13 @@ def make_traverse_location_handler(graph: CampusLocationGraph):
         actor = context.state.population.get(command.actor_id)
         if not isinstance(actor, dict):
             return TransactionOutcome(False, False, "unknown_actor", "行动者不存在。")
+        if (
+            command.issued_day != context.state.clock.day
+            or command.issued_phase != context.state.clock.phase
+        ):
+            return TransactionOutcome(
+                False, False, "command_clock_mismatch", "移动指令所属的日期或时段已经过期。"
+            )
         passage_id = command.parameters.get("passage_id")
         if not isinstance(passage_id, str) or not passage_id:
             return TransactionOutcome(False, False, "missing_passage", "通行命令缺少 passage_id。")
@@ -147,12 +154,7 @@ def make_traverse_location_handler(graph: CampusLocationGraph):
             if not set(passage.required_access_tags).issubset(access_tags):
                 return TransactionOutcome(False, False, "access_denied", "行动者没有进入该地点的权限。")
             return TransactionOutcome(False, False, "location_closed", "该入口目前关闭。")
-        next_minute = context.state.clock.minute + passage.travel_minutes
-        if next_minute > 359:
-            return TransactionOutcome(False, False, "phase_time_exhausted", "当前时段剩余时间不足。")
-
         actor["current_location_id"] = destination_id
-        context.state.clock.minute = next_minute
         destination = graph.locations.get(destination_id)
         presentation_key = "campus_outdoor"
         instance_policy = "fixed"

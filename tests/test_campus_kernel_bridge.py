@@ -29,13 +29,31 @@ class CampusKernelBridgeTests(unittest.TestCase):
             "source": "player",
         }
 
+    def advance_command(self, command_id: str, revision: int) -> dict:
+        snapshot = self.bridge.campus_snapshot()
+        clock = snapshot["clock"]
+        return {
+            "command_id": command_id,
+            "actor_id": "player",
+            "action_id": "ADVANCE_PHASE",
+            "target_ids": [],
+            "parameters": {},
+            "expected_world_revision": revision,
+            "issued_day": clock["day"],
+            "issued_phase": clock["phase"],
+            "issued_minute": clock["minute"],
+            "source": "player",
+        }
+
     def test_side_by_side_snapshot_has_campus_places_and_persistent_cast(self):
         campus = self.bridge.campus_snapshot()
         legacy = self.bridge.snapshot()
-        self.assertEqual(1, campus["view_version"])
+        self.assertEqual(2, campus["view_version"])
         self.assertEqual(200, len(campus["population"]))
         self.assertEqual(6000, campus["population_summary"]["campus_total"])
         self.assertEqual("south_gate_region", campus["player"]["current_location_id"])
+        self.assertEqual(1, campus["player"]["action_budget"]["major_remaining"])
+        self.assertEqual(1, campus["action_economy"]["player"]["major_remaining"])
         self.assertEqual(2, legacy["schema_version"])
 
     def test_strict_kernel_command_crosses_continuous_region_boundary(self):
@@ -50,6 +68,17 @@ class CampusKernelBridgeTests(unittest.TestCase):
         replay = self.bridge.campus_command(command)
         self.assertTrue(replay["result"]["replayed"])
         self.assertEqual(2, replay["snapshot"]["revision"])
+
+    def test_free_movement_preserves_budget_and_phase_can_advance(self):
+        moved = self.bridge.campus_command(
+            self.command("free-road", "road_gate_to_student_life")
+        )
+        self.assertEqual(0, moved["snapshot"]["clock"]["minute"])
+        self.assertEqual(1, moved["snapshot"]["player"]["action_budget"]["major_remaining"])
+        advanced = self.bridge.campus_command(self.advance_command("next-phase", 2))
+        self.assertTrue(advanced["ok"])
+        self.assertEqual("afternoon", advanced["snapshot"]["clock"]["phase"])
+        self.assertEqual(1, advanced["snapshot"]["player"]["action_budget"]["major_remaining"])
 
     def test_remote_entrance_is_rejected_without_revision_change(self):
         result = self.bridge.campus_command(

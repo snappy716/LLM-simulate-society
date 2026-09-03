@@ -16,8 +16,10 @@ func _run_flow() -> void:
 		await create_timer(0.05).timeout
 	var initial_snapshot: Dictionary = bridge.get("campus_snapshot")
 	assert(not initial_snapshot.is_empty(), "campus snapshot did not connect")
+	assert(initial_snapshot.get("view_version") == 2)
 	assert(initial_snapshot.get("revision") == 1)
 	assert((initial_snapshot.get("player", {}) as Dictionary).get("current_location_id") == "south_gate_region")
+	assert(((initial_snapshot.get("player", {}) as Dictionary).get("action_budget", {}) as Dictionary).get("major_remaining") == 1)
 
 	var outdoor_scene := load(OUTDOOR_SCENE) as PackedScene
 	assert(outdoor_scene != null)
@@ -33,6 +35,8 @@ func _run_flow() -> void:
 	await process_frame
 	var road_snapshot: Dictionary = bridge.get("campus_snapshot")
 	assert((road_snapshot.get("player", {}) as Dictionary).get("current_location_id") == "student_life_region")
+	assert((road_snapshot.get("clock", {}) as Dictionary).get("minute") == 0)
+	assert(((road_snapshot.get("player", {}) as Dictionary).get("action_budget", {}) as Dictionary).get("major_remaining") == 1)
 	assert(current_scene == outdoor, "continuous outdoor boundary changed the Godot scene")
 
 	var entrance = outdoor.get_node("StudentCenterEntrance")
@@ -72,6 +76,25 @@ func _run_flow() -> void:
 	var final_snapshot: Dictionary = bridge.get("campus_snapshot")
 	assert((final_snapshot.get("player", {}) as Dictionary).get("current_location_id") == "student_life_region")
 	assert(final_snapshot.get("revision") == 4)
+	assert((final_snapshot.get("clock", {}) as Dictionary).get("minute") == 0)
+
+	var phase_panel := current_scene.get_node("UI/PhasePanel")
+	var advance_button := phase_panel.get_node("Margin/VBox/Advance") as Button
+	advance_button.pressed.emit()
+	var phase_resolution = await bridge.campus_phase_advanced
+	assert(bool(phase_resolution[0]), "phase advance failed: %s" % phase_resolution[1])
+	var advanced_snapshot: Dictionary = bridge.get("campus_snapshot")
+	assert((advanced_snapshot.get("clock", {}) as Dictionary).get("phase") == "afternoon")
+	assert((advanced_snapshot.get("clock", {}) as Dictionary).get("minute") == 0)
+	assert(((advanced_snapshot.get("player", {}) as Dictionary).get("action_budget", {}) as Dictionary).get("major_remaining") == 1)
+	assert(advanced_snapshot.get("revision") == 5)
+	assert("下午" in String(phase_panel.get_node("Margin/VBox/Phase").text))
+	assert(not advance_button.disabled)
 
 	print("CAMPUS_NAVIGATION_FLOW_OK")
+	if current_scene != null:
+		current_scene.queue_free()
+		current_scene = null
+	await process_frame
+	await process_frame
 	quit(0)

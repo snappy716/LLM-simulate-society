@@ -14,6 +14,7 @@ from simulation.domain.entities import PHASES, Phase
 
 
 AGGREGATE_NAMES = (
+    "action_economy",
     "population",
     "places",
     "inventories",
@@ -72,6 +73,7 @@ class WorldState:
     content_version: str = "development"
     master_seed: int = 42
     event_sequence: int = 0
+    action_economy: Dict[str, Any] = field(default_factory=dict)
     population: Dict[str, Any] = field(default_factory=dict)
     places: Dict[str, Any] = field(default_factory=dict)
     inventories: Dict[str, Any] = field(default_factory=dict)

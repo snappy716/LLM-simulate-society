@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "phases": [
+    {
+      "id": "morning",
+      "major_actions": 1,
+      "optional": false
+    },
+    {
+      "id": "afternoon",
+      "major_actions": 1,
+      "optional": false
+    },
+    {
+      "id": "evening",
+      "major_actions": 1,
+      "optional": false
+    },
+    {
+      "id": "late_night",
+      "major_actions": 1,
+      "optional": true
+    }
+  ],
+  "action_classes": {
+    "travel": "free",
+    "chat": "free",
+    "shopping": "free",
+    "meal": "free",
+    "committed_activity": "major"
+  }
+}

@@ -9,6 +9,7 @@ signal item_use_completed(success: bool, result: Dictionary)
 signal action_completed(success: bool, result: Dictionary)
 signal campus_snapshot_updated(snapshot: Dictionary)
 signal campus_traversal_completed(success: bool, result: Dictionary, passage_id: String)
+signal campus_phase_advanced(success: bool, result: Dictionary)
 
 const BASE_URL := "http://127.0.0.1:8765"
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
@@ -172,6 +173,38 @@ func traverse_campus_passage(passage_id: String) -> void:
 		campus_traversal_completed.emit(false, {"error": "无法发送校园移动请求：%s" % error}, passage_id)
 
 
+func advance_campus_phase() -> void:
+	if _campus_busy or not connected or campus_snapshot.is_empty():
+		campus_phase_advanced.emit(false, {"error": "校园模拟尚未连接或正在处理其他行动"})
+		return
+	_campus_busy = true
+	_campus_pending_operation = "advance_phase"
+	_campus_command_counter += 1
+	var clock: Dictionary = campus_snapshot.get("clock", {})
+	var command := {
+		"command_id": "godot-phase-%d-%d" % [Time.get_ticks_usec(), _campus_command_counter],
+		"actor_id": "player",
+		"action_id": "ADVANCE_PHASE",
+		"target_ids": [],
+		"parameters": {},
+		"expected_world_revision": int(campus_snapshot.get("revision", 1)),
+		"issued_day": int(clock.get("day", 1)),
+		"issued_phase": String(clock.get("phase", "morning")),
+		"issued_minute": int(clock.get("minute", 0)),
+		"source": "player",
+	}
+	var error := _campus_request.request(
+		BASE_URL + "/kernel/command",
+		PackedStringArray(["Content-Type: application/json"]),
+		HTTPClient.METHOD_POST,
+		JSON.stringify(command)
+	)
+	if error != OK:
+		_campus_busy = false
+		_campus_pending_operation = ""
+		campus_phase_advanced.emit(false, {"error": "无法发送时段推进请求：%s" % error})
+
+
 func phase_display_name(phase: String) -> String:
 	return {"morning": "上午", "afternoon": "下午", "evening": "晚间", "late_night": "深夜"}.get(phase, phase)
 
@@ -296,6 +329,9 @@ func _on_campus_request_completed(
 		if operation == "traverse":
 			var error_payload: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
 			campus_traversal_completed.emit(false, error_payload, passage_id)
+		elif operation == "advance_phase":
+			var phase_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
+			campus_phase_advanced.emit(false, phase_error)
 		return
 	if operation == "snapshot":
 		campus_snapshot = parsed
@@ -305,4 +341,7 @@ func _on_campus_request_completed(
 	if updated_snapshot is Dictionary:
 		campus_snapshot = updated_snapshot
 		campus_snapshot_updated.emit(campus_snapshot)
-	campus_traversal_completed.emit(bool(parsed.get("ok", false)), parsed, passage_id)
+	if operation == "advance_phase":
+		campus_phase_advanced.emit(bool(parsed.get("ok", false)), parsed)
+	else:
+		campus_traversal_completed.emit(bool(parsed.get("ok", false)), parsed, passage_id)

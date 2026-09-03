@@ -30,6 +30,14 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         player = (GAME_DIR / "scripts/player/player_controller.gd").read_text(encoding="utf-8")
         self.assertIn('add_to_group("player")', player)
 
+    def test_bridge_exposes_authoritative_phase_advance(self):
+        bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("signal campus_phase_advanced", bridge)
+        self.assertIn("func advance_campus_phase()", bridge)
+        self.assertIn('"action_id": "ADVANCE_PHASE"', bridge)
+
     def test_navigation_graybox_keeps_outdoors_continuous_and_reuses_lobby(self):
         outdoors = (GAME_DIR / "scenes/debug/campus_navigation_test.tscn").read_text(
             encoding="utf-8"
@@ -42,6 +50,16 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn('anchor_id = "outside:student_center:entrance"', outdoors)
         self.assertIn('anchor_id = "inside:student_center:entrance"', lobby)
         self.assertIn('passage_id = "parent:student_center"', lobby)
+
+    def test_graybox_exposes_coarse_phase_and_major_action_debug_ui(self):
+        panel_scene = GAME_DIR / "scenes/ui/campus_phase_debug_panel.tscn"
+        panel_script = GAME_DIR / "scripts/ui/campus_phase_debug_panel.gd"
+        self.assertTrue(panel_scene.is_file())
+        self.assertTrue(panel_script.is_file())
+        script = panel_script.read_text(encoding="utf-8")
+        self.assertIn("主要行动剩余", script)
+        self.assertIn("聊天 / 购物 / 吃饭 / 普通移动：免费", script)
+        self.assertIn('call("advance_campus_phase")', script)
 
 
 if __name__ == "__main__":
