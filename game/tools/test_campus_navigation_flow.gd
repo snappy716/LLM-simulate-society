@@ -16,7 +16,7 @@ func _run_flow() -> void:
 		await create_timer(0.05).timeout
 	var initial_snapshot: Dictionary = bridge.get("campus_snapshot")
 	assert(not initial_snapshot.is_empty(), "campus snapshot did not connect")
-	assert(initial_snapshot.get("view_version") == 4)
+	assert(initial_snapshot.get("view_version") == 5)
 	assert(initial_snapshot.get("revision") == 1)
 	assert((initial_snapshot.get("player", {}) as Dictionary).get("current_location_id") == "south_gate_region")
 	assert(((initial_snapshot.get("player", {}) as Dictionary).get("action_budget", {}) as Dictionary).get("major_remaining") == 1)
@@ -109,6 +109,12 @@ func _run_flow() -> void:
 	var phase_execution: Dictionary = (evening_resolution[1] as Dictionary).get("result", {}).get("payload", {}).get("phase_execution", {})
 	assert(int(phase_execution.get("planned_actor_count", 0)) == 200)
 	assert(int(phase_execution.get("blocked_actor_count", -1)) == 0)
+	var effected_npc: Dictionary = evening_snapshot.get("population", {}).get("campus_student_001", {})
+	var effected_activity: Dictionary = effected_npc.get("current_activity", {})
+	var activity_effects: Dictionary = effected_activity.get("effects", {})
+	assert(not activity_effects.is_empty())
+	assert(not (effected_npc.get("needs", {}) as Dictionary).is_empty())
+	assert(int((effected_npc.get("activity_progress", {}) as Dictionary).get("total", 0)) >= 2)
 
 	print("CAMPUS_NAVIGATION_FLOW_OK")
 	if current_scene != null:

@@ -36,6 +36,7 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ContentSource("locations/campus_passages.json", "campus_passage", "passages"),
     ContentSource("actions/college_skills.json", "college", "colleges"),
     ContentSource("actions/action_economy.json", "configuration", singleton_id="action_economy"),
+    ContentSource("actions/campus_activities.json", "campus_activity", "activities"),
     ContentSource("actions/campus_schedules.json", "schedule_template", "templates"),
     ContentSource("organizations/clubs.json", "club", "clubs"),
     ContentSource("npcs/generation_rules.json", "configuration", singleton_id="npc_generation"),
@@ -150,6 +151,35 @@ class ContentRegistry:
                         f"campus passage {passage.get('id')} references unknown node: {node_id}"
                     )
         schedule_ids = set(self.ids("schedule_template"))
+        activity_ids = set(self.ids("campus_activity"))
+        activity_profiles = (
+            self.document("actions/campus_activities.json").get("profiles", {})
+            if activity_ids else {}
+        )
+        for activity in self.all("campus_activity").values():
+            if activity.get("profile_id") not in activity_profiles:
+                errors.append(
+                    f"campus activity {activity.get('id')} references unknown profile: "
+                    f"{activity.get('profile_id')}"
+                )
+        for schedule in self.all("schedule_template").values():
+            for day_kind in ("weekday", "weekend"):
+                for phase, slot in schedule.get(day_kind, {}).items():
+                    activity_id = slot.get("activity_id")
+                    if activity_id not in activity_ids:
+                        errors.append(
+                            f"schedule {schedule.get('id')} references unknown activity: {activity_id}"
+                        )
+                        continue
+                    activity = self.get("campus_activity", activity_id)
+                    if slot.get("action_class") != activity.get("action_class"):
+                        errors.append(
+                            f"schedule {schedule.get('id')} action class differs for {activity_id}"
+                        )
+                    if phase not in activity.get("allowed_phases", []):
+                        errors.append(
+                            f"schedule {schedule.get('id')} uses {activity_id} in forbidden phase {phase}"
+                        )
         population_config = self.all("configuration").get("campus_population", {})
         referenced_schedules = set(population_config.get("schedules", {}).values())
         unknown_schedules = referenced_schedules - schedule_ids

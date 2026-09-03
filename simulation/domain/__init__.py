@@ -77,6 +77,13 @@ from simulation.domain.action_economy import (
     PhaseActionRule,
     build_action_economy_policy,
 )
+from simulation.domain.activities import (
+    ACTIVITY_CATEGORIES,
+    EMOTION_NAMES,
+    NEED_NAMES,
+    CampusActivityDefinition,
+    parse_activity_definition,
+)
 from simulation.domain.schedules import (
     CampusScheduleTemplate,
     PlannedScheduleSlot,
@@ -157,8 +164,13 @@ __all__ = [
     "TaskState",
     "AGGREGATE_NAMES",
     "ActionEconomyPolicy",
+    "ACTIVITY_CATEGORIES",
+    "EMOTION_NAMES",
+    "NEED_NAMES",
+    "CampusActivityDefinition",
     "PhaseActionRule",
     "build_action_economy_policy",
+    "parse_activity_definition",
     "CampusScheduleTemplate",
     "PlannedScheduleSlot",
     "ScheduleSlotTemplate",

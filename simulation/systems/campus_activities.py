@@ -9,7 +9,6 @@ from simulation.domain.locations import CampusLocationGraph
 from simulation.domain.world_state import WorldState
 from simulation.systems.campus_locations import make_traverse_location_handler
 from simulation.systems.campus_schedules import current_schedule_slot
-from simulation.systems.time import consume_major_action
 
 
 ACTIVITY_STATUSES = {"completed", "blocked"}
@@ -39,6 +38,8 @@ def make_scheduled_npc_phase_executor(
     graph: CampusLocationGraph,
     policy: ActionEconomyPolicy,
     traverse_handler=None,
+    activity_handler=None,
+    phase_upkeep=None,
 ):
     """Build a phase-start callback that moves and activates every scheduled NPC.
 
@@ -48,6 +49,8 @@ def make_scheduled_npc_phase_executor(
     mutation have one source of truth.
     """
     traverse = traverse_handler or make_traverse_location_handler(graph)
+    if activity_handler is None:
+        raise ValueError("scheduled NPC execution requires a campus activity handler")
 
     def execute(context, phase_command) -> Dict[str, int]:
         summary = {
@@ -58,6 +61,8 @@ def make_scheduled_npc_phase_executor(
             "free_activity_count": 0,
             "blocked_actor_count": 0,
         }
+        if phase_upkeep is not None:
+            summary.update(phase_upkeep(context))
         for actor_id in sorted(context.state.population):
             if actor_id == "player":
                 continue
@@ -141,22 +146,24 @@ def make_scheduled_npc_phase_executor(
                 summary["moved_actor_count"] += 1
 
             action_class = str(plan.get("action_class", ""))
-            if action_class == "major":
-                activity_command = SimulationCommand(
-                    command_id=f"{phase_command.command_id}:{actor_id}:activity",
-                    actor_id=actor_id,
-                    action_id=str(plan.get("activity_id", "SCHEDULED_ACTIVITY")),
-                    expected_world_revision=context.state.revision,
-                    issued_day=context.state.clock.day,
-                    issued_phase=context.state.clock.phase,
-                    issued_minute=context.state.clock.minute,
-                    source=CommandSource.RULE.value,
+            activity_command = SimulationCommand(
+                command_id=f"{phase_command.command_id}:{actor_id}:activity",
+                actor_id=actor_id,
+                action_id=str(plan.get("activity_id", "SCHEDULED_ACTIVITY")),
+                expected_world_revision=context.state.revision,
+                parameters={"location_id": destination_id, "scheduled": True},
+                issued_day=context.state.clock.day,
+                issued_phase=context.state.clock.phase,
+                issued_minute=context.state.clock.minute,
+                source=CommandSource.RULE.value,
+            )
+            activity_outcome = activity_handler(context, activity_command)
+            if not activity_outcome.success:
+                raise RuntimeError(
+                    f"scheduled activity could not execute for {actor_id}: "
+                    f"{activity_outcome.code}"
                 )
-                spent = consume_major_action(context.state, policy, activity_command)
-                if not spent.success:
-                    raise RuntimeError(
-                        f"scheduled major action could not execute for {actor_id}: {spent.code}"
-                    )
+            if action_class == "major":
                 summary["major_activity_count"] += 1
             elif action_class == "free":
                 summary["free_activity_count"] += 1
@@ -169,6 +176,7 @@ def make_scheduled_npc_phase_executor(
                 status="completed",
                 route_step_count=route_step_count,
             )
+            actor["current_activity"]["effects"] = activity_outcome.payload.get("effects", {})
             context.emit(
                 "NPC_ACTIVITY_COMPLETED",
                 f"{actor_id} 在 {destination_id} 完成 {plan.get('activity_id')}。",

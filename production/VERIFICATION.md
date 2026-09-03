@@ -8,6 +8,7 @@
 - 四时段与主要行动专项：`python3 -m unittest tests.test_action_economy tests.test_campus_locations tests.test_campus_kernel_bridge tests.test_kernel_api_contracts -v`
 - 校园日程与容量专项：`python3 -m unittest tests.test_campus_schedules tests.test_campus_population tests.test_campus_kernel_bridge tests.test_content_registry -v`
 - NPC 寻路与活动专项：`python3 -m unittest tests.test_campus_activities tests.test_campus_locations tests.test_campus_kernel_bridge tests.test_godot_campus_navigation -v`
+- 校园活动效果专项：`python3 -m unittest tests.test_campus_activity_effects tests.test_campus_activities tests.test_campus_kernel_bridge tests.test_content_registry -v`
 - Python 编译：`python3 -m compileall -q simulation tests`
 - 补丁格式：`git diff --check`
 - 离线启动：`python3 -m simulation --days 0 --llm rule --quiet`
@@ -64,6 +65,13 @@ NPC 统一寻路与活动执行阶段验收：当前工程 224 项、旧版工�
 个人行动次数。校园快照升级到 v4，保留可按需查询的活动依据。Godot 4.7.2 导入、组件、
 旧主场景和校园端到端测试均通过；校园灰盒只回放当前画面附近最多 18 名 NPC 的真实通勤
 轨迹，进入室内后退场，默认不显示 NPC 名称或活动状态文字。
+
+校园活动真实结算阶段验收：当前工程 232 项、旧版工程 46 项测试通过；现有日程引用的 32 项
+活动全部拥有数据驱动效果，玩家与 NPC 共用同一处理器和主要行动预算。固定种子 42 连续运行
+7 天、28 个时段，共结算 5,600 次活动效果、20,777 段合法移动、1,167 次免费用餐和 224 次
+免费短社交；每名 NPC 恰好结算 28 个计划，饥饿需求保持在 23～68，动态状态和知识不变量错误
+为 0。Godot 校园快照升级到 v5；Godot 4.7.2 导入、组件、校园端到端、旧主场景以及实际图形
+窗口启动均通过。桥接端口默认仍为 8765，测试或冲突环境可使用 `GODOT_SIM_PORT` 指定独立端口。
 
 本轮固定种子 42 的 14 天结果：共 16,385 个事件，497 笔商店成交、264 笔私人成交、
 236 次统一物品使用；普通重复交易者平均间隔 3.71 天、最短 2 天且同日重复为 0；

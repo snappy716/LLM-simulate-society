@@ -60,6 +60,13 @@ from simulation.systems.campus_activities import (
     campus_activity_invariant,
     make_scheduled_npc_phase_executor,
 )
+from simulation.systems.campus_activity_effects import (
+    PHASE_NEED_DRIFT,
+    advance_campus_phase_upkeep,
+    campus_activity_effect_invariant,
+    load_campus_activity_definitions,
+    make_campus_activity_handler,
+)
 
 __all__ = [
     "DesireEngine",
@@ -82,6 +89,11 @@ __all__ = [
     "ACTIVITY_STATUSES",
     "campus_activity_invariant",
     "make_scheduled_npc_phase_executor",
+    "campus_activity_effect_invariant",
+    "PHASE_NEED_DRIFT",
+    "advance_campus_phase_upkeep",
+    "load_campus_activity_definitions",
+    "make_campus_activity_handler",
     "IntelligenceSystem",
     "ItemUseSystem",
     "ItemInstanceSystem",

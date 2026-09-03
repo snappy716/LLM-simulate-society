@@ -9,7 +9,7 @@ from simulation.systems.campus_schedules import current_schedule_slot
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 4
+CAMPUS_WORLD_VIEW_VERSION = 5
 
 
 def kernel_status_view(state: WorldState, *, busy: bool = False) -> Dict[str, Any]:
@@ -34,6 +34,9 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     actor_budgets = state.action_economy.get("actors", {})
     player["action_budget"] = deepcopy(actor_budgets.get("player", {}))
     player["current_plan"] = current_schedule_slot(state, "player")
+    player["knowledge_progress"] = deepcopy(
+        state.knowledge.get("actors", {}).get("player", {})
+    )
     cast = {
         npc_id: {
             key: deepcopy(record.get(key))
@@ -41,7 +44,8 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
                 "npc_id", "display_name", "role_kind", "college_id", "occupation_id",
                 "current_location_id", "home_location_id", "home_room_key",
                 "simulation_tier", "night_access", "appearance_seed",
-                "current_activity",
+                "current_activity", "needs", "emotions", "activity_progress",
+                "last_activity_effects",
             )
         }
         for npc_id, record in state.population.items()
@@ -49,6 +53,9 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     }
     for npc_id in cast:
         cast[npc_id]["current_plan"] = current_schedule_slot(state, npc_id)
+        cast[npc_id]["knowledge_progress"] = deepcopy(
+            state.knowledge.get("actors", {}).get(npc_id, {})
+        )
     schedule = state.metadata.get("campus_schedule", {})
     week_day = str((state.clock.day - 1) % 7)
     planned_occupancy = schedule.get("planned_occupancy", {})

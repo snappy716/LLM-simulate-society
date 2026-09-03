@@ -44,6 +44,10 @@ from simulation.systems import (  # noqa: E402
     action_economy_invariant,
     campus_schedule_invariant,
     campus_activity_invariant,
+    campus_activity_effect_invariant,
+    advance_campus_phase_upkeep,
+    load_campus_activity_definitions,
+    make_campus_activity_handler,
     make_scheduled_npc_phase_executor,
 )
 
@@ -63,10 +67,13 @@ class CampusKernelBridge:
         install_campus_schedules(state, graph, schedule_templates)
         action_policy = load_action_economy_policy(registry)
         install_action_economy(state, action_policy)
+        activity_definitions = load_campus_activity_definitions(registry)
+        activity_handler = make_campus_activity_handler(activity_definitions, action_policy)
         self.kernel = WorldKernel(state, rng=rng_pool)
         self.kernel.add_invariant(action_economy_invariant)
         self.kernel.add_invariant(campus_schedule_invariant)
         self.kernel.add_invariant(campus_activity_invariant)
+        self.kernel.add_invariant(campus_activity_effect_invariant)
         traverse_handler = make_traverse_location_handler(graph)
         self.kernel.register_handler(
             "TRAVERSE_LOCATION_PASSAGE",
@@ -80,9 +87,13 @@ class CampusKernelBridge:
                     graph,
                     action_policy,
                     traverse_handler,
+                    activity_handler,
+                    advance_campus_phase_upkeep,
                 ),
             ),
         )
+        for activity_id in sorted(activity_definitions):
+            self.kernel.register_handler(activity_id, activity_handler)
 
     def snapshot(self) -> dict:
         return campus_world_view(self.kernel.state)

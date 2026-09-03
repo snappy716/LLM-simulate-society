@@ -11,7 +11,6 @@ signal campus_snapshot_updated(snapshot: Dictionary)
 signal campus_traversal_completed(success: bool, result: Dictionary, passage_id: String)
 signal campus_phase_advanced(success: bool, result: Dictionary)
 
-const BASE_URL := "http://127.0.0.1:8765"
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
 
 var snapshot: Dictionary = {}
@@ -27,9 +26,15 @@ var _campus_busy := false
 var _campus_pending_operation := ""
 var _campus_pending_passage_id := ""
 var _campus_command_counter := 0
+var _server_port := 8765
+var _base_url := ""
 
 
 func _ready() -> void:
+	var configured_port := OS.get_environment("GODOT_SIM_PORT")
+	if not configured_port.is_empty() and configured_port.is_valid_int():
+		_server_port = clampi(int(configured_port), 1024, 65535)
+	_base_url = "http://127.0.0.1:%d" % _server_port
 	_request = HTTPRequest.new()
 	_request.timeout = 180.0
 	_request.request_completed.connect(_on_request_completed)
@@ -58,7 +63,7 @@ func advance_time() -> void:
 	busy = true
 	advance_state_changed.emit(true)
 	_pending_operation = "step"
-	var error := _request.request(BASE_URL + "/step", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, "{}")
+	var error := _request.request(_base_url + "/step", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, "{}")
 	if error != OK:
 		_finish_with_error("无法发送时间推进请求：%s" % error)
 
@@ -70,7 +75,7 @@ func configure_interface(config: Dictionary) -> void:
 	busy = true
 	_pending_operation = "configure"
 	var body := JSON.stringify(config)
-	var error := _request.request(BASE_URL + "/configure", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, body)
+	var error := _request.request(_base_url + "/configure", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, body)
 	if error != OK:
 		busy = false
 		interface_configured.emit(false, {"error": "无法发送接口配置：%s" % error})
@@ -89,7 +94,7 @@ func trade(shop_id: String, item_id: String, direction: String, quantity: int = 
 		"direction": direction,
 		"quantity": quantity,
 	})
-	var error := _request.request(BASE_URL + "/trade", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, body)
+	var error := _request.request(_base_url + "/trade", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, body)
 	if error != OK:
 		busy = false
 		trade_completed.emit(false, {"trade": {"message": "无法发送交易请求：%s" % error}})
@@ -102,7 +107,7 @@ func use_item(item_id: String) -> void:
 	busy = true
 	_pending_operation = "use_item"
 	var body := JSON.stringify({"actor_id": "player", "item_id": item_id})
-	var error := _request.request(BASE_URL + "/use-item", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, body)
+	var error := _request.request(_base_url + "/use-item", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, body)
 	if error != OK:
 		busy = false
 		item_use_completed.emit(false, {"item_use": {"message": "无法发送物品使用请求：%s" % error}})
@@ -118,7 +123,7 @@ func perform_action(action_id: String, parameters: Dictionary = {}) -> void:
 	payload["actor_id"] = String(payload.get("actor_id", "player"))
 	payload["action_id"] = action_id
 	var error := _request.request(
-		BASE_URL + "/action", PackedStringArray(["Content-Type: application/json"]),
+		_base_url + "/action", PackedStringArray(["Content-Type: application/json"]),
 		HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if error != OK:
 		busy = false
@@ -130,7 +135,7 @@ func refresh_campus_snapshot() -> void:
 		return
 	_campus_busy = true
 	_campus_pending_operation = "snapshot"
-	var error := _campus_request.request(BASE_URL + "/kernel/campus-snapshot")
+	var error := _campus_request.request(_base_url + "/kernel/campus-snapshot")
 	if error != OK:
 		_campus_busy = false
 		_campus_pending_operation = ""
@@ -161,7 +166,7 @@ func traverse_campus_passage(passage_id: String) -> void:
 		"source": "player",
 	}
 	var error := _campus_request.request(
-		BASE_URL + "/kernel/command",
+		_base_url + "/kernel/command",
 		PackedStringArray(["Content-Type: application/json"]),
 		HTTPClient.METHOD_POST,
 		JSON.stringify(command)
@@ -194,7 +199,7 @@ func advance_campus_phase() -> void:
 		"source": "player",
 	}
 	var error := _campus_request.request(
-		BASE_URL + "/kernel/command",
+		_base_url + "/kernel/command",
 		PackedStringArray(["Content-Type: application/json"]),
 		HTTPClient.METHOD_POST,
 		JSON.stringify(command)
@@ -216,7 +221,11 @@ func weekday_display_name(index: int) -> String:
 func _start_server() -> void:
 	var script_path := ProjectSettings.globalize_path(SERVER_SCRIPT)
 	var python_command := "python" if OS.has_feature("windows") else "python3"
-	server_pid = OS.create_process(python_command, PackedStringArray([script_path, "--port", "8765"]), false)
+	server_pid = OS.create_process(
+		python_command,
+		PackedStringArray([script_path, "--port", str(_server_port)]),
+		false
+	)
 	if server_pid <= 0:
 		connection_state_changed.emit(false, "无法启动 Python 模拟服务，请确认 %s 命令可用" % python_command)
 
@@ -225,7 +234,7 @@ func _request_snapshot() -> void:
 	if busy or _request.get_http_client_status() != HTTPClient.STATUS_DISCONNECTED:
 		return
 	_pending_operation = "snapshot"
-	var error := _request.request(BASE_URL + "/snapshot")
+	var error := _request.request(_base_url + "/snapshot")
 	if error != OK:
 		connected = false
 

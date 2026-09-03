@@ -68,6 +68,14 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("func advance_campus_phase()", bridge)
         self.assertIn('"action_id": "ADVANCE_PHASE"', bridge)
 
+    def test_bridge_port_is_configurable_without_changing_windows_default(self):
+        bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('OS.get_environment("GODOT_SIM_PORT")', bridge)
+        self.assertIn("var _server_port := 8765", bridge)
+        self.assertIn('"--port", str(_server_port)', bridge)
+
     def test_navigation_graybox_keeps_outdoors_continuous_and_reuses_lobby(self):
         outdoors = (GAME_DIR / "scenes/debug/campus_navigation_test.tscn").read_text(
             encoding="utf-8"
