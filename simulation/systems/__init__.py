@@ -41,6 +41,7 @@ from simulation.systems.content_registry import (
 from simulation.systems.campus_locations import (
     install_campus_places,
     load_campus_location_graph,
+    make_fast_travel_handler,
     make_traverse_location_handler,
 )
 from simulation.systems.campus_population import (
@@ -77,6 +78,7 @@ __all__ = [
     "ContentValidationError",
     "install_campus_places",
     "load_campus_location_graph",
+    "make_fast_travel_handler",
     "make_traverse_location_handler",
     "CampusPopulationError",
     "CampusPopulationGenerator",

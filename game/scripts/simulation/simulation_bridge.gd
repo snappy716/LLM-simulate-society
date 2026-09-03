@@ -10,6 +10,7 @@ signal action_completed(success: bool, result: Dictionary)
 signal campus_snapshot_updated(snapshot: Dictionary)
 signal campus_traversal_completed(success: bool, result: Dictionary, passage_id: String)
 signal campus_phase_advanced(success: bool, result: Dictionary)
+signal campus_fast_travel_completed(success: bool, result: Dictionary, destination_id: String)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
 
@@ -25,6 +26,7 @@ var campus_snapshot: Dictionary = {}
 var _campus_busy := false
 var _campus_pending_operation := ""
 var _campus_pending_passage_id := ""
+var _campus_pending_destination_id := ""
 var _campus_command_counter := 0
 var _server_port := 8765
 var _base_url := ""
@@ -210,6 +212,43 @@ func advance_campus_phase() -> void:
 		campus_phase_advanced.emit(false, {"error": "无法发送时段推进请求：%s" % error})
 
 
+func fast_travel_campus(destination_id: String) -> void:
+	if destination_id.is_empty():
+		campus_fast_travel_completed.emit(false, {"error": "校园地图没有指定目的地"}, destination_id)
+		return
+	if _campus_busy or not connected or campus_snapshot.is_empty():
+		campus_fast_travel_completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他移动"}, destination_id)
+		return
+	_campus_busy = true
+	_campus_pending_operation = "fast_travel"
+	_campus_pending_destination_id = destination_id
+	_campus_command_counter += 1
+	var clock: Dictionary = campus_snapshot.get("clock", {})
+	var command := {
+		"command_id": "godot-map-%d-%d" % [Time.get_ticks_usec(), _campus_command_counter],
+		"actor_id": "player",
+		"action_id": "FAST_TRAVEL_CAMPUS",
+		"target_ids": [],
+		"parameters": {"destination_id": destination_id},
+		"expected_world_revision": int(campus_snapshot.get("revision", 1)),
+		"issued_day": int(clock.get("day", 1)),
+		"issued_phase": String(clock.get("phase", "morning")),
+		"issued_minute": int(clock.get("minute", 0)),
+		"source": "player",
+	}
+	var error := _campus_request.request(
+		_base_url + "/kernel/command",
+		PackedStringArray(["Content-Type: application/json"]),
+		HTTPClient.METHOD_POST,
+		JSON.stringify(command)
+	)
+	if error != OK:
+		_campus_busy = false
+		_campus_pending_operation = ""
+		_campus_pending_destination_id = ""
+		campus_fast_travel_completed.emit(false, {"error": "无法发送校园地图移动请求：%s" % error}, destination_id)
+
+
 func phase_display_name(phase: String) -> String:
 	return {"morning": "上午", "afternoon": "下午", "evening": "晚间", "late_night": "深夜"}.get(phase, phase)
 
@@ -330,8 +369,10 @@ func _on_campus_request_completed(
 ) -> void:
 	var operation := _campus_pending_operation
 	var passage_id := _campus_pending_passage_id
+	var destination_id := _campus_pending_destination_id
 	_campus_pending_operation = ""
 	_campus_pending_passage_id = ""
+	_campus_pending_destination_id = ""
 	_campus_busy = false
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if response_code != 200 or not parsed is Dictionary:
@@ -341,6 +382,9 @@ func _on_campus_request_completed(
 		elif operation == "advance_phase":
 			var phase_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
 			campus_phase_advanced.emit(false, phase_error)
+		elif operation == "fast_travel":
+			var travel_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
+			campus_fast_travel_completed.emit(false, travel_error, destination_id)
 		return
 	if operation == "snapshot":
 		campus_snapshot = parsed
@@ -352,5 +396,7 @@ func _on_campus_request_completed(
 		campus_snapshot_updated.emit(campus_snapshot)
 	if operation == "advance_phase":
 		campus_phase_advanced.emit(bool(parsed.get("ok", false)), parsed)
+	elif operation == "fast_travel":
+		campus_fast_travel_completed.emit(bool(parsed.get("ok", false)), parsed, destination_id)
 	else:
 		campus_traversal_completed.emit(bool(parsed.get("ok", false)), parsed, passage_id)

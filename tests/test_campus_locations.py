@@ -10,6 +10,7 @@ from simulation.systems import (
     WorldKernel,
     install_campus_places,
     load_campus_location_graph,
+    make_fast_travel_handler,
     make_traverse_location_handler,
 )
 
@@ -187,6 +188,42 @@ class CampusTraversalTests(unittest.TestCase):
         self.assertEqual("continuous_boundary", result.payload["transition_kind"])
         self.assertFalse(result.payload["requires_scene_change"])
         self.assertEqual("campus_outdoor", result.payload["presentation_key"])
+
+    def test_campus_map_fast_travel_uses_graph_and_remains_free(self):
+        kernel = self.make_kernel("south_gate_region")
+        kernel.register_handler("FAST_TRAVEL_CAMPUS", make_fast_travel_handler(self.graph))
+        command = SimulationCommand(
+            command_id="map-to-west-dorm",
+            actor_id="player",
+            action_id="FAST_TRAVEL_CAMPUS",
+            expected_world_revision=1,
+            parameters={"destination_id": "west_dorm_region"},
+            issued_day=1,
+            issued_phase="morning",
+        )
+        result = kernel.execute(command)
+        self.assertTrue(result.success)
+        self.assertTrue(result.payload["free_movement"])
+        self.assertGreater(len(result.payload["route"]), 1)
+        self.assertEqual("west_dorm_region", kernel.state.population["player"]["current_location_id"])
+        self.assertEqual(0, kernel.state.clock.minute)
+
+    def test_campus_map_rejects_interior_as_direct_destination(self):
+        kernel = self.make_kernel("south_gate_region")
+        kernel.register_handler("FAST_TRAVEL_CAMPUS", make_fast_travel_handler(self.graph))
+        command = SimulationCommand(
+            command_id="map-to-archive",
+            actor_id="player",
+            action_id="FAST_TRAVEL_CAMPUS",
+            expected_world_revision=1,
+            parameters={"destination_id": "library_special_archive"},
+            issued_day=1,
+            issued_phase="morning",
+        )
+        result = kernel.execute(command)
+        self.assertFalse(result.success)
+        self.assertEqual("invalid_map_destination", result.code)
+        self.assertEqual(1, kernel.state.revision)
 
     def test_stairs_entrance_requests_building_scene(self):
         kernel = self.make_kernel("humanities_psychology_region")

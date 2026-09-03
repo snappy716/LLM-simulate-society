@@ -19,6 +19,7 @@
 - Godot 4.7 导入：`Godot --headless --editor --path game --quit`
 - Godot 校园导航端到端：`Godot --headless --path game --script res://tools/test_campus_navigation_flow.gd`，必须输出 `CAMPUS_NAVIGATION_FLOW_OK`。
 - Godot 协作美术联调：`Godot --headless --path game --script res://tools/test_campus_collab_flow.gd`，必须输出 `CAMPUS_COLLAB_FLOW_OK`；图形渲染可运行 `res://tools/capture_campus_collab.gd`。
+- 校园美术完整性：`campus_art_catalog.json` 必须有 20 个唯一条目，每个 PNG 文件存在且 IHDR 尺寸与目录一致；地图跨区必须走 `FAST_TRAVEL_CAMPUS`，不得直接修改地点。
 - Godot 运行：启动 `game/project.godot`，确认后端连接、200 NPC 首个快照与城市地图加载。
 - Windows 目标检查：Windows 使用 `python`，macOS/Linux 使用 `python3`；不得提交平台绝对路径。
 - 目录保护：确认 `project-a-0.2/`、`emergent_town_demo/` 与原 ZIP 仍存在。
@@ -80,6 +81,15 @@ NPC 统一寻路与活动执行阶段验收：当前工程 224 项、旧版工�
 同一美术场景、时段推进及晚间 NPC 可见移动。当前工程 232 项、旧版工程 46 项、原校园导航
 端到端和协作美术端到端均通过；Godot 4.7.2 图形渲染确认玩家位于主道路。该场景不替换正式
 入口，地图在补齐授权并去除真实校名和现实品牌前仅供开发联调。
+
+校园协作包完整接入验收：`Project-c-0.1.rar` 中的 20 张校园 PNG 已全部加入可浏览目录，保留首次
+接入的 5 张稳定别名以兼容历史场景。校园联调场景现已接入完整地图选择、Python 内核权威免费传送、
+现有模块化玩家与 NPC、WASD 移动、动态镜头边界、1×/2×/3×缩放、上下边缘浏览和手机 UI 原型。
+端到端测试会实际切换 2040 像素与 3548 像素宽地图，验证人物模块、手机暂停、道路与室内通行、
+NPC 通勤，以及地图传送不推进分钟、不消耗主要行动。协作包的随机游走 NPC、硬编码传送、重复角色
+脚本和缓存未接入，因为它们会与现有权威模拟冲突。当前工程 238 项、旧版工程 46 项测试通过；
+Godot 4.7.2 编辑器导入、组件、原校园导航、完整协作场景端到端和旧主场景启动全部通过。图形渲染
+已分别检查默认校园场景、20 图滚动目录与手机校园相册页面。
 
 本轮固定种子 42 的 14 天结果：共 16,385 个事件，497 笔商店成交、264 笔私人成交、
 236 次统一物品使用；普通重复交易者平均间隔 3.71 天、最短 2 天且同日重复为 0；

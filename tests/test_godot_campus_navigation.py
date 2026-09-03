@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import struct
 import unittest
 from pathlib import Path
 
@@ -9,6 +11,35 @@ GAME_DIR = REPOSITORY_DIR / "game"
 
 
 class GodotCampusNavigationSourceTests(unittest.TestCase):
+    def test_all_twenty_collaboration_maps_are_catalogued_with_real_dimensions(self):
+        catalog_path = GAME_DIR / "data/campus_art_catalog.json"
+        catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+        maps = catalog["maps"]
+        self.assertEqual(20, len(maps))
+        self.assertEqual(20, len({entry["id"] for entry in maps}))
+        self.assertEqual(20, len({entry["texture_path"] for entry in maps}))
+        self.assertEqual(
+            20,
+            len(list((GAME_DIR / "assets/maps/campus_collab/all_maps").glob("*.png"))),
+        )
+        for entry in maps:
+            self.assertIn(entry["semantic_location_id"], {
+                "south_gate_region",
+                "student_life_region",
+                "east_dorm_region",
+                "west_dorm_region",
+                "humanities_psychology_region",
+            })
+            texture_path = entry["texture_path"].removeprefix("res://")
+            image_path = GAME_DIR / texture_path
+            self.assertTrue(image_path.is_file(), entry["id"])
+            with image_path.open("rb") as image:
+                self.assertEqual(b"\x89PNG\r\n\x1a\n", image.read(8))
+                self.assertEqual(13, struct.unpack(">I", image.read(4))[0])
+                self.assertEqual(b"IHDR", image.read(4))
+                width, height = struct.unpack(">II", image.read(8))
+            self.assertEqual([width, height], entry["map_size"], entry["id"])
+
     def test_existing_blueprint_tool_has_explicit_boundary_position_type(self):
         generator = (
             GAME_DIR / "tools/generate_full_city_orthographic_blueprint.gd"
@@ -67,6 +98,44 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("signal campus_phase_advanced", bridge)
         self.assertIn("func advance_campus_phase()", bridge)
         self.assertIn('"action_id": "ADVANCE_PHASE"', bridge)
+
+    def test_map_ui_uses_authoritative_free_travel_and_scene_mounts_all_prototypes(self):
+        bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
+            encoding="utf-8"
+        )
+        map_ui = (GAME_DIR / "scripts/ui/campus_art_map_ui.gd").read_text(
+            encoding="utf-8"
+        )
+        scene = (GAME_DIR / "scenes/campus/campus_collab_test.tscn").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('"action_id": "FAST_TRAVEL_CAMPUS"', bridge)
+        self.assertIn("SimulationBridge.fast_travel_campus(destination_id)", map_ui)
+        self.assertNotIn("change_scene_to_file", map_ui)
+        for node_name in ("CampusMapUI", "CampusPhoneUI", "CameraControls"):
+            self.assertIn(f'name="{node_name}"', scene)
+        self.assertIn("R 随机人物模块", scene)
+
+    def test_collaboration_scene_reuses_current_modular_characters_and_camera(self):
+        scene = (GAME_DIR / "scenes/campus/campus_collab_test.tscn").read_text(
+            encoding="utf-8"
+        )
+        controller = (GAME_DIR / "scripts/world/campus_collab_scene.gd").read_text(
+            encoding="utf-8"
+        )
+        player = (GAME_DIR / "scripts/player/player_controller.gd").read_text(
+            encoding="utf-8"
+        )
+        npc_layer = (GAME_DIR / "scripts/world/campus_npc_movement_layer.gd").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('res://scenes/characters/player.tscn', scene)
+        self.assertIn('res://scenes/characters/npc.tscn', scene)
+        self.assertIn("AppearanceGenerator.generate", player)
+        self.assertIn("npc.world_seed", npc_layer)
+        self.assertIn('add_to_group("campus_art_camera")', controller)
+        self.assertIn("camera.limit_right = int(_map_size.x)", controller)
+        self.assertIn("edge_scroll_speed", controller)
 
     def test_bridge_port_is_configurable_without_changing_windows_default(self):
         bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(

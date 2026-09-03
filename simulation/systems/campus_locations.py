@@ -202,8 +202,99 @@ def make_traverse_location_handler(graph: CampusLocationGraph):
     return traverse
 
 
+def make_fast_travel_handler(graph: CampusLocationGraph):
+    """Build free campus-map travel without bypassing the authoritative graph."""
+
+    def fast_travel(context, command):
+        actor = context.state.population.get(command.actor_id)
+        if not isinstance(actor, dict):
+            return TransactionOutcome(False, False, "unknown_actor", "行动者不存在。")
+        if (
+            command.issued_day != context.state.clock.day
+            or command.issued_phase != context.state.clock.phase
+        ):
+            return TransactionOutcome(
+                False, False, "command_clock_mismatch", "移动指令所属的日期或时段已经过期。"
+            )
+        destination_id = command.parameters.get("destination_id")
+        if not isinstance(destination_id, str) or not destination_id:
+            return TransactionOutcome(False, False, "missing_destination", "校园地图没有指定目的地。")
+        if destination_id not in graph.regions:
+            return TransactionOutcome(False, False, "invalid_map_destination", "校园地图只能前往室外区域。")
+        current_id = actor.get("current_location_id")
+        if not isinstance(current_id, str) or current_id not in graph.node_ids:
+            return TransactionOutcome(False, False, "unknown_location", "行动者当前地点无效。")
+        route = graph.shortest_route(
+            current_id,
+            destination_id,
+            phase=context.state.clock.phase,
+            access_tags=actor.get("access_tags", ()),
+        )
+        if route is None:
+            return TransactionOutcome(False, False, "no_available_route", "当前时段没有可用路线。")
+        if not route.steps:
+            return TransactionOutcome(
+                False,
+                True,
+                "already_there",
+                "已经在这个校园区域。",
+                payload={
+                    "current_location_id": destination_id,
+                    "presentation_key": "campus_outdoor",
+                    "route": [],
+                    "free_movement": True,
+                },
+            )
+
+        for index, step in enumerate(route.steps):
+            passage = graph.passages[step.passage_id]
+            actor["current_location_id"] = step.to_id
+            context.emit(
+                "ACTOR_LOCATION_CHANGED",
+                f"{command.actor_id} 经校园地图前往 {step.to_id}。",
+                actor_ids=[command.actor_id],
+                scene_id=step.to_id,
+                payload={
+                    "passage_id": step.passage_id,
+                    "from_id": step.from_id,
+                    "to_id": step.to_id,
+                    "travel_minutes": step.travel_minutes,
+                    "transition_kind": passage.transition_kind,
+                    "requires_scene_change": False,
+                    "presentation_key": "campus_outdoor",
+                    "route_index": index,
+                    "free_movement": True,
+                },
+                knowledge_tags=["location", "campus_map", *passage.tags],
+            )
+        return TransactionOutcome(
+            True,
+            True,
+            "success",
+            "已通过校园地图到达目的区域。",
+            commit=True,
+            payload={
+                "current_location_id": destination_id,
+                "presentation_key": "campus_outdoor",
+                "route": [
+                    {
+                        "passage_id": step.passage_id,
+                        "from_id": step.from_id,
+                        "to_id": step.to_id,
+                    }
+                    for step in route.steps
+                ],
+                "route_cost_minutes": route.total_minutes,
+                "free_movement": True,
+            },
+        )
+
+    return fast_travel
+
+
 __all__ = [
     "install_campus_places",
     "load_campus_location_graph",
+    "make_fast_travel_handler",
     "make_traverse_location_handler",
 ]

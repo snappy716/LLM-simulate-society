@@ -8,4 +8,4 @@
 
 ## 校园美术协作候选
 
-`assets/maps/campus_collab/` 来自美术协作者于 2026-09-03 提供的 `Project-c-0.1.rar`。当前只作为开发联调素材，并未替换正式主场景。压缩包没有包含这些地图的来源与许可文件，且图中仍有真实校名和现实品牌近似元素；公开演示或发布前必须补齐授权记录并完成虚构化替换。详细评审见 `design/ART_COLLABORATION_INTEGRATION.md`。
+`assets/maps/campus_collab/` 来自美术协作者于 2026-09-03 提供的 `Project-c-0.1.rar`。压缩包中的 20 张校园区域 PNG 已全部进入开发联调目录并可在校园联调场景中浏览，但未替换正式主场景。压缩包没有包含这些地图的来源与许可文件，且图中仍有真实校名和现实品牌近似元素；公开演示或发布前必须补齐授权记录并完成虚构化替换。详细评审见 `design/ART_COLLABORATION_INTEGRATION.md`。

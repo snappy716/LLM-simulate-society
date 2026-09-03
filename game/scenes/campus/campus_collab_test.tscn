@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/campus_collab_scene.gd" id="1_world"]
 [ext_resource type="Texture2D" path="res://assets/maps/campus_collab/campus_gate.png" id="2_map"]
@@ -8,6 +8,9 @@
 [ext_resource type="PackedScene" path="res://scenes/world/components/campus_transition_trigger.tscn" id="6_trigger"]
 [ext_resource type="PackedScene" path="res://scenes/world/components/campus_arrival_anchor.tscn" id="7_anchor"]
 [ext_resource type="PackedScene" path="res://scenes/ui/campus_phase_debug_panel.tscn" id="8_phase"]
+[ext_resource type="Script" path="res://scripts/ui/campus_art_map_ui.gd" id="9_map_ui"]
+[ext_resource type="Script" path="res://scripts/ui/campus_phone_ui.gd" id="10_phone_ui"]
+[ext_resource type="Script" path="res://scripts/ui/campus_camera_controls.gd" id="11_camera_ui"]
 
 [node name="CampusCollabTest" type="Node2D"]
 y_sort_enabled = true
@@ -122,7 +125,19 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 18
-text = "校园美术联调 · WASD 移动\n右侧道路向上跨区；进入后前往左侧台阶进入学生中心"
+text = "校园美术联调 · WASD 移动 · R 随机人物模块\nM 全部地图/传送 · T 手机 · 左下角镜头缩放 · 画面上下边缘浏览"
+
+[node name="CurrentMap" type="Label" parent="UI"]
+offset_left = 18.0
+offset_top = 88.0
+offset_right = 590.0
+offset_bottom = 118.0
+theme_override_colors/font_color = Color(0.78, 0.9, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 16
+text = "校园正门 · M 地图 · T 手机"
 
 [node name="PrototypeNotice" type="Label" parent="UI"]
 anchors_preset = 3
@@ -145,3 +160,15 @@ text = "开发联调素材：正式发布前需去除真实校名/品牌并补�
 horizontal_alignment = 2
 
 [node name="PhasePanel" parent="UI" instance=ExtResource("8_phase")]
+
+[node name="CameraControls" type="CanvasLayer" parent="."]
+layer = 25
+script = ExtResource("11_camera_ui")
+
+[node name="CampusMapUI" type="CanvasLayer" parent="."]
+layer = 30
+script = ExtResource("9_map_ui")
+
+[node name="CampusPhoneUI" type="CanvasLayer" parent="."]
+layer = 32
+script = ExtResource("10_phone_ui")

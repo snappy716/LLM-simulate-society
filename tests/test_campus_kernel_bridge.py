@@ -45,6 +45,22 @@ class CampusKernelBridgeTests(unittest.TestCase):
             "source": "player",
         }
 
+    def fast_travel_command(self, command_id: str, destination_id: str, revision: int = 1) -> dict:
+        snapshot = self.bridge.campus_snapshot()
+        clock = snapshot["clock"]
+        return {
+            "command_id": command_id,
+            "actor_id": "player",
+            "action_id": "FAST_TRAVEL_CAMPUS",
+            "target_ids": [],
+            "parameters": {"destination_id": destination_id},
+            "expected_world_revision": revision,
+            "issued_day": clock["day"],
+            "issued_phase": clock["phase"],
+            "issued_minute": clock["minute"],
+            "source": "player",
+        }
+
     def test_side_by_side_snapshot_has_campus_places_and_persistent_cast(self):
         campus = self.bridge.campus_snapshot()
         legacy = self.bridge.snapshot()
@@ -89,6 +105,16 @@ class CampusKernelBridgeTests(unittest.TestCase):
         self.assertGreater(execution["moved_actor_count"], 0)
         self.assertEqual(200, execution["major_activity_count"])
         self.assertEqual(0, execution["blocked_actor_count"])
+
+    def test_campus_map_fast_travel_preserves_time_and_action_budget(self):
+        result = self.bridge.campus_command(
+            self.fast_travel_command("map-travel", "east_dorm_region")
+        )
+        self.assertTrue(result["ok"])
+        self.assertTrue(result["result"]["payload"]["free_movement"])
+        self.assertEqual("east_dorm_region", result["snapshot"]["player"]["current_location_id"])
+        self.assertEqual(0, result["snapshot"]["clock"]["minute"])
+        self.assertEqual(1, result["snapshot"]["player"]["action_budget"]["major_remaining"])
 
     def test_remote_entrance_is_rejected_without_revision_change(self):
         result = self.bridge.campus_command(

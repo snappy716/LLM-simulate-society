@@ -40,6 +40,7 @@ from simulation.systems import (  # noqa: E402
     load_campus_location_graph,
     load_campus_schedule_templates,
     make_advance_phase_handler,
+    make_fast_travel_handler,
     make_traverse_location_handler,
     action_economy_invariant,
     campus_schedule_invariant,
@@ -78,6 +79,10 @@ class CampusKernelBridge:
         self.kernel.register_handler(
             "TRAVERSE_LOCATION_PASSAGE",
             traverse_handler,
+        )
+        self.kernel.register_handler(
+            "FAST_TRAVEL_CAMPUS",
+            make_fast_travel_handler(graph),
         )
         self.kernel.register_handler(
             "ADVANCE_PHASE",
