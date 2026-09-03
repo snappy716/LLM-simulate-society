@@ -18,6 +18,7 @@
   `performed=true / ok=false` 的有效检定失败。
 - Godot 4.7 导入：`Godot --headless --editor --path game --quit`
 - Godot 校园导航端到端：`Godot --headless --path game --script res://tools/test_campus_navigation_flow.gd`，必须输出 `CAMPUS_NAVIGATION_FLOW_OK`。
+- Godot 协作美术联调：`Godot --headless --path game --script res://tools/test_campus_collab_flow.gd`，必须输出 `CAMPUS_COLLAB_FLOW_OK`；图形渲染可运行 `res://tools/capture_campus_collab.gd`。
 - Godot 运行：启动 `game/project.godot`，确认后端连接、200 NPC 首个快照与城市地图加载。
 - Windows 目标检查：Windows 使用 `python`，macOS/Linux 使用 `python3`；不得提交平台绝对路径。
 - 目录保护：确认 `project-a-0.2/`、`emergent_town_demo/` 与原 ZIP 仍存在。
@@ -72,6 +73,13 @@ NPC 统一寻路与活动执行阶段验收：当前工程 224 项、旧版工�
 免费短社交；每名 NPC 恰好结算 28 个计划，饥饿需求保持在 23～68，动态状态和知识不变量错误
 为 0。Godot 校园快照升级到 v5；Godot 4.7.2 导入、组件、校园端到端、旧主场景以及实际图形
 窗口启动均通过。桥接端口默认仍为 8765，测试或冲突环境可使用 `GODOT_SIM_PORT` 指定独立端口。
+
+校园协作美术首次接入验收：从 `Project-c-0.1.rar` 的 20 张地图迭代图中只保留 5 张地点候选，
+没有导入 `.godot/`、`.import`、历史迭代稿或会绕过内核的硬编码传送与随机游走实现。新增独立
+美术联调场景，使用场景语义锚点回放权威 NPC 路线，并验证道路连续跨区、进入共享大厅、返回
+同一美术场景、时段推进及晚间 NPC 可见移动。当前工程 232 项、旧版工程 46 项、原校园导航
+端到端和协作美术端到端均通过；Godot 4.7.2 图形渲染确认玩家位于主道路。该场景不替换正式
+入口，地图在补齐授权并去除真实校名和现实品牌前仅供开发联调。
 
 本轮固定种子 42 的 14 天结果：共 16,385 个事件，497 笔商店成交、264 笔私人成交、
 236 次统一物品使用；普通重复交易者平均间隔 3.71 天、最短 2 天且同日重复为 0；

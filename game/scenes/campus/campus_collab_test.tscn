@@ -1,0 +1,147 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/campus_collab_scene.gd" id="1_world"]
+[ext_resource type="Texture2D" path="res://assets/maps/campus_collab/campus_gate.png" id="2_map"]
+[ext_resource type="PackedScene" path="res://scenes/characters/player.tscn" id="3_player"]
+[ext_resource type="Script" path="res://scripts/world/campus_npc_movement_layer.gd" id="4_npc_movement"]
+[ext_resource type="PackedScene" path="res://scenes/characters/npc.tscn" id="5_npc"]
+[ext_resource type="PackedScene" path="res://scenes/world/components/campus_transition_trigger.tscn" id="6_trigger"]
+[ext_resource type="PackedScene" path="res://scenes/world/components/campus_arrival_anchor.tscn" id="7_anchor"]
+[ext_resource type="PackedScene" path="res://scenes/ui/campus_phase_debug_panel.tscn" id="8_phase"]
+
+[node name="CampusCollabTest" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_world")
+
+[node name="CampusMap" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2_map")
+centered = false
+show_behind_parent = true
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+position = Vector2(888, 690)
+
+[node name="NpcMovementLayer" type="Node2D" parent="."]
+y_sort_enabled = true
+script = ExtResource("4_npc_movement")
+npc_scene = ExtResource("5_npc")
+max_visible_npcs = 18
+playback_speed = 220.0
+use_scene_route_anchors = true
+
+[node name="RoadBoundary" parent="." instance=ExtResource("6_trigger")]
+position = Vector2(1480, 635)
+scale = Vector2(6.5, 1)
+passage_id = "road_gate_to_student_life"
+
+[node name="StudentCenterEntrance" parent="." instance=ExtResource("6_trigger")]
+position = Vector2(294, 604)
+scale = Vector2(2.2, 1)
+passage_id = "parent:student_center"
+
+[node name="SouthRoadArrival" parent="." instance=ExtResource("7_anchor")]
+position = Vector2(1480, 690)
+anchor_id = "region:south_gate_region:entry:road_gate_to_student_life"
+
+[node name="StudentRoadArrival" parent="." instance=ExtResource("7_anchor")]
+position = Vector2(1480, 586)
+anchor_id = "region:student_life_region:entry:road_gate_to_student_life"
+
+[node name="StudentCenterOutdoorArrival" parent="." instance=ExtResource("7_anchor")]
+position = Vector2(294, 646)
+anchor_id = "outside:student_center:entrance"
+
+[node name="RouteAnchors" type="Node2D" parent="."]
+
+[node name="SouthGate" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(1480, 690)
+metadata/location_id = "south_gate_region"
+
+[node name="StudentLife" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(1180, 680)
+metadata/location_id = "student_life_region"
+
+[node name="Central" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(900, 684)
+metadata/location_id = "central_region"
+
+[node name="HumanitiesPsychology" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(300, 668)
+metadata/location_id = "humanities_psychology_region"
+
+[node name="ScienceTeaching" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(540, 684)
+metadata/location_id = "science_teaching_region"
+
+[node name="ResearchInnovation" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(700, 690)
+metadata/location_id = "research_innovation_region"
+
+[node name="EastDorm" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(1320, 700)
+metadata/location_id = "east_dorm_region"
+
+[node name="WestDorm" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(430, 700)
+metadata/location_id = "west_dorm_region"
+
+[node name="SportsHealth" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(180, 690)
+metadata/location_id = "sports_health_region"
+
+[node name="ServiceLogistics" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(1570, 686)
+metadata/location_id = "service_logistics_region"
+
+[node name="StudentCenter" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(294, 640)
+metadata/location_id = "student_center"
+
+[node name="Canteen" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(1020, 680)
+metadata/location_id = "campus_canteen"
+
+[node name="Supermarket" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(800, 680)
+metadata/location_id = "campus_supermarket"
+
+[node name="PsychologyCenter" type="Marker2D" parent="RouteAnchors" groups=["campus_route_anchor"]]
+position = Vector2(320, 652)
+metadata/location_id = "psychology_center"
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Instructions" type="Label" parent="UI"]
+offset_left = 18.0
+offset_top = 16.0
+offset_right = 660.0
+offset_bottom = 84.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 18
+text = "校园美术联调 · WASD 移动\n右侧道路向上跨区；进入后前往左侧台阶进入学生中心"
+
+[node name="PrototypeNotice" type="Label" parent="UI"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -480.0
+offset_top = -38.0
+offset_right = -18.0
+offset_bottom = -14.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 14
+text = "开发联调素材：正式发布前需去除真实校名/品牌并补齐授权记录"
+horizontal_alignment = 2
+
+[node name="PhasePanel" parent="UI" instance=ExtResource("8_phase")]

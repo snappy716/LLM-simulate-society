@@ -10,13 +10,16 @@ signal movement_replay_finished()
 @export var map_origin_world := Vector2(740, 300)
 @export var map_scale := Vector2(3, 5)
 @export var visibility_margin := 100.0
+@export var use_scene_route_anchors := false
 
 var last_replayed_count := 0
 var _places: Dictionary = {}
 var _active_routes := 0
+var _scene_route_points: Dictionary = {}
 
 
 func _ready() -> void:
+	_refresh_scene_route_anchors()
 	SimulationBridge.campus_snapshot_updated.connect(_on_snapshot_updated)
 	SimulationBridge.campus_phase_advanced.connect(_on_phase_advanced)
 	if not SimulationBridge.campus_snapshot.is_empty():
@@ -122,6 +125,8 @@ func _world_point_for_location(location_id: String) -> Variant:
 	var visited: Dictionary = {}
 	while _places.has(cursor) and not visited.has(cursor):
 		visited[cursor] = true
+		if use_scene_route_anchors and _scene_route_points.has(cursor):
+			return _scene_route_points[cursor]
 		var place: Dictionary = _places[cursor]
 		var cell_value = place.get("map_cell")
 		if cell_value is Array and cell_value.size() == 2:
@@ -129,6 +134,19 @@ func _world_point_for_location(location_id: String) -> Variant:
 			return map_origin_world + (cell - map_origin_cell) * map_scale
 		cursor = String(place.get("parent_id", place.get("region_id", "")))
 	return null
+
+
+func _refresh_scene_route_anchors() -> void:
+	_scene_route_points.clear()
+	if not use_scene_route_anchors:
+		return
+	for candidate in get_tree().get_nodes_in_group("campus_route_anchor"):
+		if not candidate is Node2D:
+			continue
+		var location_id := String(candidate.get_meta("location_id", ""))
+		if location_id.is_empty():
+			continue
+		_scene_route_points[location_id] = candidate.global_position
 
 
 func _route_intersects_view(points: PackedVector2Array) -> bool:

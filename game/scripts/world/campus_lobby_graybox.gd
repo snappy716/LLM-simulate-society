@@ -9,7 +9,10 @@ func _ready() -> void:
 	if camera != null:
 		camera.enabled = true
 	var navigation := get_node("/root/CampusNavigation")
-	navigation.call("register_presentation_scene", "campus_outdoor", OUTDOOR_SCENE)
+	# Preserve the outdoor scene that opened this shared lobby.  The graybox
+	# registers itself only when it is launched directly by the navigation test.
+	if not bool(navigation.call("has_presentation_scene", "campus_outdoor")):
+		navigation.call("register_presentation_scene", "campus_outdoor", OUTDOOR_SCENE)
 	navigation.call("register_presentation_scene", "interior_building_lobby", LOBBY_SCENE)
 	queue_redraw()
 
