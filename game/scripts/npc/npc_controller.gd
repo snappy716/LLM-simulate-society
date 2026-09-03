@@ -5,6 +5,7 @@ extends ModularCharacter
 @export var world_seed := 42
 @export var move_speed := 90.0
 @export var simulation_controlled := false
+@export var show_name_label := true
 
 @onready var navigation_agent: NavigationAgent2D = $NavigationAgent2D
 @onready var name_label: Label = $NameLabel
@@ -12,6 +13,10 @@ extends ModularCharacter
 var _rng := RandomNumberGenerator.new()
 var _anchors: Array[Node] = []
 var _wait_time := 0.0
+var _simulation_route := PackedVector2Array()
+var _simulation_route_index := 0
+
+signal simulation_route_finished(npc_id: String)
 
 
 func _ready() -> void:
@@ -20,6 +25,7 @@ func _ready() -> void:
 	_rng.seed = stable_seed
 	apply_appearance(AppearanceGenerator.generate(body_type, stable_seed))
 	name_label.text = npc_id
+	name_label.visible = show_name_label
 	_anchors = get_tree().get_nodes_in_group("semantic_anchor")
 	if not simulation_controlled:
 		call_deferred("_choose_target")
@@ -29,8 +35,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if simulation_controlled:
-		velocity = Vector2.ZERO
-		set_move_direction(Vector2.ZERO)
+		_follow_simulation_route(delta)
 		return
 	if _wait_time > 0.0:
 		_wait_time -= delta
@@ -51,6 +56,48 @@ func _physics_process(delta: float) -> void:
 	velocity = direction * move_speed
 	move_and_slide()
 	set_move_direction(direction)
+
+
+func play_simulation_route(points: PackedVector2Array, speed: float = 240.0) -> void:
+	"""Replay an authoritative semantic route without making a local decision."""
+	simulation_controlled = true
+	move_speed = speed
+	_simulation_route = points
+	_simulation_route_index = 1
+	if _simulation_route.is_empty():
+		_finish_simulation_route()
+		return
+	global_position = _simulation_route[0]
+	if _simulation_route.size() == 1:
+		_finish_simulation_route()
+
+
+func _follow_simulation_route(delta: float) -> void:
+	if _simulation_route_index >= _simulation_route.size():
+		velocity = Vector2.ZERO
+		set_move_direction(Vector2.ZERO)
+		return
+	var target := _simulation_route[_simulation_route_index]
+	var direction := global_position.direction_to(target)
+	var travel_distance := move_speed * delta
+	if global_position.distance_to(target) <= travel_distance:
+		global_position = target
+		_simulation_route_index += 1
+		if _simulation_route_index >= _simulation_route.size():
+			_finish_simulation_route()
+		else:
+			set_move_direction(global_position.direction_to(_simulation_route[_simulation_route_index]))
+		return
+	velocity = direction * move_speed
+	move_and_slide()
+	set_move_direction(direction)
+
+
+func _finish_simulation_route() -> void:
+	_simulation_route_index = _simulation_route.size()
+	velocity = Vector2.ZERO
+	set_move_direction(Vector2.ZERO)
+	simulation_route_finished.emit(npc_id)
 
 
 func _choose_target() -> void:

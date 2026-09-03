@@ -61,6 +61,21 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("聊天 / 购物 / 吃饭 / 普通移动：免费", script)
         self.assertIn('call("advance_campus_phase")', script)
 
+    def test_phase_changes_replay_visible_npc_routes_without_status_text(self):
+        scene = (GAME_DIR / "scenes/debug/campus_navigation_test.tscn").read_text(
+            encoding="utf-8"
+        )
+        layer = (GAME_DIR / "scripts/world/campus_npc_movement_layer.gd").read_text(
+            encoding="utf-8"
+        )
+        npc = (GAME_DIR / "scripts/npc/npc_controller.gd").read_text(encoding="utf-8")
+        self.assertIn('name="NpcMovementLayer"', scene)
+        self.assertIn('"ACTOR_LOCATION_CHANGED"', layer)
+        self.assertIn("npc.show_name_label = false", layer)
+        self.assertNotIn("Label.new", layer)
+        self.assertIn("func play_simulation_route", npc)
+        self.assertIn("name_label.visible = show_name_label", npc)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -55,6 +55,11 @@ from simulation.systems.campus_schedules import (
     install_campus_schedules,
     load_campus_schedule_templates,
 )
+from simulation.systems.campus_activities import (
+    ACTIVITY_STATUSES,
+    campus_activity_invariant,
+    make_scheduled_npc_phase_executor,
+)
 
 __all__ = [
     "DesireEngine",
@@ -74,6 +79,9 @@ __all__ = [
     "current_schedule_slot",
     "install_campus_schedules",
     "load_campus_schedule_templates",
+    "ACTIVITY_STATUSES",
+    "campus_activity_invariant",
+    "make_scheduled_npc_phase_executor",
     "IntelligenceSystem",
     "ItemUseSystem",
     "ItemInstanceSystem",

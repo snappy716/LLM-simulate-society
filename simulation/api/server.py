@@ -43,6 +43,8 @@ from simulation.systems import (  # noqa: E402
     make_traverse_location_handler,
     action_economy_invariant,
     campus_schedule_invariant,
+    campus_activity_invariant,
+    make_scheduled_npc_phase_executor,
 )
 
 
@@ -64,13 +66,22 @@ class CampusKernelBridge:
         self.kernel = WorldKernel(state, rng=rng_pool)
         self.kernel.add_invariant(action_economy_invariant)
         self.kernel.add_invariant(campus_schedule_invariant)
+        self.kernel.add_invariant(campus_activity_invariant)
+        traverse_handler = make_traverse_location_handler(graph)
         self.kernel.register_handler(
             "TRAVERSE_LOCATION_PASSAGE",
-            make_traverse_location_handler(graph),
+            traverse_handler,
         )
         self.kernel.register_handler(
             "ADVANCE_PHASE",
-            make_advance_phase_handler(action_policy),
+            make_advance_phase_handler(
+                action_policy,
+                make_scheduled_npc_phase_executor(
+                    graph,
+                    action_policy,
+                    traverse_handler,
+                ),
+            ),
         )
 
     def snapshot(self) -> dict:

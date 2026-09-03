@@ -9,7 +9,7 @@ from simulation.systems.campus_schedules import current_schedule_slot
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 3
+CAMPUS_WORLD_VIEW_VERSION = 4
 
 
 def kernel_status_view(state: WorldState, *, busy: bool = False) -> Dict[str, Any]:
@@ -41,6 +41,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
                 "npc_id", "display_name", "role_kind", "college_id", "occupation_id",
                 "current_location_id", "home_location_id", "home_room_key",
                 "simulation_tier", "night_access", "appearance_seed",
+                "current_activity",
             )
         }
         for npc_id, record in state.population.items()

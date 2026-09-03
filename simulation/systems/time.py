@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable
+from typing import Any, Callable, Dict, Iterable, Optional
 
 from simulation.actions.commands import SimulationCommand
 from simulation.domain.action_economy import ActionEconomyPolicy, build_action_economy_policy
@@ -151,7 +151,10 @@ def action_economy_invariant(state: WorldState) -> Iterable[str]:
     return errors
 
 
-def make_advance_phase_handler(policy: ActionEconomyPolicy):
+def make_advance_phase_handler(
+    policy: ActionEconomyPolicy,
+    on_phase_started: Optional[Callable[[Any, SimulationCommand], Dict[str, Any]]] = None,
+):
     def advance(context, command):
         if command.actor_id not in context.state.population:
             return TransactionOutcome(False, False, "unknown_actor", "行动者不存在。")
@@ -163,6 +166,7 @@ def make_advance_phase_handler(policy: ActionEconomyPolicy):
         previous_phase = context.state.clock.phase
         context.state.clock.advance_phase()
         reset_all_actor_budgets(context.state, policy)
+        phase_execution = on_phase_started(context, command) if on_phase_started else {}
         rule = policy.rule(context.state.clock.phase)
         context.emit(
             "WORLD_PHASE_ADVANCED",
@@ -176,6 +180,7 @@ def make_advance_phase_handler(policy: ActionEconomyPolicy):
                 "day_rolled_over": context.state.clock.day != previous_day,
                 "major_actions": rule.major_actions,
                 "optional": rule.optional,
+                "phase_execution": phase_execution,
             },
             knowledge_tags=["time", "phase"],
         )
@@ -190,6 +195,7 @@ def make_advance_phase_handler(policy: ActionEconomyPolicy):
                 "phase": context.state.clock.phase,
                 "minute": context.state.clock.minute,
                 "major_remaining": rule.major_actions,
+                "phase_execution": phase_execution,
             },
         )
 

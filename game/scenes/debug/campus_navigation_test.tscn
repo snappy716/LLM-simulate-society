@@ -1,10 +1,12 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/campus_navigation_graybox.gd" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/characters/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://scenes/world/components/campus_transition_trigger.tscn" id="3_trigger"]
 [ext_resource type="PackedScene" path="res://scenes/world/components/campus_arrival_anchor.tscn" id="4_anchor"]
 [ext_resource type="PackedScene" path="res://scenes/ui/campus_phase_debug_panel.tscn" id="5_phase"]
+[ext_resource type="Script" path="res://scripts/world/campus_npc_movement_layer.gd" id="6_npc_movement"]
+[ext_resource type="PackedScene" path="res://scenes/characters/npc.tscn" id="7_npc"]
 
 [node name="CampusNavigationGraybox" type="Node2D"]
 script = ExtResource("1_world")
@@ -15,6 +17,10 @@ position = Vector2(740, 610)
 [node name="Camera2D" type="Camera2D" parent="Player"]
 position = Vector2(0, -20)
 enabled = true
+
+[node name="NpcMovementLayer" type="Node2D" parent="."]
+script = ExtResource("6_npc_movement")
+npc_scene = ExtResource("7_npc")
 
 [node name="RoadBoundary" parent="." instance=ExtResource("3_trigger")]
 position = Vector2(740, 350)

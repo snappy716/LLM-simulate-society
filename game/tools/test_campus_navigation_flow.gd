@@ -16,7 +16,7 @@ func _run_flow() -> void:
 		await create_timer(0.05).timeout
 	var initial_snapshot: Dictionary = bridge.get("campus_snapshot")
 	assert(not initial_snapshot.is_empty(), "campus snapshot did not connect")
-	assert(initial_snapshot.get("view_version") == 3)
+	assert(initial_snapshot.get("view_version") == 4)
 	assert(initial_snapshot.get("revision") == 1)
 	assert((initial_snapshot.get("player", {}) as Dictionary).get("current_location_id") == "south_gate_region")
 	assert(((initial_snapshot.get("player", {}) as Dictionary).get("action_budget", {}) as Dictionary).get("major_remaining") == 1)
@@ -92,6 +92,23 @@ func _run_flow() -> void:
 	assert(((advanced_snapshot.get("player", {}) as Dictionary).get("current_plan", {}) as Dictionary).get("activity_id") == "CAMPUS_EXPLORATION")
 	assert("下午" in String(phase_panel.get_node("Margin/VBox/Phase").text))
 	assert(not advance_button.disabled)
+
+	# In this graybox, the afternoon routes stay inside teaching buildings. The
+	# evening commute crosses the student-life roads and must become visible.
+	advance_button.pressed.emit()
+	var evening_resolution = await bridge.campus_phase_advanced
+	assert(bool(evening_resolution[0]), "evening phase advance failed: %s" % evening_resolution[1])
+	var evening_snapshot: Dictionary = bridge.get("campus_snapshot")
+	assert((evening_snapshot.get("clock", {}) as Dictionary).get("phase") == "evening")
+	assert(evening_snapshot.get("revision") == 6)
+	var movement_layer = current_scene.get_node("NpcMovementLayer")
+	await process_frame
+	assert(int(movement_layer.get("last_replayed_count")) > 0, "NPC routes were not replayed")
+	for visible_npc in movement_layer.get_children():
+		assert(not visible_npc.name_label.visible, "ordinary NPCs should not show status/name text")
+	var phase_execution: Dictionary = (evening_resolution[1] as Dictionary).get("result", {}).get("payload", {}).get("phase_execution", {})
+	assert(int(phase_execution.get("planned_actor_count", 0)) == 200)
+	assert(int(phase_execution.get("blocked_actor_count", -1)) == 0)
 
 	print("CAMPUS_NAVIGATION_FLOW_OK")
 	if current_scene != null:

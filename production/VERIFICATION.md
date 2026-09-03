@@ -7,6 +7,7 @@
 - 校园地点与人口专项：`python3 -m unittest tests.test_campus_locations tests.test_campus_population tests.test_campus_kernel_bridge tests.test_godot_campus_navigation -v`
 - 四时段与主要行动专项：`python3 -m unittest tests.test_action_economy tests.test_campus_locations tests.test_campus_kernel_bridge tests.test_kernel_api_contracts -v`
 - 校园日程与容量专项：`python3 -m unittest tests.test_campus_schedules tests.test_campus_population tests.test_campus_kernel_bridge tests.test_content_registry -v`
+- NPC 寻路与活动专项：`python3 -m unittest tests.test_campus_activities tests.test_campus_locations tests.test_campus_kernel_bridge tests.test_godot_campus_navigation -v`
 - Python 编译：`python3 -m compileall -q simulation tests`
 - 补丁格式：`git diff --check`
 - 离线启动：`python3 -m simulation --days 0 --llm rule --quiet`
@@ -55,6 +56,14 @@
 默认内容没有非法地点或容量改派；人工制造的 10 人争抢 8 人心理支持室场景能稳定改派 2 人。
 校园快照升级到 v3，并在灰盒面板展示随时段变化的玩家计划。计划生成不移动角色、不扣行动，
 因此下一阶段仍需实现 NPC 统一寻路与实际活动执行。
+
+NPC 统一寻路与活动执行阶段验收：当前工程 224 项、旧版工程 46 项测试通过；固定种子 42
+连续运行 7 天、28 个时段，共执行 5,600 个 NPC 计划，发生 4,303 人次跨地点移动并通过
+20,777 个合法通道，完成 3,925 次主要活动和 1,675 次自由活动，路径、权限或排班阻塞为 0。
+玩家不会被日程自动接管，移动仍免费；NPC 与玩家复用同一个通行处理器，到达后才结算活动与
+个人行动次数。校园快照升级到 v4，保留可按需查询的活动依据。Godot 4.7.2 导入、组件、
+旧主场景和校园端到端测试均通过；校园灰盒只回放当前画面附近最多 18 名 NPC 的真实通勤
+轨迹，进入室内后退场，默认不显示 NPC 名称或活动状态文字。
 
 本轮固定种子 42 的 14 天结果：共 16,385 个事件，497 笔商店成交、264 笔私人成交、
 236 次统一物品使用；普通重复交易者平均间隔 3.71 天、最短 2 天且同日重复为 0；
