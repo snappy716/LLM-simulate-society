@@ -185,9 +185,10 @@ func _show_home() -> void:
 
 func _set_open(value: bool) -> void:
 	if value:
-		var map_ui := get_tree().get_first_node_in_group("campus_map_ui")
-		if map_ui != null and map_ui.is_open():
-			return
+		for group_name in ["campus_map_ui", "campus_npc_inspector_ui"]:
+			var other_ui = get_tree().get_first_node_in_group(group_name)
+			if other_ui != null and other_ui.is_open():
+				return
 	_opened = value
 	_overlay.visible = value
 	if value:

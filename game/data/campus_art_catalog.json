@@ -8,6 +8,7 @@
       "group": "教学区",
       "texture_path": "res://assets/maps/campus_collab/campus_gate.png",
       "semantic_location_id": "south_gate_region",
+      "visible_region_ids": ["south_gate_region", "central_region"],
       "map_size": [1774, 887],
       "spawn": [888, 690],
       "walk_rect": [30, 620, 1714, 130]
@@ -18,6 +19,7 @@
       "group": "生活区",
       "texture_path": "res://assets/maps/campus_collab/living_area.png",
       "semantic_location_id": "student_life_region",
+      "visible_region_ids": ["student_life_region", "service_logistics_region"],
       "map_size": [2040, 771],
       "spawn": [1020, 620],
       "walk_rect": [30, 465, 1980, 275]
@@ -28,6 +30,7 @@
       "group": "宿舍区",
       "texture_path": "res://assets/maps/campus_collab/east_dormitory.png",
       "semantic_location_id": "east_dorm_region",
+      "visible_region_ids": ["east_dorm_region", "student_life_region"],
       "map_size": [1774, 887],
       "spawn": [887, 700],
       "walk_rect": [30, 470, 1714, 390]
@@ -38,6 +41,7 @@
       "group": "宿舍区",
       "texture_path": "res://assets/maps/campus_collab/west_dormitory.png",
       "semantic_location_id": "west_dorm_region",
+      "visible_region_ids": ["west_dorm_region", "sports_health_region"],
       "map_size": [1774, 887],
       "spawn": [887, 700],
       "walk_rect": [30, 470, 1714, 390]
@@ -48,6 +52,7 @@
       "group": "心理学院与桥",
       "texture_path": "res://assets/maps/campus_collab/psychology_bridge.png",
       "semantic_location_id": "humanities_psychology_region",
+      "visible_region_ids": ["humanities_psychology_region", "central_region"],
       "map_size": [1742, 903],
       "spawn": [1060, 810],
       "walk_rect": [30, 475, 1682, 398]

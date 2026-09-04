@@ -53,6 +53,27 @@ func _run_flow() -> void:
 	randomize_event.pressed = true
 	player.call("_unhandled_input", randomize_event)
 	assert((player.get("appearance") as Dictionary) != old_appearance)
+	var movement_layer = outdoor.get_node("NpcMovementLayer")
+	for _attempt in range(20):
+		if int(movement_layer.call("visible_resident_count")) > 0:
+			break
+		await process_frame
+	assert(int(movement_layer.call("visible_resident_count")) > 0)
+	var nearby_npc = movement_layer.call("nearest_interactable_npc", player.global_position, 100.0)
+	assert(nearby_npc != null)
+	assert(not nearby_npc.name_label.visible)
+	var inspector = outdoor.get_node("CampusNpcInspectorUI")
+	inspector.call("inspect_npc", nearby_npc)
+	assert(bool(inspector.call("is_open")))
+	assert(paused)
+	var details := inspector.get("_details") as RichTextLabel
+	var public_text := details.text
+	assert(public_text.contains("公开身份"))
+	assert(public_text.contains("正在做的事"))
+	assert(not public_text.contains("simulation_tier"))
+	assert(not public_text.contains("night_access"))
+	inspector.call("_set_open", false)
+	assert(not paused)
 
 	var phone_ui = outdoor.get_node("CampusPhoneUI")
 	phone_ui.call("_set_open", true)
@@ -64,7 +85,6 @@ func _run_flow() -> void:
 	assert(not bool(phone_ui.call("is_open")))
 	assert(outdoor.has_node("CampusMapUI"))
 	assert(outdoor.has_node("CameraControls"))
-	var movement_layer = outdoor.get_node("NpcMovementLayer")
 	assert(bool(movement_layer.get("use_scene_route_anchors")))
 	assert(get_nodes_in_group("campus_route_anchor").size() >= 10)
 

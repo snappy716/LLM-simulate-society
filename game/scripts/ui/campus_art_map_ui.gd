@@ -138,9 +138,10 @@ func _result_message(result: Dictionary) -> String:
 
 func _set_open(value: bool) -> void:
 	if value:
-		var phone := get_tree().get_first_node_in_group("campus_phone_ui")
-		if phone != null and phone.is_open():
-			return
+		for group_name in ["campus_phone_ui", "campus_npc_inspector_ui"]:
+			var other_ui = get_tree().get_first_node_in_group(group_name)
+			if other_ui != null and other_ui.is_open():
+				return
 	_opened = value
 	_overlay.visible = value
 	_pending_map_id = ""

@@ -137,6 +137,26 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("camera.limit_right = int(_map_size.x)", controller)
         self.assertIn("edge_scroll_speed", controller)
 
+    def test_campus_scene_keeps_authoritative_npcs_visible_and_inspectable(self):
+        scene = (GAME_DIR / "scenes/campus/campus_collab_test.tscn").read_text(
+            encoding="utf-8"
+        )
+        layer = (GAME_DIR / "scripts/world/campus_npc_movement_layer.gd").read_text(
+            encoding="utf-8"
+        )
+        inspector = (GAME_DIR / "scripts/ui/campus_npc_inspector_ui.gd").read_text(
+            encoding="utf-8"
+        )
+        project = (GAME_DIR / "project.godot").read_text(encoding="utf-8")
+        self.assertIn('name="CampusNpcInspectorUI"', scene)
+        self.assertIn("interact_npc={", project)
+        self.assertIn('add_to_group("campus_npc_movement_layer")', layer)
+        self.assertIn("func _refresh_residents()", layer)
+        self.assertIn("func nearest_interactable_npc", layer)
+        self.assertIn("get_campus_profile", inspector)
+        self.assertIn("内在需求、秘密动机与后续计划不会直接显示", inspector)
+        self.assertNotIn('_dictionary_lines(profile.get("needs"', inspector)
+
     def test_bridge_port_is_configurable_without_changing_windows_default(self):
         bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
             encoding="utf-8"

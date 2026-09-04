@@ -15,7 +15,20 @@ func _capture() -> void:
 	current_scene = scene
 	for _frame in range(12):
 		await process_frame
+	var movement_layer = scene.get_node("NpcMovementLayer")
+	for _attempt in range(100):
+		if int(movement_layer.call("visible_resident_count")) > 0:
+			break
+		await create_timer(0.05).timeout
 	await _save_view("user://campus_collab_capture.png", "CAMPUS_COLLAB_CAPTURE")
+	var player := scene.get_node("Player") as Node2D
+	var nearby_npc = movement_layer.call("nearest_interactable_npc", player.global_position, 120.0)
+	if nearby_npc != null:
+		var inspector = scene.get_node("CampusNpcInspectorUI")
+		inspector.call("inspect_npc", nearby_npc)
+		await process_frame
+		await _save_view("user://campus_npc_ui_capture.png", "CAMPUS_NPC_UI_CAPTURE")
+		inspector.call("_set_open", false)
 
 	var map_ui = scene.get_node("CampusMapUI")
 	map_ui.call("_set_open", true)

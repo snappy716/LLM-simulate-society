@@ -15,6 +15,7 @@ var _anchors: Array[Node] = []
 var _wait_time := 0.0
 var _simulation_route := PackedVector2Array()
 var _simulation_route_index := 0
+var campus_profile: Dictionary = {}
 
 signal simulation_route_finished(npc_id: String)
 
@@ -70,6 +71,16 @@ func play_simulation_route(points: PackedVector2Array, speed: float = 240.0) -> 
 	global_position = _simulation_route[0]
 	if _simulation_route.size() == 1:
 		_finish_simulation_route()
+
+
+func set_campus_profile(profile: Dictionary) -> void:
+	campus_profile = profile.duplicate(true)
+	var profile_name := String(campus_profile.get("display_name", npc_id))
+	name_label.text = profile_name
+
+
+func get_campus_profile() -> Dictionary:
+	return campus_profile.duplicate(true)
 
 
 func _follow_simulation_route(delta: float) -> void:

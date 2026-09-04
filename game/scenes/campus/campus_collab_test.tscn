@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/campus_collab_scene.gd" id="1_world"]
 [ext_resource type="Texture2D" path="res://assets/maps/campus_collab/campus_gate.png" id="2_map"]
@@ -11,6 +11,7 @@
 [ext_resource type="Script" path="res://scripts/ui/campus_art_map_ui.gd" id="9_map_ui"]
 [ext_resource type="Script" path="res://scripts/ui/campus_phone_ui.gd" id="10_phone_ui"]
 [ext_resource type="Script" path="res://scripts/ui/campus_camera_controls.gd" id="11_camera_ui"]
+[ext_resource type="Script" path="res://scripts/ui/campus_npc_inspector_ui.gd" id="12_npc_ui"]
 
 [node name="CampusCollabTest" type="Node2D"]
 y_sort_enabled = true
@@ -125,7 +126,7 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 18
-text = "校园美术联调 · WASD 移动 · R 随机人物模块\nM 全部地图/传送 · T 手机 · 左下角镜头缩放 · 画面上下边缘浏览"
+text = "校园美术联调 · WASD 移动 · E 查看附近 NPC · R 随机人物模块\nM 校园地图/传送 · T 手机 · 左下角镜头缩放 · 画面上下边缘浏览"
 
 [node name="CurrentMap" type="Label" parent="UI"]
 offset_left = 18.0
@@ -168,6 +169,10 @@ script = ExtResource("11_camera_ui")
 [node name="CampusMapUI" type="CanvasLayer" parent="."]
 layer = 30
 script = ExtResource("9_map_ui")
+
+[node name="CampusNpcInspectorUI" type="CanvasLayer" parent="."]
+layer = 31
+script = ExtResource("12_npc_ui")
 
 [node name="CampusPhoneUI" type="CanvasLayer" parent="."]
 layer = 32

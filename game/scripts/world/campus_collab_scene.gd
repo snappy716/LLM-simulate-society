@@ -143,7 +143,7 @@ func _configure_map_specific_triggers(map_id: String) -> void:
 
 
 func _ui_is_open() -> bool:
-	for group_name in ["campus_map_ui", "campus_phone_ui"]:
+	for group_name in ["campus_map_ui", "campus_phone_ui", "campus_npc_inspector_ui"]:
 		var ui = get_tree().get_first_node_in_group(group_name)
 		if ui != null and ui.is_open():
 			return true

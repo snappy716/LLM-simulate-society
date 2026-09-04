@@ -20,6 +20,8 @@
 - Godot 校园导航端到端：`Godot --headless --path game --script res://tools/test_campus_navigation_flow.gd`，必须输出 `CAMPUS_NAVIGATION_FLOW_OK`。
 - Godot 协作美术联调：`Godot --headless --path game --script res://tools/test_campus_collab_flow.gd`，必须输出 `CAMPUS_COLLAB_FLOW_OK`；图形渲染可运行 `res://tools/capture_campus_collab.gd`。
 - 校园美术完整性：`campus_art_catalog.json` 必须只有 5 个最新版条目，每个 PNG 文件存在且 IHDR 尺寸与目录一致；地图跨区必须走 `FAST_TRAVEL_CAMPUS`，不得直接修改地点。
+- 校园 NPC 呈现：进入最新版校园场景后应保留当前区域真实在场 NPC；靠近后按 `E` 可查看公开状态，
+  面板不得显示需求原始数值、秘密、内部层级或未来计划，并须与地图、手机界面互斥。
 - Godot 运行：启动 `game/project.godot`，确认后端连接、200 NPC 首个快照与城市地图加载。
 - Windows 目标检查：Windows 使用 `python`，macOS/Linux 使用 `python3`；不得提交平台绝对路径。
 - 目录保护：确认 `project-a-0.2/`、`emergent_town_demo/` 与原 ZIP 仍存在。
@@ -90,6 +92,13 @@ NPC 通勤，以及地图传送不推进分钟、不消耗主要行动。协作�
 脚本和缓存未接入，因为它们会与现有权威模拟冲突。当前工程 238 项、旧版工程 46 项测试通过；
 Godot 4.7.2 编辑器导入、组件、原校园导航、完整协作场景端到端和旧主场景启动全部通过。图形渲染
 已分别检查默认校园场景、5 区地图目录与手机校园相册页面。
+
+校园 NPC 常驻与公开查看阶段验收：NPC 路线动画结束后仍按权威地点保留在当前区域，切换地图、
+快速移动或推进时段后会重新投影真实在场角色，最多渲染 18 人；普通 NPC 仍不显示头顶名称或状态。
+玩家靠近后按 `E` 打开公开查看面板，可见身份、地点、活动和模糊情绪，内部需求、秘密与计划保持
+隐藏。协作场景端到端测试同时验证 NPC 常驻、近距离交互、暂停恢复、UI 互斥、道路/室内通行、
+时段推进和地图权威传送。当前工程 239 项、旧版工程 46 项测试通过；Godot 4.7.2 编辑器导入、
+组件、原校园导航与完整协作场景端到端均通过。
 
 本轮固定种子 42 的 14 天结果：共 16,385 个事件，497 笔商店成交、264 笔私人成交、
 236 次统一物品使用；普通重复交易者平均间隔 3.71 天、最短 2 天且同日重复为 0；
