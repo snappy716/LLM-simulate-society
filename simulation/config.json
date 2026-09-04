@@ -5,7 +5,7 @@
   "simple_npcs": 180,
   "llm_mode": "rule",
   "deepseek_url": "https://api.deepseek.com",
-  "deepseek_model": "deepseek-gangtise",
+  "deepseek_model": "deepseek-chat",
   "max_llm_npcs": 20,
   "llm_concurrency": 5,
   "log_dir": "runs/latest",

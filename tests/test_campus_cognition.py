@@ -153,18 +153,11 @@ class CampusCognitionTests(unittest.TestCase):
         self.assertNotIn("test-secret-never-save", serialized)
         self.assertNotIn("provider.invalid", serialized)
 
-    def test_supplied_model_presets_are_registered_exactly(self):
+    def test_versioned_policy_does_not_contain_personal_provider_presets(self):
         payload = json.loads(
             (REPOSITORY_DIR / "content/npcs/cognition_policy.json").read_text(encoding="utf-8")
         )
-        presets = {item["env_name"]: item["model"] for item in payload["model_presets"]}
-        self.assertEqual("stocklink-chat", presets["V4pro_CHAT_MODEL"])
-        self.assertEqual("stocklink-reason", presets["V4pro_REASON_MODEL"])
-        self.assertEqual("deepseek-gangtise", presets["V4flash_CHAT_MODEL"])
-        self.assertEqual("deepseek-gangtise-thinkinkg", presets["V4flash_REASON_MODEL"])
-        self.assertEqual("gangtise-flash", presets["QWEN32B_FLASH_MODEL"])
-        self.assertEqual("gangtise-flash-nothink", presets["QWEN32B_FLASH_NOTHINK_MODEL"])
-        self.assertEqual("gangtise-vl", presets["VL_MODEL"])
+        self.assertNotIn("model_presets", payload)
 
 
 if __name__ == "__main__":

@@ -35,25 +35,15 @@
 
 调用计数、Token 估算、服务返回的实际 Token、缓存命中、拒绝响应、接口错误和预算拦截会进入可序列化账本。API Key 和 Base URL 只存在于本机接口对象，不进入世界状态、存档、事件、人物日志或 Git。公开快照只返回经过清理的提供方状态与额度统计，不返回 NPC 私有记忆。
 
-## 模型预设
+## 模型配置边界
 
-模型目录已按提供的名称登记：
+仓库只提供通用的离线规则、OpenAI 兼容接口和本地 Ollama 适配能力，不提交开发者个人模型名称、服务地址或 API Key。每位开发者可以在自己的 Godot 本地接口面板中建立不同配置；这些配置由 `.gitignore` 排除，不会随分支共享。
 
-| 用途 | 环境变量名 | 模型名 |
-| --- | --- | --- |
-| 高质量对话 | `V4pro_CHAT_MODEL` | `stocklink-chat` |
-| 深度反思 | `V4pro_REASON_MODEL` | `stocklink-reason` |
-| 低成本决策 | `V4flash_CHAT_MODEL` | `deepseek-gangtise` |
-| 快速推理 | `V4flash_REASON_MODEL` | `deepseek-gangtise-thinkinkg` |
-| 低成本决策备选 | `QWEN32B_FLASH_MODEL` | `gangtise-flash` |
-| 无思考低成本决策 | `QWEN32B_FLASH_NOTHINK_MODEL` | `gangtise-flash-nothink` |
-| 视觉理解 | `VL_MODEL` | `gangtise-vl` |
-
-当前 NPC 时段选择推荐使用 `deepseek-gangtise` 或 `gangtise-flash-nothink`；高价的 Pro/Reason 模型留给后续重要对话、日终反思和剧情节点，不应用于 200 人每时段常规决策。
+常规 NPC 时段选择应使用低成本模型；高质量对话或推理模型只留给后续重要对话、日终反思和剧情节点，不应用于 200 人每时段常规决策。
 
 ## 本地配置与待补前置条件
 
-Godot 中按 Esc 打开接口面板，选择“兼容接口”，填写 Base URL、模型名和 API Key 后应用。配置文件位于 `user://llm_interfaces.cfg`，已被 Git 忽略，但它本身不是系统钥匙串且没有加密；共享电脑不应勾留正式密钥。
+Godot 中按 Esc 打开接口面板，选择“兼容接口”，填写仅属于当前开发者的 Base URL、模型名和 API Key 后应用。配置文件位于 `user://llm_interfaces.cfg`，已被 Git 忽略，但它本身不是系统钥匙串且没有加密；共享电脑不应留存正式密钥。
 
 真实联网测试仍需要确认服务的 API Base URL，并确认服务兼容 `POST {Base URL}/chat/completions`、Bearer Token 和标准 `choices[0].message.content` 响应。该前置条件补齐前，所有自动回归只使用假提供方或离线规则，不消耗正式额度。
 
