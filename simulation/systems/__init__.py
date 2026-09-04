@@ -68,6 +68,14 @@ from simulation.systems.campus_activity_effects import (
     load_campus_activity_definitions,
     make_campus_activity_handler,
 )
+from simulation.systems.campus_decisions import (
+    CampusDecisionAlternative,
+    CampusDecisionPolicy,
+    campus_decision_invariant,
+    choose_campus_npc_activity,
+    load_campus_decision_policy,
+    make_campus_npc_decision_selector,
+)
 
 __all__ = [
     "DesireEngine",
@@ -96,6 +104,12 @@ __all__ = [
     "advance_campus_phase_upkeep",
     "load_campus_activity_definitions",
     "make_campus_activity_handler",
+    "CampusDecisionAlternative",
+    "CampusDecisionPolicy",
+    "campus_decision_invariant",
+    "choose_campus_npc_activity",
+    "load_campus_decision_policy",
+    "make_campus_npc_decision_selector",
     "IntelligenceSystem",
     "ItemUseSystem",
     "ItemInstanceSystem",

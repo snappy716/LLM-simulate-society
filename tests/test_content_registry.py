@@ -28,6 +28,7 @@ class ContentRegistryTests(unittest.TestCase):
         self.assertEqual(16, len(registry.ids("interior_template")))
         self.assertIn("campus_population", registry.ids("configuration"))
         self.assertIn("action_economy", registry.ids("configuration"))
+        self.assertIn("campus_decisions", registry.ids("configuration"))
 
     def test_content_version_is_reproducible_and_manifest_is_portable(self):
         first = ContentRegistry.load_default(REPOSITORY_DIR / "content")

@@ -9,7 +9,7 @@ from simulation.systems.campus_schedules import current_schedule_slot
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 5
+CAMPUS_WORLD_VIEW_VERSION = 6
 
 
 def kernel_status_view(state: WorldState, *, busy: bool = False) -> Dict[str, Any]:
@@ -52,7 +52,18 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         if npc_id != "player" and isinstance(record, dict)
     }
     for npc_id in cast:
-        cast[npc_id]["current_plan"] = current_schedule_slot(state, npc_id)
+        source_record = state.population.get(npc_id, {})
+        decision = source_record.get("current_decision") if isinstance(source_record, dict) else None
+        cast[npc_id]["current_plan"] = (
+            {
+                key: deepcopy(decision.get(key))
+                for key in ("activity_id", "action_class", "location_id", "day", "phase")
+            }
+            if isinstance(decision, dict)
+            and decision.get("day") == state.clock.day
+            and decision.get("phase") == state.clock.phase
+            else current_schedule_slot(state, npc_id)
+        )
         cast[npc_id]["knowledge_progress"] = deepcopy(
             state.knowledge.get("actors", {}).get(npc_id, {})
         )

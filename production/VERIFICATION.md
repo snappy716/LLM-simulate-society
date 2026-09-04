@@ -9,6 +9,7 @@
 - 校园日程与容量专项：`python3 -m unittest tests.test_campus_schedules tests.test_campus_population tests.test_campus_kernel_bridge tests.test_content_registry -v`
 - NPC 寻路与活动专项：`python3 -m unittest tests.test_campus_activities tests.test_campus_locations tests.test_campus_kernel_bridge tests.test_godot_campus_navigation -v`
 - 校园活动效果专项：`python3 -m unittest tests.test_campus_activity_effects tests.test_campus_activities tests.test_campus_kernel_bridge tests.test_content_registry -v`
+- 校园 NPC 规则决策专项：`python3 -m unittest tests.test_campus_decisions tests.test_campus_activities tests.test_campus_activity_effects tests.test_campus_kernel_bridge -v`
 - Python 编译：`python3 -m compileall -q simulation tests`
 - 补丁格式：`git diff --check`
 - 离线启动：`python3 -m simulation --days 0 --llm rule --quiet`
@@ -108,6 +109,14 @@ Godot 4.7.2 编辑器导入、组件、原校园导航、完整协作场景端�
 心理学院→生活区→校门”，并在途中验证学生中心室内进入与原入口返回。所有步行换区均不推进
 时钟、不扣主要行动，失败不会切图。当前工程 240 项、旧版工程 46 项测试通过；Godot 4.7.2
 编辑器导入、组件、原校园导航、新版五区联调和旧主入口启动均通过。
+
+校园 NPC 第一版规则决策阶段验收：当前工程 244 项、旧版工程 46 项测试通过。固定种子 42
+连续运行 7 天、28 个时段，共完成 5,600 次 NPC 决策和活动，其中 4,363 次遵循原日程、
+1,237 次根据休息、求知、社交、社团、探索或经济压力自主改选；完成 21,011 段合法通行，
+路径、权限、营业时间、容量或行动额度阻塞为 0。高优先级职责在非紧急状态下受到保护，极端
+生理需求可以触发重新比较；相同种子得到相同决策轨迹。Godot 校园快照升级到 v6，只公开
+实际活动与地点，不公开内部评分。Godot 4.7.2 编辑器导入、组件、校园导航、五区协作场景和
+旧主场景启动全部通过；校园导航端到端确认晚上存在自主改选 NPC 且可见路线照常回放。
 
 本轮固定种子 42 的 14 天结果：共 16,385 个事件，497 笔商店成交、264 笔私人成交、
 236 次统一物品使用；普通重复交易者平均间隔 3.71 天、最短 2 天且同日重复为 0；

@@ -104,7 +104,7 @@ class KernelApiContractTests(unittest.TestCase):
             },
         )
         view = campus_world_view(state)
-        self.assertEqual(5, view["view_version"])
+        self.assertEqual(6, view["view_version"])
         self.assertEqual("region_a", view["player"]["current_location_id"])
         self.assertIn("road", view["passages"])
         self.assertIn("lobby", view["interior_templates"])

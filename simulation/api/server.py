@@ -50,6 +50,9 @@ from simulation.systems import (  # noqa: E402
     load_campus_activity_definitions,
     make_campus_activity_handler,
     make_scheduled_npc_phase_executor,
+    campus_decision_invariant,
+    load_campus_decision_policy,
+    make_campus_npc_decision_selector,
 )
 
 
@@ -70,11 +73,18 @@ class CampusKernelBridge:
         install_action_economy(state, action_policy)
         activity_definitions = load_campus_activity_definitions(registry)
         activity_handler = make_campus_activity_handler(activity_definitions, action_policy)
+        decision_policy = load_campus_decision_policy(
+            registry, activity_definitions, graph
+        )
+        decision_selector = make_campus_npc_decision_selector(
+            graph, activity_definitions, decision_policy
+        )
         self.kernel = WorldKernel(state, rng=rng_pool)
         self.kernel.add_invariant(action_economy_invariant)
         self.kernel.add_invariant(campus_schedule_invariant)
         self.kernel.add_invariant(campus_activity_invariant)
         self.kernel.add_invariant(campus_activity_effect_invariant)
+        self.kernel.add_invariant(campus_decision_invariant)
         traverse_handler = make_traverse_location_handler(graph)
         self.kernel.register_handler(
             "TRAVERSE_LOCATION_PASSAGE",
@@ -94,6 +104,7 @@ class CampusKernelBridge:
                     traverse_handler,
                     activity_handler,
                     advance_campus_phase_upkeep,
+                    decision_selector,
                 ),
             ),
         )

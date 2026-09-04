@@ -37,6 +37,11 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ContentSource("actions/college_skills.json", "college", "colleges"),
     ContentSource("actions/action_economy.json", "configuration", singleton_id="action_economy"),
     ContentSource("actions/campus_activities.json", "campus_activity", "activities"),
+    ContentSource(
+        "actions/campus_decisions.json",
+        "configuration",
+        singleton_id="campus_decisions",
+    ),
     ContentSource("actions/campus_schedules.json", "schedule_template", "templates"),
     ContentSource("organizations/clubs.json", "club", "clubs"),
     ContentSource("npcs/generation_rules.json", "configuration", singleton_id="npc_generation"),
@@ -180,6 +185,26 @@ class ContentRegistry:
                         errors.append(
                             f"schedule {schedule.get('id')} uses {activity_id} in forbidden phase {phase}"
                         )
+        decision_config = self.all("configuration").get("campus_decisions", {})
+        for alternative in decision_config.get("alternatives", []):
+            if not isinstance(alternative, dict):
+                errors.append("campus decision alternative must be a mapping")
+                continue
+            activity_id = alternative.get("activity_id")
+            if activity_id not in activity_ids:
+                errors.append(
+                    f"campus decision {alternative.get('id')} references unknown activity: {activity_id}"
+                )
+                continue
+            activity = self.get("campus_activity", activity_id)
+            forbidden = set(alternative.get("allowed_phases", [])) - set(
+                activity.get("allowed_phases", [])
+            )
+            if forbidden:
+                errors.append(
+                    f"campus decision {alternative.get('id')} uses {activity_id} in forbidden phases: "
+                    + ", ".join(sorted(forbidden))
+                )
         population_config = self.all("configuration").get("campus_population", {})
         referenced_schedules = set(population_config.get("schedules", {}).values())
         unknown_schedules = referenced_schedules - schedule_ids

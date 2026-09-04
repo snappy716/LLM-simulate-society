@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "score_jitter": 3.0,
+  "route_minutes_for_max_cost": 90,
+  "protected_schedule_priority": 90,
+  "emergency_need_threshold": 90,
+  "alternatives": [
+    {
+      "id": "recover_at_home",
+      "activity_id": "REST",
+      "location": "home",
+      "allowed_phases": ["morning", "afternoon", "evening", "late_night"],
+      "priority": 20,
+      "reason": "rest_need"
+    },
+    {
+      "id": "independent_study",
+      "activity_id": "SELF_STUDY",
+      "location": "library",
+      "allowed_phases": ["morning", "afternoon", "evening"],
+      "priority": 42,
+      "reason": "achievement_or_curiosity"
+    },
+    {
+      "id": "seek_company",
+      "activity_id": "SOCIAL_OR_SELF_STUDY",
+      "location": "mirror_lake_square",
+      "allowed_phases": ["morning", "afternoon", "evening"],
+      "priority": 35,
+      "reason": "social_need"
+    },
+    {
+      "id": "join_club_activity",
+      "activity_id": "CLUB_OR_PERSONAL_ACTIVITY",
+      "location": "club_room_pool",
+      "allowed_phases": ["afternoon"],
+      "priority": 40,
+      "required_club": true,
+      "reason": "club_commitment"
+    },
+    {
+      "id": "join_club_evening",
+      "activity_id": "CLUB_OR_SELF_STUDY",
+      "location": "club_room_pool",
+      "allowed_phases": ["evening"],
+      "priority": 40,
+      "required_club": true,
+      "reason": "club_commitment"
+    },
+    {
+      "id": "personal_time",
+      "activity_id": "PERSONAL_ACTIVITY",
+      "location": "home",
+      "allowed_phases": ["morning", "afternoon", "evening"],
+      "priority": 30,
+      "reason": "emotional_recovery"
+    },
+    {
+      "id": "explore_campus",
+      "activity_id": "CAMPUS_EXPLORATION",
+      "location": "mirror_lake_square",
+      "allowed_phases": ["morning", "afternoon", "evening"],
+      "priority": 32,
+      "reason": "curiosity"
+    },
+    {
+      "id": "student_part_time_shift",
+      "activity_id": "CAMPUS_SERVICE_SHIFT",
+      "location": "canteen_dining_hall",
+      "allowed_phases": ["morning", "afternoon", "evening"],
+      "priority": 45,
+      "role_kinds": ["student"],
+      "reason": "money_need"
+    }
+  ]
+}
