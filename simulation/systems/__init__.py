@@ -134,11 +134,13 @@ from simulation.systems.campus_intelligence import (
     share_specific_known_claim,
 )
 from simulation.systems.campus_interactions import (
+    PLAYER_DIALOGUE_ACTION_ID,
     CampusInteractionPolicy,
     advance_campus_interactions,
     campus_interaction_invariant,
     install_campus_interactions,
     load_campus_interaction_policy,
+    make_player_dialogue_handler,
 )
 from simulation.systems.campus_messaging import (
     CAMPUS_MESSAGING_SCHEMA_VERSION,
@@ -258,10 +260,12 @@ __all__ = [
     "share_known_claim",
     "share_specific_known_claim",
     "CampusInteractionPolicy",
+    "PLAYER_DIALOGUE_ACTION_ID",
     "advance_campus_interactions",
     "campus_interaction_invariant",
     "install_campus_interactions",
     "load_campus_interaction_policy",
+    "make_player_dialogue_handler",
     "CAMPUS_MESSAGING_SCHEMA_VERSION",
     "PHONE_ACTION_IDS",
     "CampusMessagingPolicy",

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/player_npc_dialogue.schema.json",
+  "title": "Committed player initiated in-person NPC dialogue payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dialogue_id", "day", "phase", "scene_id", "player_id", "target_id",
+    "intent_id", "outcome", "acceptance_score", "player_text", "reply_text",
+    "wording_source", "shared_claim_ids", "consequence_applied",
+    "relationship_deltas", "emotion_deltas", "hook_id", "hook_transition",
+    "outcome_claim_ids", "action_class"
+  ],
+  "properties": {
+    "dialogue_id": {"type": "string", "pattern": "^player_dialogue:[0-9]{8}$"},
+    "day": {"type": "integer", "minimum": 1},
+    "phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+    "scene_id": {"type": "string", "minLength": 1},
+    "player_id": {"const": "player"},
+    "target_id": {"type": "string", "minLength": 1},
+    "intent_id": {"type": "string", "minLength": 1},
+    "outcome": {"enum": ["accepted", "rejected"]},
+    "acceptance_score": {"type": "number"},
+    "player_text": {"type": "string", "minLength": 1, "maxLength": 240},
+    "reply_text": {"type": "string", "minLength": 1},
+    "wording_source": {"enum": ["rule", "llm"]},
+    "shared_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "consequence_applied": {"type": "boolean"},
+    "relationship_deltas": {"type": "object", "required": ["actor", "target"]},
+    "emotion_deltas": {"type": "object", "required": ["actor", "target"]},
+    "hook_id": {"type": ["string", "null"]},
+    "hook_transition": {"enum": ["created", "completed", "broken", null]},
+    "outcome_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "action_class": {"const": "free"}
+  }
+}

@@ -24,8 +24,10 @@ class CognitionPolicy:
     max_output_tokens: int = 160
     request_timeout_seconds: float = 8.0
     cache_limit: int = 96
-    player_dialogue_daily_reserve: int = 4
-    player_dialogue_phase_call_limit: int = 2
+    # Kept only so snapshots made before schema migration can still be loaded.
+    # Player-initiated dialogue is intentionally not governed by these values.
+    player_dialogue_daily_reserve: int = 0
+    player_dialogue_phase_call_limit: int = 0
 
     def __post_init__(self) -> None:
         integer_values = {
@@ -45,15 +47,11 @@ class CognitionPolicy:
             "daily_estimated_token_limit": self.daily_estimated_token_limit,
             "max_output_tokens": self.max_output_tokens,
             "cache_limit": self.cache_limit,
-            "player_dialogue_daily_reserve": self.player_dialogue_daily_reserve,
-            "player_dialogue_phase_call_limit": self.player_dialogue_phase_call_limit,
         }
         if any(isinstance(value, bool) or not isinstance(value, int) or value < 1 for value in integer_values.values()):
             raise ValueError("cognition policy integer limits must be positive")
         if self.player_awakened_slots > self.total_focus_slots:
             raise ValueError("player awakened slots cannot exceed total focus slots")
-        if self.player_dialogue_daily_reserve >= self.daily_call_limit:
-            raise ValueError("player dialogue reserve must be smaller than the daily call limit")
         if not 1 <= self.interaction_phase_call_limit <= self.interaction_reserved_phase_calls <= self.phase_call_limit:
             raise ValueError("interaction calls must fit inside the reserved phase budget")
         if (
@@ -84,8 +82,6 @@ class CognitionPolicy:
             "max_output_tokens": self.max_output_tokens,
             "request_timeout_seconds": self.request_timeout_seconds,
             "cache_limit": self.cache_limit,
-            "player_dialogue_daily_reserve": self.player_dialogue_daily_reserve,
-            "player_dialogue_phase_call_limit": self.player_dialogue_phase_call_limit,
         }
 
 

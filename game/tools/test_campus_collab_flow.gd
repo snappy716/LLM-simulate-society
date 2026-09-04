@@ -72,6 +72,17 @@ func _run_flow() -> void:
 	assert(public_text.contains("正在做的事"))
 	assert(not public_text.contains("simulation_tier"))
 	assert(not public_text.contains("night_access"))
+	var dialogue_budget_before := int(((bridge.get("campus_snapshot") as Dictionary).get("player", {}) as Dictionary).get("action_budget", {}).get("major_remaining", -1))
+	var dialogue_input := inspector.get("_dialogue_input") as LineEdit
+	dialogue_input.text = "你好，我想先认识一下你。"
+	inspector.call("_submit_dialogue")
+	var dialogue_resolution = await bridge.campus_dialogue_completed
+	assert(bool(dialogue_resolution[0]), "in-person dialogue failed: %s" % dialogue_resolution[1])
+	var dialogue_result: Dictionary = dialogue_resolution[1]
+	var dialogue_payload: Dictionary = (dialogue_result.get("result", {}) as Dictionary).get("payload", {})
+	assert(String(dialogue_payload.get("action_class", "")) == "free")
+	assert(not String(dialogue_payload.get("reply_text", "")).is_empty())
+	assert(int(((bridge.get("campus_snapshot") as Dictionary).get("player", {}) as Dictionary).get("action_budget", {}).get("major_remaining", -1)) == dialogue_budget_before)
 	inspector.call("_set_open", false)
 	assert(not paused)
 

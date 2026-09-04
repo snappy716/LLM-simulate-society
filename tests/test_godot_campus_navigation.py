@@ -24,6 +24,10 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         inspector = (GAME_DIR / "scripts/ui/campus_npc_inspector_ui.gd").read_text(encoding="utf-8")
         self.assertIn('"ADD_PHONE_CONTACT"', inspector)
         self.assertIn("交换联系方式（免费操作）", inspector)
+        self.assertIn("func operate_campus_dialogue", bridge)
+        self.assertIn("campus_dialogue_completed", bridge)
+        self.assertIn("当面交谈（免费，可继续追问）", inspector)
+        self.assertIn('"TALK_TO_NPC"', bridge)
 
     def test_five_latest_collaboration_maps_are_catalogued_with_real_dimensions(self):
         catalog_path = GAME_DIR / "data/campus_art_catalog.json"

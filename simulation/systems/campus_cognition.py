@@ -69,6 +69,9 @@ def _fresh_usage(day: int) -> Dict[str, Any]:
         "day": day,
         "calls": 0,
         "estimated_tokens": 0,
+        "automated_calls": 0,
+        "automated_estimated_tokens": 0,
+        "player_dialogue_calls": 0,
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "phase_calls": {},
@@ -396,11 +399,10 @@ class CognitionRuntime:
         purpose_phase_calls = usage.setdefault("purpose_phase_calls", {})
         purpose_key = f"{state.clock.phase}:{purpose}"
         current_purpose_calls = int(purpose_phase_calls.get(purpose_key, 0))
-        player_dialogue_calls = sum(
-            int(value) for key, value in purpose_phase_calls.items()
-            if str(key).endswith(":player_dialogue")
+        automated_calls = int(usage.get("automated_calls", usage["calls"]))
+        automated_estimated_tokens = int(
+            usage.get("automated_estimated_tokens", usage["estimated_tokens"])
         )
-        automated_calls = int(usage["calls"]) - player_dialogue_calls
         canonical = json.dumps(request.to_dict(), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         cache_payload = request.to_dict()
         cache_payload["candidate_revision"] = 0
@@ -423,19 +425,20 @@ class CognitionRuntime:
                 else self.policy.interaction_phase_call_limit
             )
             if (
-                int(usage["calls"]) >= self.policy.daily_call_limit
-                or automated_calls >= self.policy.daily_call_limit - self.policy.player_dialogue_daily_reserve
+                automated_calls >= self.policy.daily_call_limit
                 or phase_calls >= self.policy.phase_call_limit
                 or current_purpose_calls >= purpose_limit
-                or int(usage["estimated_tokens"]) + estimated > self.policy.daily_estimated_token_limit
+                or automated_estimated_tokens + estimated > self.policy.daily_estimated_token_limit
             ):
                 usage["budget_blocks"] += 1
                 usage["fallbacks"] += 1
                 return None
             usage["calls"] += 1
+            usage["automated_calls"] = automated_calls + 1
             usage["phase_calls"][state.clock.phase] = phase_calls + 1
             purpose_phase_calls[purpose_key] = current_purpose_calls + 1
             usage["estimated_tokens"] += estimated
+            usage["automated_estimated_tokens"] = automated_estimated_tokens + estimated
             try:
                 raw = dict(self.provider.decide(request, max_output_tokens=self.policy.max_output_tokens))
             except Exception:
@@ -534,7 +537,7 @@ class CognitionRuntime:
             state,
             request,
             purpose="player_dialogue",
-            purpose_phase_limit=self.policy.player_dialogue_phase_call_limit,
+            purpose_phase_limit=None,
             counts_against_automated_phase=False,
         )
 
@@ -612,13 +615,95 @@ class CognitionRuntime:
             counts_against_automated_phase=True,
         )
 
+    def compose_player_in_person_reply(
+        self,
+        state: WorldState,
+        npc_id: str,
+        target_id: str,
+        incoming_text: str,
+        interaction_context: Mapping[str, Any],
+        recent_dialogues: Sequence[Mapping[str, Any]],
+        allowed_facts: Sequence[Mapping[str, Any]],
+    ) -> Dict[str, Any] | None:
+        """Reply to a player in person without consuming autonomous budgets."""
+        if (
+            npc_id not in state.cognition.get("focused_ids", ())
+            or not self.provider.configured
+            or not callable(getattr(self.provider, "respond", None))
+        ):
+            return None
+        actor = state.population[npc_id]
+        allowed = tuple({
+            "claim_id": item["claim"]["claim_id"],
+            "summary": item["claim"]["summary"],
+            "confidence": item["belief"]["confidence"],
+            "source_kind": item["belief"]["source_kind"],
+        } for item in allowed_facts[-8:])
+        messages: list[Dict[str, Any]] = []
+        for item in recent_dialogues[-3:]:
+            messages.extend((
+                {
+                    "sender_id": target_id,
+                    "receiver_id": npc_id,
+                    "day": item.get("day"),
+                    "phase": item.get("phase"),
+                    "text": str(item.get("player_text", ""))[:240],
+                },
+                {
+                    "sender_id": npc_id,
+                    "receiver_id": target_id,
+                    "day": item.get("day"),
+                    "phase": item.get("phase"),
+                    "text": str(item.get("reply_text", ""))[:240],
+                },
+            ))
+        request = BoundedDialogueRequest(
+            npc_id=npc_id,
+            target_id=target_id,
+            candidate_revision=state.revision,
+            day=state.clock.day,
+            phase=state.clock.phase,
+            identity={
+                "role_kind": actor.get("role_kind"),
+                "college_id": actor.get("college_id"),
+                "occupation_id": actor.get("occupation_id"),
+                "core_values": list(actor.get("core_values", ())),
+                "moral_boundaries": list(actor.get("moral_boundaries", ())),
+                "personality": deepcopy(actor.get("personality", {})),
+            },
+            state={
+                "needs": deepcopy(actor.get("needs", {})),
+                "emotions": deepcopy(actor.get("emotions", {})),
+            },
+            relationship=deepcopy(state.relationships.get(npc_id, {}).get(target_id, {})),
+            recent_messages=tuple(messages[-6:]),
+            incoming_text=incoming_text[:240],
+            allowed_facts=allowed,
+            dialogue_kind="in_person",
+            interaction_context={
+                "location_id": interaction_context.get("location_id"),
+                "intent_id": interaction_context.get("intent_id"),
+                "intent_name": interaction_context.get("intent_name"),
+                "outcome": interaction_context.get("outcome"),
+                "verified_summary": str(interaction_context.get("verified_summary", ""))[:240],
+                "consequence_applied": bool(interaction_context.get("consequence_applied", False)),
+            },
+        )
+        return self._compose_dialogue_response(
+            state,
+            request,
+            purpose="player_dialogue",
+            purpose_phase_limit=None,
+            counts_against_automated_phase=False,
+        )
+
     def _compose_dialogue_response(
         self,
         state: WorldState,
         request: BoundedDialogueRequest,
         *,
         purpose: str,
-        purpose_phase_limit: int,
+        purpose_phase_limit: int | None,
         counts_against_automated_phase: bool,
     ) -> Dict[str, Any] | None:
         usage = state.cognition["usage"]
@@ -627,25 +712,20 @@ class CognitionRuntime:
         purpose_phase_calls = usage.setdefault("purpose_phase_calls", {})
         purpose_key = f"{state.clock.phase}:{purpose}"
         current_purpose_calls = int(purpose_phase_calls.get(purpose_key, 0))
-        player_dialogue_calls = sum(
-            int(value) for key, value in purpose_phase_calls.items()
-            if str(key).endswith(":player_dialogue")
+        automated_calls = int(usage.get("automated_calls", usage["calls"]))
+        automated_estimated_tokens = int(
+            usage.get("automated_estimated_tokens", usage["estimated_tokens"])
         )
-        automated_calls = int(usage["calls"]) - player_dialogue_calls
         phase_calls = int(usage["phase_calls"].get(state.clock.phase, 0))
         canonical = json.dumps(
             request.to_dict(), ensure_ascii=False, sort_keys=True, separators=(",", ":")
         )
         estimated = max(1, len(canonical) // 4) + self.policy.max_output_tokens
-        if (
-            int(usage["calls"]) >= self.policy.daily_call_limit
-            or current_purpose_calls >= purpose_phase_limit
-            or (
-                counts_against_automated_phase
-                and automated_calls >= self.policy.daily_call_limit - self.policy.player_dialogue_daily_reserve
-            )
-            or (counts_against_automated_phase and phase_calls >= self.policy.phase_call_limit)
-            or int(usage["estimated_tokens"]) + estimated > self.policy.daily_estimated_token_limit
+        if counts_against_automated_phase and (
+            automated_calls >= self.policy.daily_call_limit
+            or (purpose_phase_limit is not None and current_purpose_calls >= purpose_phase_limit)
+            or phase_calls >= self.policy.phase_call_limit
+            or automated_estimated_tokens + estimated > self.policy.daily_estimated_token_limit
         ):
             usage["budget_blocks"] += 1
             usage["fallbacks"] += 1
@@ -653,7 +733,11 @@ class CognitionRuntime:
         usage["calls"] += 1
         purpose_phase_calls[purpose_key] = current_purpose_calls + 1
         if counts_against_automated_phase:
+            usage["automated_calls"] = automated_calls + 1
             usage["phase_calls"][state.clock.phase] = phase_calls + 1
+            usage["automated_estimated_tokens"] = automated_estimated_tokens + estimated
+        else:
+            usage["player_dialogue_calls"] = int(usage.get("player_dialogue_calls", 0)) + 1
         usage["estimated_tokens"] += estimated
         try:
             raw = dict(self.provider.respond(request, max_output_tokens=self.policy.max_output_tokens))

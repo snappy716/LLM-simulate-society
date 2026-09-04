@@ -16,7 +16,5 @@
   "daily_estimated_token_limit": 24000,
   "max_output_tokens": 160,
   "request_timeout_seconds": 8.0,
-  "cache_limit": 96,
-  "player_dialogue_daily_reserve": 4,
-  "player_dialogue_phase_call_limit": 2
+  "cache_limit": 96
 }

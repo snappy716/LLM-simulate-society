@@ -139,6 +139,8 @@ class CampusCognitionTests(unittest.TestCase):
         self.assertEqual(3, len(provider.requests))
         self.assertEqual(1, len(provider.dialogue_requests))
         self.assertEqual(4, usage["calls"])
+        self.assertEqual(4, usage["automated_calls"])
+        self.assertEqual(0, usage["player_dialogue_calls"])
         self.assertEqual(4, usage["phase_calls"]["afternoon"])
         self.assertEqual(2, usage["purpose_phase_calls"]["afternoon:activity"])
         self.assertEqual(1, usage["purpose_phase_calls"]["afternoon:interaction"])

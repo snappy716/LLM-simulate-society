@@ -81,27 +81,32 @@ class CampusMessagingIntegrationTests(unittest.TestCase):
         self.assertIn(used_claim, bridge.kernel.state.knowledge["beliefs_by_actor"]["player"])
         share = result["result"]["payload"]["information_shares"][0]
         self.assertEqual("phone_statement", share["acquisition_method"])
-        usage = bridge.kernel.state.cognition["usage"]
+        usage = bridge.kernel._state.cognition["usage"]
         self.assertEqual(1, usage["purpose_phase_calls"]["morning:player_dialogue"])
         self.assertEqual(72, usage["prompt_tokens"])
         self.assertEqual(20, usage["completion_tokens"])
 
-    def test_player_dialogue_phase_budget_falls_back_to_rules(self):
+    def test_player_dialogue_is_not_limited_by_autonomous_budget(self):
         bridge = CampusKernelBridge(9)
         target_id = str(bridge.snapshot()["messaging"]["contacts"][0]["actor_id"])
         self.assertTrue(execute(bridge, "AWAKEN_NPC", {"target_id": target_id})["ok"])
         provider = DialogueProvider()
         bridge.cognition_runtime.provider = provider
+        usage = bridge.kernel.state.cognition["usage"]
+        usage["automated_calls"] = bridge.cognition_runtime.policy.daily_call_limit
+        usage["automated_estimated_tokens"] = bridge.cognition_runtime.policy.daily_estimated_token_limit
         sources = []
-        for index in range(3):
+        for index in range(5):
             result = execute(bridge, "SEND_PHONE_MESSAGE", {
                 "target_id": target_id, "text": f"第{index + 1}条消息。",
             }, step=index)
             self.assertTrue(result["ok"])
             sources.append(result["result"]["payload"]["reply_messages"][0]["source"])
-        self.assertEqual(["llm", "llm", "rule"], sources)
-        self.assertEqual(2, len(provider.dialogue_requests))
-        self.assertGreaterEqual(bridge.kernel.state.cognition["usage"]["budget_blocks"], 1)
+        self.assertEqual(["llm"] * 5, sources)
+        self.assertEqual(5, len(provider.dialogue_requests))
+        final_usage = bridge.kernel.state.cognition["usage"]
+        self.assertEqual(5, final_usage["player_dialogue_calls"])
+        self.assertEqual(0, final_usage["budget_blocks"])
 
     def test_player_can_message_remote_npc_for_free_and_records_reply(self):
         bridge = CampusKernelBridge(42)

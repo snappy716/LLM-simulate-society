@@ -98,6 +98,7 @@ from simulation.systems import (  # noqa: E402
     campus_interaction_invariant,
     install_campus_interactions,
     load_campus_interaction_policy,
+    make_player_dialogue_handler,
     advance_campus_phone_messages,
     campus_messaging_invariant,
     install_campus_messaging,
@@ -283,6 +284,12 @@ class CampusKernelBridge:
         )
         for action_id in ("ADD_PHONE_CONTACT", "SEND_PHONE_MESSAGE", "MARK_PHONE_THREAD_READ"):
             self.kernel.register_handler(action_id, messaging_handler)
+        self.kernel.register_handler(
+            "TALK_TO_NPC",
+            make_player_dialogue_handler(
+                interaction_policy, intelligence_policy, self.cognition_runtime
+            ),
+        )
 
     def configure_cognition_interface(self, config: dict) -> None:
         provider = str(config.get("provider", "rule"))

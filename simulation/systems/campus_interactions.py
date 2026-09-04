@@ -12,9 +12,14 @@ from simulation.systems.campus_intelligence import (
     create_campus_claim,
     disclosable_known_claims,
     share_known_claim,
+    share_specific_known_claim,
 )
 from simulation.systems.campus_social import DEFAULT_RELATIONSHIP, adjust_relationship
 from simulation.systems.campus_tasks import phase_index
+from simulation.systems.transactions import TransactionOutcome
+
+
+PLAYER_DIALOGUE_ACTION_ID = "TALK_TO_NPC"
 
 
 @dataclass(frozen=True)
@@ -25,6 +30,8 @@ class CampusInteractionPolicy:
     max_recent_interactions: int
     max_open_hooks: int
     minimum_pair_score: float
+    player_max_text_length: int
+    coarse_scene_region_groups: tuple[tuple[str, ...], ...]
     intents: Mapping[str, Mapping[str, Any]]
 
     def __post_init__(self) -> None:
@@ -34,6 +41,7 @@ class CampusInteractionPolicy:
             self.hook_lifetime_phases,
             self.max_recent_interactions,
             self.max_open_hooks,
+            self.player_max_text_length,
         )
         if any(isinstance(value, bool) or not isinstance(value, int) or value < 1 for value in positive):
             raise ValueError("campus interaction limits must be positive integers")
@@ -41,6 +49,8 @@ class CampusInteractionPolicy:
             raise ValueError("campus interaction minimum pair score cannot be negative")
         if not self.intents or "small_talk" not in self.intents:
             raise ValueError("campus interactions require a small_talk intent")
+        if any(len(group) < 1 or any(not region_id for region_id in group) for group in self.coarse_scene_region_groups):
+            raise ValueError("campus interaction scene region groups are invalid")
 
 
 def load_campus_interaction_policy(registry) -> CampusInteractionPolicy:
@@ -71,6 +81,11 @@ def load_campus_interaction_policy(registry) -> CampusInteractionPolicy:
         max_recent_interactions=int(payload.get("max_recent_interactions", 0)),
         max_open_hooks=int(payload.get("max_open_hooks", 0)),
         minimum_pair_score=float(payload.get("minimum_pair_score", 0)),
+        player_max_text_length=int(payload.get("player_max_text_length", 240)),
+        coarse_scene_region_groups=tuple(
+            tuple(str(region_id) for region_id in group)
+            for group in payload.get("coarse_scene_region_groups", ())
+        ),
         intents=intents,
     )
 
@@ -86,6 +101,8 @@ def install_campus_interactions(state: WorldState) -> None:
         "recent": [],
         "hooks": [],
         "pair_last_phase": {},
+        "player_dialogue_sequence": 0,
+        "player_dialogues": [],
     }
 
 
@@ -96,6 +113,26 @@ def _relation(state: WorldState, owner_id: str, target_id: str) -> Mapping[str, 
 
 def _pair_key(first_id: str, second_id: str) -> str:
     return "|".join(sorted((first_id, second_id)))
+
+
+def _region_id(state: WorldState, location_id: Any) -> str:
+    place = state.places.get(str(location_id), {})
+    if not isinstance(place, dict):
+        return ""
+    return str(place.get("region_id") or place.get("parent_id") or location_id)
+
+
+def _regions_share_coarse_scene(
+    first_region: str,
+    second_region: str,
+    policy: CampusInteractionPolicy,
+) -> bool:
+    if first_region == second_region and first_region:
+        return True
+    return any(
+        first_region in group and second_region in group
+        for group in policy.coarse_scene_region_groups
+    )
 
 
 def _shared_clubs(first: Mapping[str, Any], second: Mapping[str, Any]) -> list[str]:
@@ -627,6 +664,254 @@ def advance_campus_interactions(
     return summary
 
 
+def _rule_player_reply(
+    state: WorldState,
+    npc_id: str,
+    intent_id: str,
+    accepted: bool,
+) -> str:
+    relation = _relation(state, npc_id, "player")
+    if not accepted:
+        if intent_id == "confront":
+            return "我不接受你这样下结论。我们都冷静一点，再谈吧。"
+        return "我听到了，不过现在不太方便继续这个话题。"
+    if intent_id == "offer_support":
+        return "谢谢你注意到这些。能有人认真听我说，我确实轻松了一些。"
+    if intent_id == "exchange_ideas":
+        return "这个角度很有意思。我也有一些相关想法，可以继续交换看看。"
+    if intent_id == "coordinate_club":
+        return "可以，我们把社团里的安排具体列出来，再各自确认。"
+    if intent_id == "ask_task_help":
+        return "我愿意帮忙。先把你目前掌握的情况和需要我做的部分告诉我。"
+    if intent_id == "follow_up_promise":
+        return "我还记得之前说过的事。既然碰到了，我们就把它落实下来。"
+    if intent_id == "confront":
+        return "我明白你为什么会怀疑。我们先把各自知道的事实说清楚。"
+    if int(relation.get("closeness", 0)) >= 45:
+        return "见到你真好。最近校园里事情不少，你想聊什么都可以。"
+    return "你好。我现在有空，可以聊一会儿。"
+
+
+def make_player_dialogue_handler(
+    policy: CampusInteractionPolicy,
+    intelligence_policy: CampusIntelligencePolicy,
+    cognition_runtime=None,
+):
+    """Create a free, authoritative face-to-face player dialogue command."""
+    def handle(context, command) -> TransactionOutcome:
+        state = context.state
+        if command.actor_id != "player":
+            return TransactionOutcome(False, False, "player_only", "目前只有玩家可以主动发起面对面交谈。")
+        target_id = str(command.parameters.get("target_id", ""))
+        if target_id not in state.population or target_id == "player":
+            return TransactionOutcome(False, False, "invalid_dialogue_target", "交谈对象不存在。")
+        player = state.population["player"]
+        target = state.population[target_id]
+        if not _regions_share_coarse_scene(
+            _region_id(state, player.get("current_location_id")),
+            _region_id(state, target.get("current_location_id")),
+            policy,
+        ):
+            return TransactionOutcome(False, False, "target_not_present", "需要与对方处于同一校园场景才能当面交谈。")
+        text = str(command.parameters.get("text", "")).strip()
+        if not text:
+            return TransactionOutcome(False, False, "empty_dialogue", "交谈内容不能为空。")
+        if len(text) > policy.player_max_text_length:
+            return TransactionOutcome(
+                False, False, "dialogue_too_long",
+                f"单次交谈不能超过 {policy.player_max_text_length} 个字符。",
+            )
+        intent_id = str(command.parameters.get("intent_id", "small_talk"))
+        legal = {
+            item["intent_id"]: item
+            for item in _legal_intents(state, "player", target_id, policy)
+        }
+        if intent_id not in legal:
+            return TransactionOutcome(False, False, "illegal_dialogue_intent", "当前情境不支持这个交谈意图。")
+
+        interactions = state.cognition["interactions"]
+        now = phase_index(state.clock.day, state.clock.phase)
+        consequence_applied = interactions["pair_last_phase"].get(
+            _pair_key("player", target_id)
+        ) != now
+        definition = policy.intents[intent_id]
+        acceptance = _acceptance_score(
+            state, "player", target_id, intent_id,
+            context.rng.stream("player_dialogue_outcome"),
+        )
+        accepted = acceptance >= float(definition.get("acceptance_threshold", 0))
+        outcome = "accepted" if accepted else "rejected"
+        relationship_deltas: Dict[str, Any] = {"actor": {}, "target": {}}
+        emotion_deltas: Dict[str, Any] = {"actor": {}, "target": {}}
+        hook_id = None
+        hook_transition = None
+        outcome_claim_ids: list[str] = []
+        if consequence_applied:
+            outcome_key = "accept" if accepted else "reject"
+            relationship = definition.get(f"relationship_on_{outcome_key}", {})
+            relationship_deltas = {
+                "actor": adjust_relationship(state, "player", target_id, relationship.get("initiator", {})),
+                "target": adjust_relationship(state, target_id, "player", relationship.get("target", {})),
+            }
+            emotions = definition.get("emotion_on_accept", {}) if accepted else definition.get("emotion_on_reject", {})
+            emotion_deltas = {
+                "actor": _apply_emotions(player, emotions.get("initiator", {})),
+                "target": _apply_emotions(target, emotions.get("target", {})),
+            }
+            if accepted:
+                social_relief = int(definition.get("social_relief", 0))
+                player["needs"]["social"] = _clamp_meter(int(player["needs"].get("social", 0)) - social_relief)
+                target["needs"]["social"] = _clamp_meter(int(target["needs"].get("social", 0)) - social_relief // 2)
+                player["needs"]["curiosity"] = _clamp_meter(
+                    int(player["needs"].get("curiosity", 0)) - int(definition.get("curiosity_relief", 0))
+                )
+            open_hook = _open_hook(state, "player", target_id)
+            if definition.get("resolves_hook") and open_hook is not None:
+                open_hook["state"] = "completed" if accepted else "broken"
+                open_hook["resolved_day"] = state.clock.day
+                open_hook["resolved_phase"] = state.clock.phase
+                hook_id = open_hook["hook_id"]
+                hook_transition = "completed" if accepted else "broken"
+            elif accepted and definition.get("creates_hook"):
+                # The NPC owns the promise, so autonomous task generation can act on it later.
+                hook_id = _create_hook(
+                    state, target_id, "player", str(definition["creates_hook"]), policy, now
+                )
+                hook_transition = "created" if hook_id else None
+            interactions["pair_last_phase"][_pair_key("player", target_id)] = now
+
+        interactions["player_dialogue_sequence"] += 1
+        dialogue_id = f"player_dialogue:{interactions['player_dialogue_sequence']:08d}"
+        summary_key = "summary_accept" if accepted else "summary_reject"
+        verified_summary = str(definition[summary_key]).format(
+            actor=player.get("display_name", "player"),
+            target=target.get("display_name", target_id),
+        )
+        if consequence_applied:
+            outcome_claim_ids = _create_outcome_claims(
+                state,
+                actor_id="player",
+                target_id=target_id,
+                interaction_id=dialogue_id,
+                intent_id=intent_id,
+                outcome=outcome,
+                summary=verified_summary,
+                hook_id=hook_id,
+                hook_transition=hook_transition,
+            )
+
+        allowed_facts = []
+        if consequence_applied and accepted and intent_id in intelligence_policy.shareable_intent_ids:
+            player_beliefs = state.knowledge.get("beliefs_by_actor", {}).get("player", {})
+            allowed_facts = [
+                item for item in disclosable_known_claims(
+                    state, target_id, "player", intelligence_policy
+                )
+                if item["claim"]["claim_id"] not in player_beliefs
+            ]
+        reply_text = _rule_player_reply(state, target_id, intent_id, accepted)
+        wording_source = "rule"
+        requested_fact_ids: list[str] = []
+        if cognition_runtime is not None:
+            dialogue = cognition_runtime.compose_player_in_person_reply(
+                state,
+                target_id,
+                "player",
+                text,
+                {
+                    "location_id": player.get("current_location_id"),
+                    "intent_id": intent_id,
+                    "intent_name": definition.get("name", intent_id),
+                    "outcome": outcome,
+                    "verified_summary": verified_summary,
+                    "consequence_applied": consequence_applied,
+                },
+                [
+                    item for item in interactions["player_dialogues"]
+                    if item.get("target_id") == target_id
+                ],
+                allowed_facts,
+            )
+            if dialogue is not None:
+                reply_text = str(dialogue["utterance"])
+                requested_fact_ids = list(dialogue.get("fact_ids_used", ()))
+                wording_source = "llm"
+
+        information_shares: list[Dict[str, Any]] = []
+        fact_ids_to_share = requested_fact_ids[:1]
+        if wording_source == "rule" and allowed_facts and not fact_ids_to_share:
+            fact_ids_to_share = [str(allowed_facts[0]["claim"]["claim_id"])]
+        for claim_id in fact_ids_to_share:
+            receipt = share_specific_known_claim(
+                state,
+                sender_id=target_id,
+                receiver_id="player",
+                claim_id=claim_id,
+                interaction_id=dialogue_id,
+                intent_id=intent_id,
+                policy=intelligence_policy,
+                acquisition_method="in_person_statement",
+            )
+            if receipt is not None:
+                information_shares.append(receipt)
+        if wording_source == "rule" and information_shares:
+            reply_text = str(information_shares[0]["dialogue_summary"]).split("：“", 1)[-1].rstrip("”")
+
+        record = {
+            "dialogue_id": dialogue_id,
+            "day": state.clock.day,
+            "phase": state.clock.phase,
+            "scene_id": player.get("current_location_id"),
+            "player_id": "player",
+            "target_id": target_id,
+            "intent_id": intent_id,
+            "outcome": outcome,
+            "acceptance_score": acceptance,
+            "player_text": text,
+            "reply_text": reply_text,
+            "wording_source": wording_source,
+            "shared_claim_ids": [item["claim_id"] for item in information_shares],
+            "consequence_applied": consequence_applied,
+            "relationship_deltas": relationship_deltas,
+            "emotion_deltas": emotion_deltas,
+            "hook_id": hook_id,
+            "hook_transition": hook_transition,
+            "outcome_claim_ids": outcome_claim_ids,
+            "action_class": "free",
+        }
+        interactions["player_dialogues"].append(record)
+        del interactions["player_dialogues"][:-policy.max_recent_interactions]
+        context.emit(
+            "PLAYER_NPC_DIALOGUE_RESOLVED",
+            f"{target.get('display_name', target_id)}回应：{reply_text}",
+            actor_ids=["player"],
+            target_ids=[target_id],
+            scene_id=str(player.get("current_location_id", "")) or None,
+            payload=deepcopy(record),
+            visibility="private",
+            severity=2,
+            knowledge_tags=["social", "dialogue", "in_person", intent_id],
+        )
+        for receipt in information_shares:
+            context.emit(
+                "NPC_INFORMATION_SHARED",
+                str(receipt["dialogue_summary"]),
+                actor_ids=[target_id],
+                target_ids=["player"],
+                scene_id=str(player.get("current_location_id", "")) or None,
+                payload=deepcopy(receipt),
+                visibility="private",
+                severity=3,
+                knowledge_tags=["social", "dialogue", "information", intent_id],
+                correlation_id=dialogue_id,
+            )
+        return TransactionOutcome(
+            True, True, "success", "交谈已完成。", commit=True, payload=deepcopy(record)
+        )
+
+    return handle
+
+
 def campus_interaction_invariant(state: WorldState) -> Iterable[str]:
     interaction_state = state.cognition.get("interactions")
     if interaction_state is None:
@@ -635,8 +920,9 @@ def campus_interaction_invariant(state: WorldState) -> Iterable[str]:
     if not isinstance(interaction_state, dict):
         return ("campus cognition interactions must be a mapping",)
     recent = interaction_state.get("recent", [])
+    player_dialogues = interaction_state.get("player_dialogues", [])
     hooks = interaction_state.get("hooks", [])
-    if not isinstance(recent, list) or not isinstance(hooks, list):
+    if not isinstance(recent, list) or not isinstance(player_dialogues, list) or not isinstance(hooks, list):
         return ("campus interaction records and hooks must be lists",)
     for record in recent:
         if not isinstance(record, dict) or record.get("actor_id") not in state.population or record.get("target_id") not in state.population:
@@ -659,6 +945,27 @@ def campus_interaction_invariant(state: WorldState) -> Iterable[str]:
             for claim_id in record.get("wording_fact_ids", ())
         ):
             errors.append("campus interaction wording references an invalid claim")
+    for record in player_dialogues:
+        if not isinstance(record, dict) or record.get("player_id") != "player":
+            errors.append("player dialogue record is invalid")
+        elif record.get("target_id") not in state.population or record.get("target_id") == "player":
+            errors.append("player dialogue references an invalid target")
+        elif record.get("outcome") not in {"accepted", "rejected"}:
+            errors.append("player dialogue has invalid outcome")
+        elif record.get("wording_source") not in {"rule", "llm"}:
+            errors.append("player dialogue has invalid wording source")
+        elif record.get("action_class") != "free":
+            errors.append("player dialogue must remain a free action")
+        elif not isinstance(record.get("shared_claim_ids"), list) or any(
+            claim_id not in state.knowledge.get("claims", {})
+            for claim_id in record.get("shared_claim_ids", ())
+        ):
+            errors.append("player dialogue references an invalid shared claim")
+        elif not isinstance(record.get("outcome_claim_ids"), list) or any(
+            claim_id not in state.knowledge.get("claims", {})
+            for claim_id in record.get("outcome_claim_ids", ())
+        ):
+            errors.append("player dialogue references an invalid outcome claim")
     hook_ids: set[str] = set()
     for hook in hooks:
         hook_id = hook.get("hook_id") if isinstance(hook, dict) else None
@@ -676,7 +983,7 @@ def campus_interaction_invariant(state: WorldState) -> Iterable[str]:
 
 
 __all__ = [
-    "CampusInteractionPolicy", "advance_campus_interactions",
+    "PLAYER_DIALOGUE_ACTION_ID", "CampusInteractionPolicy", "advance_campus_interactions",
     "campus_interaction_invariant", "install_campus_interactions",
-    "load_campus_interaction_policy",
+    "load_campus_interaction_policy", "make_player_dialogue_handler",
 ]

@@ -72,6 +72,16 @@ const ACTIVITY_NAMES := {
 	"TEACH_CLASS": "授课",
 }
 
+const DIALOGUE_INTENTS := [
+	{"id": "small_talk", "name": "随口交谈"},
+	{"id": "exchange_ideas", "name": "交换想法"},
+	{"id": "offer_support", "name": "主动关心"},
+	{"id": "coordinate_club", "name": "商量社团"},
+	{"id": "ask_task_help", "name": "请求协助"},
+	{"id": "follow_up_promise", "name": "兑现约定"},
+	{"id": "confront", "name": "当面质疑"},
+]
+
 var _overlay: ColorRect
 var _title: Label
 var _details: RichTextLabel
@@ -82,6 +92,10 @@ var _awaken_button: Button
 var _awaken_feedback: Label
 var _contact_button: Button
 var _contact_feedback: Label
+var _dialogue_intent: OptionButton
+var _dialogue_input: LineEdit
+var _dialogue_button: Button
+var _dialogue_feedback: Label
 var _opened := false
 var _selected_npc: Node
 var _selected_profile: Dictionary = {}
@@ -97,6 +111,7 @@ func _ready() -> void:
 	SimulationBridge.campus_npc_chronicle_loaded.connect(_on_chronicle_loaded)
 	SimulationBridge.campus_cognition_operation_completed.connect(_on_cognition_operation_completed)
 	SimulationBridge.campus_phone_message_completed.connect(_on_contact_operation_completed)
+	SimulationBridge.campus_dialogue_completed.connect(_on_dialogue_completed)
 
 
 func _process(_delta: float) -> void:
@@ -158,8 +173,8 @@ func _build_ui() -> void:
 
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.position = Vector2(-340, -260)
-	panel.size = Vector2(680, 520)
+	panel.position = Vector2(-340, -310)
+	panel.size = Vector2(680, 620)
 	_overlay.add_child(panel)
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
@@ -199,6 +214,37 @@ func _build_ui() -> void:
 	_load_more.visible = false
 	_load_more.pressed.connect(_load_more_chronicle)
 	column.add_child(_load_more)
+	var dialogue_label := Label.new()
+	dialogue_label.text = "当面交谈（免费，可继续追问）"
+	dialogue_label.add_theme_color_override("font_color", Color("8fb7d6"))
+	column.add_child(dialogue_label)
+	var dialogue_row := HBoxContainer.new()
+	dialogue_row.add_theme_constant_override("separation", 8)
+	column.add_child(dialogue_row)
+	_dialogue_intent = OptionButton.new()
+	_dialogue_intent.custom_minimum_size = Vector2(135, 38)
+	for intent in DIALOGUE_INTENTS:
+		_dialogue_intent.add_item(String(intent["name"]))
+		_dialogue_intent.set_item_metadata(_dialogue_intent.item_count - 1, String(intent["id"]))
+	dialogue_row.add_child(_dialogue_intent)
+	_dialogue_input = LineEdit.new()
+	_dialogue_input.placeholder_text = "输入想说的话（最多 240 字）"
+	_dialogue_input.max_length = 240
+	_dialogue_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_dialogue_input.text_submitted.connect(_submit_dialogue)
+	_dialogue_input.text_changed.connect(_on_dialogue_text_changed)
+	dialogue_row.add_child(_dialogue_input)
+	_dialogue_button = Button.new()
+	_dialogue_button.text = "交谈"
+	_dialogue_button.custom_minimum_size = Vector2(82, 38)
+	_dialogue_button.disabled = true
+	_dialogue_button.pressed.connect(_submit_dialogue.bind(""))
+	dialogue_row.add_child(_dialogue_button)
+	_dialogue_feedback = Label.new()
+	_dialogue_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dialogue_feedback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dialogue_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	column.add_child(_dialogue_feedback)
 	_contact_button = Button.new()
 	_contact_button.text = "交换联系方式（免费操作）"
 	_contact_button.pressed.connect(_add_selected_contact)
@@ -229,6 +275,9 @@ func _show_npc(npc: Node) -> void:
 	_title.text = _safe_text(_selected_profile.get("display_name"), _safe_text(_selected_profile.get("npc_id"), "校园成员"))
 	_awaken_feedback.text = ""
 	_contact_feedback.text = ""
+	_dialogue_feedback.text = ""
+	_dialogue_input.text = ""
+	_dialogue_button.disabled = true
 	_refresh_awaken_button()
 	_refresh_contact_button()
 	_select_tab("overview")
@@ -403,6 +452,42 @@ func _add_selected_contact() -> void:
 	_contact_button.disabled = true
 	_contact_feedback.text = "正在交换联系方式……"
 	SimulationBridge.operate_campus_message("ADD_PHONE_CONTACT", npc_id)
+
+
+func _on_dialogue_text_changed(text: String) -> void:
+	_dialogue_button.disabled = text.strip_edges().is_empty()
+
+
+func _submit_dialogue(_submitted_text: String = "") -> void:
+	var npc_id := _safe_text(_selected_profile.get("npc_id"))
+	var text := _dialogue_input.text.strip_edges()
+	if npc_id.is_empty() or text.is_empty():
+		return
+	var intent_id := "small_talk"
+	if _dialogue_intent.selected >= 0:
+		intent_id = String(_dialogue_intent.get_item_metadata(_dialogue_intent.selected))
+	_dialogue_button.disabled = true
+	_dialogue_feedback.text = "对方正在回应……"
+	SimulationBridge.operate_campus_dialogue(npc_id, intent_id, text)
+
+
+func _on_dialogue_completed(success: bool, result: Dictionary, target_id: String) -> void:
+	if _selected_profile.is_empty() or target_id != _safe_text(_selected_profile.get("npc_id")):
+		return
+	var command_result: Dictionary = result.get("result", {})
+	if success:
+		var payload: Dictionary = command_result.get("payload", {})
+		_dialogue_feedback.text = "%s：%s" % [
+			_safe_text(_selected_profile.get("display_name"), target_id),
+			_safe_text(payload.get("reply_text"), "对方没有继续回答。"),
+		]
+		_dialogue_feedback.add_theme_color_override("font_color", Color("9bcf9b"))
+		_dialogue_input.text = ""
+		_selected_profile = (SimulationBridge.campus_snapshot.get("population", {}) as Dictionary).get(target_id, _selected_profile)
+	else:
+		_dialogue_feedback.text = String(command_result.get("message", result.get("error", "交谈失败")))
+		_dialogue_feedback.add_theme_color_override("font_color", Color("ee8174"))
+	_dialogue_button.disabled = _dialogue_input.text.strip_edges().is_empty()
 
 
 func _on_contact_operation_completed(

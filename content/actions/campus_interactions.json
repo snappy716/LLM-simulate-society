@@ -6,6 +6,14 @@
   "max_recent_interactions": 96,
   "max_open_hooks": 64,
   "minimum_pair_score": 54,
+  "player_max_text_length": 240,
+  "coarse_scene_region_groups": [
+    ["south_gate_region", "central_region"],
+    ["student_life_region", "service_logistics_region"],
+    ["east_dorm_region", "student_life_region"],
+    ["west_dorm_region", "sports_health_region"],
+    ["humanities_psychology_region", "central_region"]
+  ],
   "information_exchange": {
     "shareable_intent_ids": ["exchange_ideas", "coordinate_club", "ask_task_help", "follow_up_promise"],
     "minimum_belief_confidence": 0.35,
