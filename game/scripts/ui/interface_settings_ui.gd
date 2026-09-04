@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 const SETTINGS_PATH := "user://llm_interfaces.cfg"
-const PROVIDERS := ["rule", "deepseek", "deepseek_compatible", "ollama"]
+const PROVIDERS := ["rule", "openai_compatible", "ollama"]
 
 @onready var panel: Control = $Panel
 @onready var profile_list: ItemList = $Panel/Window/ProfileList
@@ -18,7 +18,7 @@ var selected_index := -1
 
 func _ready() -> void:
 	panel.visible = false
-	for label in ["规则模式（离线）", "DeepSeek", "DeepSeek兼容接口", "Ollama（本地）"]:
+	for label in ["规则模式（离线）", "OpenAI 兼容接口", "Ollama（本地）"]:
 		provider.add_item(label)
 	profile_list.item_selected.connect(_select_profile)
 	$Panel/Window/Add.pressed.connect(_add_profile)
@@ -45,7 +45,7 @@ func _load_profiles() -> void:
 		for section in config.get_sections():
 			profiles.append({
 				"name": config.get_value(section, "name", section),
-				"provider": config.get_value(section, "provider", "rule"),
+				"provider": _normalize_provider_id(String(config.get_value(section, "provider", "rule"))),
 				"base_url": config.get_value(section, "base_url", ""),
 				"model": config.get_value(section, "model", ""),
 				"api_key": config.get_value(section, "api_key", ""),
@@ -53,8 +53,7 @@ func _load_profiles() -> void:
 	if profiles.is_empty():
 		profiles = [
 			{"name": "离线规则", "provider": "rule", "base_url": "", "model": "", "api_key": ""},
-			{"name": "DeepSeek", "provider": "deepseek", "base_url": "https://api.deepseek.com", "model": "deepseek-chat", "api_key": ""},
-			{"name": "自定义兼容接口", "provider": "deepseek_compatible", "base_url": "", "model": "", "api_key": ""},
+			{"name": "通用兼容接口", "provider": "openai_compatible", "base_url": "", "model": "", "api_key": ""},
 			{"name": "本地 Ollama", "provider": "ollama", "base_url": "http://127.0.0.1:11434", "model": "qwen3:8b", "api_key": ""},
 		]
 	_rebuild_list()
@@ -83,7 +82,7 @@ func _select_profile(index: int) -> void:
 
 
 func _add_profile() -> void:
-	profiles.append({"name": "新接口", "provider": "deepseek_compatible", "base_url": "", "model": "", "api_key": ""})
+	profiles.append({"name": "新接口", "provider": "openai_compatible", "base_url": "", "model": "", "api_key": ""})
 	_rebuild_list()
 	_select_profile(profiles.size() - 1)
 
@@ -134,9 +133,15 @@ func _provider_changed(index: int) -> void:
 	var offline: bool = provider_id == "rule"
 	base_url.editable = not offline
 	model.editable = not offline
-	api_key.editable = provider_id in ["deepseek", "deepseek_compatible"]
+	api_key.editable = provider_id == "openai_compatible"
 	if provider_id == "ollama":
 		api_key.text = ""
+
+
+func _normalize_provider_id(provider_id: String) -> String:
+	if provider_id in ["deepseek", "deepseek_compatible"]:
+		return "openai_compatible"
+	return provider_id if provider_id in PROVIDERS else "rule"
 
 
 func _interface_configured(success: bool, result: Dictionary) -> void:

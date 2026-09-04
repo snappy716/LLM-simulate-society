@@ -258,7 +258,7 @@ class CampusKernelBridge:
                 str(config.get("model", "")).strip(),
             )
             return
-        if provider in {"deepseek", "deepseek_compatible"}:
+        if provider in {"openai_compatible", "deepseek", "deepseek_compatible"}:
             self.cognition_runtime.configure_openai_compatible(
                 str(config.get("base_url", "")).strip().rstrip("/"),
                 str(config.get("model", "")).strip(),
@@ -343,9 +343,9 @@ class SimulationBridge:
                 raise ValueError("Ollama requires base_url and model")
             self.world.ollama = sim.OllamaClient(base_url, model, self.world.ledger)
             self.world.cfg.llm_mode = "ollama"
-        elif provider in {"deepseek", "deepseek_compatible"}:
+        elif provider in {"openai_compatible", "deepseek", "deepseek_compatible"}:
             if not base_url or not model or not api_key:
-                raise ValueError("DeepSeek-compatible API requires base_url, model, and api_key")
+                raise ValueError("OpenAI-compatible API requires base_url, model, and api_key")
             # The legacy prototype remains rule-only.  Its historical client writes
             # full prompts and responses to disk; the campus cognition runtime does not.
             self.world.cfg.llm_mode = "rule"

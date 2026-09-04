@@ -153,6 +153,19 @@ class CampusCognitionTests(unittest.TestCase):
         self.assertNotIn("test-secret-never-save", serialized)
         self.assertNotIn("provider.invalid", serialized)
 
+    def test_generic_openai_compatible_provider_and_legacy_aliases_are_supported(self):
+        for provider_id in ("openai_compatible", "deepseek", "deepseek_compatible"):
+            bridge = CampusKernelBridge(5)
+            bridge.configure_cognition_interface({
+                "provider": provider_id,
+                "base_url": "https://provider.invalid/v1",
+                "model": "configured-model",
+                "api_key": "test-secret-never-send",
+            })
+            status = bridge.cognition_runtime.public_status()
+            self.assertEqual("openai_compatible", status["mode"])
+            self.assertTrue(status["configured"])
+
     def test_versioned_policy_does_not_contain_personal_provider_presets(self):
         payload = json.loads(
             (REPOSITORY_DIR / "content/npcs/cognition_policy.json").read_text(encoding="utf-8")
