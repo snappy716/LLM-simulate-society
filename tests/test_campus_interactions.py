@@ -101,7 +101,7 @@ class CampusInteractionIntegrationTests(unittest.TestCase):
         for day, phase, pair, _, _ in first:
             current = phase_index(day, phase)
             if pair in by_pair:
-                self.assertGreaterEqual(current - by_pair[pair], 3)
+                self.assertGreaterEqual(current - by_pair[pair], 2)
             by_pair[pair] = current
 
     def test_support_hook_can_be_revisited_and_resolved(self):
@@ -145,7 +145,7 @@ class CampusInteractionIntegrationTests(unittest.TestCase):
         self.assertEqual("check_in", hook["hook_type"])
         self.assertEqual("open", hook["state"])
 
-        for _ in range(policy.pair_cooldown_phases):
+        for _ in range(policy.pair_cooldown_phases + 1):
             state.clock.advance_phase()
         actor["personality"]["altruism"] = 0
         target["emotions"]["sadness"] = 0

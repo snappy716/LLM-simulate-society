@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "max_interactions_per_phase": 12,
-  "pair_cooldown_phases": 3,
+  "pair_cooldown_phases": 1,
   "hook_lifetime_phases": 8,
   "max_recent_interactions": 96,
   "max_open_hooks": 64,

@@ -420,7 +420,7 @@ def advance_campus_interactions(
         for index, first_id in enumerate(actor_ids):
             for second_id in actor_ids[index + 1:]:
                 last_phase = interaction_state["pair_last_phase"].get(_pair_key(first_id, second_id))
-                if isinstance(last_phase, int) and now - last_phase < policy.pair_cooldown_phases:
+                if isinstance(last_phase, int) and now - last_phase <= policy.pair_cooldown_phases:
                     continue
                 score = _pair_score(state, first_id, second_id, rng)
                 if score >= policy.minimum_pair_score:
