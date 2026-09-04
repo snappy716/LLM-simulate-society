@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "total_focus_slots": 20,
+  "player_awakened_slots": 6,
+  "candidate_limit": 5,
+  "memory_limit_per_actor": 48,
+  "persistent_memory_limit_per_actor": 8,
+  "observation_limit_per_actor": 8,
+  "reflection_memory_limit": 8,
+  "daily_call_limit": 12,
+  "phase_call_limit": 4,
+  "max_concurrent_requests": 1,
+  "daily_estimated_token_limit": 24000,
+  "max_output_tokens": 160,
+  "request_timeout_seconds": 8.0,
+  "cache_limit": 96,
+  "model_presets": [
+    {"env_name": "V4pro_CHAT_MODEL", "model": "stocklink-chat", "purpose": "dialogue"},
+    {"env_name": "V4pro_REASON_MODEL", "model": "stocklink-reason", "purpose": "reflection"},
+    {"env_name": "V4flash_CHAT_MODEL", "model": "deepseek-gangtise", "purpose": "bounded_decision"},
+    {"env_name": "V4flash_REASON_MODEL", "model": "deepseek-gangtise-thinkinkg", "purpose": "reflection"},
+    {"env_name": "QWEN32B_FLASH_MODEL", "model": "gangtise-flash", "purpose": "bounded_decision"},
+    {"env_name": "QWEN32B_FLASH_NOTHINK_MODEL", "model": "gangtise-flash-nothink", "purpose": "bounded_decision"},
+    {"env_name": "VL_MODEL", "model": "gangtise-vl", "purpose": "vision"}
+  ]
+}

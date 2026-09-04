@@ -423,7 +423,7 @@ def _build_candidates(
     return result
 
 
-def choose_campus_npc_activity(
+def rank_campus_npc_activities(
     context,
     actor_id: str,
     schedule_plan: Mapping[str, Any],
@@ -431,10 +431,10 @@ def choose_campus_npc_activity(
     definitions: Mapping[str, CampusActivityDefinition],
     policy: CampusDecisionPolicy,
     occupancy: Counter[str],
-) -> Optional[Dict[str, Any]]:
+) -> list[Dict[str, Any]]:
     actor = context.state.population.get(actor_id)
     if not isinstance(actor, dict):
-        return None
+        return []
     candidates = _build_candidates(
         context.state,
         actor_id,
@@ -446,7 +446,7 @@ def choose_campus_npc_activity(
         occupancy,
     )
     if not candidates:
-        return None
+        return []
     personality = PersonalityTraits(**{
         name: int(actor.get("personality", {}).get(name, 50))
         for name in PersonalityTraits.__dataclass_fields__
@@ -469,34 +469,57 @@ def choose_campus_npc_activity(
         jitter = rng.uniform(-policy.score_jitter, policy.score_jitter)
         total = round(score.total + jitter, 3)
         scored.append((total, candidate.candidate_id, candidate, score.contributions, jitter))
-    total, _, chosen, contributions, jitter = max(scored, key=lambda item: (item[0], item[1]))
-    reserve_decision_destination(graph, occupancy, chosen.location_id)
-    ranked_reasons = [
-        key
-        for key, value in sorted(
-            contributions.items(),
-            key=lambda item: (-item[1], item[0]),
-        )
-        if value > 0
-    ][:3]
-    return {
-        "activity_id": chosen.activity_id,
-        "action_class": chosen.action_class,
-        "location_id": chosen.location_id,
-        "priority": chosen.priority,
-        "decision_source": chosen.source,
-        "decision_reason": chosen.reason,
-        "reason_codes": ranked_reasons,
-        "scheduled_activity_id": str(schedule_plan.get("activity_id", "")),
-        "scheduled_location_id": str(schedule_plan.get("location_id", "")),
-        "candidate_count": len(candidates),
-        "score": total,
-        "score_jitter": round(jitter, 3),
-        "score_contributions": {key: round(value, 3) for key, value in contributions.items()},
-        "route_minutes": chosen.route.total_minutes,
-        "day": context.state.clock.day,
-        "phase": context.state.clock.phase,
-    }
+    ranked: list[Dict[str, Any]] = []
+    for total, _, chosen, contributions, jitter in sorted(
+        scored, key=lambda item: (-item[0], item[1])
+    ):
+        ranked_reasons = [
+            key
+            for key, value in sorted(
+                contributions.items(),
+                key=lambda item: (-item[1], item[0]),
+            )
+            if value > 0
+        ][:3]
+        ranked.append({
+            "candidate_id": chosen.candidate_id,
+            "activity_id": chosen.activity_id,
+            "action_class": chosen.action_class,
+            "location_id": chosen.location_id,
+            "priority": chosen.priority,
+            "decision_source": chosen.source,
+            "decision_reason": chosen.reason,
+            "reason_codes": ranked_reasons,
+            "scheduled_activity_id": str(schedule_plan.get("activity_id", "")),
+            "scheduled_location_id": str(schedule_plan.get("location_id", "")),
+            "candidate_count": len(candidates),
+            "score": total,
+            "score_jitter": round(jitter, 3),
+            "score_contributions": {key: round(value, 3) for key, value in contributions.items()},
+            "route_minutes": chosen.route.total_minutes,
+            "day": context.state.clock.day,
+            "phase": context.state.clock.phase,
+        })
+    return ranked
+
+
+def choose_campus_npc_activity(
+    context,
+    actor_id: str,
+    schedule_plan: Mapping[str, Any],
+    graph: CampusLocationGraph,
+    definitions: Mapping[str, CampusActivityDefinition],
+    policy: CampusDecisionPolicy,
+    occupancy: Counter[str],
+) -> Optional[Dict[str, Any]]:
+    ranked = rank_campus_npc_activities(
+        context, actor_id, schedule_plan, graph, definitions, policy, occupancy
+    )
+    if not ranked:
+        return None
+    chosen = ranked[0]
+    reserve_decision_destination(graph, occupancy, chosen["location_id"])
+    return chosen
 
 
 def make_campus_npc_decision_selector(
@@ -538,7 +561,7 @@ def campus_decision_invariant(state: WorldState) -> Iterable[str]:
             errors.append(f"actor {actor_id} current_decision has invalid action class")
         if decision.get("location_id") not in state.places:
             errors.append(f"actor {actor_id} current_decision references unknown place")
-        if decision.get("decision_source") not in {"schedule", "rule", "task"}:
+        if decision.get("decision_source") not in {"schedule", "rule", "task", "llm"}:
             errors.append(f"actor {actor_id} current_decision has invalid source")
         candidate_count = decision.get("candidate_count")
         if (
@@ -557,5 +580,6 @@ __all__ = [
     "choose_campus_npc_activity",
     "load_campus_decision_policy",
     "make_campus_npc_decision_selector",
+    "rank_campus_npc_activities",
     "reserve_decision_destination",
 ]

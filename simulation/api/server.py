@@ -83,6 +83,14 @@ from simulation.systems import (  # noqa: E402
     install_chronicles,
     project_chronicle_events,
     chronicle_invariant,
+    CognitionRuntime,
+    advance_cognition_phase,
+    cognition_invariant,
+    install_campus_cognition,
+    load_cognition_policy,
+    make_awaken_npc_handler,
+    make_cognition_decision_selector,
+    project_cognition_events,
 )
 
 
@@ -109,6 +117,9 @@ class CampusKernelBridge:
         action_policy = load_action_economy_policy(registry)
         install_action_economy(state, action_policy)
         install_chronicles(state)
+        cognition_policy = load_cognition_policy(registry)
+        install_campus_cognition(state, cognition_policy)
+        self.cognition_runtime = CognitionRuntime(cognition_policy)
         activity_definitions = load_campus_activity_definitions(registry)
         activity_handler = make_campus_activity_handler(
             activity_definitions,
@@ -121,8 +132,8 @@ class CampusKernelBridge:
         decision_policy = load_campus_decision_policy(
             registry, activity_definitions, graph
         )
-        base_decision_selector = make_campus_npc_decision_selector(
-            graph, activity_definitions, decision_policy
+        base_decision_selector = make_cognition_decision_selector(
+            self.cognition_runtime, graph, activity_definitions, decision_policy
         )
         def decision_selector(context, actor_id, schedule_plan, destination_occupancy):
             plan = base_decision_selector(
@@ -159,6 +170,8 @@ class CampusKernelBridge:
             summary = advance_campus_phase_upkeep(context)
             summary.update(advance_club_upkeep(context, club_policy))
             summary.update(advance_party_commitments(context, party_policy))
+            self.cognition_runtime.publish_status(context.state)
+            summary.update(advance_cognition_phase(context, cognition_policy))
             return summary
 
         phase_upkeep = make_surface_forum_phase_upkeep(
@@ -169,7 +182,9 @@ class CampusKernelBridge:
         )
         self.kernel = WorldKernel(state, rng=rng_pool)
         self.kernel.add_event_projector(project_chronicle_events)
+        self.kernel.add_event_projector(project_cognition_events)
         self.kernel.add_invariant(chronicle_invariant)
+        self.kernel.add_invariant(cognition_invariant)
         self.kernel.add_invariant(action_economy_invariant)
         self.kernel.add_invariant(campus_schedule_invariant)
         self.kernel.add_invariant(campus_activity_invariant)
@@ -230,9 +245,32 @@ class CampusKernelBridge:
             "DISBAND_PARTY",
         ):
             self.kernel.register_handler(action_id, party_handler)
+        self.kernel.register_handler("AWAKEN_NPC", make_awaken_npc_handler(cognition_policy))
+
+    def configure_cognition_interface(self, config: dict) -> None:
+        provider = str(config.get("provider", "rule"))
+        if provider == "rule":
+            self.cognition_runtime.configure_rule()
+            return
+        if provider == "ollama":
+            self.cognition_runtime.configure_ollama(
+                str(config.get("base_url", "")).strip().rstrip("/"),
+                str(config.get("model", "")).strip(),
+            )
+            return
+        if provider in {"deepseek", "deepseek_compatible"}:
+            self.cognition_runtime.configure_openai_compatible(
+                str(config.get("base_url", "")).strip().rstrip("/"),
+                str(config.get("model", "")).strip(),
+                str(config.get("api_key", "")).strip(),
+            )
+            return
+        raise ValueError(f"unsupported provider: {provider}")
 
     def snapshot(self) -> dict:
-        return self.kernel.project_view(campus_world_view)
+        view = self.kernel.project_view(campus_world_view)
+        view["cognition"]["provider"] = self.cognition_runtime.public_status()
+        return view
 
     def execute(self, payload: dict) -> dict:
         command = parse_simulation_command(payload)
@@ -308,14 +346,16 @@ class SimulationBridge:
         elif provider in {"deepseek", "deepseek_compatible"}:
             if not base_url or not model or not api_key:
                 raise ValueError("DeepSeek-compatible API requires base_url, model, and api_key")
-            self.world.deepseek = sim.DeepSeekClient(base_url, model, api_key, self.world.ledger)
-            self.world.cfg.llm_mode = "deepseek"
+            # The legacy prototype remains rule-only.  Its historical client writes
+            # full prompts and responses to disk; the campus cognition runtime does not.
+            self.world.cfg.llm_mode = "rule"
         else:
             raise ValueError(f"unsupported provider: {provider}")
+        self.campus.configure_cognition_interface(config)
         return {
             "ok": True, "provider": provider, "base_url": base_url,
             "model": model, "api_key_configured": bool(api_key),
-            "message": "接口已应用；将在下次日终规划时使用。",
+            "message": "接口已应用；将在下个校园时段按预算用于深度 NPC。",
         }
 
     def campus_snapshot(self) -> dict:

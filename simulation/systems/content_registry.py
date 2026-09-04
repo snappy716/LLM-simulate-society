@@ -58,6 +58,7 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ),
     ContentSource("npcs/generation_rules.json", "configuration", singleton_id="npc_generation"),
     ContentSource("npcs/campus_population.json", "configuration", singleton_id="campus_population"),
+    ContentSource("npcs/cognition_policy.json", "configuration", singleton_id="cognition_policy"),
     ContentSource("main_story/demo_calendar.json", "configuration", singleton_id="demo_calendar"),
     ContentSource("situations/enemy_archetypes.json", "enemy_archetype", "archetypes"),
 )

@@ -157,7 +157,9 @@ Godot 第一次打开时会导入 PNG 人物图集和地图资源，首次加载
 - `DeepSeek兼容接口`：连接采用同类请求格式的服务。
 - `Ollama（本地）`：连接本机 Ollama 模型。
 
-点击“保存并应用”只会切换接口，不会立即产生外部请求。所选接口会在下一次日终规划时使用。
+点击“保存并应用”只会切换接口，不会立即产生外部请求。所选接口会从下一个校园时段开始，仅在预算允许时用于深度 NPC 的合法候选选择。
+
+默认仍为离线规则模式。当前硬限制为每时段最多 4 次、每游戏日最多 12 次、每日预估最多 24000 Token、单次输出最多 160 Token；接口异常或返回非法候选时自动回退规则决策。正式接口还必须填写服务方提供的 Base URL。
 
 接口配置保存在 Godot 的：
 
@@ -166,6 +168,8 @@ user://llm_interfaces.cfg
 ```
 
 API Key 不会写入项目仓库，但该本地配置文件本身没有加密。不要提交密钥、`.env` 或 `config.local.json`。
+
+模型名称与认知安全边界见 [`design/NPC_COGNITION_LLM_RUNTIME.md`](design/NPC_COGNITION_LLM_RUNTIME.md)。
 
 详细说明见 [`game/SIMULATION_INTEGRATION.md`](game/SIMULATION_INTEGRATION.md)。
 

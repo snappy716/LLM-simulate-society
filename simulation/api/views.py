@@ -13,7 +13,7 @@ from simulation.systems.campus_parties import party_policy_from_state, party_vie
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 13
+CAMPUS_WORLD_VIEW_VERSION = 14
 NPC_CHRONICLE_VIEW_VERSION = 1
 
 
@@ -213,6 +213,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
                 "npc_id", "display_name", "role_kind", "college_id", "occupation_id",
                 "current_location_id", "home_location_id", "home_room_key",
                 "simulation_tier", "night_access", "appearance_seed",
+                "awakened_by_player",
                 "current_activity", "needs", "emotions", "activity_progress",
                 "last_activity_effects",
             )
@@ -312,6 +313,27 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         party_view(state, "player", party_policy_from_state(state))
         if state.metadata.get("campus_parties") else {}
     )
+    cognition = state.cognition
+    cognition_policy = cognition.get("policy", {})
+    usage = cognition.get("usage", {})
+    cognition_status = {
+        "provider": deepcopy(cognition.get("provider", {})),
+        "focused_count": len(cognition.get("focused_ids", ())),
+        "focus_slot_limit": int(cognition_policy.get("total_focus_slots", 20)),
+        "awakened_count": len(cognition.get("awakened_ids", ())),
+        "awakened_slot_limit": int(cognition_policy.get("player_awakened_slots", 6)),
+        "daily_call_limit": int(cognition_policy.get("daily_call_limit", 0)),
+        "phase_call_limit": int(cognition_policy.get("phase_call_limit", 0)),
+        "daily_estimated_token_limit": int(cognition_policy.get("daily_estimated_token_limit", 0)),
+        "usage": {
+            key: int(usage.get(key, 0))
+            for key in (
+                "calls", "estimated_tokens", "prompt_tokens", "completion_tokens",
+                "cache_hits", "fallbacks", "rejected_responses", "provider_errors",
+                "budget_blocks",
+            )
+        },
+    }
     return {
         "view_version": CAMPUS_WORLD_VIEW_VERSION,
         "revision": state.revision,
@@ -353,6 +375,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         },
         "clubs": club_catalog_view(state, "player"),
         "party": player_party,
+        "cognition": cognition_status,
     }
 
 

@@ -78,6 +78,8 @@ var _details: RichTextLabel
 var _nearby_hint: Label
 var _tab_buttons: Dictionary = {}
 var _load_more: Button
+var _awaken_button: Button
+var _awaken_feedback: Label
 var _opened := false
 var _selected_npc: Node
 var _selected_profile: Dictionary = {}
@@ -91,6 +93,7 @@ func _ready() -> void:
 	add_to_group("campus_npc_inspector_ui")
 	_build_ui()
 	SimulationBridge.campus_npc_chronicle_loaded.connect(_on_chronicle_loaded)
+	SimulationBridge.campus_cognition_operation_completed.connect(_on_cognition_operation_completed)
 
 
 func _process(_delta: float) -> void:
@@ -193,6 +196,14 @@ func _build_ui() -> void:
 	_load_more.visible = false
 	_load_more.pressed.connect(_load_more_chronicle)
 	column.add_child(_load_more)
+	_awaken_button = Button.new()
+	_awaken_button.text = "记名觉醒（长期深度认知）"
+	_awaken_button.pressed.connect(_awaken_selected_npc)
+	column.add_child(_awaken_button)
+	_awaken_feedback = Label.new()
+	_awaken_feedback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_awaken_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	column.add_child(_awaken_feedback)
 	var close := Button.new()
 	close.text = "关闭（E / Esc）"
 	close.pressed.connect(_set_open.bind(false))
@@ -205,6 +216,8 @@ func _show_npc(npc: Node) -> void:
 	_chronicle_pages.clear()
 	_chronicle_loading = false
 	_title.text = _safe_text(_selected_profile.get("display_name"), _safe_text(_selected_profile.get("npc_id"), "校园成员"))
+	_awaken_feedback.text = ""
+	_refresh_awaken_button()
 	_select_tab("overview")
 	_set_open(true)
 	_request_chronicle("recent")
@@ -345,6 +358,38 @@ func _public_profile_text(profile: Dictionary) -> String:
 		ACTIVITY_NAMES.get(activity_id, activity_id if not activity_id.is_empty() else "暂时没有明显行动"),
 		_visible_mood(profile.get("emotions", {})),
 	]
+
+
+func _refresh_awaken_button() -> void:
+	if _selected_profile.is_empty():
+		_awaken_button.visible = false
+		return
+	_awaken_button.visible = true
+	var cognition: Dictionary = SimulationBridge.campus_snapshot.get("cognition", {})
+	var awakened := bool(_selected_profile.get("awakened_by_player", false))
+	_awaken_button.disabled = awakened or int(cognition.get("awakened_count", 0)) >= int(cognition.get("awakened_slot_limit", 6))
+	_awaken_button.text = "已记名觉醒" if awakened else "记名觉醒（%d / %d）" % [
+		int(cognition.get("awakened_count", 0)), int(cognition.get("awakened_slot_limit", 6)),
+	]
+
+
+func _awaken_selected_npc() -> void:
+	var npc_id := _safe_text(_selected_profile.get("npc_id"))
+	if npc_id.is_empty():
+		return
+	_awaken_button.disabled = true
+	_awaken_feedback.text = "正在建立长期认知槽位……"
+	SimulationBridge.operate_campus_cognition("AWAKEN_NPC", npc_id)
+
+
+func _on_cognition_operation_completed(success: bool, result: Dictionary, _action_id: String, target_id: String) -> void:
+	if _selected_profile.is_empty() or target_id != _safe_text(_selected_profile.get("npc_id")):
+		return
+	var command_result: Dictionary = result.get("result", {})
+	_awaken_feedback.text = String(command_result.get("message", result.get("error", "觉醒操作失败")))
+	if success:
+		_selected_profile = (SimulationBridge.campus_snapshot.get("population", {}) as Dictionary).get(target_id, _selected_profile)
+	_refresh_awaken_button()
 
 
 func _visible_mood(value: Variant) -> String:

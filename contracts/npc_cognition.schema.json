@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/npc_cognition.schema.json",
+  "title": "Sanitized campus cognition status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider", "focused_count", "focus_slot_limit", "awakened_count",
+    "awakened_slot_limit", "daily_call_limit", "phase_call_limit",
+    "daily_estimated_token_limit", "usage"
+  ],
+  "properties": {
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "configured", "model"],
+      "properties": {
+        "mode": {"type": "string"},
+        "configured": {"type": "boolean"},
+        "model": {"type": "string"}
+      }
+    },
+    "focused_count": {"type": "integer", "minimum": 0, "maximum": 20},
+    "focus_slot_limit": {"const": 20},
+    "awakened_count": {"type": "integer", "minimum": 0, "maximum": 6},
+    "awakened_slot_limit": {"const": 6},
+    "daily_call_limit": {"type": "integer", "minimum": 1},
+    "phase_call_limit": {"type": "integer", "minimum": 1},
+    "daily_estimated_token_limit": {"type": "integer", "minimum": 1},
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "calls", "estimated_tokens", "prompt_tokens", "completion_tokens",
+        "cache_hits", "fallbacks", "rejected_responses", "provider_errors", "budget_blocks"
+      ],
+      "properties": {
+        "calls": {"type": "integer", "minimum": 0},
+        "estimated_tokens": {"type": "integer", "minimum": 0},
+        "prompt_tokens": {"type": "integer", "minimum": 0},
+        "completion_tokens": {"type": "integer", "minimum": 0},
+        "cache_hits": {"type": "integer", "minimum": 0},
+        "fallbacks": {"type": "integer", "minimum": 0},
+        "rejected_responses": {"type": "integer", "minimum": 0},
+        "provider_errors": {"type": "integer", "minimum": 0},
+        "budget_blocks": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

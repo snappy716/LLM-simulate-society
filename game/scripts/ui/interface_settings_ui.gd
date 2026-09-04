@@ -53,7 +53,9 @@ func _load_profiles() -> void:
 	if profiles.is_empty():
 		profiles = [
 			{"name": "离线规则", "provider": "rule", "base_url": "", "model": "", "api_key": ""},
-			{"name": "DeepSeek", "provider": "deepseek", "base_url": "https://api.deepseek.com", "model": "deepseek-v4-flash", "api_key": ""},
+			{"name": "V4 Flash 决策", "provider": "deepseek_compatible", "base_url": "", "model": "deepseek-gangtise", "api_key": ""},
+			{"name": "Qwen 32B Flash 决策", "provider": "deepseek_compatible", "base_url": "", "model": "gangtise-flash-nothink", "api_key": ""},
+			{"name": "V4 Pro 对话", "provider": "deepseek_compatible", "base_url": "", "model": "stocklink-chat", "api_key": ""},
 			{"name": "本地 Ollama", "provider": "ollama", "base_url": "http://127.0.0.1:11434", "model": "qwen3:8b", "api_key": ""},
 		]
 	_rebuild_list()
