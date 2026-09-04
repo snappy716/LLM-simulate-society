@@ -538,7 +538,7 @@ def campus_decision_invariant(state: WorldState) -> Iterable[str]:
             errors.append(f"actor {actor_id} current_decision has invalid action class")
         if decision.get("location_id") not in state.places:
             errors.append(f"actor {actor_id} current_decision references unknown place")
-        if decision.get("decision_source") not in {"schedule", "rule"}:
+        if decision.get("decision_source") not in {"schedule", "rule", "task"}:
             errors.append(f"actor {actor_id} current_decision has invalid source")
         candidate_count = decision.get("candidate_count")
         if (

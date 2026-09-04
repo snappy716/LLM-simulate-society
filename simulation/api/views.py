@@ -9,7 +9,7 @@ from simulation.systems.campus_schedules import current_schedule_slot
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 6
+CAMPUS_WORLD_VIEW_VERSION = 7
 
 
 def kernel_status_view(state: WorldState, *, busy: bool = False) -> Dict[str, Any]:
@@ -71,6 +71,35 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     week_day = str((state.clock.day - 1) % 7)
     planned_occupancy = schedule.get("planned_occupancy", {})
     current_occupancy = planned_occupancy.get(week_day, {}).get(state.clock.phase, {})
+    public_tasks = {}
+    for task_id, task in state.tasks.items():
+        if not isinstance(task, dict):
+            continue
+        issuer = state.population.get(str(task.get("issuer_id", "")), {})
+        assignee = state.population.get(str(task.get("assignee_id", "")), {})
+        place = state.places.get(str(task.get("scene_id", "")), {})
+        public_tasks[task_id] = {
+            key: deepcopy(task.get(key))
+            for key in (
+                "task_id", "forum", "title", "description", "objective",
+                "action_id", "activity_id", "allowed_phases", "scene_id", "created_day", "expires_day",
+                "state", "assignee_id", "lock_revision", "reward", "tags",
+                "required_skill_ids", "required_item_ids", "history",
+            )
+        }
+        public_tasks[task_id].update({
+            "issuer_name": issuer.get("display_name", "校园用户"),
+            "assignee_name": assignee.get("display_name", "") if isinstance(assignee, dict) else "",
+            "scene_name": place.get("name", task.get("scene_id", "")) if isinstance(place, dict) else task.get("scene_id", ""),
+            "viewer_count": len(task.get("viewer_ids", ())),
+            "considering_count": len(task.get("considering_ids", ())),
+            "viewed_by_player": "player" in task.get("viewer_ids", ()),
+            "owned_by_player": task.get("assignee_id") == "player",
+        })
+    task_counts: Dict[str, int] = {}
+    for task in public_tasks.values():
+        state_name = str(task.get("state", "unknown"))
+        task_counts[state_name] = task_counts.get(state_name, 0) + 1
     return {
         "view_version": CAMPUS_WORLD_VIEW_VERSION,
         "revision": state.revision,
@@ -94,6 +123,17 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             "cycle_days": schedule.get("cycle_days", 0),
             "current_planned_occupancy": deepcopy(current_occupancy),
             "capacity_redirect_count": schedule.get("capacity_redirect_count", 0),
+        },
+        "forums": deepcopy(state.forums),
+        "tasks": public_tasks,
+        "task_summary": {
+            "total": len(public_tasks),
+            "by_state": task_counts,
+            "available": sum(
+                count for name, count in task_counts.items()
+                if name in {"open", "viewed", "considering"}
+            ),
+            "mine": sum(1 for task in public_tasks.values() if task.get("owned_by_player")),
         },
     }
 

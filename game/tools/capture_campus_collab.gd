@@ -41,6 +41,15 @@ func _capture() -> void:
 	phone_ui.call("_open_app", "album", "校园相册")
 	await process_frame
 	await _save_view("user://campus_phone_ui_capture.png", "CAMPUS_PHONE_UI_CAPTURE")
+	phone_ui.call("_open_app", "forums", "校园互助")
+	await process_frame
+	await _save_view("user://campus_forum_ui_capture.png", "CAMPUS_FORUM_UI_CAPTURE")
+	var forum_cards := phone_ui.get("_forum_cards") as VBoxContainer
+	if forum_cards.get_child_count() > 0 and forum_cards.get_child(0) is Button:
+		(forum_cards.get_child(0) as Button).pressed.emit()
+		await root.get_node("SimulationBridge").campus_task_operation_completed
+		await process_frame
+		await _save_view("user://campus_forum_detail_capture.png", "CAMPUS_FORUM_DETAIL_CAPTURE")
 	phone_ui.call("_set_open", false)
 	scene.queue_free()
 	current_scene = null

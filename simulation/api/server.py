@@ -53,6 +53,14 @@ from simulation.systems import (  # noqa: E402
     campus_decision_invariant,
     load_campus_decision_policy,
     make_campus_npc_decision_selector,
+    complete_assigned_task,
+    install_campus_forums,
+    load_campus_forum_policy,
+    load_surface_task_templates,
+    make_campus_task_invariant,
+    make_forum_task_handler,
+    make_surface_forum_phase_upkeep,
+    make_task_aware_decision_selector,
 )
 
 
@@ -79,12 +87,32 @@ class CampusKernelBridge:
         decision_selector = make_campus_npc_decision_selector(
             graph, activity_definitions, decision_policy
         )
+        task_templates = load_surface_task_templates(registry)
+        for task_template in task_templates.values():
+            task_template["allowed_phases"] = list(
+                activity_definitions[task_template["activity_id"]].allowed_phases
+            )
+        forum_policy = load_campus_forum_policy(registry)
+        install_campus_forums(state, task_templates, forum_policy, rng_pool)
+        decision_selector = make_task_aware_decision_selector(
+            decision_selector,
+            activity_definitions,
+            graph,
+            forum_policy,
+        )
+        phase_upkeep = make_surface_forum_phase_upkeep(
+            graph,
+            task_templates,
+            forum_policy,
+            advance_campus_phase_upkeep,
+        )
         self.kernel = WorldKernel(state, rng=rng_pool)
         self.kernel.add_invariant(action_economy_invariant)
         self.kernel.add_invariant(campus_schedule_invariant)
         self.kernel.add_invariant(campus_activity_invariant)
         self.kernel.add_invariant(campus_activity_effect_invariant)
         self.kernel.add_invariant(campus_decision_invariant)
+        self.kernel.add_invariant(make_campus_task_invariant(activity_definitions))
         traverse_handler = make_traverse_location_handler(graph)
         self.kernel.register_handler(
             "TRAVERSE_LOCATION_PASSAGE",
@@ -103,13 +131,22 @@ class CampusKernelBridge:
                     action_policy,
                     traverse_handler,
                     activity_handler,
-                    advance_campus_phase_upkeep,
+                    phase_upkeep,
                     decision_selector,
+                    complete_assigned_task,
                 ),
             ),
         )
         for activity_id in sorted(activity_definitions):
             self.kernel.register_handler(activity_id, activity_handler)
+        task_handler = make_forum_task_handler(activity_handler)
+        for action_id in (
+            "VIEW_FORUM_TASK",
+            "CLAIM_FORUM_TASK",
+            "ABANDON_FORUM_TASK",
+            "COMPLETE_FORUM_TASK",
+        ):
+            self.kernel.register_handler(action_id, task_handler)
 
     def snapshot(self) -> dict:
         return campus_world_view(self.kernel.state)

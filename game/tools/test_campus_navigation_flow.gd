@@ -16,7 +16,8 @@ func _run_flow() -> void:
 		await create_timer(0.05).timeout
 	var initial_snapshot: Dictionary = bridge.get("campus_snapshot")
 	assert(not initial_snapshot.is_empty(), "campus snapshot did not connect")
-	assert(initial_snapshot.get("view_version") == 6)
+	assert(initial_snapshot.get("view_version") == 7)
+	assert(int((initial_snapshot.get("task_summary", {}) as Dictionary).get("total", 0)) == 12)
 	assert(initial_snapshot.get("revision") == 1)
 	assert((initial_snapshot.get("player", {}) as Dictionary).get("current_location_id") == "south_gate_region")
 	assert(((initial_snapshot.get("player", {}) as Dictionary).get("action_budget", {}) as Dictionary).get("major_remaining") == 1)
@@ -109,7 +110,12 @@ func _run_flow() -> void:
 	var phase_execution: Dictionary = (evening_resolution[1] as Dictionary).get("result", {}).get("payload", {}).get("phase_execution", {})
 	assert(int(phase_execution.get("planned_actor_count", 0)) == 200)
 	assert(int(phase_execution.get("blocked_actor_count", -1)) == 0)
-	assert(int(phase_execution.get("schedule_follow_count", 0)) + int(phase_execution.get("rule_choice_count", 0)) == 200)
+	assert(
+		int(phase_execution.get("schedule_follow_count", 0))
+		+ int(phase_execution.get("rule_choice_count", 0))
+		+ int(phase_execution.get("task_choice_count", 0))
+		== 200
+	)
 	assert(int(phase_execution.get("rule_choice_count", 0)) > 0, "NPC decision layer produced no autonomous choices")
 	var effected_npc: Dictionary = evening_snapshot.get("population", {}).get("campus_student_001", {})
 	var public_plan: Dictionary = effected_npc.get("current_plan", {})
