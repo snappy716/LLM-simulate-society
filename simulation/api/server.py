@@ -91,6 +91,10 @@ from simulation.systems import (  # noqa: E402
     make_awaken_npc_handler,
     make_cognition_decision_selector,
     project_cognition_events,
+    advance_campus_interactions,
+    campus_interaction_invariant,
+    install_campus_interactions,
+    load_campus_interaction_policy,
 )
 
 
@@ -119,6 +123,8 @@ class CampusKernelBridge:
         install_chronicles(state)
         cognition_policy = load_cognition_policy(registry)
         install_campus_cognition(state, cognition_policy)
+        interaction_policy = load_campus_interaction_policy(registry)
+        install_campus_interactions(state)
         self.cognition_runtime = CognitionRuntime(cognition_policy)
         activity_definitions = load_campus_activity_definitions(registry)
         activity_handler = make_campus_activity_handler(
@@ -185,6 +191,7 @@ class CampusKernelBridge:
         self.kernel.add_event_projector(project_cognition_events)
         self.kernel.add_invariant(chronicle_invariant)
         self.kernel.add_invariant(cognition_invariant)
+        self.kernel.add_invariant(campus_interaction_invariant)
         self.kernel.add_invariant(action_economy_invariant)
         self.kernel.add_invariant(campus_schedule_invariant)
         self.kernel.add_invariant(campus_activity_invariant)
@@ -216,6 +223,9 @@ class CampusKernelBridge:
                     phase_upkeep,
                     decision_selector,
                     complete_assigned_task,
+                    lambda context: advance_campus_interactions(
+                        context, interaction_policy, self.cognition_runtime
+                    ),
                 ),
             ),
         )

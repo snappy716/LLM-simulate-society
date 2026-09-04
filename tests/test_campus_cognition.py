@@ -116,6 +116,8 @@ class CampusCognitionTests(unittest.TestCase):
         self.assertEqual(4, len(provider.requests))
         self.assertEqual(4, usage["calls"])
         self.assertEqual(4, usage["phase_calls"]["afternoon"])
+        self.assertEqual(3, usage["purpose_phase_calls"]["afternoon:activity"])
+        self.assertEqual(1, usage["purpose_phase_calls"]["afternoon:interaction"])
         self.assertEqual(320, usage["prompt_tokens"])
         self.assertEqual(72, usage["completion_tokens"])
         llm_decisions = [
@@ -124,6 +126,12 @@ class CampusCognitionTests(unittest.TestCase):
         ]
         self.assertGreater(len(llm_decisions), 0)
         self.assertTrue(all(item["candidate_id"] for item in llm_decisions))
+        interaction_events = [
+            event for event in result["result"]["events"]
+            if event["event_type"] == "NPC_INTERACTION_RESOLVED"
+            and event["payload"]["decision_source"] == "llm"
+        ]
+        self.assertEqual(1, len(interaction_events))
         first_request = provider.requests[0].to_dict()
         self.assertNotIn("chronicles", first_request)
         self.assertNotIn("authoritative", first_request)

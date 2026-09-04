@@ -69,6 +69,7 @@ def _fresh_usage(day: int) -> Dict[str, Any]:
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "phase_calls": {},
+        "purpose_phase_calls": {},
         "cache_hits": 0,
         "fallbacks": 0,
         "rejected_responses": 0,
@@ -378,21 +379,29 @@ class CognitionRuntime:
             candidates=public_candidates,
         )
 
-    def select(self, state: WorldState, actor_id: str, candidates: Sequence[Dict[str, Any]]) -> Dict[str, Any] | None:
-        if not candidates or actor_id not in state.cognition.get("focused_ids", ()) or not self.provider.configured:
-            return None
+    def _select_response(
+        self,
+        state: WorldState,
+        request: BoundedDecisionRequest,
+        *,
+        purpose: str,
+    ) -> BoundedDecisionResponse | None:
         usage = state.cognition["usage"]
         if usage.get("day") != state.clock.day:
             state.cognition["usage"] = usage = _fresh_usage(state.clock.day)
         phase_calls = int(usage["phase_calls"].get(state.clock.phase, 0))
-        request = self._request(state, actor_id, candidates)
+        purpose_phase_calls = usage.setdefault("purpose_phase_calls", {})
+        purpose_key = f"{state.clock.phase}:{purpose}"
+        current_purpose_calls = int(purpose_phase_calls.get(purpose_key, 0))
         canonical = json.dumps(request.to_dict(), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         cache_payload = request.to_dict()
         cache_payload["candidate_revision"] = 0
         cache_canonical = json.dumps(
             cache_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
         )
-        cache_key = hashlib.sha256((self.provider.model + cache_canonical).encode("utf-8")).hexdigest()
+        cache_key = hashlib.sha256(
+            (self.provider.model + purpose + cache_canonical).encode("utf-8")
+        ).hexdigest()
         cached = state.cognition["decision_cache"].get(cache_key)
         if isinstance(cached, dict):
             usage["cache_hits"] += 1
@@ -400,9 +409,15 @@ class CognitionRuntime:
             raw["candidate_revision"] = state.revision
         else:
             estimated = max(1, len(canonical) // 4) + self.policy.max_output_tokens
+            purpose_limit = (
+                self.policy.phase_call_limit - self.policy.interaction_reserved_phase_calls
+                if purpose == "activity"
+                else self.policy.interaction_phase_call_limit
+            )
             if (
                 int(usage["calls"]) >= self.policy.daily_call_limit
                 or phase_calls >= self.policy.phase_call_limit
+                or current_purpose_calls >= purpose_limit
                 or int(usage["estimated_tokens"]) + estimated > self.policy.daily_estimated_token_limit
             ):
                 usage["budget_blocks"] += 1
@@ -410,6 +425,7 @@ class CognitionRuntime:
                 return None
             usage["calls"] += 1
             usage["phase_calls"][state.clock.phase] = phase_calls + 1
+            purpose_phase_calls[purpose_key] = current_purpose_calls + 1
             usage["estimated_tokens"] += estimated
             try:
                 raw = dict(self.provider.decide(request, max_output_tokens=self.policy.max_output_tokens))
@@ -432,15 +448,28 @@ class CognitionRuntime:
             usage["rejected_responses"] += 1
             usage["fallbacks"] += 1
             return None
-        legal = {item["candidate_id"]: item for item in candidates[:self.policy.candidate_limit]}
+        legal_ids = {
+            str(item.get("candidate_id"))
+            for item in request.candidates[:self.policy.candidate_limit]
+        }
         if (
-            response.npc_id != actor_id
+            response.npc_id != request.npc_id
             or response.candidate_revision != state.revision
-            or response.selected_action_id not in legal
+            or response.selected_action_id not in legal_ids
         ):
             usage["rejected_responses"] += 1
             usage["fallbacks"] += 1
             return None
+        return response
+
+    def select(self, state: WorldState, actor_id: str, candidates: Sequence[Dict[str, Any]]) -> Dict[str, Any] | None:
+        if not candidates or actor_id not in state.cognition.get("focused_ids", ()) or not self.provider.configured:
+            return None
+        request = self._request(state, actor_id, candidates)
+        response = self._select_response(state, request, purpose="activity")
+        if response is None:
+            return None
+        legal = {item["candidate_id"]: item for item in candidates[:self.policy.candidate_limit]}
         chosen = deepcopy(legal[response.selected_action_id])
         chosen["rule_decision_source"] = chosen.get("decision_source", "rule")
         chosen["decision_source"] = "llm"
@@ -450,6 +479,77 @@ class CognitionRuntime:
         audit.append({
             "day": state.clock.day, "phase": state.clock.phase, "npc_id": actor_id,
             "candidate_revision": state.revision, "selected_action_id": response.selected_action_id,
+            "purpose": "activity", "model": self.provider.model, "reason": response.reason[:500],
+        })
+        del audit[:-96]
+        return chosen
+
+    def select_interaction(
+        self,
+        state: WorldState,
+        actor_id: str,
+        target_id: str,
+        candidates: Sequence[Dict[str, Any]],
+    ) -> Dict[str, Any] | None:
+        if not candidates or actor_id not in state.cognition.get("focused_ids", ()) or not self.provider.configured:
+            return None
+        actor = state.population[actor_id]
+        target = state.population[target_id]
+        relation = state.relationships.get(actor_id, {}).get(target_id, {})
+        memories = state.cognition.get("memory_by_actor", {}).get(actor_id, [])[-self.policy.reflection_memory_limit:]
+        reflection = state.cognition.get("reflections", {}).get(actor_id, {})
+        request = BoundedDecisionRequest(
+            npc_id=actor_id,
+            candidate_revision=state.revision,
+            day=state.clock.day,
+            phase=state.clock.phase,
+            identity={
+                "role_kind": actor.get("role_kind"),
+                "college_id": actor.get("college_id"),
+                "occupation_id": actor.get("occupation_id"),
+                "core_values": list(actor.get("core_values", ())),
+                "moral_boundaries": list(actor.get("moral_boundaries", ())),
+                "personality": deepcopy(actor.get("personality", {})),
+            },
+            state={
+                "location_id": actor.get("current_location_id"),
+                "needs": deepcopy(actor.get("needs", {})),
+                "emotions": deepcopy(actor.get("emotions", {})),
+                "interaction_target": {
+                    "npc_id": target_id,
+                    "role_kind": target.get("role_kind"),
+                    "college_id": target.get("college_id"),
+                    "current_activity_id": target.get("current_activity", {}).get("activity_id"),
+                },
+                "relationship": deepcopy(relation),
+            },
+            reflection=str(reflection.get("summary", "")),
+            memories=tuple({
+                "day": item.get("day"), "phase": item.get("phase"),
+                "summary": item.get("summary"), "confidence": item.get("confidence"),
+                "interpretation": item.get("interpretation"),
+            } for item in memories),
+            candidates=tuple({
+                "candidate_id": item["candidate_id"],
+                "activity_id": item.get("activity_id", "NPC_SOCIAL_INTERACTION"),
+                "location_id": item.get("location_id"),
+                "intent_id": item.get("intent_id"),
+                "reason": item.get("reason"),
+                "reason_codes": list(item.get("reason_codes", ())),
+                "rule_score": item.get("rule_score", 0),
+            } for item in candidates[:self.policy.candidate_limit]),
+        )
+        response = self._select_response(state, request, purpose="interaction")
+        if response is None:
+            return None
+        legal = {item["candidate_id"]: item for item in candidates[:self.policy.candidate_limit]}
+        chosen = deepcopy(legal[response.selected_action_id])
+        chosen["model_reason"] = response.reason[:300]
+        audit = state.cognition["decision_audit"]
+        audit.append({
+            "day": state.clock.day, "phase": state.clock.phase, "npc_id": actor_id,
+            "target_id": target_id, "candidate_revision": state.revision,
+            "selected_action_id": response.selected_action_id, "purpose": "interaction",
             "model": self.provider.model, "reason": response.reason[:500],
         })
         del audit[:-96]

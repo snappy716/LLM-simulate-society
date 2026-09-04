@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "max_interactions_per_phase": 12,
+  "pair_cooldown_phases": 3,
+  "hook_lifetime_phases": 8,
+  "max_recent_interactions": 96,
+  "max_open_hooks": 64,
+  "minimum_pair_score": 54,
+  "intents": [
+    {
+      "id": "small_talk",
+      "name": "随口交谈",
+      "base_score": 25,
+      "acceptance_threshold": 28,
+      "relationship_on_accept": {
+        "initiator": {"familiarity": 3, "closeness": 1},
+        "target": {"familiarity": 2}
+      },
+      "relationship_on_reject": {
+        "initiator": {"suspicion": 1},
+        "target": {"familiarity": 1}
+      },
+      "emotion_on_accept": {
+        "initiator": {"joy": 2},
+        "target": {"joy": 1}
+      },
+      "social_relief": 10,
+      "summary_accept": "{actor} 与 {target} 随口聊了几句，彼此熟悉了一些。",
+      "summary_reject": "{actor} 尝试与 {target} 交谈，但对方没有继续话题。"
+    },
+    {
+      "id": "exchange_ideas",
+      "name": "交换想法",
+      "base_score": 43,
+      "acceptance_threshold": 38,
+      "requires_any_category": ["study", "research", "exploration"],
+      "relationship_on_accept": {
+        "initiator": {"familiarity": 2, "respect": 3},
+        "target": {"familiarity": 2, "respect": 2}
+      },
+      "relationship_on_reject": {
+        "initiator": {"conflict": 1},
+        "target": {"suspicion": 1}
+      },
+      "emotion_on_accept": {
+        "initiator": {"joy": 1},
+        "target": {"joy": 1}
+      },
+      "social_relief": 6,
+      "curiosity_relief": 8,
+      "summary_accept": "{actor} 与 {target} 交换了各自最近在思考的问题。",
+      "summary_reject": "{actor} 提起一个想法，但 {target} 暂时不愿深入讨论。"
+    },
+    {
+      "id": "offer_support",
+      "name": "主动关心",
+      "base_score": 34,
+      "acceptance_threshold": 42,
+      "requires_target_emotion": 18,
+      "relationship_on_accept": {
+        "initiator": {"familiarity": 2, "trust": 2, "closeness": 2},
+        "target": {"familiarity": 3, "trust": 4, "closeness": 3, "obligation": 1}
+      },
+      "relationship_on_reject": {
+        "initiator": {"suspicion": 1},
+        "target": {"suspicion": 2}
+      },
+      "emotion_on_accept": {
+        "initiator": {"joy": 2},
+        "target": {"sadness": -5, "fear": -3, "joy": 2}
+      },
+      "social_relief": 8,
+      "creates_hook": "check_in",
+      "summary_accept": "{actor} 注意到 {target} 状态不佳，并认真关心了对方。",
+      "summary_reject": "{actor} 试着关心 {target}，但对方暂时不愿谈起自己的状态。"
+    },
+    {
+      "id": "coordinate_club",
+      "name": "商量社团事务",
+      "base_score": 45,
+      "acceptance_threshold": 38,
+      "requires_shared_club": true,
+      "relationship_on_accept": {
+        "initiator": {"familiarity": 2, "respect": 2},
+        "target": {"familiarity": 2, "respect": 2, "obligation": 1}
+      },
+      "relationship_on_reject": {
+        "initiator": {"conflict": 1},
+        "target": {"conflict": 1}
+      },
+      "emotion_on_accept": {
+        "initiator": {"joy": 1},
+        "target": {"joy": 1}
+      },
+      "social_relief": 5,
+      "creates_hook": "club_promise",
+      "summary_accept": "{actor} 与 {target} 商量了共同社团接下来的安排。",
+      "summary_reject": "{actor} 想和 {target} 商量社团事务，但没有当场取得一致。"
+    },
+    {
+      "id": "ask_task_help",
+      "name": "请求任务协助",
+      "base_score": 50,
+      "acceptance_threshold": 45,
+      "requires_active_task": true,
+      "relationship_on_accept": {
+        "initiator": {"trust": 3, "obligation": 2},
+        "target": {"familiarity": 2, "respect": 2}
+      },
+      "relationship_on_reject": {
+        "initiator": {"suspicion": 1},
+        "target": {"conflict": 1}
+      },
+      "emotion_on_accept": {
+        "initiator": {"fear": -2, "joy": 2},
+        "target": {"joy": 1}
+      },
+      "social_relief": 5,
+      "creates_hook": "task_help",
+      "summary_accept": "{actor} 向 {target} 请求协助，对方答应之后提供帮助。",
+      "summary_reject": "{actor} 向 {target} 请求协助，但对方目前无法答应。"
+    },
+    {
+      "id": "follow_up_promise",
+      "name": "兑现后续约定",
+      "base_score": 70,
+      "acceptance_threshold": 35,
+      "requires_open_hook": true,
+      "relationship_on_accept": {
+        "initiator": {"trust": 3, "closeness": 2, "respect": 1},
+        "target": {"trust": 4, "closeness": 2, "obligation": -1}
+      },
+      "relationship_on_reject": {
+        "initiator": {"trust": -3, "conflict": 2},
+        "target": {"trust": -5, "suspicion": 3, "conflict": 2}
+      },
+      "emotion_on_accept": {
+        "initiator": {"joy": 2},
+        "target": {"joy": 3, "sadness": -2}
+      },
+      "social_relief": 8,
+      "resolves_hook": true,
+      "summary_accept": "{actor} 与 {target} 再次碰面，并兑现了此前留下的约定。",
+      "summary_reject": "{actor} 与 {target} 再次谈到此前的约定，但这次没能兑现。"
+    },
+    {
+      "id": "confront",
+      "name": "当面质疑",
+      "base_score": 20,
+      "acceptance_threshold": 60,
+      "requires_conflict_or_anger": 18,
+      "relationship_on_accept": {
+        "initiator": {"respect": 1, "conflict": 2},
+        "target": {"respect": 1, "conflict": 2}
+      },
+      "relationship_on_reject": {
+        "initiator": {"trust": -2, "conflict": 4},
+        "target": {"trust": -3, "suspicion": 3, "conflict": 5}
+      },
+      "emotion_on_accept": {
+        "initiator": {"anger": -2},
+        "target": {"anger": 1}
+      },
+      "social_relief": 2,
+      "summary_accept": "{actor} 当面质疑了 {target}，双方虽然紧张但把分歧说开了一部分。",
+      "summary_reject": "{actor} 当面质疑 {target}，谈话最终不欢而散。"
+    }
+  ]
+}

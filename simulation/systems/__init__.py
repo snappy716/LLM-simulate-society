@@ -120,6 +120,13 @@ from simulation.systems.campus_social import (
     install_campus_social_state,
     relationship_between as campus_relationship_between,
 )
+from simulation.systems.campus_interactions import (
+    CampusInteractionPolicy,
+    advance_campus_interactions,
+    campus_interaction_invariant,
+    install_campus_interactions,
+    load_campus_interaction_policy,
+)
 from simulation.systems.campus_clubs import (
     CLUB_ACTIVITY_IDS,
     advance_club_upkeep,
@@ -216,6 +223,11 @@ __all__ = [
     "campus_social_invariant",
     "install_campus_social_state",
     "campus_relationship_between",
+    "CampusInteractionPolicy",
+    "advance_campus_interactions",
+    "campus_interaction_invariant",
+    "install_campus_interactions",
+    "load_campus_interaction_policy",
     "CLUB_ACTIVITY_IDS",
     "advance_club_upkeep",
     "campus_club_invariant",

@@ -43,6 +43,7 @@ def make_scheduled_npc_phase_executor(
     phase_upkeep=None,
     decision_selector=None,
     activity_completed=None,
+    phase_completed=None,
 ):
     """Build a phase-start callback that moves and activates every scheduled NPC.
 
@@ -240,6 +241,8 @@ def make_scheduled_npc_phase_executor(
                 visibility="private",
                 knowledge_tags=["schedule", "activity"],
             )
+        if phase_completed is not None:
+            summary.update(phase_completed(context))
         summary["decision_reason_counts"] = dict(sorted(decision_reasons.items()))
         return summary
 

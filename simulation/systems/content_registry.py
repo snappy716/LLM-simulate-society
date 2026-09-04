@@ -43,6 +43,11 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
         "configuration",
         singleton_id="campus_decisions",
     ),
+    ContentSource(
+        "actions/campus_interactions.json",
+        "configuration",
+        singleton_id="campus_interactions",
+    ),
     ContentSource("actions/campus_schedules.json", "schedule_template", "templates"),
     ContentSource("organizations/clubs.json", "club", "clubs"),
     ContentSource(

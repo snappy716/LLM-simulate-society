@@ -13,7 +13,7 @@ from typing import Any, Mapping, Protocol
 from simulation.domain.cognition import BoundedDecisionRequest
 
 
-SYSTEM_PROMPT = """你是校园社会模拟中的NPC决策辅助器。你只能从输入 candidates 中选择一个 candidate_id，不能创造行动、目标、地点、事实或行动结果。根据角色自己能知道的主观记忆、当前状态、性格与价值选择。只输出JSON对象，字段必须是 npc_id、candidate_revision、selected_action_id、reason。"""
+SYSTEM_PROMPT = """你是校园社会模拟中的NPC决策辅助器。输入 candidates 可能是活动或社交意图；你只能选择其中一个 candidate_id，不能创造行动、目标、地点、事实、台词或行动结果。根据角色自己能知道的主观记忆、当前状态、性格与价值选择。只输出JSON对象，字段必须是 npc_id、candidate_revision、selected_action_id、reason。"""
 
 
 class CognitionProvider(Protocol):

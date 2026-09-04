@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/npc_interaction.schema.json",
+  "title": "Committed autonomous NPC interaction event payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "interaction_id", "day", "phase", "scene_id", "actor_id", "target_id",
+    "intent_id", "outcome", "decision_source", "acceptance_score",
+    "relationship_deltas", "emotion_deltas", "hook_id", "model_reason"
+  ],
+  "properties": {
+    "interaction_id": {"type": "string", "pattern": "^interaction:[0-9]{8}$"},
+    "day": {"type": "integer", "minimum": 1},
+    "phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+    "scene_id": {"type": "string", "minLength": 1},
+    "actor_id": {"type": "string", "minLength": 1},
+    "target_id": {"type": "string", "minLength": 1},
+    "intent_id": {"type": "string", "minLength": 1},
+    "outcome": {"enum": ["accepted", "rejected"]},
+    "decision_source": {"enum": ["rule", "llm"]},
+    "acceptance_score": {"type": "number"},
+    "relationship_deltas": {
+      "type": "object",
+      "required": ["actor", "target"],
+      "properties": {
+        "actor": {"type": "object"},
+        "target": {"type": "object"}
+      }
+    },
+    "emotion_deltas": {
+      "type": "object",
+      "required": ["actor", "target"],
+      "properties": {
+        "actor": {"type": "object"},
+        "target": {"type": "object"}
+      }
+    },
+    "hook_id": {"type": ["string", "null"]},
+    "model_reason": {"type": "string", "maxLength": 300}
+  }
+}
