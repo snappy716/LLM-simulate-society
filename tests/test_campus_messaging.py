@@ -11,6 +11,35 @@ from simulation.systems import campus_messaging_invariant, phase_index
 REPOSITORY_DIR = Path(__file__).resolve().parents[1]
 
 
+class DialogueProvider:
+    name = "fake"
+    model = "fake-dialogue-model"
+    configured = True
+
+    def __init__(self) -> None:
+        self.dialogue_requests = []
+
+    def decide(self, request, *, max_output_tokens):
+        return {
+            "npc_id": request.npc_id,
+            "candidate_revision": request.candidate_revision,
+            "selected_action_id": request.candidates[0]["candidate_id"],
+            "reason": "合法候选。",
+        }
+
+    def respond(self, request, *, max_output_tokens):
+        self.dialogue_requests.append(request)
+        fact_ids = [request.allowed_facts[0]["claim_id"]] if request.allowed_facts else []
+        return {
+            "npc_id": request.npc_id,
+            "target_id": request.target_id,
+            "candidate_revision": request.candidate_revision,
+            "utterance": "你好，我看到了。我们可以从彼此已经知道的事情聊起。",
+            "fact_ids_used": fact_ids,
+            "_usage": {"prompt_tokens": 72, "completion_tokens": 20},
+        }
+
+
 def execute(bridge: CampusKernelBridge, action_id: str, parameters=None, step=0) -> dict:
     snapshot = bridge.snapshot()
     clock = snapshot["clock"]
@@ -29,6 +58,51 @@ def execute(bridge: CampusKernelBridge, action_id: str, parameters=None, step=0)
 
 
 class CampusMessagingIntegrationTests(unittest.TestCase):
+    def test_focused_contact_uses_bounded_llm_wording_and_discloses_only_allowed_fact(self):
+        bridge = CampusKernelBridge(42)
+        target_id = str(bridge.snapshot()["messaging"]["contacts"][0]["actor_id"])
+        self.assertTrue(execute(bridge, "AWAKEN_NPC", {"target_id": target_id})["ok"])
+        provider = DialogueProvider()
+        bridge.cognition_runtime.provider = provider
+        result = execute(bridge, "SEND_PHONE_MESSAGE", {
+            "target_id": target_id,
+            "text": "你好，最近有什么想和我说的吗？",
+        })
+        self.assertTrue(result["ok"])
+        reply = result["result"]["payload"]["reply_messages"][0]
+        self.assertEqual("llm", reply["source"])
+        self.assertIn("彼此已经知道", reply["text"])
+        self.assertEqual(1, len(provider.dialogue_requests))
+        request = provider.dialogue_requests[0]
+        request_json = json.dumps(request.to_dict(), ensure_ascii=False)
+        self.assertNotIn("chronicles", request_json)
+        self.assertNotIn("tasks", request_json)
+        used_claim = reply["shared_claim_id"]
+        self.assertIn(used_claim, bridge.kernel.state.knowledge["beliefs_by_actor"]["player"])
+        share = result["result"]["payload"]["information_shares"][0]
+        self.assertEqual("phone_statement", share["acquisition_method"])
+        usage = bridge.kernel.state.cognition["usage"]
+        self.assertEqual(1, usage["purpose_phase_calls"]["morning:player_dialogue"])
+        self.assertEqual(72, usage["prompt_tokens"])
+        self.assertEqual(20, usage["completion_tokens"])
+
+    def test_player_dialogue_phase_budget_falls_back_to_rules(self):
+        bridge = CampusKernelBridge(9)
+        target_id = str(bridge.snapshot()["messaging"]["contacts"][0]["actor_id"])
+        self.assertTrue(execute(bridge, "AWAKEN_NPC", {"target_id": target_id})["ok"])
+        provider = DialogueProvider()
+        bridge.cognition_runtime.provider = provider
+        sources = []
+        for index in range(3):
+            result = execute(bridge, "SEND_PHONE_MESSAGE", {
+                "target_id": target_id, "text": f"第{index + 1}条消息。",
+            }, step=index)
+            self.assertTrue(result["ok"])
+            sources.append(result["result"]["payload"]["reply_messages"][0]["source"])
+        self.assertEqual(["llm", "llm", "rule"], sources)
+        self.assertEqual(2, len(provider.dialogue_requests))
+        self.assertGreaterEqual(bridge.kernel.state.cognition["usage"]["budget_blocks"], 1)
+
     def test_player_can_message_remote_npc_for_free_and_records_reply(self):
         bridge = CampusKernelBridge(42)
         before = bridge.snapshot()

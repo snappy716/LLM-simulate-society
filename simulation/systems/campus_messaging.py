@@ -7,7 +7,12 @@ from typing import Any, Dict, Iterable, Mapping
 
 from simulation.actions.commands import SimulationCommand
 from simulation.domain.world_state import WorldState
-from simulation.systems.campus_intelligence import CampusIntelligencePolicy, share_known_claim
+from simulation.systems.campus_intelligence import (
+    CampusIntelligencePolicy,
+    disclosable_known_claims,
+    share_known_claim,
+    share_specific_known_claim,
+)
 from simulation.systems.campus_social import DEFAULT_RELATIONSHIP, adjust_relationship
 from simulation.systems.campus_tasks import phase_index
 from simulation.systems.transactions import TransactionOutcome
@@ -281,7 +286,11 @@ def _rule_reply(state: WorldState, sender_id: str, receiver_id: str) -> str:
     return "收到消息了，有需要可以继续告诉我。"
 
 
-def make_campus_messaging_handler(policy: CampusMessagingPolicy):
+def make_campus_messaging_handler(
+    policy: CampusMessagingPolicy,
+    intelligence_policy: CampusIntelligencePolicy | None = None,
+    cognition_runtime=None,
+):
     def handle(context, command: SimulationCommand) -> TransactionOutcome:
         if command.actor_id not in context.state.population:
             return TransactionOutcome(False, False, "unknown_actor", "发送者不存在。")
@@ -339,15 +348,62 @@ def make_campus_messaging_handler(policy: CampusMessagingPolicy):
         thread["unread_by_actor"][command.actor_id] = 0
         _emit_message_event(context, sent)
         replies: list[Dict[str, Any]] = []
+        information_shares: list[Dict[str, Any]] = []
         if command.actor_id == "player" and target_id != "player" and policy.player_auto_reply:
+            reply_text = _rule_reply(context.state, target_id, "player")
+            reply_source = "rule"
+            fact_ids_used: list[str] = []
+            if cognition_runtime is not None and intelligence_policy is not None:
+                allowed_facts = disclosable_known_claims(
+                    context.state, target_id, "player", intelligence_policy
+                )
+                dialogue = cognition_runtime.compose_phone_reply(
+                    context.state,
+                    target_id,
+                    "player",
+                    text,
+                    [
+                        context.state.cognition["messaging"]["messages"][message_id]
+                        for message_id in thread["message_ids"][:-1]
+                        if message_id in context.state.cognition["messaging"]["messages"]
+                    ],
+                    allowed_facts,
+                )
+                if dialogue is not None:
+                    reply_text = str(dialogue["utterance"])
+                    reply_source = "llm"
+                    fact_ids_used = list(dialogue.get("fact_ids_used", ()))
+                    for claim_id in fact_ids_used:
+                        receipt = share_specific_known_claim(
+                            context.state,
+                            sender_id=target_id,
+                            receiver_id="player",
+                            claim_id=claim_id,
+                            interaction_id=sent["message_id"],
+                            intent_id="phone_reply",
+                            policy=intelligence_policy,
+                            acquisition_method="phone_statement",
+                        )
+                        if receipt is not None:
+                            information_shares.append(receipt)
             reply = _append_message(
                 context.state, target_id, "player",
-                _rule_reply(context.state, target_id, "player"), policy,
-                source="rule", reply_to_message_id=sent["message_id"],
+                reply_text, policy,
+                source=reply_source, reply_to_message_id=sent["message_id"],
+                shared_claim_id=fact_ids_used[0] if fact_ids_used else None,
             )
             adjust_relationship(context.state, target_id, "player", {"familiarity": 1})
             adjust_relationship(context.state, "player", target_id, {"familiarity": 1})
             _emit_message_event(context, reply)
+            for receipt in information_shares:
+                context.emit(
+                    "NPC_INFORMATION_SHARED",
+                    str(receipt["dialogue_summary"]),
+                    actor_ids=[target_id], target_ids=["player"],
+                    payload=deepcopy(receipt), visibility="private", severity=2,
+                    knowledge_tags=["phone", "dialogue", "information"],
+                    correlation_id=sent["message_id"],
+                )
             replies.append(reply)
         return TransactionOutcome(
             True, True, "success", "消息已发送。", commit=True,
@@ -355,6 +411,7 @@ def make_campus_messaging_handler(policy: CampusMessagingPolicy):
                 "thread_id": thread["thread_id"],
                 "sent_message": deepcopy(sent),
                 "reply_messages": deepcopy(replies),
+                "information_shares": deepcopy(information_shares),
                 "action_class": "free",
             },
         )

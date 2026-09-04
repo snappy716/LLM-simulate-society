@@ -278,7 +278,9 @@ class CampusKernelBridge:
         ):
             self.kernel.register_handler(action_id, party_handler)
         self.kernel.register_handler("AWAKEN_NPC", make_awaken_npc_handler(cognition_policy))
-        messaging_handler = make_campus_messaging_handler(messaging_policy)
+        messaging_handler = make_campus_messaging_handler(
+            messaging_policy, intelligence_policy, self.cognition_runtime
+        )
         for action_id in ("ADD_PHONE_CONTACT", "SEND_PHONE_MESSAGE", "MARK_PHONE_THREAD_READ"):
             self.kernel.register_handler(action_id, messaging_handler)
 

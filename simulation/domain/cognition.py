@@ -23,6 +23,8 @@ class CognitionPolicy:
     max_output_tokens: int = 160
     request_timeout_seconds: float = 8.0
     cache_limit: int = 96
+    player_dialogue_daily_reserve: int = 4
+    player_dialogue_phase_call_limit: int = 2
 
     def __post_init__(self) -> None:
         integer_values = {
@@ -41,11 +43,15 @@ class CognitionPolicy:
             "daily_estimated_token_limit": self.daily_estimated_token_limit,
             "max_output_tokens": self.max_output_tokens,
             "cache_limit": self.cache_limit,
+            "player_dialogue_daily_reserve": self.player_dialogue_daily_reserve,
+            "player_dialogue_phase_call_limit": self.player_dialogue_phase_call_limit,
         }
         if any(isinstance(value, bool) or not isinstance(value, int) or value < 1 for value in integer_values.values()):
             raise ValueError("cognition policy integer limits must be positive")
         if self.player_awakened_slots > self.total_focus_slots:
             raise ValueError("player awakened slots cannot exceed total focus slots")
+        if self.player_dialogue_daily_reserve >= self.daily_call_limit:
+            raise ValueError("player dialogue reserve must be smaller than the daily call limit")
         if not 1 <= self.interaction_phase_call_limit <= self.interaction_reserved_phase_calls <= self.phase_call_limit:
             raise ValueError("interaction calls must fit inside the reserved phase budget")
         if self.request_timeout_seconds <= 0:
@@ -69,6 +75,8 @@ class CognitionPolicy:
             "max_output_tokens": self.max_output_tokens,
             "request_timeout_seconds": self.request_timeout_seconds,
             "cache_limit": self.cache_limit,
+            "player_dialogue_daily_reserve": self.player_dialogue_daily_reserve,
+            "player_dialogue_phase_call_limit": self.player_dialogue_phase_call_limit,
         }
 
 
@@ -122,6 +130,67 @@ class BoundedDecisionResponse:
         return cls(npc_id, revision, selected, reason)
 
 
+@dataclass(frozen=True)
+class BoundedDialogueRequest:
+    npc_id: str
+    target_id: str
+    candidate_revision: int
+    day: int
+    phase: str
+    identity: Mapping[str, Any]
+    state: Mapping[str, Any]
+    relationship: Mapping[str, Any]
+    recent_messages: Tuple[Mapping[str, Any], ...]
+    incoming_text: str
+    allowed_facts: Tuple[Mapping[str, Any], ...]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "npc_id": self.npc_id,
+            "target_id": self.target_id,
+            "candidate_revision": self.candidate_revision,
+            "day": self.day,
+            "phase": self.phase,
+            "identity": dict(self.identity),
+            "state": dict(self.state),
+            "relationship": dict(self.relationship),
+            "recent_messages": [dict(item) for item in self.recent_messages],
+            "incoming_text": self.incoming_text,
+            "allowed_facts": [dict(item) for item in self.allowed_facts],
+        }
+
+
+@dataclass(frozen=True)
+class BoundedDialogueResponse:
+    npc_id: str
+    target_id: str
+    candidate_revision: int
+    utterance: str
+    fact_ids_used: Tuple[str, ...]
+
+    @classmethod
+    def from_mapping(cls, payload: Mapping[str, Any]) -> "BoundedDialogueResponse":
+        npc_id = payload.get("npc_id")
+        target_id = payload.get("target_id")
+        revision = payload.get("candidate_revision")
+        utterance = payload.get("utterance")
+        facts = payload.get("fact_ids_used", ())
+        if not isinstance(npc_id, str) or not npc_id or not isinstance(target_id, str) or not target_id:
+            raise ValueError("dialogue actor ids are required")
+        if isinstance(revision, bool) or not isinstance(revision, int) or revision < 1:
+            raise ValueError("dialogue candidate_revision must be a positive integer")
+        if not isinstance(utterance, str) or not utterance.strip() or len(utterance) > 160:
+            raise ValueError("utterance must contain at most 160 characters")
+        if (
+            not isinstance(facts, (list, tuple))
+            or any(not isinstance(fact_id, str) or not fact_id for fact_id in facts)
+            or len(facts) != len(set(facts))
+        ):
+            raise ValueError("fact_ids_used must contain unique fact identifiers")
+        return cls(npc_id, target_id, revision, utterance.strip(), tuple(facts))
+
+
 __all__ = [
-    "BoundedDecisionRequest", "BoundedDecisionResponse", "CognitionPolicy",
+    "BoundedDecisionRequest", "BoundedDecisionResponse",
+    "BoundedDialogueRequest", "BoundedDialogueResponse", "CognitionPolicy",
 ]

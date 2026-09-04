@@ -17,6 +17,8 @@ from simulation.cognition.provider import (
 from simulation.domain.cognition import (
     BoundedDecisionRequest,
     BoundedDecisionResponse,
+    BoundedDialogueRequest,
+    BoundedDialogueResponse,
     CognitionPolicy,
 )
 from simulation.domain.events import SimulationEvent
@@ -394,6 +396,11 @@ class CognitionRuntime:
         purpose_phase_calls = usage.setdefault("purpose_phase_calls", {})
         purpose_key = f"{state.clock.phase}:{purpose}"
         current_purpose_calls = int(purpose_phase_calls.get(purpose_key, 0))
+        player_dialogue_calls = sum(
+            int(value) for key, value in purpose_phase_calls.items()
+            if str(key).endswith(":player_dialogue")
+        )
+        automated_calls = int(usage["calls"]) - player_dialogue_calls
         canonical = json.dumps(request.to_dict(), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         cache_payload = request.to_dict()
         cache_payload["candidate_revision"] = 0
@@ -417,6 +424,7 @@ class CognitionRuntime:
             )
             if (
                 int(usage["calls"]) >= self.policy.daily_call_limit
+                or automated_calls >= self.policy.daily_call_limit - self.policy.player_dialogue_daily_reserve
                 or phase_calls >= self.policy.phase_call_limit
                 or current_purpose_calls >= purpose_limit
                 or int(usage["estimated_tokens"]) + estimated > self.policy.daily_estimated_token_limit
@@ -462,6 +470,128 @@ class CognitionRuntime:
             usage["fallbacks"] += 1
             return None
         return response
+
+    def compose_phone_reply(
+        self,
+        state: WorldState,
+        npc_id: str,
+        target_id: str,
+        incoming_text: str,
+        recent_messages: Sequence[Mapping[str, Any]],
+        allowed_facts: Sequence[Mapping[str, Any]] | None = None,
+    ) -> Dict[str, Any] | None:
+        """Generate non-authoritative wording from an NPC's bounded knowledge."""
+        if (
+            npc_id not in state.cognition.get("focused_ids", ())
+            or not self.provider.configured
+            or not callable(getattr(self.provider, "respond", None))
+        ):
+            return None
+        actor = state.population[npc_id]
+        fact_source = (
+            allowed_facts
+            if allowed_facts is not None
+            else known_claims(state, npc_id)
+        )
+        allowed = tuple({
+            "claim_id": item["claim"]["claim_id"],
+            "summary": item["claim"]["summary"],
+            "confidence": item["belief"]["confidence"],
+            "source_kind": item["belief"]["source_kind"],
+        } for item in fact_source[-8:])
+        request = BoundedDialogueRequest(
+            npc_id=npc_id,
+            target_id=target_id,
+            candidate_revision=state.revision,
+            day=state.clock.day,
+            phase=state.clock.phase,
+            identity={
+                "role_kind": actor.get("role_kind"),
+                "college_id": actor.get("college_id"),
+                "occupation_id": actor.get("occupation_id"),
+                "core_values": list(actor.get("core_values", ())),
+                "moral_boundaries": list(actor.get("moral_boundaries", ())),
+                "personality": deepcopy(actor.get("personality", {})),
+            },
+            state={
+                "needs": deepcopy(actor.get("needs", {})),
+                "emotions": deepcopy(actor.get("emotions", {})),
+            },
+            relationship=deepcopy(state.relationships.get(npc_id, {}).get(target_id, {})),
+            recent_messages=tuple({
+                "sender_id": item.get("sender_id"),
+                "receiver_id": item.get("receiver_id"),
+                "day": item.get("day"),
+                "phase": item.get("phase"),
+                "text": str(item.get("text", ""))[:240],
+            } for item in recent_messages[-6:]),
+            incoming_text=incoming_text[:240],
+            allowed_facts=allowed,
+        )
+        usage = state.cognition["usage"]
+        if usage.get("day") != state.clock.day:
+            state.cognition["usage"] = usage = _fresh_usage(state.clock.day)
+        purpose_phase_calls = usage.setdefault("purpose_phase_calls", {})
+        purpose_key = f"{state.clock.phase}:player_dialogue"
+        current_purpose_calls = int(purpose_phase_calls.get(purpose_key, 0))
+        canonical = json.dumps(
+            request.to_dict(), ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+        estimated = max(1, len(canonical) // 4) + self.policy.max_output_tokens
+        if (
+            int(usage["calls"]) >= self.policy.daily_call_limit
+            or current_purpose_calls >= self.policy.player_dialogue_phase_call_limit
+            or int(usage["estimated_tokens"]) + estimated > self.policy.daily_estimated_token_limit
+        ):
+            usage["budget_blocks"] += 1
+            usage["fallbacks"] += 1
+            return None
+        usage["calls"] += 1
+        purpose_phase_calls[purpose_key] = current_purpose_calls + 1
+        usage["estimated_tokens"] += estimated
+        try:
+            raw = dict(self.provider.respond(request, max_output_tokens=self.policy.max_output_tokens))
+        except Exception:
+            usage["provider_errors"] += 1
+            usage["fallbacks"] += 1
+            return None
+        provider_usage = raw.pop("_usage", {})
+        if isinstance(provider_usage, dict):
+            usage["prompt_tokens"] += int(provider_usage.get("prompt_tokens", 0))
+            usage["completion_tokens"] += int(provider_usage.get("completion_tokens", 0))
+        try:
+            response = BoundedDialogueResponse.from_mapping(raw)
+        except (TypeError, ValueError):
+            usage["rejected_responses"] += 1
+            usage["fallbacks"] += 1
+            return None
+        allowed_ids = {str(item["claim_id"]) for item in allowed}
+        if (
+            response.npc_id != npc_id
+            or response.target_id != target_id
+            or response.candidate_revision != state.revision
+            or not set(response.fact_ids_used).issubset(allowed_ids)
+        ):
+            usage["rejected_responses"] += 1
+            usage["fallbacks"] += 1
+            return None
+        audit = state.cognition["decision_audit"]
+        audit.append({
+            "day": state.clock.day,
+            "phase": state.clock.phase,
+            "npc_id": npc_id,
+            "target_id": target_id,
+            "candidate_revision": state.revision,
+            "purpose": "player_dialogue",
+            "model": self.provider.model,
+            "fact_ids_used": list(response.fact_ids_used),
+        })
+        del audit[:-96]
+        return {
+            "utterance": response.utterance,
+            "fact_ids_used": list(response.fact_ids_used),
+            "source": "llm",
+        }
 
     def select(self, state: WorldState, actor_id: str, candidates: Sequence[Dict[str, Any]]) -> Dict[str, Any] | None:
         if not candidates or actor_id not in state.cognition.get("focused_ids", ()) or not self.provider.configured:

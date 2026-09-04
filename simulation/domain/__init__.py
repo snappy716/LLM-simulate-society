@@ -103,6 +103,8 @@ from simulation.domain.parties import CampusPartyPolicy, parse_party_policy
 from simulation.domain.cognition import (
     BoundedDecisionRequest,
     BoundedDecisionResponse,
+    BoundedDialogueRequest,
+    BoundedDialogueResponse,
     CognitionPolicy,
 )
 from simulation.domain.schedules import (
@@ -194,6 +196,8 @@ __all__ = [
     "CampusPartyPolicy",
     "BoundedDecisionRequest",
     "BoundedDecisionResponse",
+    "BoundedDialogueRequest",
+    "BoundedDialogueResponse",
     "CognitionPolicy",
     "CardBlueprint",
     "EMOTION_NAMES",

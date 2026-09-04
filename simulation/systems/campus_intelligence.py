@@ -227,6 +227,105 @@ def _disclosure_limit(
     ))
 
 
+def disclosable_known_claims(
+    state: WorldState,
+    sender_id: str,
+    receiver_id: str,
+    policy: CampusIntelligencePolicy,
+) -> list[Dict[str, Any]]:
+    """Return only beliefs this sender may safely disclose to this receiver."""
+    if sender_id not in state.population or receiver_id not in state.population:
+        raise KeyError("campus information disclosure actors must exist")
+    disclosure_limit = _disclosure_limit(state, sender_id, receiver_id, policy)
+    return [
+        item for item in known_claims(state, sender_id)
+        if float(item["belief"].get("confidence", 0.0)) >= policy.minimum_belief_confidence
+        and int(item["claim"].get("secrecy", 100)) <= disclosure_limit
+    ]
+
+
+def share_specific_known_claim(
+    state: WorldState,
+    *,
+    sender_id: str,
+    receiver_id: str,
+    claim_id: str,
+    interaction_id: str,
+    intent_id: str,
+    policy: CampusIntelligencePolicy,
+    acquisition_method: str = "direct_statement",
+) -> Dict[str, Any] | None:
+    """Copy one explicitly selected, disclosure-safe belief and its source chain."""
+    eligible = {
+        item["claim"]["claim_id"]: item
+        for item in disclosable_known_claims(state, sender_id, receiver_id, policy)
+    }
+    item = eligible.get(claim_id)
+    if item is None:
+        return None
+    receiver_beliefs = state.knowledge["beliefs_by_actor"][receiver_id]
+    if claim_id in receiver_beliefs:
+        return None
+    claim = item["claim"]
+    sender_belief = item["belief"]
+    receiver_relation = state.relationships.get(receiver_id, {}).get(sender_id, DEFAULT_RELATIONSHIP)
+    credibility = (
+        0.55
+        + 0.35 * int(receiver_relation.get("trust", 50)) / 100
+        - 0.18 * int(receiver_relation.get("suspicion", 0)) / 100
+    )
+    confidence = round(max(0.1, min(
+        0.98,
+        float(sender_belief.get("confidence", 0.0))
+        * max(0.25, credibility)
+        * (1.0 - float(sender_belief.get("distortion", 0.0)) * 0.35),
+    )), 3)
+    distortion = round(min(
+        1.0,
+        float(sender_belief.get("distortion", 0.0))
+        + 0.04
+        + (100 - int(receiver_relation.get("trust", 50))) / 500,
+    ), 3)
+    receiver_beliefs[claim_id] = {
+        "claim_id": claim_id,
+        "source_actor_id": sender_id,
+        "upstream_source_actor_id": sender_belief.get("source_actor_id"),
+        "source_kind": "statement",
+        "confidence": confidence,
+        "distortion": distortion,
+        "learned_day": state.clock.day,
+        "learned_phase": state.clock.phase,
+        "last_confirmed_day": state.clock.day,
+        "last_confirmed_phase": state.clock.phase,
+        "transmission_count": int(sender_belief.get("transmission_count", 0)) + 1,
+    }
+    state.knowledge["share_sequence"] += 1
+    share_id = f"share:{state.knowledge['share_sequence']:08d}"
+    sender_name = state.population[sender_id].get("display_name", sender_id)
+    receiver_name = state.population[receiver_id].get("display_name", receiver_id)
+    receipt = {
+        "share_id": share_id,
+        "claim_id": claim_id,
+        "sender_id": sender_id,
+        "receiver_id": receiver_id,
+        "interaction_id": interaction_id,
+        "intent_id": intent_id,
+        "day": state.clock.day,
+        "phase": state.clock.phase,
+        "source_actor_id": sender_id,
+        "upstream_source_actor_id": sender_belief.get("source_actor_id"),
+        "confidence": confidence,
+        "distortion": distortion,
+        "secrecy": int(claim["secrecy"]),
+        "acquisition_method": acquisition_method,
+        "dialogue_summary": f"{sender_name}对{receiver_name}说：“{claim['summary']}”",
+    }
+    recent = state.knowledge["recent_shares"]
+    recent.append(deepcopy(receipt))
+    del recent[:-policy.recent_share_limit]
+    return receipt
+
+
 def share_known_claim(
     state: WorldState,
     *,
@@ -270,64 +369,16 @@ def share_known_claim(
         candidates.append((score, claim_id, claim, belief))
     if not candidates:
         return None
-    _, claim_id, claim, sender_belief = max(candidates, key=lambda item: (item[0], item[1]))
-    receiver_relation = state.relationships.get(receiver_id, {}).get(sender_id, DEFAULT_RELATIONSHIP)
-    credibility = (
-        0.55
-        + 0.35 * int(receiver_relation.get("trust", 50)) / 100
-        - 0.18 * int(receiver_relation.get("suspicion", 0)) / 100
+    _, claim_id, _, _ = max(candidates, key=lambda item: (item[0], item[1]))
+    return share_specific_known_claim(
+        state,
+        sender_id=sender_id,
+        receiver_id=receiver_id,
+        claim_id=claim_id,
+        interaction_id=interaction_id,
+        intent_id=intent_id,
+        policy=policy,
     )
-    confidence = round(max(0.1, min(
-        0.98,
-        float(sender_belief.get("confidence", 0.0))
-        * max(0.25, credibility)
-        * (1.0 - float(sender_belief.get("distortion", 0.0)) * 0.35),
-    )), 3)
-    distortion = round(min(
-        1.0,
-        float(sender_belief.get("distortion", 0.0))
-        + 0.04
-        + (100 - int(receiver_relation.get("trust", 50))) / 500,
-    ), 3)
-    receiver_beliefs[claim_id] = {
-        "claim_id": claim_id,
-        "source_actor_id": sender_id,
-        "upstream_source_actor_id": sender_belief.get("source_actor_id"),
-        "source_kind": "statement",
-        "confidence": confidence,
-        "distortion": distortion,
-        "learned_day": state.clock.day,
-        "learned_phase": state.clock.phase,
-        "last_confirmed_day": state.clock.day,
-        "last_confirmed_phase": state.clock.phase,
-        "transmission_count": int(sender_belief.get("transmission_count", 0)) + 1,
-    }
-    state.knowledge["share_sequence"] += 1
-    share_id = f"share:{state.knowledge['share_sequence']:08d}"
-    sender_name = state.population[sender_id].get("display_name", sender_id)
-    receiver_name = state.population[receiver_id].get("display_name", receiver_id)
-    dialogue_summary = f"{sender_name}对{receiver_name}说：“{claim['summary']}”"
-    receipt = {
-        "share_id": share_id,
-        "claim_id": claim_id,
-        "sender_id": sender_id,
-        "receiver_id": receiver_id,
-        "interaction_id": interaction_id,
-        "intent_id": intent_id,
-        "day": state.clock.day,
-        "phase": state.clock.phase,
-        "source_actor_id": sender_id,
-        "upstream_source_actor_id": sender_belief.get("source_actor_id"),
-        "confidence": confidence,
-        "distortion": distortion,
-        "secrecy": int(claim["secrecy"]),
-        "acquisition_method": "direct_statement",
-        "dialogue_summary": dialogue_summary,
-    }
-    recent = state.knowledge["recent_shares"]
-    recent.append(deepcopy(receipt))
-    del recent[:-policy.recent_share_limit]
-    return receipt
 
 
 def campus_intelligence_invariant(state: WorldState) -> Iterable[str]:
@@ -377,7 +428,7 @@ def campus_intelligence_invariant(state: WorldState) -> Iterable[str]:
 
 __all__ = [
     "CAMPUS_INTELLIGENCE_SCHEMA_VERSION", "CampusIntelligencePolicy",
-    "campus_intelligence_invariant", "create_campus_claim",
+    "campus_intelligence_invariant", "create_campus_claim", "disclosable_known_claims",
     "install_campus_intelligence", "known_claims",
-    "load_campus_intelligence_policy", "share_known_claim",
+    "load_campus_intelligence_policy", "share_known_claim", "share_specific_known_claim",
 ]
