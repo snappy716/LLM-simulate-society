@@ -8,10 +8,11 @@ from typing import Any, Dict
 
 from simulation.domain.world_state import WorldState
 from simulation.systems.campus_schedules import current_schedule_slot
+from simulation.systems.campus_clubs import club_catalog_view
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 10
+CAMPUS_WORLD_VIEW_VERSION = 11
 NPC_CHRONICLE_VIEW_VERSION = 1
 
 
@@ -296,6 +297,8 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
                 organization.get("completed_tasks_by_actor", {}).get("player", 0)
             ),
             "is_member": "player" in organization.get("member_ids", ()),
+            "membership": deepcopy(organization.get("memberships", {}).get("player")),
+            "resources": deepcopy(organization.get("resources", {})),
         }
         for organization_id, organization in state.organizations.items()
         if isinstance(organization, dict)
@@ -343,6 +346,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             "player_relationships": player_relationships,
             "player_organizations": player_organizations,
         },
+        "clubs": club_catalog_view(state, "player"),
     }
 
 

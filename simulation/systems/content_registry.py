@@ -283,9 +283,28 @@ class ContentRegistry:
                         + ", ".join(sorted(unknown))
                     )
         club_skill_owners: Dict[str, str] = {}
+        club_runtime_policy = (
+            self.document("organizations/clubs.json").get("runtime_policy", {})
+            if club_ids else {}
+        )
+        if club_ids and not isinstance(club_runtime_policy, dict):
+            errors.append("club runtime_policy must be a mapping")
+        elif club_ids:
+            thresholds = club_runtime_policy.get("rank_thresholds", {})
+            if not isinstance(thresholds, dict) or set(thresholds) != {"member", "core_member", "leader"}:
+                errors.append("club runtime_policy must define all rank thresholds")
+            for field_name in (
+                "activity_contribution", "activity_resource_gain", "task_contribution",
+                "task_resource_gain", "daily_resource_cost", "resource_capacity",
+                "initial_resource", "core_member_limit", "member_limit",
+                "tactic_resource_cost",
+            ):
+                value = club_runtime_policy.get(field_name)
+                if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                    errors.append(f"club runtime_policy requires non-negative {field_name}")
         for club in self.all("club").values():
             club_id = str(club.get("id", ""))
-            for required_field in ("category", "signature_resource"):
+            for required_field in ("category", "signature_resource", "night_skill_name"):
                 if not isinstance(club.get(required_field), str) or not club.get(required_field):
                     errors.append(f"club {club_id} requires {required_field}")
             unknown_overlaps = set(club.get("college_overlap_ids", ())) - college_ids

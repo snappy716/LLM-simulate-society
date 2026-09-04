@@ -8,6 +8,7 @@ const APPS := [
 	{"id": "market", "name": "校园商城", "icon": "商", "color": Color("ed6540")},
 	{"id": "wallet", "name": "电子钱包", "icon": "钱", "color": Color("4f73cd")},
 	{"id": "health", "name": "健康档案", "icon": "健", "color": Color("e95d70")},
+	{"id": "clubs", "name": "社团中心", "icon": "社", "color": Color("c47a46")},
 	{"id": "forums", "name": "双层论坛", "icon": "坛", "color": Color("785bc7")},
 ]
 
@@ -28,6 +29,13 @@ var _forum_abandon_action: Button
 var _forum_feedback: Label
 var _forum_filter := "available"
 var _selected_task_id := ""
+var _club_root: VBoxContainer
+var _club_picker: OptionButton
+var _club_detail: RichTextLabel
+var _club_membership_action: Button
+var _club_activity_action: Button
+var _club_feedback: Label
+var _selected_club_id := ""
 
 
 func _ready() -> void:
@@ -36,6 +44,7 @@ func _ready() -> void:
 	_build_ui()
 	SimulationBridge.campus_snapshot_updated.connect(_on_campus_snapshot_updated)
 	SimulationBridge.campus_task_operation_completed.connect(_on_task_operation_completed)
+	SimulationBridge.campus_club_operation_completed.connect(_on_club_operation_completed)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -148,7 +157,41 @@ func _build_app_page() -> VBoxContainer:
 	_forum_root.visible = false
 	_forum_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page.add_child(_forum_root)
+	_club_root = _build_club_page()
+	_club_root.visible = false
+	_club_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_child(_club_root)
 	return page
+
+
+func _build_club_page() -> VBoxContainer:
+	var root := VBoxContainer.new()
+	root.add_theme_constant_override("separation", 8)
+	_club_picker = OptionButton.new()
+	_club_picker.item_selected.connect(_select_club)
+	root.add_child(_club_picker)
+	_club_detail = RichTextLabel.new()
+	_club_detail.bbcode_enabled = true
+	_club_detail.fit_content = false
+	_club_detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_club_detail.add_theme_font_size_override("normal_font_size", 14)
+	root.add_child(_club_detail)
+	_club_feedback = Label.new()
+	_club_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_club_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	root.add_child(_club_feedback)
+	var actions := HBoxContainer.new()
+	_club_membership_action = Button.new()
+	_club_membership_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_club_membership_action.pressed.connect(_perform_club_membership_action)
+	actions.add_child(_club_membership_action)
+	_club_activity_action = Button.new()
+	_club_activity_action.text = "参加本时段活动"
+	_club_activity_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_club_activity_action.pressed.connect(_perform_club_activity)
+	actions.add_child(_club_activity_action)
+	root.add_child(actions)
+	return root
 
 
 func _build_forum_page() -> VBoxContainer:
@@ -233,11 +276,16 @@ func _build_forum_page() -> VBoxContainer:
 func _open_app(app_id: String, app_name: String) -> void:
 	_app_title.text = app_name
 	var is_forum := app_id == "forums"
-	_content.visible = not is_forum
+	var is_club := app_id == "clubs"
+	_content.visible = not is_forum and not is_club
 	_forum_root.visible = is_forum
+	_club_root.visible = is_club
 	if is_forum:
 		_forum_feedback.text = ""
 		_show_forum_list()
+	elif is_club:
+		_club_feedback.text = ""
+		_refresh_club_page()
 	else:
 		_content.text = _app_text(app_id)
 	_home.visible = false
@@ -487,12 +535,116 @@ func _on_task_operation_completed(success: bool, result: Dictionary, _action_id:
 
 
 func _on_campus_snapshot_updated(_snapshot: Dictionary) -> void:
-	if not _opened or not _forum_root.visible:
+	if not _opened:
 		return
-	if _selected_task_id.is_empty():
-		_refresh_forum_list()
+	if _forum_root.visible:
+		if _selected_task_id.is_empty():
+			_refresh_forum_list()
+		else:
+			_refresh_forum_detail()
+	elif _club_root.visible:
+		_refresh_club_page()
+
+
+func _refresh_club_page() -> void:
+	var clubs: Dictionary = SimulationBridge.campus_snapshot.get("clubs", {})
+	if clubs.is_empty():
+		_club_detail.text = "社团数据尚未同步。"
+		_club_membership_action.disabled = true
+		_club_activity_action.disabled = true
+		return
+	var previous := _selected_club_id
+	_club_picker.clear()
+	var ids: Array = clubs.keys()
+	ids.sort()
+	var selected_index := 0
+	for index in range(ids.size()):
+		var club_id := String(ids[index])
+		var club: Dictionary = clubs[club_id]
+		var marker := " · 已加入" if club.get("viewer_membership") is Dictionary else ""
+		_club_picker.add_item("%s%s" % [club.get("name", club_id), marker])
+		_club_picker.set_item_metadata(index, club_id)
+		if club_id == previous:
+			selected_index = index
+	_club_picker.select(selected_index)
+	_selected_club_id = String(_club_picker.get_item_metadata(selected_index))
+	_refresh_club_detail()
+
+
+func _select_club(index: int) -> void:
+	_selected_club_id = String(_club_picker.get_item_metadata(index))
+	_club_feedback.text = ""
+	_refresh_club_detail()
+
+
+func _refresh_club_detail() -> void:
+	var campus: Dictionary = SimulationBridge.campus_snapshot
+	var club: Dictionary = (campus.get("clubs", {}) as Dictionary).get(_selected_club_id, {})
+	if club.is_empty():
+		return
+	var resources: Dictionary = club.get("resources", {})
+	var tactic: Dictionary = club.get("team_tactic", {})
+	var membership_value: Variant = club.get("viewer_membership")
+	var membership: Dictionary = membership_value if membership_value is Dictionary else {}
+	var rank_names := {"member": "普通成员", "core_member": "骨干", "leader": "负责人"}
+	var identity_text := "尚未加入"
+	if not membership.is_empty():
+		identity_text = "%s · 贡献 %d · 出勤 %d / 缺勤 %d" % [
+			rank_names.get(String(membership.get("rank", "member")), "成员"),
+			int(membership.get("contribution", 0)), int(membership.get("attendance_count", 0)),
+			int(membership.get("absence_count", 0)),
+		]
+	var admission: Dictionary = club.get("admission", {})
+	var admission_text: String = "已具备申请条件" if bool(admission.get("eligible", false)) else {
+		"already_member": "你已经是成员",
+		"membership_limit": "已达到两社团上限",
+		"club_full": "社团名额已满",
+		"requirements_not_met": "需要相关学院背景、社团任务声望或足够社交能力",
+	}.get(String(admission.get("reason", "")), "暂不符合条件")
+	_club_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]负责人[/b]  %s\n[b]成员[/b]  %d / %d\n[b]公共资源[/b]  %d / %d（%s）\n\n[b]你的身份[/b]\n%s\n[b]入社评估[/b]\n%s\n\n[b]表世界实践[/b]  %s\n[b]团队战术[/b]  %s · 消耗 %d 公共资源\n[color=#91a4bc]团队战术需要至少两名同社团成员，并由骨干或负责人组织；正式卡牌效果将在战斗阶段接入。[/color]" % [
+		club.get("name", _selected_club_id), club.get("category", ""),
+		club.get("leader_name", "未知"), int(club.get("member_count", 0)),
+		int(club.get("member_limit", 0)), int(resources.get("current", 0)),
+		int(resources.get("capacity", 0)), resources.get("resource_id", ""),
+		identity_text, admission_text, club.get("surface_skill", ""),
+		tactic.get("name", tactic.get("tactic_id", "")), int(tactic.get("resource_cost", 0)),
+	]
+	var player: Dictionary = campus.get("player", {})
+	var clock: Dictionary = campus.get("clock", {})
+	var at_club := String(player.get("current_location_id", "")) == "club_room_pool"
+	var phase := String(clock.get("phase", "morning"))
+	var reception_open: bool = phase in club.get("activity_phases", [])
+	if membership.is_empty():
+		_club_membership_action.text = "申请加入"
+		_club_membership_action.disabled = not bool(admission.get("eligible", false)) or not at_club or not reception_open
 	else:
-		_refresh_forum_detail()
+		_club_membership_action.text = "退出社团"
+		_club_membership_action.disabled = String(membership.get("rank", "")) == "leader"
+	var major_remaining := int((player.get("action_budget", {}) as Dictionary).get("major_remaining", 0))
+	_club_activity_action.disabled = membership.is_empty() or not at_club or not reception_open or major_remaining <= 0
+
+
+func _perform_club_membership_action() -> void:
+	var club: Dictionary = (SimulationBridge.campus_snapshot.get("clubs", {}) as Dictionary).get(_selected_club_id, {})
+	var action_id := "LEAVE_CAMPUS_CLUB" if club.get("viewer_membership") is Dictionary else "JOIN_CAMPUS_CLUB"
+	_club_feedback.text = "正在提交社团申请……"
+	SimulationBridge.operate_campus_club(action_id, _selected_club_id)
+
+
+func _perform_club_activity() -> void:
+	var phase := String((SimulationBridge.campus_snapshot.get("clock", {}) as Dictionary).get("phase", "afternoon"))
+	var action_id := "CLUB_OR_SELF_STUDY" if phase == "evening" else "CLUB_OR_PERSONAL_ACTIVITY"
+	_club_feedback.text = "正在结算社团活动……"
+	SimulationBridge.operate_campus_club(action_id, _selected_club_id)
+
+
+func _on_club_operation_completed(success: bool, result: Dictionary, _action_id: String, club_id: String) -> void:
+	if club_id != _selected_club_id:
+		return
+	var command_result: Dictionary = result.get("result", {})
+	_club_feedback.text = String(command_result.get("message", result.get("error", "社团操作失败")))
+	_club_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
+	_refresh_club_page()
 
 
 func _dictionary_lines(value: Variant) -> String:
@@ -537,6 +689,7 @@ func _show_home() -> void:
 	_home.visible = true
 	_app_page.visible = false
 	_forum_root.visible = false
+	_club_root.visible = false
 	_content.visible = true
 
 

@@ -157,6 +157,7 @@ def advance_campus_phase_upkeep(context) -> Dict[str, int]:
 def make_campus_activity_handler(
     definitions: Mapping[str, CampusActivityDefinition],
     policy,
+    activity_settled=None,
 ):
     def perform(context, command) -> TransactionOutcome:
         actor = context.state.population.get(command.actor_id)
@@ -221,6 +222,10 @@ def make_campus_activity_handler(
             },
             "budget": budget_payload,
         }
+        if activity_settled is not None:
+            club_effects = activity_settled(context, command, definition)
+            if club_effects:
+                effects["club"] = club_effects
         actor["last_activity_effects"] = effects
         context.emit(
             "CAMPUS_ACTIVITY_EFFECT_APPLIED",

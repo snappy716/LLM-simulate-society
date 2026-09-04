@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/campus_club.schema.json",
+  "title": "Campus club runtime view",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["organization_id", "name", "category", "member_count", "member_limit", "leader_id", "leader_name", "resources", "surface_skill", "team_tactic", "viewer_membership", "admission", "activity_phases"],
+  "properties": {
+    "organization_id": {"type": "string", "minLength": 1},
+    "name": {"type": "string", "minLength": 1},
+    "category": {"type": "string", "minLength": 1},
+    "member_count": {"type": "integer", "minimum": 1},
+    "member_limit": {"type": "integer", "minimum": 2},
+    "leader_id": {"type": "string", "minLength": 1},
+    "leader_name": {"type": "string", "minLength": 1},
+    "resources": {
+      "type": "object",
+      "required": ["resource_id", "current", "capacity", "earned_total", "spent_total"],
+      "properties": {
+        "resource_id": {"type": "string", "minLength": 1},
+        "current": {"type": "integer", "minimum": 0},
+        "capacity": {"type": "integer", "minimum": 1},
+        "earned_total": {"type": "integer", "minimum": 0},
+        "spent_total": {"type": "integer", "minimum": 0}
+      }
+    },
+    "surface_skill": {"type": "string", "minLength": 1},
+    "team_tactic": {"type": "object"},
+    "viewer_membership": {"type": ["object", "null"]},
+    "admission": {"type": "object"},
+    "activity_phases": {"type": "array", "items": {"enum": ["morning", "afternoon", "evening", "late_night"]}, "uniqueItems": true}
+  }
+}

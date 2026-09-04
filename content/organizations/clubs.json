@@ -5,18 +5,32 @@
     "club_role": "optional_shared_practice_resources_and_team_tactics",
     "membership_ranks": ["member", "core_member", "leader"]
   },
+  "runtime_policy": {
+    "rank_thresholds": {"member": 0, "core_member": 20, "leader": 60},
+    "activity_contribution": 4,
+    "activity_resource_gain": 1,
+    "task_contribution": 6,
+    "task_resource_gain": 3,
+    "daily_resource_cost": 4,
+    "resource_capacity": 100,
+    "initial_resource": 40,
+    "core_member_limit": 3,
+    "member_limit": 18,
+    "tactic_resource_cost": 8,
+    "activity_phases": ["afternoon", "evening"]
+  },
   "clubs": [
-    {"id": "psychology_reading", "name": "心理学读书会", "category": "study_community", "surface_skill": "case_roundtable", "night_skill": "shared_grounding", "signature_resource": "annotated_case_archive", "college_overlap_ids": ["psychology", "humanities"], "task_tags": ["books", "rumor", "support"]},
-    {"id": "campus_press", "name": "校园记者团", "category": "media_organization", "surface_skill": "structured_interview", "night_skill": "source_network", "signature_resource": "campus_source_directory", "college_overlap_ids": ["humanities"], "task_tags": ["interview", "missing_person", "news"]},
-    {"id": "photography", "name": "摄影社", "category": "creative_practice", "surface_skill": "event_documentation", "night_skill": "anomaly_capture", "signature_resource": "shared_camera_kit", "college_overlap_ids": [], "task_tags": ["photography", "equipment", "evidence"]},
-    {"id": "astronomy", "name": "天文社", "category": "observation_community", "surface_skill": "night_watch_log", "night_skill": "lunar_window", "signature_resource": "observation_schedule", "college_overlap_ids": ["earth_space"], "task_tags": ["observation", "equipment", "moonlight"]},
-    {"id": "theatre", "name": "话剧社", "category": "performance_ensemble", "surface_skill": "stage_performance", "night_skill": "identity_misdirection", "signature_resource": "costume_prop_store", "college_overlap_ids": ["humanities"], "task_tags": ["recruitment", "props", "rehearsal"]},
-    {"id": "debate", "name": "辩论社", "category": "public_deliberation", "surface_skill": "argument_building", "night_skill": "coherence_break", "signature_resource": "motion_casebook", "college_overlap_ids": ["humanities", "psychology"], "task_tags": ["research", "speech", "dispute"]},
-    {"id": "computer_robotics", "name": "计算机与机器人社", "category": "maker_team", "surface_skill": "team_prototyping", "night_skill": "remote_system_support", "signature_resource": "maker_workbench", "college_overlap_ids": ["artificial_intelligence"], "task_tags": ["repair", "competition", "account_trace"]},
-    {"id": "volunteer_service", "name": "志愿服务协会", "category": "service_network", "surface_skill": "community_support", "night_skill": "safe_escort", "signature_resource": "volunteer_contact_network", "college_overlap_ids": ["psychology", "medicine", "humanities"], "task_tags": ["delivery", "care", "escort"]},
-    {"id": "martial_fitness", "name": "武术与体能社", "category": "training_team", "surface_skill": "sparring_discipline", "night_skill": "formation_guard", "signature_resource": "training_equipment_pool", "college_overlap_ids": ["sports"], "task_tags": ["training", "escort", "competition"]},
-    {"id": "outdoor_orienteering", "name": "户外与定向社", "category": "expedition_team", "surface_skill": "route_planning", "night_skill": "emergency_extraction", "signature_resource": "expedition_supply_cache", "college_overlap_ids": ["earth_space", "sports"], "task_tags": ["search", "route", "outdoor"]},
-    {"id": "music", "name": "音乐社", "category": "performance_ensemble", "surface_skill": "ensemble_performance", "night_skill": "group_rhythm", "signature_resource": "rehearsal_room_booking", "college_overlap_ids": ["humanities"], "task_tags": ["performance", "recruitment", "instrument"]},
-    {"id": "moot_court", "name": "模拟法庭与社会实践社", "category": "advocacy_network", "surface_skill": "policy_argument", "night_skill": "rule_exception", "signature_resource": "procedure_and_case_file", "college_overlap_ids": ["humanities"], "task_tags": ["mediation", "policy", "appeal"]}
+    {"id": "psychology_reading", "name": "心理学读书会", "category": "study_community", "surface_skill": "case_roundtable", "night_skill": "shared_grounding", "night_skill_name": "共同锚定", "signature_resource": "annotated_case_archive", "college_overlap_ids": ["psychology", "humanities"], "task_tags": ["books", "rumor", "support"]},
+    {"id": "campus_press", "name": "校园记者团", "category": "media_organization", "surface_skill": "structured_interview", "night_skill": "source_network", "night_skill_name": "信源网络", "signature_resource": "campus_source_directory", "college_overlap_ids": ["humanities"], "task_tags": ["interview", "missing_person", "news"]},
+    {"id": "photography", "name": "摄影社", "category": "creative_practice", "surface_skill": "event_documentation", "night_skill": "anomaly_capture", "night_skill_name": "异常留影", "signature_resource": "shared_camera_kit", "college_overlap_ids": [], "task_tags": ["photography", "equipment", "evidence"]},
+    {"id": "astronomy", "name": "天文社", "category": "observation_community", "surface_skill": "night_watch_log", "night_skill": "lunar_window", "night_skill_name": "月相窗口", "signature_resource": "observation_schedule", "college_overlap_ids": ["earth_space"], "task_tags": ["observation", "equipment", "moonlight"]},
+    {"id": "theatre", "name": "话剧社", "category": "performance_ensemble", "surface_skill": "stage_performance", "night_skill": "identity_misdirection", "night_skill_name": "身份误导", "signature_resource": "costume_prop_store", "college_overlap_ids": ["humanities"], "task_tags": ["recruitment", "props", "rehearsal"]},
+    {"id": "debate", "name": "辩论社", "category": "public_deliberation", "surface_skill": "argument_building", "night_skill": "coherence_break", "night_skill_name": "自洽瓦解", "signature_resource": "motion_casebook", "college_overlap_ids": ["humanities", "psychology"], "task_tags": ["research", "speech", "dispute"]},
+    {"id": "computer_robotics", "name": "计算机与机器人社", "category": "maker_team", "surface_skill": "team_prototyping", "night_skill": "remote_system_support", "night_skill_name": "远程系统支援", "signature_resource": "maker_workbench", "college_overlap_ids": ["artificial_intelligence"], "task_tags": ["repair", "competition", "account_trace"]},
+    {"id": "volunteer_service", "name": "志愿服务协会", "category": "service_network", "surface_skill": "community_support", "night_skill": "safe_escort", "night_skill_name": "安全护送", "signature_resource": "volunteer_contact_network", "college_overlap_ids": ["psychology", "medicine", "humanities"], "task_tags": ["delivery", "care", "escort"]},
+    {"id": "martial_fitness", "name": "武术与体能社", "category": "training_team", "surface_skill": "sparring_discipline", "night_skill": "formation_guard", "night_skill_name": "阵型守护", "signature_resource": "training_equipment_pool", "college_overlap_ids": ["sports"], "task_tags": ["training", "escort", "competition"]},
+    {"id": "outdoor_orienteering", "name": "户外与定向社", "category": "expedition_team", "surface_skill": "route_planning", "night_skill": "emergency_extraction", "night_skill_name": "紧急撤离", "signature_resource": "expedition_supply_cache", "college_overlap_ids": ["earth_space", "sports"], "task_tags": ["search", "route", "outdoor"]},
+    {"id": "music", "name": "音乐社", "category": "performance_ensemble", "surface_skill": "ensemble_performance", "night_skill": "group_rhythm", "night_skill_name": "群体节律", "signature_resource": "rehearsal_room_booking", "college_overlap_ids": ["humanities"], "task_tags": ["performance", "recruitment", "instrument"]},
+    {"id": "moot_court", "name": "模拟法庭与社会实践社", "category": "advocacy_network", "surface_skill": "policy_argument", "night_skill": "rule_exception", "night_skill_name": "规则例外", "signature_resource": "procedure_and_case_file", "college_overlap_ids": ["humanities"], "task_tags": ["mediation", "policy", "appeal"]}
   ]
 }

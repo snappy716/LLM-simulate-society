@@ -64,7 +64,7 @@ class CampusKernelBridgeTests(unittest.TestCase):
     def test_side_by_side_snapshot_has_campus_places_and_persistent_cast(self):
         campus = self.bridge.campus_snapshot()
         legacy = self.bridge.snapshot()
-        self.assertEqual(10, campus["view_version"])
+        self.assertEqual(11, campus["view_version"])
         self.assertEqual(200, len(campus["population"]))
         self.assertEqual(6000, campus["population_summary"]["campus_total"])
         self.assertEqual("south_gate_region", campus["player"]["current_location_id"])

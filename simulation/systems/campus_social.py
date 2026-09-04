@@ -137,6 +137,23 @@ def apply_task_social_consequence(
             organization_delta,
             completed=outcome == "completed",
         )
+        membership = state.organizations[organization_id].get("memberships", {}).get(actor_id)
+        club_policy = state.metadata.get("campus_clubs", {}).get("policy", {})
+        if outcome == "completed" and isinstance(membership, dict) and club_policy:
+            contribution_gain = int(club_policy.get("task_contribution", 0))
+            resource_gain = int(club_policy.get("task_resource_gain", 0))
+            membership["contribution"] = int(membership.get("contribution", 0)) + contribution_gain
+            resources = state.organizations[organization_id].get("resources", {})
+            resource_before = int(resources.get("current", 0))
+            resource_after = min(int(resources.get("capacity", 0)), resource_before + resource_gain)
+            resources["current"] = resource_after
+            resources["earned_total"] = int(resources.get("earned_total", 0)) + resource_after - resource_before
+            result["club_contribution"] = {
+                "contribution_gain": contribution_gain,
+                "contribution": membership["contribution"],
+                "resource_gain": resource_after - resource_before,
+                "resource": resource_after,
+            }
     return result
 
 

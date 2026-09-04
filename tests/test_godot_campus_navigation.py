@@ -150,6 +150,18 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn('card.get("command_cost", 0)', phone)
         self.assertIn("角色绑定的战斗卡牌", phone)
 
+    def test_club_app_exposes_membership_resources_and_activity_actions(self):
+        phone = (GAME_DIR / "scripts/ui/campus_phone_ui.gd").read_text(encoding="utf-8")
+        bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
+            encoding="utf-8"
+        )
+        for text in ("社团中心", "公共资源", "你的身份", "团队战术", "申请加入", "参加本时段活动"):
+            self.assertIn(text, phone)
+        self.assertIn("func operate_campus_club", bridge)
+        self.assertIn("campus_club_operation_completed", bridge)
+        self.assertIn('"JOIN_CAMPUS_CLUB"', phone)
+        self.assertIn('"CLUB_OR_PERSONAL_ACTIVITY"', phone)
+
     def test_map_ui_uses_authoritative_free_travel_and_scene_mounts_all_prototypes(self):
         bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
             encoding="utf-8"

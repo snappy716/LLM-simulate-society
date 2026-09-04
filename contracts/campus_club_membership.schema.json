@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/campus_club_membership.schema.json",
+  "title": "Campus club membership record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["actor_id", "rank", "contribution", "attendance_count", "absence_count", "joined_day", "last_attendance_marker", "promotion_history"],
+  "properties": {
+    "actor_id": {"type": "string", "minLength": 1},
+    "rank": {"enum": ["member", "core_member", "leader"]},
+    "contribution": {"type": "integer", "minimum": 0},
+    "attendance_count": {"type": "integer", "minimum": 0},
+    "absence_count": {"type": "integer", "minimum": 0},
+    "joined_day": {"type": "integer", "minimum": 1},
+    "last_attendance_marker": {"type": "string"},
+    "promotion_history": {"type": "array", "items": {"type": "object"}}
+  }
+}

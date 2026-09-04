@@ -65,6 +65,12 @@ from simulation.systems import (  # noqa: E402
     make_task_aware_decision_selector,
     campus_social_invariant,
     install_campus_social_state,
+    install_campus_clubs,
+    load_campus_club_policy,
+    make_campus_club_handler,
+    settle_club_activity,
+    advance_club_upkeep,
+    campus_club_invariant,
     campus_ability_invariant,
     load_campus_ability_definitions,
     install_chronicles,
@@ -87,13 +93,21 @@ class CampusKernelBridge:
         ability_definitions = load_campus_ability_definitions(registry)
         install_campus_abilities(state, ability_definitions, registry.all("college"))
         install_campus_social_state(state, registry.all("club"))
+        club_policy = load_campus_club_policy(registry)
+        install_campus_clubs(state, registry.all("club"), club_policy)
         schedule_templates = load_campus_schedule_templates(registry, graph)
         install_campus_schedules(state, graph, schedule_templates)
         action_policy = load_action_economy_policy(registry)
         install_action_economy(state, action_policy)
         install_chronicles(state)
         activity_definitions = load_campus_activity_definitions(registry)
-        activity_handler = make_campus_activity_handler(activity_definitions, action_policy)
+        activity_handler = make_campus_activity_handler(
+            activity_definitions,
+            action_policy,
+            lambda context, command, definition: settle_club_activity(
+                context, command, definition, club_policy
+            ),
+        )
         decision_policy = load_campus_decision_policy(
             registry, activity_definitions, graph
         )
@@ -113,11 +127,16 @@ class CampusKernelBridge:
             graph,
             forum_policy,
         )
+        def campus_phase_upkeep(context):
+            summary = advance_campus_phase_upkeep(context)
+            summary.update(advance_club_upkeep(context, club_policy))
+            return summary
+
         phase_upkeep = make_surface_forum_phase_upkeep(
             graph,
             task_templates,
             forum_policy,
-            advance_campus_phase_upkeep,
+            campus_phase_upkeep,
         )
         self.kernel = WorldKernel(state, rng=rng_pool)
         self.kernel.add_event_projector(project_chronicle_events)
@@ -129,6 +148,7 @@ class CampusKernelBridge:
         self.kernel.add_invariant(campus_activity_effect_invariant)
         self.kernel.add_invariant(campus_decision_invariant)
         self.kernel.add_invariant(campus_social_invariant)
+        self.kernel.add_invariant(campus_club_invariant)
         self.kernel.add_invariant(make_campus_task_invariant(activity_definitions))
         traverse_handler = make_traverse_location_handler(graph)
         self.kernel.register_handler(
@@ -164,6 +184,14 @@ class CampusKernelBridge:
             "COMPLETE_FORUM_TASK",
         ):
             self.kernel.register_handler(action_id, task_handler)
+        club_handler = make_campus_club_handler(club_policy)
+        for action_id in (
+            "JOIN_CAMPUS_CLUB",
+            "LEAVE_CAMPUS_CLUB",
+            "USE_CLUB_TEAM_TACTIC",
+            "TRANSFER_CLUB_LEADERSHIP",
+        ):
+            self.kernel.register_handler(action_id, club_handler)
 
     def snapshot(self) -> dict:
         return self.kernel.project_view(campus_world_view)

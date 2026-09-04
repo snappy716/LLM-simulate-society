@@ -85,6 +85,11 @@ func _run_flow() -> void:
 	assert(course_content.text.contains("认知心理"))
 	assert(course_content.text.contains("角色绑定"))
 	phone_ui.call("_open_app", "health", "健康档案")
+	phone_ui.call("_open_app", "clubs", "社团中心")
+	var club_detail := phone_ui.get("_club_detail") as RichTextLabel
+	assert(club_detail.text.contains("公共资源"))
+	assert(club_detail.text.contains("团队战术"))
+	assert((phone_ui.get("_club_picker") as OptionButton).item_count == 12)
 	phone_ui.call("_open_app", "forums", "校园互助")
 	var forum_cards := phone_ui.get("_forum_cards") as VBoxContainer
 	assert(forum_cards.get_child_count() == 12)
