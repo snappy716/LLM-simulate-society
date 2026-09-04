@@ -31,6 +31,8 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("func operate_campus_social_proposal", bridge)
         self.assertIn("campus_social_proposal_completed", bridge)
         self.assertIn('"MAKE_SOCIAL_PROPOSAL"', bridge)
+        self.assertIn('"RESPOND_SOCIAL_PROPOSAL"', bridge)
+        self.assertIn("campus_social_proposal_response_completed", bridge)
         self.assertIn("约定稍后见面", phone)
         self.assertIn("正式提出", phone)
 

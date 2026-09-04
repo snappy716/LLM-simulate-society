@@ -6,7 +6,16 @@ from copy import deepcopy
 from pathlib import Path
 
 from simulation.api.server import CampusKernelBridge
-from simulation.systems import campus_proposal_invariant
+from simulation.actions.commands import SimulationCommand
+from simulation.systems import (
+    ContentRegistry,
+    DeterministicRngPool,
+    TransactionContext,
+    advance_npc_player_proposals,
+    campus_proposal_invariant,
+    load_campus_interaction_policy,
+    load_campus_messaging_policy,
+)
 from simulation.systems.campus_social import DEFAULT_RELATIONSHIP
 
 
@@ -56,6 +65,31 @@ def execute_action(bridge: CampusKernelBridge, action_id: str, parameters: dict,
         "issued_minute": clock["minute"],
         "source": "player",
     })
+
+
+def advance_phase(bridge: CampusKernelBridge, marker: str) -> dict:
+    return execute_action(bridge, "ADVANCE_PHASE", {}, marker)
+
+
+def respond(bridge: CampusKernelBridge, proposal_id: str, accepted: bool, marker: str) -> dict:
+    return execute_action(
+        bridge,
+        "RESPOND_SOCIAL_PROPOSAL",
+        {"proposal_id": proposal_id, "accepted": accepted},
+        marker,
+    )
+
+
+def advance_until_incoming(bridge: CampusKernelBridge, limit: int = 8) -> dict:
+    for index in range(limit):
+        result = advance_phase(bridge, f"incoming-{index}")
+        pending = [
+            item for item in result["snapshot"]["social"]["incoming_proposals"]
+            if item["status"] == "pending"
+        ]
+        if pending:
+            return pending[0]
+    raise AssertionError("expected an autonomous NPC proposal")
 
 
 def make_willing(bridge: CampusKernelBridge, target_id: str) -> None:
@@ -214,6 +248,119 @@ class CampusProposalTests(unittest.TestCase):
         usage = bridge.kernel.state.cognition["usage"]
         self.assertEqual(1, usage["player_dialogue_calls"])
         self.assertEqual(0, usage["budget_blocks"])
+
+    def test_npc_task_request_waits_for_player_then_commits_atomically(self):
+        bridge = CampusKernelBridge(91)
+        proposal = advance_until_incoming(bridge)
+        self.assertEqual("task_help", proposal["proposal_type"])
+        task_id = proposal["subject_id"]
+        self.assertNotIn("player", bridge.kernel._state.tasks[task_id]["helper_ids"])
+        self.assertFalse(any(
+            hook.get("linked_task_id") == task_id and hook.get("target_id") == "player"
+            for hook in bridge.kernel._state.cognition["interactions"]["hooks"]
+        ))
+        result = respond(bridge, proposal["proposal_id"], True, "accept-incoming")
+        self.assertTrue(result["ok"])
+        payload = result["result"]["payload"]
+        self.assertEqual("accepted", payload["status"])
+        self.assertEqual("created", payload["hook_transition"])
+        self.assertIn("player", bridge.kernel._state.tasks[task_id]["helper_ids"])
+        self.assertTrue(any(
+            hook.get("hook_id") == payload["hook_id"]
+            and hook.get("hook_type") == "task_support_commitment"
+            and hook.get("linked_task_id") == task_id
+            for hook in bridge.kernel._state.cognition["interactions"]["hooks"]
+        ))
+        self.assertEqual([], list(campus_proposal_invariant(bridge.kernel.state)))
+
+    def test_player_can_decline_without_applying_requested_task_or_hook(self):
+        bridge = CampusKernelBridge(91)
+        proposal = advance_until_incoming(bridge)
+        task_id = proposal["subject_id"]
+        result = respond(bridge, proposal["proposal_id"], False, "decline-incoming")
+        self.assertTrue(result["ok"])
+        self.assertEqual("declined", result["result"]["payload"]["status"])
+        self.assertNotIn("player", bridge.kernel._state.tasks[task_id]["helper_ids"])
+        self.assertFalse(any(
+            hook.get("linked_task_id") == task_id and hook.get("target_id") == "player"
+            for hook in bridge.kernel._state.cognition["interactions"]["hooks"]
+        ))
+
+    def test_pending_request_expires_and_cannot_be_answered_late(self):
+        bridge = CampusKernelBridge(91)
+        proposal = advance_until_incoming(bridge)
+        for index in range(5):
+            advance_phase(bridge, f"expire-{index}")
+        final = next(
+            item for item in bridge.snapshot()["social"]["incoming_proposals"]
+            if item["proposal_id"] == proposal["proposal_id"]
+        )
+        self.assertEqual("expired", final["status"])
+        result = respond(bridge, proposal["proposal_id"], True, "late-response")
+        self.assertFalse(result["ok"])
+        self.assertEqual("proposal_already_resolved", result["result"]["code"])
+
+    def test_incoming_proposal_schema_and_snapshot_are_explicit(self):
+        bridge = CampusKernelBridge(91)
+        proposal = advance_until_incoming(bridge)
+        schema = json.loads(
+            (REPOSITORY_DIR / "contracts/npc_player_proposal.schema.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(set(schema["required"]), set(proposal) - {"initiator_name"})
+        self.assertEqual("player", proposal["player_id"])
+        self.assertEqual("free", proposal["action_class"])
+        self.assertEqual("pending", proposal["status"])
+
+    def test_remote_contact_request_and_player_reply_share_the_phone_thread(self):
+        bridge = CampusKernelBridge(93)
+        state = bridge.kernel._state
+        contact_id = bridge.snapshot()["messaging"]["contacts"][0]["actor_id"]
+        for actor_id, actor in state.population.items():
+            if actor_id != "player":
+                actor["needs"]["social"] = 0
+                actor.pop("active_forum_task_id", None)
+        contact = state.population[contact_id]
+        contact["needs"]["social"] = 100
+        relation = state.relationships.setdefault(contact_id, {}).setdefault(
+            "player", deepcopy(DEFAULT_RELATIONSHIP)
+        )
+        relation.update({"trust": 100, "closeness": 100, "suspicion": 0, "conflict": 0})
+        state.population["player"]["current_location_id"] = next(
+            place_id for place_id, place in state.places.items()
+            if place.get("region_id") == "central_region" and place.get("node_type") != "region"
+        )
+        contact["current_location_id"] = next(
+            place_id for place_id, place in state.places.items()
+            if place.get("region_id") == "west_dorm_region" and place.get("node_type") != "region"
+        )
+        registry = ContentRegistry.load_default(REPOSITORY_DIR / "content")
+        clock = state.clock
+        command = SimulationCommand(
+            command_id="system-proposal-test", actor_id="player",
+            action_id="ADVANCE_PHASE", target_ids=(), parameters={},
+            expected_world_revision=state.revision, issued_day=clock.day,
+            issued_phase=clock.phase, issued_minute=clock.minute, source="rule",
+        )
+        context = TransactionContext(state, DeterministicRngPool(state.master_seed), command)
+        summary = advance_npc_player_proposals(
+            context,
+            load_campus_interaction_policy(registry),
+            load_campus_messaging_policy(registry),
+        )
+        self.assertEqual(1, summary["incoming_proposal_created_count"])
+        proposal = state.cognition["interactions"]["incoming_proposals"][-1]
+        self.assertEqual(contact_id, proposal["initiator_id"])
+        self.assertEqual("phone", proposal["channel"])
+        self.assertIsNotNone(proposal["request_message_id"])
+        result = respond(bridge, proposal["proposal_id"], False, "phone-decline")
+        self.assertTrue(result["ok"])
+        payload = result["result"]["payload"]
+        self.assertIsNotNone(payload["response_message_id"])
+        messages = result["snapshot"]["messaging"]["threads"][contact_id]["messages"]
+        self.assertEqual(
+            [proposal["request_message_id"], payload["response_message_id"]],
+            [messages[-2]["message_id"], messages[-1]["message_id"]],
+        )
 
 
 if __name__ == "__main__":

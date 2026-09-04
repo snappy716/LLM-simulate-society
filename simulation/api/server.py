@@ -106,6 +106,8 @@ from simulation.systems import (  # noqa: E402
     make_campus_messaging_handler,
     campus_proposal_invariant,
     install_campus_proposals,
+    advance_npc_player_proposals,
+    make_npc_player_proposal_response_handler,
     make_player_proposal_handler,
 )
 
@@ -253,6 +255,10 @@ class CampusKernelBridge:
                         **advance_campus_phone_messages(
                             context, messaging_policy, intelligence_policy,
                         ),
+                        **advance_npc_player_proposals(
+                            context, interaction_policy, messaging_policy,
+                            self.cognition_runtime,
+                        ),
                     },
                 ),
             ),
@@ -302,6 +308,14 @@ class CampusKernelBridge:
                 messaging_policy,
                 party_handler,
                 self.cognition_runtime,
+            ),
+        )
+        self.kernel.register_handler(
+            "RESPOND_SOCIAL_PROPOSAL",
+            make_npc_player_proposal_response_handler(
+                interaction_policy,
+                messaging_policy,
+                party_handler,
             ),
         )
 

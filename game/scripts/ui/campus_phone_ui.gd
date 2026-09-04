@@ -55,6 +55,9 @@ var _message_send_action: Button
 var _message_feedback: Label
 var _message_proposal_picker: OptionButton
 var _message_proposal_action: Button
+var _incoming_proposal_picker: OptionButton
+var _incoming_proposal_accept: Button
+var _incoming_proposal_decline: Button
 var _selected_message_contact_id := ""
 
 
@@ -68,6 +71,7 @@ func _ready() -> void:
 	SimulationBridge.campus_party_operation_completed.connect(_on_party_operation_completed)
 	SimulationBridge.campus_phone_message_completed.connect(_on_phone_message_completed)
 	SimulationBridge.campus_social_proposal_completed.connect(_on_social_proposal_completed)
+	SimulationBridge.campus_social_proposal_response_completed.connect(_on_social_proposal_response_completed)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -240,6 +244,24 @@ func _build_message_page() -> VBoxContainer:
 	_message_proposal_action.pressed.connect(_send_phone_proposal)
 	proposal_row.add_child(_message_proposal_action)
 	root.add_child(proposal_row)
+	var incoming_label := Label.new()
+	incoming_label.text = "待处理请求（NPC 会按自己的计划主动提出）"
+	incoming_label.add_theme_color_override("font_color", Color("91a4bc"))
+	root.add_child(incoming_label)
+	_incoming_proposal_picker = OptionButton.new()
+	root.add_child(_incoming_proposal_picker)
+	var incoming_actions := HBoxContainer.new()
+	_incoming_proposal_accept = Button.new()
+	_incoming_proposal_accept.text = "接受"
+	_incoming_proposal_accept.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_incoming_proposal_accept.pressed.connect(_respond_incoming_proposal.bind(true))
+	incoming_actions.add_child(_incoming_proposal_accept)
+	_incoming_proposal_decline = Button.new()
+	_incoming_proposal_decline.text = "拒绝"
+	_incoming_proposal_decline.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_incoming_proposal_decline.pressed.connect(_respond_incoming_proposal.bind(false))
+	incoming_actions.add_child(_incoming_proposal_decline)
+	root.add_child(incoming_actions)
 	return root
 
 
@@ -467,12 +489,66 @@ func _refresh_message_page() -> void:
 		_message_log.text = "联系人数据尚未同步。"
 		_message_send_action.disabled = true
 		_message_proposal_action.disabled = true
+		_refresh_incoming_proposals()
 		return
 	_message_contact_picker.select(selected_index)
 	_selected_message_contact_id = String(_message_contact_picker.get_item_metadata(selected_index))
 	_message_send_action.disabled = false
 	_message_proposal_action.disabled = false
 	_refresh_message_thread()
+	_refresh_incoming_proposals()
+
+
+func _refresh_incoming_proposals() -> void:
+	var previous_id := ""
+	if _incoming_proposal_picker.item_count > 0 and _incoming_proposal_picker.selected >= 0:
+		previous_id = String(_incoming_proposal_picker.get_item_metadata(_incoming_proposal_picker.selected))
+	_incoming_proposal_picker.clear()
+	var proposals: Array = (SimulationBridge.campus_snapshot.get("social", {}) as Dictionary).get("incoming_proposals", [])
+	var selected_index := 0
+	for proposal in proposals:
+		if not proposal is Dictionary or String(proposal.get("status", "")) != "pending":
+			continue
+		var proposal_id := String(proposal.get("proposal_id", ""))
+		var type_name: String = {
+			"party_invite": "加入队伍",
+			"task_help": "协助任务",
+			"meet_up": "稍后见面",
+			"follow_up": "兑现约定",
+		}.get(String(proposal.get("proposal_type", "")), "社会请求")
+		var channel_name: String = "手机" if String(proposal.get("channel", "")) == "phone" else "当面"
+		var index := _incoming_proposal_picker.item_count
+		_incoming_proposal_picker.add_item("%s · %s（%s）" % [proposal.get("initiator_name", "未知人物"), type_name, channel_name])
+		_incoming_proposal_picker.set_item_metadata(index, proposal_id)
+		if proposal_id == previous_id:
+			selected_index = index
+	var has_pending := _incoming_proposal_picker.item_count > 0
+	_incoming_proposal_picker.disabled = not has_pending
+	_incoming_proposal_accept.disabled = not has_pending
+	_incoming_proposal_decline.disabled = not has_pending
+	if has_pending:
+		_incoming_proposal_picker.select(selected_index)
+
+
+func _respond_incoming_proposal(accepted: bool) -> void:
+	if _incoming_proposal_picker.selected < 0:
+		return
+	var proposal_id := String(_incoming_proposal_picker.get_item_metadata(_incoming_proposal_picker.selected))
+	if proposal_id.is_empty():
+		return
+	_incoming_proposal_accept.disabled = true
+	_incoming_proposal_decline.disabled = true
+	_message_feedback.text = "正在记录你的决定……"
+	SimulationBridge.respond_campus_social_proposal(proposal_id, accepted)
+
+
+func _on_social_proposal_response_completed(
+	success: bool, result: Dictionary, _proposal_id: String
+) -> void:
+	var command_result: Dictionary = result.get("result", {})
+	_message_feedback.text = String(command_result.get("message", result.get("error", "请求处理失败")))
+	_message_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
+	_refresh_message_page()
 
 
 func _refresh_message_thread() -> void:

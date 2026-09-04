@@ -94,7 +94,7 @@ class CampusAbilityTests(unittest.TestCase):
             first.metadata["campus_abilities"], second.metadata["campus_abilities"]
         )
         view = campus_world_view(first)
-        self.assertEqual(17, view["view_version"])
+        self.assertEqual(18, view["view_version"])
         self.assertEqual(5, len(view["player"]["abilities"]))
         self.assertEqual(5, len(view["player"]["card_pool"]))
         npc = next(iter(view["population"].values()))

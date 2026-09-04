@@ -13,7 +13,7 @@ from simulation.systems.campus_parties import party_policy_from_state, party_vie
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 17
+CAMPUS_WORLD_VIEW_VERSION = 18
 NPC_CHRONICLE_VIEW_VERSION = 1
 
 
@@ -439,6 +439,18 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             "player_proposals": deepcopy(
                 state.cognition.get("interactions", {}).get("proposals", [])[-40:]
             ),
+            "incoming_proposals": [
+                {
+                    **deepcopy(proposal),
+                    "initiator_name": state.population.get(
+                        str(proposal.get("initiator_id", "")), {}
+                    ).get("display_name", proposal.get("initiator_id", "未知人物")),
+                }
+                for proposal in state.cognition.get("interactions", {}).get(
+                    "incoming_proposals", []
+                )[-40:]
+                if isinstance(proposal, dict)
+            ],
         },
         "clubs": club_catalog_view(state, "player"),
         "party": player_party,

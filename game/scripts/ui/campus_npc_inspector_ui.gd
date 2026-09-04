@@ -106,6 +106,10 @@ var _dialogue_feedback: Label
 var _proposal_picker: OptionButton
 var _proposal_button: Button
 var _proposal_feedback: Label
+var _incoming_proposal_id := ""
+var _incoming_proposal_label: Label
+var _incoming_proposal_accept: Button
+var _incoming_proposal_decline: Button
 var _opened := false
 var _selected_npc: Node
 var _selected_profile: Dictionary = {}
@@ -123,6 +127,7 @@ func _ready() -> void:
 	SimulationBridge.campus_phone_message_completed.connect(_on_contact_operation_completed)
 	SimulationBridge.campus_dialogue_completed.connect(_on_dialogue_completed)
 	SimulationBridge.campus_social_proposal_completed.connect(_on_social_proposal_completed)
+	SimulationBridge.campus_social_proposal_response_completed.connect(_on_incoming_proposal_response_completed)
 
 
 func _process(_delta: float) -> void:
@@ -274,6 +279,23 @@ func _build_ui() -> void:
 	_proposal_feedback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_proposal_feedback.add_theme_color_override("font_color", Color("e0b86a"))
 	column.add_child(_proposal_feedback)
+	_incoming_proposal_label = Label.new()
+	_incoming_proposal_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_incoming_proposal_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_incoming_proposal_label.add_theme_color_override("font_color", Color("e0b86a"))
+	column.add_child(_incoming_proposal_label)
+	var incoming_actions := HBoxContainer.new()
+	_incoming_proposal_accept = Button.new()
+	_incoming_proposal_accept.text = "接受对方请求"
+	_incoming_proposal_accept.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_incoming_proposal_accept.pressed.connect(_respond_incoming_proposal.bind(true))
+	incoming_actions.add_child(_incoming_proposal_accept)
+	_incoming_proposal_decline = Button.new()
+	_incoming_proposal_decline.text = "拒绝对方请求"
+	_incoming_proposal_decline.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_incoming_proposal_decline.pressed.connect(_respond_incoming_proposal.bind(false))
+	incoming_actions.add_child(_incoming_proposal_decline)
+	column.add_child(incoming_actions)
 	_contact_button = Button.new()
 	_contact_button.text = "交换联系方式（免费操作）"
 	_contact_button.pressed.connect(_add_selected_contact)
@@ -306,6 +328,7 @@ func _show_npc(npc: Node) -> void:
 	_contact_feedback.text = ""
 	_dialogue_feedback.text = ""
 	_proposal_feedback.text = ""
+	_refresh_incoming_proposal()
 	_dialogue_input.text = ""
 	_dialogue_button.disabled = true
 	_refresh_awaken_button()
@@ -546,6 +569,50 @@ func _on_social_proposal_completed(
 		_proposal_feedback.text = String(command_result.get("message", result.get("error", "提议未能送达")))
 	_proposal_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
 	_proposal_button.disabled = false
+
+
+func _refresh_incoming_proposal() -> void:
+	_incoming_proposal_id = ""
+	var npc_id := _safe_text(_selected_profile.get("npc_id"))
+	var incoming: Array = (SimulationBridge.campus_snapshot.get("social", {}) as Dictionary).get("incoming_proposals", [])
+	for proposal in incoming:
+		if (
+			proposal is Dictionary
+			and String(proposal.get("initiator_id", "")) == npc_id
+			and String(proposal.get("status", "")) == "pending"
+		):
+			_incoming_proposal_id = String(proposal.get("proposal_id", ""))
+			_incoming_proposal_label.text = "%s向你提出请求：%s" % [
+				_safe_text(_selected_profile.get("display_name"), npc_id),
+				_safe_text(proposal.get("request_text"), "希望得到你的明确答复。"),
+			]
+			break
+	var has_pending := not _incoming_proposal_id.is_empty()
+	if not has_pending:
+		_incoming_proposal_label.text = ""
+	_incoming_proposal_accept.visible = has_pending
+	_incoming_proposal_decline.visible = has_pending
+
+
+func _respond_incoming_proposal(accepted: bool) -> void:
+	if _incoming_proposal_id.is_empty():
+		return
+	_incoming_proposal_accept.disabled = true
+	_incoming_proposal_decline.disabled = true
+	SimulationBridge.respond_campus_social_proposal(_incoming_proposal_id, accepted)
+
+
+func _on_incoming_proposal_response_completed(
+	success: bool, result: Dictionary, proposal_id: String
+) -> void:
+	if proposal_id != _incoming_proposal_id:
+		return
+	var command_result: Dictionary = result.get("result", {})
+	_proposal_feedback.text = String(command_result.get("message", result.get("error", "请求处理失败")))
+	_proposal_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
+	_incoming_proposal_accept.disabled = false
+	_incoming_proposal_decline.disabled = false
+	_refresh_incoming_proposal()
 
 
 func _on_contact_operation_completed(

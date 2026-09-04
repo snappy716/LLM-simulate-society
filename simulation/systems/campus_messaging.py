@@ -266,6 +266,32 @@ def are_phone_contacts(state: WorldState, first_id: str, second_id: str) -> bool
     return _are_contacts(state, first_id, second_id)
 
 
+def append_structured_phone_message(
+    context,
+    sender_id: str,
+    receiver_id: str,
+    text: str,
+    policy: CampusMessagingPolicy,
+    *,
+    source: str,
+    reply_to_message_id: str | None = None,
+) -> Dict[str, Any]:
+    """Persist one system-verified social message in an existing contact thread."""
+    if not _are_contacts(context.state, sender_id, receiver_id):
+        raise ValueError("structured phone messages require existing contacts")
+    message = _append_message(
+        context.state,
+        sender_id,
+        receiver_id,
+        text,
+        policy,
+        source=source,
+        reply_to_message_id=reply_to_message_id,
+    )
+    _emit_message_event(context, message)
+    return deepcopy(message)
+
+
 def append_structured_phone_exchange(
     context,
     sender_id: str,
@@ -278,16 +304,15 @@ def append_structured_phone_exchange(
     if not _are_contacts(context.state, sender_id, receiver_id):
         raise ValueError("structured phone exchanges require existing contacts")
     thread = _ensure_thread(context.state, sender_id, receiver_id)
-    request = _append_message(
-        context.state, sender_id, receiver_id, request_text, policy,
+    request = append_structured_phone_message(
+        context, sender_id, receiver_id, request_text, policy,
         source="structured_proposal",
     )
-    _emit_message_event(context, request)
-    reply = _append_message(
-        context.state, receiver_id, sender_id, reply_text, policy,
+    reply = append_structured_phone_message(
+        context, receiver_id, sender_id, reply_text, policy,
         source="structured_proposal_reply",
+        reply_to_message_id=str(request["message_id"]),
     )
-    _emit_message_event(context, reply)
     thread["unread_by_actor"][sender_id] = 1
     thread["unread_by_actor"][receiver_id] = 0
     return {
@@ -669,7 +694,7 @@ def campus_messaging_invariant(state: WorldState) -> Iterable[str]:
 
 __all__ = [
     "CAMPUS_MESSAGING_SCHEMA_VERSION", "PHONE_ACTION_IDS", "CampusMessagingPolicy",
-    "append_structured_phone_exchange", "are_phone_contacts",
+    "append_structured_phone_exchange", "append_structured_phone_message", "are_phone_contacts",
     "advance_campus_phone_messages", "campus_messaging_invariant",
     "install_campus_messaging", "load_campus_messaging_policy",
     "make_campus_messaging_handler",

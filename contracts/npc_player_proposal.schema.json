@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/npc_player_proposal.schema.json",
+  "title": "NPC initiated proposal awaiting or carrying a player response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "proposal_id", "created_day", "created_phase", "expires_phase_index",
+    "channel", "initiator_id", "player_id", "proposal_type", "intent_id",
+    "subject_id", "status", "request_text", "response_text",
+    "decision_source", "decision_reason", "request_message_id",
+    "response_message_id", "hook_id", "hook_transition",
+    "relationship_deltas", "emotion_deltas", "outcome_claim_ids", "action_class"
+  ],
+  "properties": {
+    "proposal_id": {"type": "string", "pattern": "^proposal:[0-9]{8}$"},
+    "created_day": {"type": "integer", "minimum": 1},
+    "created_phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+    "expires_phase_index": {"type": "integer", "minimum": 0},
+    "channel": {"enum": ["in_person", "phone"]},
+    "initiator_id": {"type": "string", "minLength": 1},
+    "player_id": {"const": "player"},
+    "proposal_type": {"enum": ["party_invite", "task_help", "meet_up", "follow_up"]},
+    "intent_id": {"type": "string", "minLength": 1},
+    "subject_id": {"type": ["string", "null"]},
+    "status": {"enum": ["pending", "accepted", "declined", "expired", "withdrawn"]},
+    "request_text": {"type": "string", "minLength": 1, "maxLength": 240},
+    "response_text": {"type": "string", "maxLength": 240},
+    "decision_source": {"enum": ["rule", "llm"]},
+    "decision_reason": {"type": "string"},
+    "request_message_id": {"type": ["string", "null"]},
+    "response_message_id": {"type": ["string", "null"]},
+    "hook_id": {"type": ["string", "null"]},
+    "hook_transition": {"enum": ["created", "completed", "broken", null]},
+    "relationship_deltas": {"type": "object"},
+    "emotion_deltas": {"type": "object"},
+    "outcome_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "action_class": {"const": "free"},
+    "resolved_day": {"type": "integer", "minimum": 1},
+    "resolved_phase": {"enum": ["morning", "afternoon", "evening", "late_night"]}
+  }
+}

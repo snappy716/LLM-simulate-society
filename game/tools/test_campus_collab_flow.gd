@@ -227,6 +227,29 @@ func _run_flow() -> void:
 	var evening_resolution = await bridge.campus_phase_advanced
 	assert(bool(evening_resolution[0]))
 	await process_frame
+	var incoming: Array = ((bridge.get("campus_snapshot") as Dictionary).get("social", {}) as Dictionary).get("incoming_proposals", [])
+	var pending_incoming_count := 0
+	for proposal in incoming:
+		if proposal is Dictionary and String(proposal.get("status", "")) == "pending":
+			pending_incoming_count += 1
+	assert(pending_incoming_count > 0)
+	var current_phone = current_scene.get_node("CampusPhoneUI")
+	current_phone.call("_set_open", true)
+	current_phone.call("_open_app", "messages", "校园通讯")
+	if bool(bridge.call("is_campus_busy")):
+		var incoming_read_resolution = await bridge.campus_phone_message_completed
+		assert(bool(incoming_read_resolution[0]), "incoming proposal read failed: %s" % incoming_read_resolution[1])
+	var incoming_picker := current_phone.get("_incoming_proposal_picker") as OptionButton
+	assert(incoming_picker.item_count > 0)
+	var incoming_id := String(incoming_picker.get_item_metadata(incoming_picker.selected))
+	var incoming_decline := current_phone.get("_incoming_proposal_decline") as Button
+	incoming_decline.pressed.emit()
+	var incoming_resolution = await bridge.campus_social_proposal_response_completed
+	assert(bool(incoming_resolution[0]), "incoming proposal response failed: %s" % incoming_resolution[1])
+	assert(String(incoming_resolution[2]) == incoming_id)
+	assert(String(((incoming_resolution[1].get("result", {}) as Dictionary).get("payload", {}) as Dictionary).get("status", "")) == "declined")
+	current_phone.call("_set_open", false)
+	assert(not paused)
 	movement_layer = current_scene.get_node("NpcMovementLayer")
 	assert(int(movement_layer.get("last_replayed_count")) > 0)
 	for visible_npc in movement_layer.get_children():

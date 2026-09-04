@@ -31,6 +31,10 @@ class CampusInteractionPolicy:
     max_open_hooks: int
     minimum_pair_score: float
     player_max_text_length: int
+    max_npc_player_proposals_per_phase: int
+    npc_player_proposal_cooldown_phases: int
+    proposal_response_lifetime_phases: int
+    minimum_npc_proposal_score: float
     coarse_scene_region_groups: tuple[tuple[str, ...], ...]
     intents: Mapping[str, Mapping[str, Any]]
 
@@ -42,10 +46,13 @@ class CampusInteractionPolicy:
             self.max_recent_interactions,
             self.max_open_hooks,
             self.player_max_text_length,
+            self.max_npc_player_proposals_per_phase,
+            self.npc_player_proposal_cooldown_phases,
+            self.proposal_response_lifetime_phases,
         )
         if any(isinstance(value, bool) or not isinstance(value, int) or value < 1 for value in positive):
             raise ValueError("campus interaction limits must be positive integers")
-        if self.minimum_pair_score < 0:
+        if self.minimum_pair_score < 0 or self.minimum_npc_proposal_score < 0:
             raise ValueError("campus interaction minimum pair score cannot be negative")
         if not self.intents or "small_talk" not in self.intents:
             raise ValueError("campus interactions require a small_talk intent")
@@ -82,6 +89,10 @@ def load_campus_interaction_policy(registry) -> CampusInteractionPolicy:
         max_open_hooks=int(payload.get("max_open_hooks", 0)),
         minimum_pair_score=float(payload.get("minimum_pair_score", 0)),
         player_max_text_length=int(payload.get("player_max_text_length", 240)),
+        max_npc_player_proposals_per_phase=int(payload.get("max_npc_player_proposals_per_phase", 1)),
+        npc_player_proposal_cooldown_phases=int(payload.get("npc_player_proposal_cooldown_phases", 4)),
+        proposal_response_lifetime_phases=int(payload.get("proposal_response_lifetime_phases", 4)),
+        minimum_npc_proposal_score=float(payload.get("minimum_npc_proposal_score", 64)),
         coarse_scene_region_groups=tuple(
             tuple(str(region_id) for region_id in group)
             for group in payload.get("coarse_scene_region_groups", ())
