@@ -7,8 +7,9 @@
   "required": [
     "interaction_id", "day", "phase", "scene_id", "actor_id", "target_id",
     "intent_id", "outcome", "decision_source", "acceptance_score",
-    "relationship_deltas", "emotion_deltas", "hook_id", "shared_claim_id",
-    "dialogue_summary", "model_reason"
+    "relationship_deltas", "emotion_deltas", "hook_id", "hook_transition",
+    "shared_claim_id", "outcome_claim_ids", "dialogue_summary", "wording_source",
+    "wording_fact_ids", "model_reason"
   ],
   "properties": {
     "interaction_id": {"type": "string", "pattern": "^interaction:[0-9]{8}$"},
@@ -38,8 +39,20 @@
       }
     },
     "hook_id": {"type": ["string", "null"]},
+    "hook_transition": {"enum": ["created", "completed", "broken", null]},
     "shared_claim_id": {"type": ["string", "null"], "pattern": "^claim:[0-9]{8}$"},
+    "outcome_claim_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^claim:[0-9]{8}$"}
+    },
     "dialogue_summary": {"type": "string", "minLength": 1, "maxLength": 300},
+    "wording_source": {"enum": ["rule", "llm"]},
+    "wording_fact_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^claim:[0-9]{8}$"}
+    },
     "model_reason": {"type": "string", "maxLength": 300}
   }
 }

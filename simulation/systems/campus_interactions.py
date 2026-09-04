@@ -7,7 +7,12 @@ from typing import Any, Dict, Iterable, Mapping
 
 from simulation.domain.campus import RELATIONSHIP_NAMES
 from simulation.domain.world_state import WorldState
-from simulation.systems.campus_intelligence import CampusIntelligencePolicy, share_known_claim
+from simulation.systems.campus_intelligence import (
+    CampusIntelligencePolicy,
+    create_campus_claim,
+    disclosable_known_claims,
+    share_known_claim,
+)
 from simulation.systems.campus_social import DEFAULT_RELATIONSHIP, adjust_relationship
 from simulation.systems.campus_tasks import phase_index
 
@@ -313,6 +318,51 @@ def _create_hook(
     return hook_id
 
 
+def _create_outcome_claims(
+    state: WorldState,
+    *,
+    actor_id: str,
+    target_id: str,
+    interaction_id: str,
+    intent_id: str,
+    outcome: str,
+    summary: str,
+    hook_id: str | None,
+    hook_transition: str | None,
+) -> list[str]:
+    """Persist only socially consequential, rule-verified interaction outcomes."""
+    predicate = ""
+    object_id = hook_id or target_id
+    secrecy = 40
+    if hook_transition == "created":
+        predicate = "social_commitment_opened"
+    elif hook_transition == "completed":
+        predicate = "social_commitment_completed"
+    elif hook_transition == "broken":
+        predicate = "social_commitment_broken"
+    elif intent_id == "confront":
+        predicate = (
+            "social_confrontation_addressed"
+            if outcome == "accepted"
+            else "social_confrontation_escalated"
+        )
+        object_id = interaction_id
+        secrecy = 55
+    if not predicate:
+        return []
+    claim = create_campus_claim(
+        state,
+        subject_id=actor_id,
+        predicate=predicate,
+        object_id=str(object_id),
+        summary=summary,
+        secrecy=secrecy,
+        known_by=[actor_id, target_id],
+        evidence_kind="interaction_outcome",
+    )
+    return [str(claim["claim_id"])]
+
+
 def _resolve_interaction(
     context,
     actor_id: str,
@@ -323,6 +373,7 @@ def _resolve_interaction(
     model_reason: str,
     now: int,
     intelligence_policy: CampusIntelligencePolicy,
+    cognition_runtime=None,
 ) -> Dict[str, Any]:
     state = context.state
     actor = state.population[actor_id]
@@ -345,10 +396,12 @@ def _resolve_interaction(
     actor["needs"]["curiosity"] = _clamp_meter(int(actor["needs"].get("curiosity", 0)) - curiosity_relief)
 
     hook_id = candidate.get("open_hook_id")
+    hook_transition = None
     if definition.get("resolves_hook") and isinstance(hook_id, str):
         for hook in state.cognition["interactions"]["hooks"]:
             if hook.get("hook_id") == hook_id and hook.get("state") == "open":
                 hook["state"] = "completed" if accepted else "broken"
+                hook_transition = "completed" if accepted else "broken"
                 hook["resolved_day"] = state.clock.day
                 hook["resolved_phase"] = state.clock.phase
                 break
@@ -356,6 +409,8 @@ def _resolve_interaction(
         hook_id = _create_hook(
             state, actor_id, target_id, str(definition["creates_hook"]), policy, now
         )
+        if hook_id:
+            hook_transition = "created"
 
     interaction_state = state.cognition["interactions"]
     interaction_state["sequence"] += 1
@@ -365,6 +420,17 @@ def _resolve_interaction(
     summary = summary_template.format(
         actor=actor.get("display_name", actor_id),
         target=target.get("display_name", target_id),
+    )
+    outcome_claim_ids = _create_outcome_claims(
+        state,
+        actor_id=actor_id,
+        target_id=target_id,
+        interaction_id=interaction_id,
+        intent_id=intent_id,
+        outcome=outcome,
+        summary=summary,
+        hook_id=str(hook_id) if isinstance(hook_id, str) else None,
+        hook_transition=hook_transition,
     )
     information_share = None
     if accepted:
@@ -377,6 +443,40 @@ def _resolve_interaction(
             policy=intelligence_policy,
             rng=context.rng.stream("campus_information_exchange"),
         )
+    dialogue_summary = information_share.get("dialogue_summary", summary) if information_share else summary
+    wording_source = "rule"
+    wording_fact_ids: list[str] = []
+    if cognition_runtime is not None:
+        relevant_fact_ids = set(outcome_claim_ids)
+        if information_share is not None:
+            relevant_fact_ids.add(str(information_share["claim_id"]))
+        allowed_facts = [
+            item for item in disclosable_known_claims(
+                state, actor_id, target_id, intelligence_policy
+            )
+            if item["claim"]["claim_id"] in relevant_fact_ids
+        ]
+        dialogue = cognition_runtime.compose_interaction_dialogue(
+            state,
+            actor_id,
+            target_id,
+            {
+                "location_id": actor.get("current_location_id"),
+                "intent_id": intent_id,
+                "intent_name": definition.get("name", intent_id),
+                "outcome": outcome,
+                "verified_summary": summary,
+                "hook_transition": hook_transition,
+            },
+            interaction_state.get("recent", ()),
+            allowed_facts,
+        )
+        if dialogue is not None:
+            actor_name = actor.get("display_name", actor_id)
+            target_name = target.get("display_name", target_id)
+            dialogue_summary = f"{actor_name}对{target_name}说：‘{dialogue['utterance']}’"
+            wording_source = "llm"
+            wording_fact_ids = list(dialogue.get("fact_ids_used", ()))
     record = {
         "interaction_id": interaction_id,
         "day": state.clock.day,
@@ -391,11 +491,12 @@ def _resolve_interaction(
         "relationship_deltas": {"actor": actor_relation, "target": target_relation},
         "emotion_deltas": {"actor": actor_emotions, "target": target_emotions},
         "hook_id": hook_id,
+        "hook_transition": hook_transition,
         "shared_claim_id": information_share.get("claim_id") if information_share else None,
-        "dialogue_summary": (
-            information_share.get("dialogue_summary", summary)
-            if information_share else summary
-        ),
+        "outcome_claim_ids": outcome_claim_ids,
+        "dialogue_summary": dialogue_summary,
+        "wording_source": wording_source,
+        "wording_fact_ids": wording_fact_ids,
         "model_reason": model_reason[:300],
     }
     interaction_state["recent"].append(record)
@@ -403,7 +504,7 @@ def _resolve_interaction(
     interaction_state["pair_last_phase"][_pair_key(actor_id, target_id)] = now
     context.emit(
         "NPC_INTERACTION_RESOLVED",
-        summary,
+        dialogue_summary,
         actor_ids=[actor_id],
         target_ids=[target_id],
         scene_id=str(actor.get("current_location_id", "")) or None,
@@ -450,6 +551,9 @@ def advance_campus_interactions(
         "interaction_hook_resolved_count": 0,
         "interaction_hook_expired_count": _expire_hooks(state, now, policy),
         "interaction_information_shared_count": 0,
+        "interaction_outcome_claim_count": 0,
+        "interaction_llm_wording_count": 0,
+        "interaction_rule_wording_count": 0,
     }
     groups: Dict[str, list[str]] = {}
     for actor_id, actor in sorted(state.population.items()):
@@ -506,7 +610,7 @@ def advance_campus_interactions(
         open_before = _open_hook(state, actor_id, target_id)
         record = _resolve_interaction(
             context, actor_id, target_id, chosen, policy, source, model_reason, now,
-            intelligence_policy,
+            intelligence_policy, cognition_runtime,
         )
         used.update((actor_id, target_id))
         summary["interaction_count"] += 1
@@ -518,6 +622,8 @@ def advance_campus_interactions(
             summary["interaction_hook_created_count"] += 1
         if record.get("shared_claim_id"):
             summary["interaction_information_shared_count"] += 1
+        summary["interaction_outcome_claim_count"] += len(record.get("outcome_claim_ids", ()))
+        summary[f"interaction_{record['wording_source']}_wording_count"] += 1
     return summary
 
 
@@ -541,6 +647,18 @@ def campus_interaction_invariant(state: WorldState) -> Iterable[str]:
             errors.append("campus interaction has invalid outcome")
         elif record.get("decision_source") not in {"rule", "llm"}:
             errors.append("campus interaction has invalid decision source")
+        elif record.get("wording_source") not in {"rule", "llm"}:
+            errors.append("campus interaction has invalid wording source")
+        elif not isinstance(record.get("outcome_claim_ids"), list) or any(
+            claim_id not in state.knowledge.get("claims", {})
+            for claim_id in record.get("outcome_claim_ids", ())
+        ):
+            errors.append("campus interaction references an invalid outcome claim")
+        elif not isinstance(record.get("wording_fact_ids"), list) or any(
+            claim_id not in state.knowledge.get("claims", {})
+            for claim_id in record.get("wording_fact_ids", ())
+        ):
+            errors.append("campus interaction wording references an invalid claim")
     hook_ids: set[str] = set()
     for hook in hooks:
         hook_id = hook.get("hook_id") if isinstance(hook, dict) else None

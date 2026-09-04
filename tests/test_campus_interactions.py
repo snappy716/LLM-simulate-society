@@ -148,6 +148,15 @@ class CampusInteractionIntegrationTests(unittest.TestCase):
         hook = state.cognition["interactions"]["hooks"][0]
         self.assertEqual("check_in", hook["hook_type"])
         self.assertEqual("open", hook["state"])
+        first_record = state.cognition["interactions"]["recent"][-1]
+        self.assertEqual("created", first_record["hook_transition"])
+        self.assertEqual(1, len(first_record["outcome_claim_ids"]))
+        created_claim_id = first_record["outcome_claim_ids"][0]
+        self.assertEqual(
+            "social_commitment_opened", state.knowledge["claims"][created_claim_id]["predicate"]
+        )
+        self.assertIn(created_claim_id, state.knowledge["beliefs_by_actor"][actor_id])
+        self.assertIn(created_claim_id, state.knowledge["beliefs_by_actor"][target_id])
 
         for _ in range(policy.pair_cooldown_phases + 1):
             state.clock.advance_phase()
@@ -156,6 +165,13 @@ class CampusInteractionIntegrationTests(unittest.TestCase):
         second = advance_campus_interactions(context, policy, intelligence_policy)
         self.assertEqual(1, second["interaction_hook_resolved_count"])
         self.assertEqual("completed", hook["state"])
+        second_record = state.cognition["interactions"]["recent"][-1]
+        self.assertEqual("completed", second_record["hook_transition"])
+        resolved_claim_id = second_record["outcome_claim_ids"][0]
+        self.assertEqual(
+            "social_commitment_completed", state.knowledge["claims"][resolved_claim_id]["predicate"]
+        )
+        self.assertEqual([], list(campus_interaction_invariant(state)))
 
 
 if __name__ == "__main__":

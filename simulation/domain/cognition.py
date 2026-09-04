@@ -16,8 +16,9 @@ class CognitionPolicy:
     reflection_memory_limit: int = 8
     daily_call_limit: int = 12
     phase_call_limit: int = 4
-    interaction_reserved_phase_calls: int = 1
+    interaction_reserved_phase_calls: int = 2
     interaction_phase_call_limit: int = 1
+    interaction_dialogue_phase_call_limit: int = 1
     max_concurrent_requests: int = 1
     daily_estimated_token_limit: int = 24000
     max_output_tokens: int = 160
@@ -39,6 +40,7 @@ class CognitionPolicy:
             "phase_call_limit": self.phase_call_limit,
             "interaction_reserved_phase_calls": self.interaction_reserved_phase_calls,
             "interaction_phase_call_limit": self.interaction_phase_call_limit,
+            "interaction_dialogue_phase_call_limit": self.interaction_dialogue_phase_call_limit,
             "max_concurrent_requests": self.max_concurrent_requests,
             "daily_estimated_token_limit": self.daily_estimated_token_limit,
             "max_output_tokens": self.max_output_tokens,
@@ -54,6 +56,12 @@ class CognitionPolicy:
             raise ValueError("player dialogue reserve must be smaller than the daily call limit")
         if not 1 <= self.interaction_phase_call_limit <= self.interaction_reserved_phase_calls <= self.phase_call_limit:
             raise ValueError("interaction calls must fit inside the reserved phase budget")
+        if (
+            self.interaction_dialogue_phase_call_limit < 1
+            or self.interaction_phase_call_limit + self.interaction_dialogue_phase_call_limit
+            > self.interaction_reserved_phase_calls
+        ):
+            raise ValueError("interaction choice and dialogue calls must fit inside the reserved phase budget")
         if self.request_timeout_seconds <= 0:
             raise ValueError("cognition request timeout must be positive")
 
@@ -70,6 +78,7 @@ class CognitionPolicy:
             "phase_call_limit": self.phase_call_limit,
             "interaction_reserved_phase_calls": self.interaction_reserved_phase_calls,
             "interaction_phase_call_limit": self.interaction_phase_call_limit,
+            "interaction_dialogue_phase_call_limit": self.interaction_dialogue_phase_call_limit,
             "max_concurrent_requests": self.max_concurrent_requests,
             "daily_estimated_token_limit": self.daily_estimated_token_limit,
             "max_output_tokens": self.max_output_tokens,
@@ -143,6 +152,8 @@ class BoundedDialogueRequest:
     recent_messages: Tuple[Mapping[str, Any], ...]
     incoming_text: str
     allowed_facts: Tuple[Mapping[str, Any], ...]
+    dialogue_kind: str
+    interaction_context: Mapping[str, Any]
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -157,6 +168,8 @@ class BoundedDialogueRequest:
             "recent_messages": [dict(item) for item in self.recent_messages],
             "incoming_text": self.incoming_text,
             "allowed_facts": [dict(item) for item in self.allowed_facts],
+            "dialogue_kind": self.dialogue_kind,
+            "interaction_context": dict(self.interaction_context),
         }
 
 

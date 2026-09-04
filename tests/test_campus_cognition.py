@@ -37,6 +37,7 @@ class LastLegalProvider:
 
     def __init__(self) -> None:
         self.requests = []
+        self.dialogue_requests = []
 
     def decide(self, request, *, max_output_tokens):
         self.requests.append(request)
@@ -48,6 +49,18 @@ class LastLegalProvider:
             "_usage": {"prompt_tokens": 80, "completion_tokens": 18},
         }
 
+    def respond(self, request, *, max_output_tokens):
+        self.dialogue_requests.append(request)
+        fact_ids = [request.allowed_facts[0]["claim_id"]] if request.allowed_facts else []
+        return {
+            "npc_id": request.npc_id,
+            "target_id": request.target_id,
+            "candidate_revision": request.candidate_revision,
+            "utterance": "这件事我们当面说清楚，也记得刚才的约定。",
+            "fact_ids_used": fact_ids,
+            "_usage": {"prompt_tokens": 72, "completion_tokens": 20},
+        }
+
 
 class InvalidProvider(LastLegalProvider):
     def decide(self, request, *, max_output_tokens):
@@ -57,6 +70,16 @@ class InvalidProvider(LastLegalProvider):
             "candidate_revision": request.candidate_revision,
             "selected_action_id": "invented_illegal_action",
             "reason": "试图越过规则层。",
+        }
+
+    def respond(self, request, *, max_output_tokens):
+        self.dialogue_requests.append(request)
+        return {
+            "npc_id": request.npc_id,
+            "target_id": request.target_id,
+            "candidate_revision": request.candidate_revision,
+            "utterance": "我声称知道一个白名单之外的秘密。",
+            "fact_ids_used": ["claim:99999999"],
         }
 
 
@@ -113,13 +136,15 @@ class CampusCognitionTests(unittest.TestCase):
         self.assertTrue(result["ok"])
         state = bridge.kernel.state
         usage = state.cognition["usage"]
-        self.assertEqual(4, len(provider.requests))
+        self.assertEqual(3, len(provider.requests))
+        self.assertEqual(1, len(provider.dialogue_requests))
         self.assertEqual(4, usage["calls"])
         self.assertEqual(4, usage["phase_calls"]["afternoon"])
-        self.assertEqual(3, usage["purpose_phase_calls"]["afternoon:activity"])
+        self.assertEqual(2, usage["purpose_phase_calls"]["afternoon:activity"])
         self.assertEqual(1, usage["purpose_phase_calls"]["afternoon:interaction"])
-        self.assertEqual(320, usage["prompt_tokens"])
-        self.assertEqual(72, usage["completion_tokens"])
+        self.assertEqual(1, usage["purpose_phase_calls"]["afternoon:interaction_dialogue"])
+        self.assertEqual(312, usage["prompt_tokens"])
+        self.assertEqual(74, usage["completion_tokens"])
         llm_decisions = [
             actor["current_decision"] for actor in state.population.values()
             if isinstance(actor, dict) and actor.get("current_decision", {}).get("decision_source") == "llm"
@@ -132,6 +157,15 @@ class CampusCognitionTests(unittest.TestCase):
             and event["payload"]["decision_source"] == "llm"
         ]
         self.assertEqual(1, len(interaction_events))
+        self.assertEqual("llm", interaction_events[0]["payload"]["wording_source"])
+        self.assertIn("当面说清楚", interaction_events[0]["public_summary"])
+        dialogue_request = provider.dialogue_requests[0].to_dict()
+        self.assertEqual("in_person", dialogue_request["dialogue_kind"])
+        self.assertEqual(
+            interaction_events[0]["payload"]["intent_id"],
+            dialogue_request["interaction_context"]["intent_id"],
+        )
+        self.assertNotIn("chronicles", dialogue_request)
         first_request = provider.requests[0].to_dict()
         self.assertNotIn("chronicles", first_request)
         self.assertNotIn("authoritative", first_request)
@@ -148,6 +182,10 @@ class CampusCognitionTests(unittest.TestCase):
             actor.get("current_decision", {}).get("decision_source") != "llm"
             for actor_id, actor in state.population.items()
             if actor_id != "player" and isinstance(actor, dict)
+        ))
+        self.assertTrue(all(
+            record.get("wording_source") == "rule"
+            for record in state.cognition["interactions"]["recent"]
         ))
         self.assertEqual(0, result["result"]["payload"]["phase_execution"]["blocked_actor_count"])
 
