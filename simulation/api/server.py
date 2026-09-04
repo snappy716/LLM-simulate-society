@@ -65,6 +65,9 @@ from simulation.systems import (  # noqa: E402
     make_task_aware_decision_selector,
     campus_social_invariant,
     install_campus_social_state,
+    campus_intelligence_invariant,
+    install_campus_intelligence,
+    load_campus_intelligence_policy,
     install_campus_clubs,
     load_campus_club_policy,
     make_campus_club_handler,
@@ -112,6 +115,10 @@ class CampusKernelBridge:
         ability_definitions = load_campus_ability_definitions(registry)
         install_campus_abilities(state, ability_definitions, registry.all("college"))
         install_campus_social_state(state, registry.all("club"))
+        intelligence_policy = load_campus_intelligence_policy(registry)
+        install_campus_intelligence(
+            state, registry.all("college"), registry.all("club")
+        )
         club_policy = load_campus_club_policy(registry)
         install_campus_clubs(state, registry.all("club"), club_policy)
         party_policy = load_campus_party_policy(registry)
@@ -199,6 +206,7 @@ class CampusKernelBridge:
         self.kernel.add_invariant(campus_activity_effect_invariant)
         self.kernel.add_invariant(campus_decision_invariant)
         self.kernel.add_invariant(campus_social_invariant)
+        self.kernel.add_invariant(campus_intelligence_invariant)
         self.kernel.add_invariant(campus_club_invariant)
         self.kernel.add_invariant(campus_party_invariant)
         self.kernel.add_invariant(make_campus_task_invariant(activity_definitions))
@@ -224,7 +232,8 @@ class CampusKernelBridge:
                     decision_selector,
                     complete_assigned_task,
                     lambda context: advance_campus_interactions(
-                        context, interaction_policy, self.cognition_runtime
+                        context, interaction_policy, intelligence_policy,
+                        self.cognition_runtime,
                     ),
                 ),
             ),

@@ -120,6 +120,16 @@ from simulation.systems.campus_social import (
     install_campus_social_state,
     relationship_between as campus_relationship_between,
 )
+from simulation.systems.campus_intelligence import (
+    CAMPUS_INTELLIGENCE_SCHEMA_VERSION,
+    CampusIntelligencePolicy,
+    campus_intelligence_invariant,
+    create_campus_claim,
+    install_campus_intelligence,
+    known_claims,
+    load_campus_intelligence_policy,
+    share_known_claim,
+)
 from simulation.systems.campus_interactions import (
     CampusInteractionPolicy,
     advance_campus_interactions,
@@ -223,6 +233,14 @@ __all__ = [
     "campus_social_invariant",
     "install_campus_social_state",
     "campus_relationship_between",
+    "CAMPUS_INTELLIGENCE_SCHEMA_VERSION",
+    "CampusIntelligencePolicy",
+    "campus_intelligence_invariant",
+    "create_campus_claim",
+    "install_campus_intelligence",
+    "known_claims",
+    "load_campus_intelligence_policy",
+    "share_known_claim",
     "CampusInteractionPolicy",
     "advance_campus_interactions",
     "campus_interaction_invariant",

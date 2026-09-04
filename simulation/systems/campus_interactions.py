@@ -7,6 +7,7 @@ from typing import Any, Dict, Iterable, Mapping
 
 from simulation.domain.campus import RELATIONSHIP_NAMES
 from simulation.domain.world_state import WorldState
+from simulation.systems.campus_intelligence import CampusIntelligencePolicy, share_known_claim
 from simulation.systems.campus_social import DEFAULT_RELATIONSHIP, adjust_relationship
 from simulation.systems.campus_tasks import phase_index
 
@@ -308,6 +309,7 @@ def _resolve_interaction(
     source: str,
     model_reason: str,
     now: int,
+    intelligence_policy: CampusIntelligencePolicy,
 ) -> Dict[str, Any]:
     state = context.state
     actor = state.population[actor_id]
@@ -351,6 +353,17 @@ def _resolve_interaction(
         actor=actor.get("display_name", actor_id),
         target=target.get("display_name", target_id),
     )
+    information_share = None
+    if accepted:
+        information_share = share_known_claim(
+            state,
+            sender_id=actor_id,
+            receiver_id=target_id,
+            interaction_id=interaction_id,
+            intent_id=intent_id,
+            policy=intelligence_policy,
+            rng=context.rng.stream("campus_information_exchange"),
+        )
     record = {
         "interaction_id": interaction_id,
         "day": state.clock.day,
@@ -365,6 +378,11 @@ def _resolve_interaction(
         "relationship_deltas": {"actor": actor_relation, "target": target_relation},
         "emotion_deltas": {"actor": actor_emotions, "target": target_emotions},
         "hook_id": hook_id,
+        "shared_claim_id": information_share.get("claim_id") if information_share else None,
+        "dialogue_summary": (
+            information_share.get("dialogue_summary", summary)
+            if information_share else summary
+        ),
         "model_reason": model_reason[:300],
     }
     interaction_state["recent"].append(record)
@@ -381,12 +399,26 @@ def _resolve_interaction(
         severity=3 if hook_id or intent_id == "confront" else 2,
         knowledge_tags=["social", "relationship", "interaction", intent_id],
     )
+    if information_share is not None:
+        context.emit(
+            "NPC_INFORMATION_SHARED",
+            str(information_share["dialogue_summary"]),
+            actor_ids=[actor_id],
+            target_ids=[target_id],
+            scene_id=str(actor.get("current_location_id", "")) or None,
+            payload=deepcopy(information_share),
+            visibility="private",
+            severity=3,
+            knowledge_tags=["social", "dialogue", "information", intent_id],
+            correlation_id=interaction_id,
+        )
     return record
 
 
 def advance_campus_interactions(
     context,
     policy: CampusInteractionPolicy,
+    intelligence_policy: CampusIntelligencePolicy,
     cognition_runtime=None,
 ) -> Dict[str, int]:
     """Resolve free social encounters after every NPC reaches its destination."""
@@ -404,6 +436,7 @@ def advance_campus_interactions(
         "interaction_hook_created_count": 0,
         "interaction_hook_resolved_count": 0,
         "interaction_hook_expired_count": _expire_hooks(state, now, policy),
+        "interaction_information_shared_count": 0,
     }
     groups: Dict[str, list[str]] = {}
     for actor_id, actor in sorted(state.population.items()):
@@ -459,7 +492,8 @@ def advance_campus_interactions(
                 model_reason = str(llm_choice.get("model_reason", ""))
         open_before = _open_hook(state, actor_id, target_id)
         record = _resolve_interaction(
-            context, actor_id, target_id, chosen, policy, source, model_reason, now
+            context, actor_id, target_id, chosen, policy, source, model_reason, now,
+            intelligence_policy,
         )
         used.update((actor_id, target_id))
         summary["interaction_count"] += 1
@@ -469,6 +503,8 @@ def advance_campus_interactions(
             summary["interaction_hook_resolved_count"] += 1
         elif record.get("hook_id"):
             summary["interaction_hook_created_count"] += 1
+        if record.get("shared_claim_id"):
+            summary["interaction_information_shared_count"] += 1
     return summary
 
 

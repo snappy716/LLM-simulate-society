@@ -7,7 +7,8 @@
   "required": [
     "interaction_id", "day", "phase", "scene_id", "actor_id", "target_id",
     "intent_id", "outcome", "decision_source", "acceptance_score",
-    "relationship_deltas", "emotion_deltas", "hook_id", "model_reason"
+    "relationship_deltas", "emotion_deltas", "hook_id", "shared_claim_id",
+    "dialogue_summary", "model_reason"
   ],
   "properties": {
     "interaction_id": {"type": "string", "pattern": "^interaction:[0-9]{8}$"},
@@ -37,6 +38,8 @@
       }
     },
     "hook_id": {"type": ["string", "null"]},
+    "shared_claim_id": {"type": ["string", "null"], "pattern": "^claim:[0-9]{8}$"},
+    "dialogue_summary": {"type": "string", "minLength": 1, "maxLength": 300},
     "model_reason": {"type": "string", "maxLength": 300}
   }
 }

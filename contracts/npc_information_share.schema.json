@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/npc_information_share.schema.json",
+  "title": "Committed subjective NPC information transfer payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "share_id", "claim_id", "sender_id", "receiver_id", "interaction_id",
+    "intent_id", "day", "phase", "source_actor_id", "upstream_source_actor_id",
+    "confidence", "distortion", "secrecy", "acquisition_method", "dialogue_summary"
+  ],
+  "properties": {
+    "share_id": {"type": "string", "pattern": "^share:[0-9]{8}$"},
+    "claim_id": {"type": "string", "pattern": "^claim:[0-9]{8}$"},
+    "sender_id": {"type": "string", "minLength": 1},
+    "receiver_id": {"type": "string", "minLength": 1},
+    "interaction_id": {"type": "string", "pattern": "^interaction:[0-9]{8}$"},
+    "intent_id": {"type": "string", "minLength": 1},
+    "day": {"type": "integer", "minimum": 1},
+    "phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+    "source_actor_id": {"type": "string", "minLength": 1},
+    "upstream_source_actor_id": {"type": ["string", "null"]},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "distortion": {"type": "number", "minimum": 0, "maximum": 1},
+    "secrecy": {"type": "integer", "minimum": 0, "maximum": 100},
+    "acquisition_method": {"const": "direct_statement"},
+    "dialogue_summary": {"type": "string", "minLength": 1, "maxLength": 300}
+  }
+}

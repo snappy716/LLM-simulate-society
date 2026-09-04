@@ -12,6 +12,7 @@ from simulation.systems import (
     TransactionContext,
     advance_campus_interactions,
     campus_interaction_invariant,
+    load_campus_intelligence_policy,
     load_campus_interaction_policy,
 )
 from simulation.systems.campus_social import DEFAULT_RELATIONSHIP
@@ -110,6 +111,9 @@ class CampusInteractionIntegrationTests(unittest.TestCase):
         policy = load_campus_interaction_policy(
             ContentRegistry.load_default(REPOSITORY_DIR / "content")
         )
+        intelligence_policy = load_campus_intelligence_policy(
+            ContentRegistry.load_default(REPOSITORY_DIR / "content")
+        )
         actor_id, target_id = sorted(
             actor_id for actor_id in state.population if actor_id != "player"
         )[:2]
@@ -139,7 +143,7 @@ class CampusInteractionIntegrationTests(unittest.TestCase):
             issued_phase=state.clock.phase, issued_minute=0, source="rule",
         )
         context = TransactionContext(state, DeterministicRngPool(7), command)
-        first = advance_campus_interactions(context, policy)
+        first = advance_campus_interactions(context, policy, intelligence_policy)
         self.assertEqual(1, first["interaction_count"])
         hook = state.cognition["interactions"]["hooks"][0]
         self.assertEqual("check_in", hook["hook_type"])
@@ -149,7 +153,7 @@ class CampusInteractionIntegrationTests(unittest.TestCase):
             state.clock.advance_phase()
         actor["personality"]["altruism"] = 0
         target["emotions"]["sadness"] = 0
-        second = advance_campus_interactions(context, policy)
+        second = advance_campus_interactions(context, policy, intelligence_policy)
         self.assertEqual(1, second["interaction_hook_resolved_count"])
         self.assertEqual("completed", hook["state"])
 

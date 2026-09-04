@@ -22,6 +22,7 @@ from simulation.domain.cognition import (
 from simulation.domain.events import SimulationEvent
 from simulation.domain.world_state import WorldState
 from simulation.systems.transactions import TransactionOutcome
+from simulation.systems.campus_intelligence import known_claims
 
 
 COGNITION_SCHEMA_VERSION = 1
@@ -522,6 +523,15 @@ class CognitionRuntime:
                     "current_activity_id": target.get("current_activity", {}).get("activity_id"),
                 },
                 "relationship": deepcopy(relation),
+                "known_information": [
+                    {
+                        "claim_id": item["claim"]["claim_id"],
+                        "summary": item["claim"]["summary"],
+                        "confidence": item["belief"]["confidence"],
+                        "source_kind": item["belief"]["source_kind"],
+                    }
+                    for item in known_claims(state, actor_id)[-8:]
+                ],
             },
             reflection=str(reflection.get("summary", "")),
             memories=tuple({

@@ -6,6 +6,12 @@
   "max_recent_interactions": 96,
   "max_open_hooks": 64,
   "minimum_pair_score": 54,
+  "information_exchange": {
+    "shareable_intent_ids": ["exchange_ideas", "coordinate_club", "ask_task_help", "follow_up_promise"],
+    "minimum_belief_confidence": 0.35,
+    "disclosure_base": 12,
+    "recent_share_limit": 96
+  },
   "intents": [
     {
       "id": "small_talk",
