@@ -167,9 +167,22 @@ class CampusContentTests(unittest.TestCase):
 
     def test_twelve_core_clubs_have_unique_skills(self):
         clubs = self._read("content/organizations/clubs.json")["clubs"]
+        college_abilities = {
+            ability["id"]
+            for ability in self._read("content/actions/college_skills.json")["abilities"]
+        }
         self.assertEqual(12, len(clubs))
         self.assertEqual(12, len({club["id"] for club in clubs}))
         self.assertTrue(all(club["surface_skill"] and club["night_skill"] for club in clubs))
+        club_skills = {
+            skill_id
+            for club in clubs
+            for skill_id in (club["surface_skill"], club["night_skill"])
+        }
+        self.assertEqual(24, len(club_skills))
+        self.assertTrue(college_abilities.isdisjoint(club_skills))
+        self.assertTrue(all(club["category"] and club["signature_resource"] for club in clubs))
+        self.assertTrue(all("college_overlap_ids" in club for club in clubs))
 
     def test_population_and_story_content_match_demo_scope(self):
         rules = self._read("content/npcs/generation_rules.json")

@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "ability_profiles": {
-    "analysis": {"surface_modifier": 2, "card_type": "knowledge", "cost": 1, "target": "enemy", "base_power": 6, "effect_ids": ["reveal_pattern"]},
-    "control": {"surface_modifier": 2, "card_type": "control", "cost": 1, "target": "enemy", "base_power": 5, "effect_ids": ["apply_disruption"]},
-    "defense": {"surface_modifier": 2, "card_type": "defense", "cost": 1, "target": "self_or_ally", "base_power": 7, "effect_ids": ["grant_guard"]},
-    "support": {"surface_modifier": 2, "card_type": "support", "cost": 1, "target": "self_or_ally", "base_power": 6, "effect_ids": ["restore_focus"]},
-    "assault": {"surface_modifier": 2, "card_type": "attack", "cost": 1, "target": "enemy", "base_power": 8, "effect_ids": ["deal_physical"]},
-    "technical": {"surface_modifier": 2, "card_type": "technique", "cost": 1, "target": "enemy", "base_power": 7, "effect_ids": ["deal_technique"]},
-    "recovery": {"surface_modifier": 2, "card_type": "support", "cost": 1, "target": "ally", "base_power": 7, "effect_ids": ["restore_health"]},
-    "specialist": {"surface_modifier": 3, "card_type": "signature", "cost": 2, "target": "contextual", "base_power": 11, "effect_ids": ["specialization_effect"]}
+    "analysis": {"surface_modifier": 2, "card_type": "knowledge", "cost": 1, "target": "enemy", "range_pattern": "any_enemy", "base_power": 6, "effect_ids": ["reveal_pattern"]},
+    "control": {"surface_modifier": 2, "card_type": "control", "cost": 1, "target": "enemy", "range_pattern": "any_enemy", "base_power": 5, "effect_ids": ["apply_disruption"]},
+    "defense": {"surface_modifier": 2, "card_type": "defense", "cost": 1, "target": "self_or_ally", "range_pattern": "any_ally", "base_power": 7, "effect_ids": ["grant_guard"]},
+    "support": {"surface_modifier": 2, "card_type": "support", "cost": 1, "target": "self_or_ally", "range_pattern": "same_or_adjacent_ally", "base_power": 6, "effect_ids": ["restore_focus"]},
+    "assault": {"surface_modifier": 2, "card_type": "attack", "cost": 1, "target": "enemy", "range_pattern": "frontmost_enemy", "base_power": 8, "effect_ids": ["deal_physical"]},
+    "technical": {"surface_modifier": 2, "card_type": "technique", "cost": 1, "target": "enemy", "range_pattern": "front_two_enemy_rows", "base_power": 7, "effect_ids": ["deal_technique"]},
+    "recovery": {"surface_modifier": 2, "card_type": "support", "cost": 1, "target": "ally", "range_pattern": "any_ally", "base_power": 7, "effect_ids": ["restore_health"]},
+    "specialist": {"surface_modifier": 3, "card_type": "signature", "cost": 2, "target": "contextual", "range_pattern": "card_defined", "base_power": 11, "effect_ids": ["specialization_effect"]}
   },
   "colleges": [
     {

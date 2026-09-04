@@ -4,13 +4,15 @@
   "title": "Actor-bound card combat command",
   "type": "object",
   "additionalProperties": false,
-  "required": ["battle_id", "revision", "actor_id", "command", "card_instance_id", "target_ids"],
+  "required": ["battle_id", "revision", "actor_id", "command", "card_instance_id", "character_card_instance_id", "destination_row", "target_ids"],
   "properties": {
     "battle_id": {"type": "string", "minLength": 1},
     "revision": {"type": "integer", "minimum": 1},
     "actor_id": {"type": "string", "minLength": 1},
-    "command": {"enum": ["play_card", "discard_card", "end_round", "escape"]},
+    "command": {"enum": ["deploy_character", "reposition_character", "play_card", "discard_card", "end_round", "escape"]},
     "card_instance_id": {"type": ["string", "null"]},
+    "character_card_instance_id": {"type": ["string", "null"]},
+    "destination_row": {"type": ["string", "null"], "enum": ["front", "middle", "back", null]},
     "target_ids": {
       "type": "array",
       "items": {"type": "string", "minLength": 1},
@@ -21,13 +23,32 @@
   "allOf": [
     {
       "if": {"properties": {"command": {"enum": ["play_card", "discard_card"]}}, "required": ["command"]},
-      "then": {"properties": {"card_instance_id": {"type": "string", "minLength": 1}}}
+      "then": {
+        "properties": {
+          "card_instance_id": {"type": "string", "minLength": 1},
+          "character_card_instance_id": {"type": "null"},
+          "destination_row": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"command": {"enum": ["deploy_character", "reposition_character"]}}, "required": ["command"]},
+      "then": {
+        "properties": {
+          "card_instance_id": {"type": "null"},
+          "character_card_instance_id": {"type": "string", "minLength": 1},
+          "destination_row": {"enum": ["front", "middle", "back"]},
+          "target_ids": {"maxItems": 0}
+        }
+      }
     },
     {
       "if": {"properties": {"command": {"enum": ["end_round", "escape"]}}, "required": ["command"]},
       "then": {
         "properties": {
           "card_instance_id": {"type": "null"},
+          "character_card_instance_id": {"type": "null"},
+          "destination_row": {"type": "null"},
           "target_ids": {"maxItems": 0}
         }
       }

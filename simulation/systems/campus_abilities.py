@@ -23,8 +23,9 @@ def load_campus_ability_definitions(
             source_ability_id=ability_id,
             actor_bound=True,
             card_type=str(profile["card_type"]),
-            focus_cost=int(profile["cost"]),
+            command_cost=int(profile["cost"]),
             target=str(profile["target"]),
+            range_pattern=str(profile["range_pattern"]),
             base_power=int(profile["base_power"]),
             effect_ids=tuple(str(value) for value in profile["effect_ids"]),
         )

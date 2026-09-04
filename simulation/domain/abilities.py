@@ -15,6 +15,14 @@ CARD_TYPES = {
     "technique",
 }
 CARD_TARGETS = {"ally", "contextual", "enemy", "self_or_ally"}
+CARD_RANGE_PATTERNS = {
+    "any_ally",
+    "any_enemy",
+    "card_defined",
+    "front_two_enemy_rows",
+    "frontmost_enemy",
+    "same_or_adjacent_ally",
+}
 ABILITY_SOURCE_KINDS = {"common", "specialization"}
 
 
@@ -25,8 +33,9 @@ class CardBlueprint:
     source_ability_id: str
     actor_bound: bool
     card_type: str
-    focus_cost: int
+    command_cost: int
     target: str
+    range_pattern: str
     base_power: int
     effect_ids: Tuple[str, ...]
 
@@ -37,10 +46,12 @@ class CardBlueprint:
             raise ValueError(f"unsupported card type: {self.card_type}")
         if self.target not in CARD_TARGETS:
             raise ValueError(f"unsupported card target: {self.target}")
-        if isinstance(self.focus_cost, bool) or not isinstance(self.focus_cost, int):
-            raise ValueError("card focus cost must be an integer")
-        if not 0 <= self.focus_cost <= 5:
-            raise ValueError("card focus cost must be between 0 and 5")
+        if self.range_pattern not in CARD_RANGE_PATTERNS:
+            raise ValueError(f"unsupported card range pattern: {self.range_pattern}")
+        if isinstance(self.command_cost, bool) or not isinstance(self.command_cost, int):
+            raise ValueError("card command cost must be an integer")
+        if not 0 <= self.command_cost <= 6:
+            raise ValueError("card command cost must be between 0 and 6")
         if isinstance(self.base_power, bool) or not isinstance(self.base_power, int):
             raise ValueError("card base power must be an integer")
         if self.base_power < 0:
@@ -55,8 +66,9 @@ class CardBlueprint:
             "source_ability_id": self.source_ability_id,
             "actor_bound": self.actor_bound,
             "card_type": self.card_type,
-            "focus_cost": self.focus_cost,
+            "command_cost": self.command_cost,
             "target": self.target,
+            "range_pattern": self.range_pattern,
             "base_power": self.base_power,
             "effect_ids": list(self.effect_ids),
         }
@@ -103,6 +115,7 @@ class CampusAbilityDefinition:
 __all__ = [
     "ABILITY_SOURCE_KINDS",
     "CARD_TARGETS",
+    "CARD_RANGE_PATTERNS",
     "CARD_TYPES",
     "CampusAbilityDefinition",
     "CardBlueprint",

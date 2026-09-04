@@ -528,7 +528,7 @@ func _ability_lines(value: Variant) -> String:
 		lines.append("• %s  Lv.%d%s  [%s/耗%d]" % [
 			ability.get("name", ability_id), int(ability.get("rank", 1)), specialization,
 			type_names.get(String(card.get("card_type", "")), "能力"),
-			int(card.get("focus_cost", 0)),
+			int(card.get("command_cost", 0)),
 		])
 	return "\n".join(lines)
 

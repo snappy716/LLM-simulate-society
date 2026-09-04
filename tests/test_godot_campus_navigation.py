@@ -147,6 +147,7 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("学院能力 · 心理学院", phone)
         self.assertIn('player.get("abilities", [])', phone)
         self.assertIn('player", {}) as Dictionary).get("card_pool", [])', phone)
+        self.assertIn('card.get("command_cost", 0)', phone)
         self.assertIn("角色绑定的战斗卡牌", phone)
 
     def test_map_ui_uses_authoritative_free_travel_and_scene_mounts_all_prototypes(self):

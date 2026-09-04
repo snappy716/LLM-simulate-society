@@ -282,6 +282,33 @@ class ContentRegistry:
                         f"college {college_id} references unknown abilities: "
                         + ", ".join(sorted(unknown))
                     )
+        club_skill_owners: Dict[str, str] = {}
+        for club in self.all("club").values():
+            club_id = str(club.get("id", ""))
+            for required_field in ("category", "signature_resource"):
+                if not isinstance(club.get(required_field), str) or not club.get(required_field):
+                    errors.append(f"club {club_id} requires {required_field}")
+            unknown_overlaps = set(club.get("college_overlap_ids", ())) - college_ids
+            if unknown_overlaps:
+                errors.append(
+                    f"club {club_id} references unknown college overlaps: "
+                    + ", ".join(sorted(unknown_overlaps))
+                )
+            for field_name in ("surface_skill", "night_skill"):
+                skill_id = club.get(field_name)
+                if not isinstance(skill_id, str) or not skill_id:
+                    errors.append(f"club {club_id} requires {field_name}")
+                    continue
+                if skill_id in ability_ids:
+                    errors.append(
+                        f"club {club_id} skill {skill_id} duplicates a college ability"
+                    )
+                previous_owner = club_skill_owners.get(skill_id)
+                if previous_owner is not None:
+                    errors.append(
+                        f"club skill {skill_id} is shared by {previous_owner} and {club_id}"
+                    )
+                club_skill_owners[skill_id] = club_id
         for template in self.all("surface_task_template").values():
             activity_id = template.get("activity_id")
             scene_id = template.get("scene_id")

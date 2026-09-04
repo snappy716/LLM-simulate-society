@@ -87,6 +87,7 @@ from simulation.domain.activities import (
 from simulation.domain.abilities import (
     ABILITY_SOURCE_KINDS,
     CARD_TARGETS,
+    CARD_RANGE_PATTERNS,
     CARD_TYPES,
     CampusAbilityDefinition,
     CardBlueprint,
@@ -174,6 +175,7 @@ __all__ = [
     "ACTIVITY_CATEGORIES",
     "ABILITY_SOURCE_KINDS",
     "CARD_TARGETS",
+    "CARD_RANGE_PATTERNS",
     "CARD_TYPES",
     "CampusAbilityDefinition",
     "CardBlueprint",

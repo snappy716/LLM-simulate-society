@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": [
     "card_instance_id", "card_id", "owner_actor_id", "actor_bound", "card_type",
-    "focus_cost", "target", "base_power", "effect_ids", "zone"
+    "command_cost", "target", "range_pattern", "base_power", "effect_ids", "zone"
   ],
   "properties": {
     "card_instance_id": {"type": "string", "minLength": 1},
@@ -14,8 +14,9 @@
     "owner_actor_id": {"type": "string", "minLength": 1},
     "actor_bound": {"const": true},
     "card_type": {"enum": ["attack", "control", "defense", "knowledge", "signature", "support", "technique"]},
-    "focus_cost": {"type": "integer", "minimum": 0, "maximum": 5},
+    "command_cost": {"type": "integer", "minimum": 0, "maximum": 6},
     "target": {"enum": ["ally", "contextual", "enemy", "self_or_ally"]},
+    "range_pattern": {"enum": ["any_ally", "any_enemy", "card_defined", "front_two_enemy_rows", "frontmost_enemy", "same_or_adjacent_ally"]},
     "base_power": {"type": "integer", "minimum": 0},
     "effect_ids": {
       "type": "array",

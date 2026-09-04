@@ -1,27 +1,45 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://llm-simulate-society.local/contracts/battle_state.schema.json",
-  "title": "Shared-hand card battle state",
+  "title": "Three-row character deployment and shared-command-card battle state",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "battle_id", "revision", "round", "scene_id", "participant_ids", "team_ids",
+    "battle_id", "revision", "phase", "round", "scene_id", "participant_ids", "team_ids",
+    "character_cards", "formations", "reserve_character_card_ids",
     "actor_decks", "draw_piles", "discard_piles", "exhaust_piles", "shared_hand_ids",
-    "insight_row_ids", "action_tokens", "focus", "health", "pollution", "statuses",
+    "insight_row_ids", "command_points", "command_point_cap", "focus", "health", "pollution", "statuses",
     "known_weaknesses", "enemy_intents", "card_instances", "result", "consequences"
   ],
   "properties": {
     "battle_id": {"type": "string", "minLength": 1},
     "revision": {"type": "integer", "minimum": 1},
+    "phase": {"enum": ["setup", "player_turn", "enemy_turn", "round_end", "resolved"]},
     "round": {"type": "integer", "minimum": 1},
     "scene_id": {"type": "string", "minLength": 1},
     "situation_id": {"type": ["string", "null"]},
     "participant_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
     "team_ids": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}},
+    "character_cards": {"type": "object"},
+    "formations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["front", "middle", "back"],
+        "properties": {
+          "front": {"type": "array", "items": {"type": "string"}, "maxItems": 2, "uniqueItems": true},
+          "middle": {"type": "array", "items": {"type": "string"}, "maxItems": 2, "uniqueItems": true},
+          "back": {"type": "array", "items": {"type": "string"}, "maxItems": 2, "uniqueItems": true}
+        }
+      }
+    },
+    "reserve_character_card_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "actor_decks": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
     "shared_hand_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "insight_row_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "action_tokens": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "command_points": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0, "maximum": 6}},
+    "command_point_cap": {"type": "integer", "minimum": 3, "maximum": 6},
     "focus": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
     "health": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
     "pollution": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0, "maximum": 100}},

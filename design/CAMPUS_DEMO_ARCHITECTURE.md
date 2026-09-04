@@ -78,7 +78,7 @@ game/                                  Godot 4 项目
   scenes/
     world/                             表世界、夜相和室内场景
     characters/                        玩家、NPC、敌人表现
-    combat/                            无站位卡牌战斗场景
+    combat/                            三排人物部署与指令卡牌战斗场景
     ui/                                论坛、任务、关系、队伍、战斗 UI
   scripts/
     simulation/                        API、快照、事件订阅和本地服务生命周期
@@ -312,7 +312,7 @@ Demo 阶段不以微调为前置条件。先使用通用中文模型，配合角
 
 八学院的四项公共能力和三条专业分支位于 `content/actions/college_skills.json`。十二个核心社团位于 `content/organizations/clubs.json`。
 
-学院技能、专业分支、个人特质、社团技能、关系协作和失物印记全部引用稳定 `skill_id`，不把执行逻辑写入 JSON。内容文件提供参数，系统注册对应效果。
+学院技能、专业分支、个人特质、社团技能、关系协作和失物印记全部引用稳定 `skill_id`，不把执行逻辑写入 JSON。内容文件提供参数，系统注册对应效果。学院代表个人专业训练；社团代表可选共同实践、组织资源和团队战术。允许显式学院交叉，但学院能力 ID 与社团技能 ID 必须互斥。
 
 成长拆分为：
 
@@ -339,7 +339,8 @@ BattleState
 ├─ battle_id / revision
 ├─ scene_id / situation_id
 ├─ participants / teams
-├─ round / action_tokens / enemy_intents
+├─ phase / round / command_points / enemy_intents
+├─ character_cards / formations / reserves
 ├─ actor_decks / draw_piles / discard_piles / exhaust_piles
 ├─ shared_hand / insight_row / card_instances
 ├─ health / focus / pollution
@@ -349,7 +350,7 @@ BattleState
 └─ result / consequences
 ```
 
-每名角色配置个人牌组，三人小队每回合各抽两张组成共享战术手牌；证据、知识和身份锚点进入独立洞察区。卡牌绑定来源角色并消耗其行动令牌和专注。Godot 只发送 `combat_command` 并播放事件。玩家通常控制三人小队，但 NPC 的道德边界、极端恐惧、污染和关系反应仍可拒绝非法或违背角色底线的命令。
+玩家与队友 NPC 先作为人物牌部署到前中后三排。人物牌持续提供属性、状态、被动和基础指令；每名角色再配置个人牌组，三人小队每回合各抽两张组成共享战术手牌。队伍使用首回合 3 点、逐回合增长到 6 点的共享指令点；证据、知识和身份锚点进入独立洞察区。Godot 只发送 `combat_command` 并播放事件。玩家通常控制三人小队，但 NPC 的道德边界、极端恐惧、污染和关系反应仍可拒绝参战、部署或违背底线的命令。
 
 普通怪物使用规则战斗；失心者使用污染外壳、心结核心和异常自洽度。白天获得的证据、关系和身份锚点必须成为夜间可验证命令，而不是只提供文本提示。
 
@@ -408,7 +409,7 @@ BattleState
 3. 增加社团、课程、关系和队伍邀请。
 4. 增加记名/觉醒选择与剩余槽位。
 5. 增加里世界论坛、夜相切换和三人队伍。
-6. 增加无站位卡牌战斗 UI、共享手牌和敌方意图。
+6. 增加人物牌三排部署、共享费用与手牌、敌方意图 UI。
 7. 最后加入主线证据板、书籍理解和结局反馈。
 
 ## 15. 存档与兼容
@@ -498,7 +499,7 @@ BattleState
 
 - 第 9 周：污染、月相、夜相感知和里世界论坛。
 - 第 10 周：三人队伍、邀请、准备和后台行动。
-- 第 11 周：无站位卡牌回合制、共享手牌、物品、状态、弱点和失衡。
+- 第 11 周：人物牌三排部署卡牌制、共享费用与手牌、物品、状态、弱点和失衡。
 - 第 12 周：失心者、白天介入、夜间净化与多解法。
 
 验收：玩家不参战时 NPC 也能发现、承接和处理夜相事件，结果反馈回表世界。

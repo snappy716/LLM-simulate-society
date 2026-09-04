@@ -6,7 +6,7 @@ from collections import Counter
 from pathlib import Path
 
 from simulation.api import campus_world_view
-from simulation.domain import CARD_TARGETS, CARD_TYPES, WorldState
+from simulation.domain import CARD_RANGE_PATTERNS, CARD_TARGETS, CARD_TYPES, WorldState
 from simulation.systems import (
     CampusPopulationGenerator,
     ContentRegistry,
@@ -94,7 +94,7 @@ class CampusAbilityTests(unittest.TestCase):
             first.metadata["campus_abilities"], second.metadata["campus_abilities"]
         )
         view = campus_world_view(first)
-        self.assertEqual(9, view["view_version"])
+        self.assertEqual(10, view["view_version"])
         self.assertEqual(5, len(view["player"]["abilities"]))
         self.assertEqual(5, len(view["player"]["card_pool"]))
         npc = next(iter(view["population"].values()))
@@ -109,17 +109,34 @@ class CampusAbilityTests(unittest.TestCase):
         card_schema = json.loads(
             (REPOSITORY_DIR / "contracts/combat_card.schema.json").read_text(encoding="utf-8")
         )
+        character_schema = json.loads(
+            (REPOSITORY_DIR / "contracts/combat_character_card.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
         battle_schema = json.loads(
             (REPOSITORY_DIR / "contracts/battle_state.schema.json").read_text(encoding="utf-8")
         )
         commands = set(command_schema["properties"]["command"]["enum"])
-        self.assertEqual({"play_card", "discard_card", "end_round", "escape"}, commands)
+        self.assertEqual({
+            "deploy_character", "reposition_character", "play_card",
+            "discard_card", "end_round", "escape",
+        }, commands)
         self.assertNotIn("skill_id", command_schema["properties"])
         self.assertEqual(CARD_TYPES, set(card_schema["properties"]["card_type"]["enum"]))
         self.assertEqual(CARD_TARGETS, set(card_schema["properties"]["target"]["enum"]))
+        self.assertEqual(
+            CARD_RANGE_PATTERNS,
+            set(card_schema["properties"]["range_pattern"]["enum"]),
+        )
         self.assertTrue({
-            "shared_hand_ids", "insight_row_ids", "action_tokens", "enemy_intents"
+            "character_cards", "formations", "shared_hand_ids", "insight_row_ids",
+            "command_points", "enemy_intents",
         }.issubset(battle_schema["required"]))
+        self.assertTrue({
+            "actor_id", "deployment_state", "preferred_row", "base_command_id",
+            "passive_ids", "command_card_ids",
+        }.issubset(character_schema["required"]))
 
 
 if __name__ == "__main__":
