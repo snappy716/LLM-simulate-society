@@ -27,7 +27,8 @@
       "tags": ["books", "service"],
       "preferred_college_ids": ["humanities", "psychology"],
       "preferred_club_ids": ["psychology_reading", "volunteer_service"],
-      "issuer_role_kinds": ["staff"]
+      "issuer_role_kinds": ["staff"],
+      "follow_up_template_ids": ["archive_damage_follow_up"]
     },
     {
       "id": "club_poster_copy",
@@ -95,9 +96,11 @@
       "expires_after_days": 2,
       "reward": {"wealth": 30},
       "tags": ["equipment", "repair"],
-      "preferred_college_ids": ["ai", "math_physics"],
+      "preferred_college_ids": ["artificial_intelligence", "math_physics"],
       "preferred_club_ids": ["computer_robotics"],
-      "issuer_role_kinds": ["student"]
+      "organization_id": "computer_robotics",
+      "issuer_role_kinds": ["student"],
+      "follow_up_template_ids": ["robotics_repair_follow_up"]
     },
     {
       "id": "archive_index_review",
@@ -153,6 +156,7 @@
       "tags": ["books", "psychology"],
       "preferred_college_ids": ["psychology", "humanities"],
       "preferred_club_ids": ["psychology_reading"],
+      "organization_id": "psychology_reading",
       "issuer_role_kinds": ["student"]
     },
     {
@@ -209,6 +213,7 @@
       "tags": ["research", "speech"],
       "preferred_college_ids": ["humanities", "math_physics"],
       "preferred_club_ids": ["debate", "moot_court"],
+      "organization_id": "debate",
       "issuer_role_kinds": ["student"]
     },
     {
@@ -224,6 +229,42 @@
       "preferred_college_ids": [],
       "preferred_club_ids": ["campus_press"],
       "issuer_role_kinds": ["student", "staff"]
+    },
+    {
+      "id": "archive_damage_follow_up",
+      "title": "旧期刊破损来源复查",
+      "description": "上架时发现的破损并非普通磨损。读书会希望找一位已经帮过图书馆的人继续核对借阅与修复记录。",
+      "objective": "在图书馆阅览大厅复查破损期刊的流转记录。",
+      "activity_id": "SELF_STUDY",
+      "scene_id": "library_reading_hall",
+      "expires_after_days": 3,
+      "reward": {"wealth": 45},
+      "tags": ["books", "research", "follow_up"],
+      "preferred_college_ids": ["humanities", "psychology"],
+      "preferred_club_ids": ["psychology_reading"],
+      "organization_id": "psychology_reading",
+      "issuer_role_kinds": ["student", "staff"],
+      "locked_until_unlocked": true,
+      "single_run": true,
+      "chain_parent_template_id": "library_shelf_help"
+    },
+    {
+      "id": "robotics_repair_follow_up",
+      "title": "机器人社故障复现协助",
+      "description": "零件清点后发现同一批控制板反复异常。机器人社邀请参与过清点的人继续复现故障。",
+      "objective": "在社团活动室完成控制板故障复现记录。",
+      "activity_id": "CLUB_OR_SELF_STUDY",
+      "scene_id": "club_room_pool",
+      "expires_after_days": 3,
+      "reward": {"wealth": 50},
+      "tags": ["equipment", "repair", "follow_up"],
+      "preferred_college_ids": ["artificial_intelligence", "math_physics"],
+      "preferred_club_ids": ["computer_robotics"],
+      "organization_id": "computer_robotics",
+      "issuer_role_kinds": ["student"],
+      "locked_until_unlocked": true,
+      "single_run": true,
+      "chain_parent_template_id": "robotics_parts_check"
     }
   ]
 }

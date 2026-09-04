@@ -375,6 +375,43 @@ func _refresh_forum_detail() -> void:
 		_show_forum_list()
 		return
 	var reward: Dictionary = task.get("reward", {})
+	var completed_social: Dictionary = (task.get("social_consequences", {}) as Dictionary).get("completed", {})
+	var relation_reward: Dictionary = completed_social.get("issuer_relationship", {})
+	var social_parts: Array[String] = []
+	var relationship_labels := {
+		"familiarity": "熟悉",
+		"trust": "信任",
+		"closeness": "亲近",
+		"respect": "尊重",
+		"suspicion": "怀疑",
+		"fear": "畏惧",
+		"obligation": "人情",
+		"conflict": "冲突",
+	}
+	for dimension in relationship_labels:
+		var amount := int(relation_reward.get(dimension, 0))
+		if amount != 0:
+			social_parts.append("%s %+d" % [relationship_labels[dimension], amount])
+	var organization_name := String(task.get("organization_name", ""))
+	var organization_reputation := int(completed_social.get("organization_reputation", 0))
+	if not organization_name.is_empty() and organization_reputation != 0:
+		social_parts.append("%s声望 %+d" % [organization_name, organization_reputation])
+	var social_reward_text := "预计：%s" % "、".join(social_parts) if not social_parts.is_empty() else "无固定社会影响"
+	var settled_social_value: Variant = task.get("social_result", {})
+	var settled_social: Dictionary = settled_social_value if settled_social_value is Dictionary else {}
+	if not settled_social.is_empty():
+		var settled_parts: Array[String] = []
+		var settled_relation: Dictionary = settled_social.get("relationship_delta", {})
+		for dimension in relationship_labels:
+			var amount := int(settled_relation.get(dimension, 0))
+			if amount != 0:
+				settled_parts.append("%s %+d" % [relationship_labels[dimension], amount])
+		var settled_organization: Dictionary = settled_social.get("organization", {})
+		var reputation_delta := int(settled_organization.get("reputation_delta", 0))
+		if not organization_name.is_empty() and reputation_delta != 0:
+			settled_parts.append("%s声望 %+d" % [organization_name, reputation_delta])
+		if not settled_parts.is_empty():
+			social_reward_text = "已结算：%s" % "、".join(settled_parts)
 	var history_lines: Array[String] = []
 	for entry in task.get("history", []):
 		if entry is Dictionary:
@@ -383,11 +420,12 @@ func _refresh_forum_detail() -> void:
 				SimulationBridge.phase_display_name(String(entry.get("phase", "morning"))),
 				entry.get("message", ""),
 			])
-	_forum_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]发起人[/b]  %s\n[b]地点[/b]  %s\n[b]截止[/b]  第 %d 天\n[b]报酬[/b]  %d\n\n[b]当前目标[/b]\n%s\n\n[b]竞争情况[/b]\n%d 人查看，%d 人正在考虑\n\n[b]动态记录[/b]\n%s" % [
+	_forum_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]发起人[/b]  %s\n[b]所属组织[/b]  %s\n[b]地点[/b]  %s\n[b]截止[/b]  第 %d 天\n[b]报酬[/b]  %d 校园币\n[b]社会影响[/b]  %s\n\n[b]当前目标[/b]\n%s\n\n[b]竞争情况[/b]\n%d 人查看，%d 人正在考虑\n\n[b]动态记录[/b]\n%s" % [
 		task.get("title", "未命名任务"), task.get("description", ""),
-		task.get("issuer_name", "校园用户"), task.get("scene_name", "未知地点"),
+		task.get("issuer_name", "校园用户"), organization_name if not organization_name.is_empty() else "个人委托",
+		task.get("scene_name", "未知地点"),
 		int(task.get("expires_day", 1)), int(reward.get("wealth", 0)),
-		task.get("objective", ""), int(task.get("viewer_count", 0)),
+		social_reward_text, task.get("objective", ""), int(task.get("viewer_count", 0)),
 		int(task.get("considering_count", 0)), "\n".join(history_lines),
 	]
 	var state := String(task.get("state", ""))

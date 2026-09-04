@@ -6,5 +6,33 @@
   "npc_claim_delay_phases_min": 1,
   "npc_claim_delay_phases_max": 4,
   "npc_execute_delay_phases": 1,
-  "protected_schedule_priority": 90
+  "protected_schedule_priority": 90,
+  "social_consequences": {
+    "completed": {
+      "issuer_relationship": {
+        "familiarity": 8,
+        "trust": 5,
+        "respect": 3,
+        "obligation": 2
+      },
+      "organization_reputation": 4
+    },
+    "abandoned": {
+      "issuer_relationship": {
+        "trust": -4,
+        "suspicion": 3,
+        "conflict": 1
+      },
+      "organization_reputation": -2
+    },
+    "expired": {
+      "issuer_relationship": {
+        "trust": -7,
+        "respect": -3,
+        "suspicion": 5,
+        "conflict": 2
+      },
+      "organization_reputation": -5
+    }
+  }
 }

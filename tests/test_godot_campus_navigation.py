@@ -135,6 +135,13 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("func advance_campus_phase()", bridge)
         self.assertIn('"action_id": "ADVANCE_PHASE"', bridge)
 
+    def test_forum_detail_exposes_relationship_and_club_consequences(self):
+        phone = (GAME_DIR / "scripts/ui/campus_phone_ui.gd").read_text(encoding="utf-8")
+        self.assertIn("[b]社会影响[/b]", phone)
+        self.assertIn("organization_name", phone)
+        self.assertIn("social_result", phone)
+        self.assertIn("已结算", phone)
+
     def test_map_ui_uses_authoritative_free_travel_and_scene_mounts_all_prototypes(self):
         bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
             encoding="utf-8"

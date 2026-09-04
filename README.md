@@ -15,6 +15,7 @@ Project A 是一个正在开发中的 2D 等距视角城镇 RPG 原型，目标�
 - [第一阶段程序底座与验收结果](design/PROGRAM_FOUNDATION.md)
 - [校园地点、人口与 Godot 导航灰盒](design/CAMPUS_MAP_AND_POPULATION.md)
 - [表世界论坛与玩家/NPC 任务竞争](design/CAMPUS_FORUM_TASKS.md)
+- [任务关系、社团声望与后续任务链](design/CAMPUS_SOCIAL_CONSEQUENCES.md)
 
 本分支先建立可测试的校园领域边界、数据内容和契约，现有 Godot 地图、人物动画、物品交易与旧模拟仍可运行。后续按系统逐项接入，不进行一次性破坏性重写。
 
@@ -203,7 +204,7 @@ game/assets/characters/gandalf_hardcore/READ ME.txt
 ## 当前开发方向
 
 - 约束式校园 NPC 生成、六项属性、人格与多维关系。
-- 表世界论坛、NPC/玩家公平任务竞争和原子锁定（第一版已实现）。
+- 表世界论坛、NPC/玩家公平任务竞争、原子锁定与社会后果（第一版已实现）。
 - 八学院能力、十二核心社团、课程和校园生活。
 - 20 个 LLM 深度槽位与玩家最多 6 人的记名/觉醒系统。
 - 夜相、污染、三人无站位技能回合制与 NPC 后台战斗。

@@ -61,6 +61,8 @@ from simulation.systems import (  # noqa: E402
     make_forum_task_handler,
     make_surface_forum_phase_upkeep,
     make_task_aware_decision_selector,
+    campus_social_invariant,
+    install_campus_social_state,
 )
 
 
@@ -75,6 +77,7 @@ class CampusKernelBridge:
         install_campus_places(state, graph)
         records = CampusPopulationGenerator(registry, graph, rng_pool).generate()
         install_campus_population(state, records)
+        install_campus_social_state(state, registry.all("club"))
         schedule_templates = load_campus_schedule_templates(registry, graph)
         install_campus_schedules(state, graph, schedule_templates)
         action_policy = load_action_economy_policy(registry)
@@ -112,6 +115,7 @@ class CampusKernelBridge:
         self.kernel.add_invariant(campus_activity_invariant)
         self.kernel.add_invariant(campus_activity_effect_invariant)
         self.kernel.add_invariant(campus_decision_invariant)
+        self.kernel.add_invariant(campus_social_invariant)
         self.kernel.add_invariant(make_campus_task_invariant(activity_definitions))
         traverse_handler = make_traverse_location_handler(graph)
         self.kernel.register_handler(

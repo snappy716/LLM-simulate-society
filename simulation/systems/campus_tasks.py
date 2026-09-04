@@ -1,15 +1,18 @@
 """Authoritative surface-forum tasks shared by players and autonomous NPCs."""
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, Mapping, Optional, Sequence
 
 from simulation.actions.commands import SimulationCommand
 from simulation.domain.activities import CampusActivityDefinition
+from simulation.domain.campus import RELATIONSHIP_NAMES
 from simulation.domain.entities import PHASES
 from simulation.domain.locations import CampusLocationGraph
 from simulation.domain.world_state import WorldState
 from simulation.systems.content_registry import ContentRegistry
+from simulation.systems.campus_social import apply_task_social_consequence
 from simulation.systems.transactions import TransactionOutcome
 
 
@@ -28,6 +31,7 @@ class CampusForumPolicy:
     npc_claim_delay_phases_max: int
     npc_execute_delay_phases: int
     protected_schedule_priority: int
+    social_consequences: Dict[str, Dict[str, Any]]
 
     def __post_init__(self) -> None:
         if self.daily_surface_task_count < 1:
@@ -40,6 +44,21 @@ class CampusForumPolicy:
             raise ValueError("NPC task execution must be delayed by at least one phase")
         if not 0 <= self.protected_schedule_priority <= 100:
             raise ValueError("protected schedule priority must be between 0 and 100")
+        for outcome in ("completed", "abandoned", "expired"):
+            consequence = self.social_consequences.get(outcome)
+            if not isinstance(consequence, dict):
+                raise ValueError(f"missing social consequence policy: {outcome}")
+            relationship = consequence.get("issuer_relationship", {})
+            if not isinstance(relationship, dict):
+                raise ValueError(f"{outcome} issuer relationship consequence must be a mapping")
+            for dimension, delta in relationship.items():
+                if dimension not in RELATIONSHIP_NAMES:
+                    raise ValueError(f"unsupported relationship consequence: {dimension}")
+                if isinstance(delta, bool) or not isinstance(delta, int):
+                    raise ValueError(f"relationship consequence {dimension} must be an integer")
+            reputation = consequence.get("organization_reputation", 0)
+            if isinstance(reputation, bool) or not isinstance(reputation, int):
+                raise ValueError("organization reputation consequence must be an integer")
 
 
 def load_campus_forum_policy(registry: ContentRegistry) -> CampusForumPolicy:
@@ -52,6 +71,7 @@ def load_campus_forum_policy(registry: ContentRegistry) -> CampusForumPolicy:
         npc_claim_delay_phases_max=int(payload.get("npc_claim_delay_phases_max", 0)),
         npc_execute_delay_phases=int(payload.get("npc_execute_delay_phases", 0)),
         protected_schedule_priority=int(payload.get("protected_schedule_priority", 90)),
+        social_consequences=deepcopy(payload.get("social_consequences", {})),
     )
 
 
@@ -99,9 +119,22 @@ def publish_surface_tasks(
     forum = state.forums.setdefault("surface", {})
     if int(forum.get("last_published_day", 0)) >= state.clock.day:
         return []
-    all_templates = sorted(templates)
-    count = min(policy.daily_surface_task_count, len(all_templates))
-    chosen_ids = rng.sample(all_templates, count)
+    unlocked = set(forum.get("unlocked_template_ids", ()))
+    published_single_run = set(forum.get("published_single_run_template_ids", ()))
+    eligible_ids = [
+        template_id
+        for template_id, template in sorted(templates.items())
+        if (not template.get("locked_until_unlocked") or template_id in unlocked)
+        and (not template.get("single_run") or template_id not in published_single_run)
+    ]
+    count = min(policy.daily_surface_task_count, len(eligible_ids))
+    pending = [
+        template_id
+        for template_id in forum.get("pending_follow_up_template_ids", ())
+        if template_id in eligible_ids
+    ][:count]
+    remaining = [template_id for template_id in eligible_ids if template_id not in pending]
+    chosen_ids = [*pending, *rng.sample(remaining, count - len(pending))]
     published: list[str] = []
     current_index = phase_index(state.clock.day, state.clock.phase)
     daily_sequence = int(forum.get("published_total", 0))
@@ -117,6 +150,8 @@ def publish_surface_tasks(
             policy.npc_claim_delay_phases_min,
             policy.npc_claim_delay_phases_max,
         )
+        preferred_clubs = list(template.get("preferred_club_ids", ()))
+        organization_id = str(template.get("organization_id") or "")
         task = {
             "task_id": task_id,
             "template_id": template_id,
@@ -146,7 +181,13 @@ def publish_surface_tasks(
             "reward": dict(template.get("reward", {})),
             "tags": list(template.get("tags", ())),
             "preferred_college_ids": list(template.get("preferred_college_ids", ())),
-            "preferred_club_ids": list(template.get("preferred_club_ids", ())),
+            "preferred_club_ids": preferred_clubs,
+            "organization_id": organization_id or None,
+            "social_consequences": deepcopy(
+                template.get("social_consequences", policy.social_consequences)
+            ),
+            "follow_up_template_ids": list(template.get("follow_up_template_ids", ())),
+            "chain_parent_template_id": template.get("chain_parent_template_id"),
             "npc_claim_phase_index": current_index + claim_delay,
             "npc_execute_after_phase_index": None,
             "history": [
@@ -155,12 +196,20 @@ def publish_surface_tasks(
         }
         state.tasks[task_id] = task
         published.append(task_id)
+        if template.get("single_run"):
+            published_single_run.add(template_id)
+    forum["pending_follow_up_template_ids"] = [
+        template_id
+        for template_id in forum.get("pending_follow_up_template_ids", ())
+        if template_id not in chosen_ids
+    ]
     forum.update({
         "forum_id": "surface",
         "name": "校园互助论坛",
         "enabled": True,
         "last_published_day": state.clock.day,
         "published_total": daily_sequence,
+        "published_single_run_template_ids": sorted(published_single_run),
     })
     return published
 
@@ -178,6 +227,10 @@ def install_campus_forums(
             "enabled": True,
             "last_published_day": 0,
             "published_total": 0,
+            "completed_template_ids": [],
+            "unlocked_template_ids": [],
+            "pending_follow_up_template_ids": [],
+            "published_single_run_template_ids": [],
         },
         "night": {
             "forum_id": "night",
@@ -247,7 +300,7 @@ def advance_surface_forum(
         "forum_consider_count": 0,
         "forum_npc_claim_count": 0,
     }
-    for task in context.state.tasks.values():
+    for task_id, task in context.state.tasks.items():
         if (
             isinstance(task, dict)
             and task.get("state") not in TERMINAL_STATES
@@ -257,10 +310,25 @@ def advance_surface_forum(
             assignee = context.state.population.get(assignee_id)
             if isinstance(assignee, dict):
                 assignee.pop("active_forum_task_id", None)
+                task["social_result"] = apply_task_social_consequence(
+                    context.state, str(assignee_id), task, "expired"
+                )
             task["state"] = "expired"
             task["lock_revision"] = int(task.get("lock_revision", 0)) + 1
             task.setdefault("history", []).append(
                 _history(context.state.clock.day, context.state.clock.phase, "expired", "任务已超过截止日期。")
+            )
+            context.emit(
+                "FORUM_TASK_EXPIRED",
+                f"《{task['title']}》已超过截止日期。",
+                actor_ids=[str(assignee_id)] if assignee_id else [],
+                target_ids=[task["issuer_id"]],
+                scene_id=task["scene_id"],
+                payload={
+                    "task_id": task_id,
+                    "social_result": deepcopy(task.get("social_result", {})),
+                },
+                knowledge_tags=["forum", "task", "expired"],
             )
             summary["forum_expired_count"] += 1
     if context.state.clock.phase == PHASES[0].value:
@@ -402,6 +470,25 @@ def _apply_reward(state: WorldState, actor_id: str, task: Mapping[str, Any]) -> 
     return {"wealth": wealth}
 
 
+def _unlock_follow_up_tasks(state: WorldState, task: Mapping[str, Any]) -> list[str]:
+    forum = state.forums.setdefault("surface", {})
+    completed = set(forum.get("completed_template_ids", ()))
+    completed.add(str(task.get("template_id", "")))
+    forum["completed_template_ids"] = sorted(item for item in completed if item)
+    unlocked = set(forum.get("unlocked_template_ids", ()))
+    pending = list(forum.get("pending_follow_up_template_ids", ()))
+    newly_unlocked: list[str] = []
+    for template_id in task.get("follow_up_template_ids", ()):
+        if template_id not in unlocked:
+            unlocked.add(template_id)
+            newly_unlocked.append(template_id)
+            if template_id not in pending:
+                pending.append(template_id)
+    forum["unlocked_template_ids"] = sorted(unlocked)
+    forum["pending_follow_up_template_ids"] = pending
+    return newly_unlocked
+
+
 def complete_assigned_task(context, actor_id: str, plan: Mapping[str, Any]) -> bool:
     task_id = str(plan.get("task_id", ""))
     task = context.state.tasks.get(task_id)
@@ -410,6 +497,10 @@ def complete_assigned_task(context, actor_id: str, plan: Mapping[str, Any]) -> b
     task["state"] = "in_progress"
     task["lock_revision"] = int(task.get("lock_revision", 0)) + 1
     reward = _apply_reward(context.state, actor_id, task)
+    social_result = apply_task_social_consequence(
+        context.state, actor_id, task, "completed"
+    )
+    unlocked_follow_ups = _unlock_follow_up_tasks(context.state, task)
     task["state"] = "completed"
     task["lock_revision"] += 1
     actor = context.state.population[actor_id]
@@ -422,13 +513,20 @@ def complete_assigned_task(context, actor_id: str, plan: Mapping[str, Any]) -> b
         )
     )
     actor.pop("active_forum_task_id", None)
+    task["social_result"] = social_result
+    task["unlocked_follow_up_template_ids"] = unlocked_follow_ups
     context.emit(
         "FORUM_TASK_COMPLETED",
         f"{actor.get('display_name', actor_id)} 完成了《{task['title']}》。",
         actor_ids=[actor_id],
         target_ids=[task["issuer_id"]],
         scene_id=task["scene_id"],
-        payload={"task_id": task_id, "reward": reward},
+        payload={
+            "task_id": task_id,
+            "reward": reward,
+            "social_result": social_result,
+            "unlocked_follow_up_template_ids": unlocked_follow_ups,
+        },
         knowledge_tags=["forum", "task", "completed"],
     )
     return True
@@ -508,8 +606,23 @@ def make_forum_task_handler(activity_handler):
             task["state"] = "open" if context.state.clock.day <= int(task["expires_day"]) else "expired"
             task["lock_revision"] = int(task.get("lock_revision", 0)) + 1
             actor.pop("active_forum_task_id", None)
+            task["social_result"] = apply_task_social_consequence(
+                context.state, command.actor_id, task, "abandoned"
+            )
             task.setdefault("history", []).append(
                 _history(context.state.clock.day, context.state.clock.phase, "abandoned", "玩家放弃了任务，任务重新开放。")
+            )
+            context.emit(
+                "FORUM_TASK_ABANDONED",
+                f"玩家放弃了《{task['title']}》。",
+                actor_ids=[command.actor_id],
+                target_ids=[task["issuer_id"]],
+                scene_id=task["scene_id"],
+                payload={
+                    "task_id": task_id,
+                    "social_result": deepcopy(task.get("social_result", {})),
+                },
+                knowledge_tags=["forum", "task", "abandoned"],
             )
             return TransactionOutcome(True, True, "success", "任务已放弃。", commit=True)
 
@@ -543,7 +656,14 @@ def make_forum_task_handler(activity_handler):
                 "success",
                 "任务完成，奖励已经结算。",
                 commit=True,
-                payload={"task_id": task_id, "reward": dict(task.get("reward", {}))},
+                payload={
+                    "task_id": task_id,
+                    "reward": dict(task.get("reward", {})),
+                    "social_result": deepcopy(task.get("social_result", {})),
+                    "unlocked_follow_up_template_ids": list(
+                        task.get("unlocked_follow_up_template_ids", ())
+                    ),
+                },
             )
 
         return TransactionOutcome(False, False, "unsupported_task_action", "不支持的论坛任务操作。")
@@ -573,6 +693,9 @@ def make_campus_task_invariant(
                 errors.append(f"task {task_id} references unknown activity")
             if task.get("issuer_id") not in state.population:
                 errors.append(f"task {task_id} references unknown issuer")
+            organization_id = task.get("organization_id")
+            if organization_id is not None and organization_id not in state.organizations:
+                errors.append(f"task {task_id} references unknown organization")
             if int(task.get("expires_day", 0)) < int(task.get("created_day", 1)):
                 errors.append(f"task {task_id} has invalid dates")
             revision = task.get("lock_revision")

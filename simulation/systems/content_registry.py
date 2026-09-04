@@ -219,6 +219,9 @@ class ContentRegistry:
                 "campus population references unknown schedules: "
                 + ", ".join(sorted(unknown_schedules))
             )
+        surface_task_ids = set(self.ids("surface_task_template"))
+        club_ids = set(self.ids("club"))
+        college_ids = set(self.ids("college"))
         for template in self.all("surface_task_template").values():
             activity_id = template.get("activity_id")
             scene_id = template.get("scene_id")
@@ -229,6 +232,34 @@ class ContentRegistry:
             if scene_id not in campus_node_ids:
                 errors.append(
                     f"surface task {template.get('id')} references unknown campus location: {scene_id}"
+                )
+            organization_id = template.get("organization_id")
+            if organization_id and organization_id not in club_ids:
+                errors.append(
+                    f"surface task {template.get('id')} references unknown organization: {organization_id}"
+                )
+            unknown_preferred_clubs = set(template.get("preferred_club_ids", ())) - club_ids
+            if unknown_preferred_clubs:
+                errors.append(
+                    f"surface task {template.get('id')} references unknown preferred clubs: "
+                    + ", ".join(sorted(unknown_preferred_clubs))
+                )
+            unknown_preferred_colleges = set(template.get("preferred_college_ids", ())) - college_ids
+            if unknown_preferred_colleges:
+                errors.append(
+                    f"surface task {template.get('id')} references unknown preferred colleges: "
+                    + ", ".join(sorted(unknown_preferred_colleges))
+                )
+            unknown_follow_ups = set(template.get("follow_up_template_ids", ())) - surface_task_ids
+            if unknown_follow_ups:
+                errors.append(
+                    f"surface task {template.get('id')} references unknown follow-ups: "
+                    + ", ".join(sorted(unknown_follow_ups))
+                )
+            parent_id = template.get("chain_parent_template_id")
+            if parent_id and parent_id not in surface_task_ids:
+                errors.append(
+                    f"surface task {template.get('id')} references unknown chain parent: {parent_id}"
                 )
         if errors:
             raise ContentValidationError("invalid content references: " + "; ".join(errors))

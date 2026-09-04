@@ -90,6 +90,15 @@ from simulation.systems.campus_tasks import (
     phase_index,
     publish_surface_tasks,
 )
+from simulation.systems.campus_social import (
+    DEFAULT_RELATIONSHIP,
+    adjust_organization_reputation,
+    adjust_relationship,
+    apply_task_social_consequence,
+    campus_social_invariant,
+    install_campus_social_state,
+    relationship_between as campus_relationship_between,
+)
 
 __all__ = [
     "DesireEngine",
@@ -136,6 +145,13 @@ __all__ = [
     "make_task_aware_decision_selector",
     "phase_index",
     "publish_surface_tasks",
+    "DEFAULT_RELATIONSHIP",
+    "adjust_organization_reputation",
+    "adjust_relationship",
+    "apply_task_social_consequence",
+    "campus_social_invariant",
+    "install_campus_social_state",
+    "campus_relationship_between",
     "IntelligenceSystem",
     "ItemUseSystem",
     "ItemInstanceSystem",

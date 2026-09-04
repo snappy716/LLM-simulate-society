@@ -9,7 +9,7 @@ from simulation.systems.campus_schedules import current_schedule_slot
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 7
+CAMPUS_WORLD_VIEW_VERSION = 8
 
 
 def kernel_status_view(state: WorldState, *, busy: bool = False) -> Dict[str, Any]:
@@ -81,11 +81,13 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         public_tasks[task_id] = {
             key: deepcopy(task.get(key))
             for key in (
-                "task_id", "forum", "title", "description", "objective",
+                "task_id", "template_id", "forum", "issuer_id", "title", "description", "objective",
                 "action_id", "activity_id", "allowed_phases", "scene_id", "execution_region_id",
                 "created_day", "expires_day",
                 "state", "assignee_id", "lock_revision", "reward", "tags",
                 "required_skill_ids", "required_item_ids", "history",
+                "organization_id", "social_consequences", "social_result",
+                "chain_parent_template_id", "unlocked_follow_up_template_ids",
             )
         }
         public_tasks[task_id].update({
@@ -96,11 +98,43 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             "considering_count": len(task.get("considering_ids", ())),
             "viewed_by_player": "player" in task.get("viewer_ids", ()),
             "owned_by_player": task.get("assignee_id") == "player",
+            "organization_name": (
+                state.organizations.get(str(task.get("organization_id", "")), {}).get("name", "")
+            ),
         })
     task_counts: Dict[str, int] = {}
     for task in public_tasks.values():
         state_name = str(task.get("state", "unknown"))
         task_counts[state_name] = task_counts.get(state_name, 0) + 1
+    player_relationships = {}
+    for issuer_id, targets in state.relationships.items():
+        if not isinstance(targets, dict):
+            continue
+        dimensions = targets.get("player")
+        if isinstance(dimensions, dict):
+            player_relationships[issuer_id] = {
+                "display_name": state.population.get(issuer_id, {}).get(
+                    "display_name", issuer_id
+                ),
+                **deepcopy(dimensions),
+            }
+    player_organizations = {
+        organization_id: {
+            "organization_id": organization_id,
+            "name": organization.get("name", organization_id),
+            "reputation": int(organization.get("reputation_by_actor", {}).get("player", 0)),
+            "completed_task_count": int(
+                organization.get("completed_tasks_by_actor", {}).get("player", 0)
+            ),
+            "is_member": "player" in organization.get("member_ids", ()),
+        }
+        for organization_id, organization in state.organizations.items()
+        if isinstance(organization, dict)
+        and (
+            "player" in organization.get("member_ids", ())
+            or "player" in organization.get("reputation_by_actor", {})
+        )
+    }
     return {
         "view_version": CAMPUS_WORLD_VIEW_VERSION,
         "revision": state.revision,
@@ -135,6 +169,10 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
                 if name in {"open", "viewed", "considering"}
             ),
             "mine": sum(1 for task in public_tasks.values() if task.get("owned_by_player")),
+        },
+        "social": {
+            "player_relationships": player_relationships,
+            "player_organizations": player_organizations,
         },
     }
 
