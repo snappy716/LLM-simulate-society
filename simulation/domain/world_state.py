@@ -25,6 +25,7 @@ AGGREGATE_NAMES = (
     "situations",
     "battles",
     "knowledge",
+    "chronicles",
     "narrative",
     "cognition",
 )
@@ -84,6 +85,7 @@ class WorldState:
     situations: Dict[str, Any] = field(default_factory=dict)
     battles: Dict[str, Any] = field(default_factory=dict)
     knowledge: Dict[str, Any] = field(default_factory=dict)
+    chronicles: Dict[str, Any] = field(default_factory=dict)
     narrative: Dict[str, Any] = field(default_factory=dict)
     cognition: Dict[str, Any] = field(default_factory=dict)
     processed_commands: Dict[str, Dict[str, Any]] = field(default_factory=dict)

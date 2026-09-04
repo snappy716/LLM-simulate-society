@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/npc_chronicle_view.schema.json",
+  "title": "Player-visible NPC chronicle page",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["view_version", "world_revision", "actor", "filter", "items", "has_more", "next_cursor", "knowledge_note"],
+  "properties": {
+    "view_version": {"const": 1},
+    "world_revision": {"type": "integer", "minimum": 1},
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["npc_id", "display_name"],
+      "properties": {
+        "npc_id": {"type": "string", "minLength": 1},
+        "display_name": {"type": "string", "minLength": 1}
+      }
+    },
+    "filter": {"enum": ["recent", "important", "all"]},
+    "items": {"type": "array", "items": {"type": "object"}},
+    "has_more": {"type": "boolean"},
+    "next_cursor": {"type": "string"},
+    "knowledge_note": {"type": "string"}
+  }
+}

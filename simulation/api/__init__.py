@@ -10,8 +10,10 @@ from simulation.api.commands import (
 from simulation.api.views import (
     CAMPUS_WORLD_VIEW_VERSION,
     KERNEL_STATUS_VIEW_VERSION,
+    NPC_CHRONICLE_VIEW_VERSION,
     campus_world_view,
     kernel_status_view,
+    npc_chronicle_view,
 )
 
 
@@ -26,9 +28,11 @@ __all__ = [
     "CAMPUS_WORLD_VIEW_VERSION",
     "CommandParseError",
     "KERNEL_STATUS_VIEW_VERSION",
+    "NPC_CHRONICLE_VIEW_VERSION",
     "SimulationBridge",
     "command_result_view",
     "campus_world_view",
     "kernel_status_view",
+    "npc_chronicle_view",
     "parse_simulation_command",
 ]

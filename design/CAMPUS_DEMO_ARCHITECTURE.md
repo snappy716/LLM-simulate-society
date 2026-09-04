@@ -386,6 +386,7 @@ BattleState
 | `GET /v2/world/view` | 玩家权限范围的世界投影 |
 | `POST /v2/world/advance` | 推进当前时段 |
 | `POST /v2/actions` | 统一玩家命令，支持幂等 ID |
+| `GET /kernel/npcs/{id}/chronicle` | 迁移期按玩家知识过滤并分页读取人物日志 |
 | `GET /v2/forums/{kind}` | 获取经过权限和相关性筛选的论坛 |
 | `POST /v2/tasks/{id}/claim` | 使用世界版本和锁版本原子接取 |
 | `POST /v2/tasks/{id}/assist` | 申请协助或提供资源 |

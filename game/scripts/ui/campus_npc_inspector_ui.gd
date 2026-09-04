@@ -76,14 +76,21 @@ var _overlay: ColorRect
 var _title: Label
 var _details: RichTextLabel
 var _nearby_hint: Label
+var _tab_buttons: Dictionary = {}
+var _load_more: Button
 var _opened := false
 var _selected_npc: Node
+var _selected_profile: Dictionary = {}
+var _active_tab := "overview"
+var _chronicle_pages: Dictionary = {}
+var _chronicle_loading := false
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("campus_npc_inspector_ui")
 	_build_ui()
+	SimulationBridge.campus_npc_chronicle_loaded.connect(_on_chronicle_loaded)
 
 
 func _process(_delta: float) -> void:
@@ -145,8 +152,8 @@ func _build_ui() -> void:
 
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.position = Vector2(-280, -210)
-	panel.size = Vector2(560, 420)
+	panel.position = Vector2(-340, -260)
+	panel.size = Vector2(680, 520)
 	_overlay.add_child(panel)
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
@@ -159,12 +166,33 @@ func _build_ui() -> void:
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.add_theme_font_size_override("font_size", 27)
 	column.add_child(_title)
+	var tabs := HBoxContainer.new()
+	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
+	tabs.add_theme_constant_override("separation", 8)
+	column.add_child(tabs)
+	for tab in [
+		{"id": "overview", "label": "人物概况"},
+		{"id": "recent", "label": "日程记录"},
+		{"id": "important", "label": "重要经历"},
+	]:
+		var button := Button.new()
+		button.text = tab["label"]
+		button.toggle_mode = true
+		button.custom_minimum_size = Vector2(150, 38)
+		button.pressed.connect(_select_tab.bind(tab["id"]))
+		tabs.add_child(button)
+		_tab_buttons[tab["id"]] = button
 	_details = RichTextLabel.new()
 	_details.bbcode_enabled = true
 	_details.fit_content = false
 	_details.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_details.add_theme_font_size_override("normal_font_size", 17)
 	column.add_child(_details)
+	_load_more = Button.new()
+	_load_more.text = "加载更早记录"
+	_load_more.visible = false
+	_load_more.pressed.connect(_load_more_chronicle)
+	column.add_child(_load_more)
 	var close := Button.new()
 	close.text = "关闭（E / Esc）"
 	close.pressed.connect(_set_open.bind(false))
@@ -173,10 +201,125 @@ func _build_ui() -> void:
 
 func _show_npc(npc: Node) -> void:
 	_selected_npc = npc
-	var profile: Dictionary = npc.call("get_campus_profile")
-	_title.text = _safe_text(profile.get("display_name"), _safe_text(profile.get("npc_id"), "校园成员"))
-	_details.text = _public_profile_text(profile)
+	_selected_profile = npc.call("get_campus_profile")
+	_chronicle_pages.clear()
+	_chronicle_loading = false
+	_title.text = _safe_text(_selected_profile.get("display_name"), _safe_text(_selected_profile.get("npc_id"), "校园成员"))
+	_select_tab("overview")
 	_set_open(true)
+	_request_chronicle("recent")
+
+
+func _select_tab(tab_id: String) -> void:
+	_active_tab = tab_id
+	for id in _tab_buttons:
+		(_tab_buttons[id] as Button).button_pressed = id == tab_id
+	if tab_id == "overview":
+		_details.text = _public_profile_text(_selected_profile)
+		_load_more.visible = false
+		return
+	if not _chronicle_pages.has(tab_id):
+		_details.text = "[color=#91a4bc]正在读取人物记录……[/color]"
+		_load_more.visible = false
+		_request_chronicle(tab_id)
+		return
+	_render_chronicle(tab_id)
+
+
+func _request_chronicle(filter_name: String, cursor: String = "") -> void:
+	if _chronicle_loading or _selected_profile.is_empty():
+		return
+	_chronicle_loading = true
+	SimulationBridge.request_npc_chronicle(
+		_safe_text(_selected_profile.get("npc_id")), filter_name, cursor, 20
+	)
+
+
+func _load_more_chronicle() -> void:
+	var page: Dictionary = _chronicle_pages.get(_active_tab, {})
+	var cursor := _safe_text(page.get("next_cursor"))
+	if not cursor.is_empty():
+		_request_chronicle(_active_tab, cursor)
+
+
+func _on_chronicle_loaded(success: bool, result: Dictionary, npc_id: String, filter_name: String) -> void:
+	_chronicle_loading = false
+	if _selected_profile.is_empty() or npc_id != _safe_text(_selected_profile.get("npc_id")):
+		return
+	if not success:
+		if _active_tab == filter_name:
+			_details.text = "[color=#d98282]人物记录读取失败：%s[/color]" % _safe_text(result.get("error"), "未知错误")
+			_load_more.visible = false
+		return
+	var existing: Dictionary = _chronicle_pages.get(filter_name, {})
+	var combined: Array = existing.get("items", []).duplicate(true) if existing.get("items", []) is Array else []
+	var incoming = result.get("items", [])
+	if incoming is Array:
+		combined.append_array(incoming)
+	var page := result.duplicate(true)
+	page["items"] = combined
+	_chronicle_pages[filter_name] = page
+	if _active_tab == filter_name:
+		_render_chronicle(filter_name)
+
+
+func _render_chronicle(filter_name: String) -> void:
+	var page: Dictionary = _chronicle_pages.get(filter_name, {})
+	var items = page.get("items", [])
+	if not items is Array or items.is_empty():
+		_details.text = "[b]%s[/b]\n\n目前没有玩家已知的记录。\n\n[color=#91a4bc]%s[/color]" % [
+		"最近七日日程" if filter_name == "recent" else "重要经历",
+		_safe_text(page.get("knowledge_note"), "未知行动不会显示。"),
+		]
+		_load_more.visible = false
+		return
+	var lines: Array[String] = [
+		"[b]%s[/b]" % ("最近七日日程" if filter_name == "recent" else "重要经历"),
+		"",
+	]
+	var last_day := -1
+	for value in items:
+		if not value is Dictionary:
+			continue
+		var entry: Dictionary = value
+		var day := int(entry.get("day", 1))
+		if day != last_day:
+			if last_day >= 0:
+				lines.append("")
+			lines.append("[b]第 %d 天[/b]" % day)
+			last_day = day
+		var phase_name := SimulationBridge.phase_display_name(_safe_text(entry.get("phase")))
+		var summary := _entry_summary(entry)
+		var source := _source_name(_safe_text(entry.get("source")))
+		lines.append("  [color=#8fb7d6]%s[/color]  %s  [color=#8491a3]· %s[/color]" % [phase_name, summary, source])
+	lines.append("")
+	lines.append("[color=#91a4bc]%s[/color]" % _safe_text(page.get("knowledge_note"), "未知行动不会显示。"))
+	_details.text = "\n".join(lines)
+	_load_more.visible = bool(page.get("has_more", false))
+
+
+func _entry_summary(entry: Dictionary) -> String:
+	var parameters: Dictionary = entry.get("parameters", {}) if entry.get("parameters") is Dictionary else {}
+	if _safe_text(entry.get("summary_key")) == "activity_completed":
+		var activity_id := _safe_text(parameters.get("activity_id"))
+		return "在%s%s" % [
+			_safe_text(entry.get("scene_name"), "未知地点"),
+			ACTIVITY_NAMES.get(activity_id, "完成了%s" % (activity_id if not activity_id.is_empty() else "一项活动")),
+		]
+	return _safe_text(entry.get("display_summary"), "发生了一件事")
+
+
+func _source_name(source: String) -> String:
+	return {
+		"self": "亲历",
+		"participant": "亲历",
+		"witnessed": "亲眼所见",
+		"public": "公开消息",
+		"campus_record": "校内记录",
+		"told": "本人告知",
+		"rumor": "听说",
+		"evidence": "调查所得",
+	}.get(source, "来源不明")
 
 
 func _public_profile_text(profile: Dictionary) -> String:
@@ -257,4 +400,6 @@ func _set_open(value: bool) -> void:
 	_nearby_hint.visible = false if value else _nearby_hint.visible
 	if not value:
 		_selected_npc = null
+		_selected_profile = {}
+		_chronicle_pages.clear()
 	get_tree().paused = value

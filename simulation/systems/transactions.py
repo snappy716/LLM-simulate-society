@@ -24,6 +24,10 @@ class EventSink(Protocol):
     def append_batch(self, events: Iterable[SimulationEvent]) -> None: ...
 
 
+class EventProjector(Protocol):
+    def __call__(self, state: WorldState, events: Iterable[SimulationEvent]) -> None: ...
+
+
 @dataclass
 class TransactionOutcome:
     performed: bool
@@ -84,6 +88,7 @@ class TransactionContext:
 
 CommandHandler = Callable[[TransactionContext, SimulationCommand], TransactionOutcome]
 Invariant = Callable[[WorldState], Iterable[str]]
+ReadProjector = Callable[[WorldState], Any]
 
 
 class WorldKernel:
@@ -103,6 +108,7 @@ class WorldKernel:
             raise ValueError("world state and RNG master seeds differ")
         self._event_sink = event_sink
         self._handlers: Dict[str, CommandHandler] = {}
+        self._event_projectors: list[EventProjector] = []
         self._invariants: list[Invariant] = []
         self._lock = threading.RLock()
 
@@ -123,6 +129,16 @@ class WorldKernel:
 
     def add_invariant(self, invariant: Invariant) -> None:
         self._invariants.append(invariant)
+
+    def add_event_projector(self, projector: EventProjector) -> None:
+        if projector in self._event_projectors:
+            raise ValueError("duplicate event projector")
+        self._event_projectors.append(projector)
+
+    def project_view(self, projector: ReadProjector) -> Any:
+        """Build a defensive read model without cloning unrelated aggregates."""
+        with self._lock:
+            return deepcopy(projector(self._state))
 
     def execute(self, command: SimulationCommand) -> CommandResult:
         with self._lock:
@@ -175,14 +191,15 @@ class WorldKernel:
 
                 next_revision = self._state.revision + 1
                 draft_state.revision = next_revision
+                events = self._materialize_events(
+                    command, context.event_drafts, draft_state, next_revision
+                )
+                for projector in self._event_projectors:
+                    projector(draft_state, events)
                 invariant_errors: list[str] = []
                 for invariant in self._invariants:
                     invariant_errors.extend(invariant(draft_state))
                 draft_state.require_valid(invariant_errors)
-
-                events = self._materialize_events(
-                    command, context.event_drafts, draft_state, next_revision
-                )
                 result = CommandResult(
                     command_id=command.command_id,
                     accepted=True,
@@ -258,6 +275,8 @@ class WorldKernel:
 
 __all__ = [
     "DuplicateCommandError",
+    "EventProjector",
+    "ReadProjector",
     "RevisionConflictError",
     "TransactionContext",
     "TransactionOutcome",

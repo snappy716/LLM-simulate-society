@@ -13,6 +13,7 @@
 - 校园论坛任务专项：`python3 -m unittest tests.test_campus_forum_tasks tests.test_campus_decisions tests.test_campus_kernel_bridge -v`
 - 校园社会后果专项：`python3 -m unittest tests.test_campus_social tests.test_campus_forum_tasks tests.test_campus_kernel_bridge tests.test_content_registry tests.test_kernel_api_contracts -v`
 - 校园学院能力与卡牌契约专项：`python3 -m unittest tests.test_campus_abilities tests.test_content_registry tests.test_campus_population tests.test_architecture_parity tests.test_godot_campus_navigation -v`
+- NPC 日程与人物日志专项：`python3 -m unittest tests.test_npc_chronicles tests.test_kernel_persistence tests.test_kernel_api_contracts tests.test_godot_campus_navigation -v`
 - Python 编译：`python3 -m compileall -q simulation tests`
 - 补丁格式：`git diff --check`
 - 离线启动：`python3 -m simulation --days 0 --llm rule --quiet`
@@ -26,6 +27,8 @@
 - 校园美术完整性：`campus_art_catalog.json` 必须只有 5 个最新版条目，每个 PNG 文件存在且 IHDR 尺寸与目录一致；地图跨区必须走 `FAST_TRAVEL_CAMPUS`，不得直接修改地点。
 - 校园 NPC 呈现：进入最新版校园场景后应保留当前区域真实在场 NPC；靠近后按 `E` 可查看公开状态，
   面板不得显示需求原始数值、秘密、内部层级或未来计划，并须与地图、手机界面互斥。
+- NPC 人物日志：推进至少两个时段后靠近 NPC 按 `E`，分别检查“日程记录”和“重要经历”；
+  记录须标明消息来源，秘密与决策意图不得当作已发生经历，加载更早记录必须使用分页接口。
 - 五区步行互通：实际往返校门、生活区、东/西宿舍和心理学院地图；每次边缘切换都须经对应
   `TRAVERSE_CAMPUS_PASSAGE` 道路，目标进入点不得立即反向触发，且不得改变时钟或主要行动余额。
 - Godot 运行：启动 `game/project.godot`，确认后端连接、200 NPC 首个快照与城市地图加载。
@@ -168,3 +171,14 @@ NPC 日程与人物日志设计阶段验收：人物日志作为第 9 个程序�
 设计已覆盖事件投影、同一行动去重、低重要度日程折叠、可见性、分页接口、事务回滚、存档重放和
 Godot 三页人物查看 UI。当前仅完成设计与依赖落位，运行时尚未实现。本轮当前工程 261 项、旧版
 工程 46 项测试通过；Godot 4.7.2 编辑器导入、校园导航和协作场景端到端通过。
+
+NPC 日程与人物日志第一版验收：权威内核现将已提交事件事务性投影为人物年表，移动、活动效果与
+活动完成会合并为一条记录，决策意图不会冒充经历；事件文件写入或不变量失败时人物日志随世界状态
+一起回滚。玩家查询按照公开记录、亲历、目击与已获知识过滤，秘密保持隐藏；`recent`、`important`
+和 `all` 使用绑定人物及过滤条件的游标分页，校园总快照不包含全量历史。Godot NPC 面板已提供
+“人物概况 / 日程记录 / 重要经历”和加载更早记录。固定种子 42 连续推进完整 28 天后，200 名 NPC
+均有记录，共形成 30,074 条客观记录，每人 138～170 条；个人年表内来源事件无重复，全量深验与
+检查点保存/读取一致。只读小型投影接入后，28 天验证耗时由约 1,032 秒降到 393 秒。当前完整检查点
+约 292 MB，主要来自现有幂等命令保存每回合完整事件结果，已列入第 20 步存档与性能瘦身范围。
+最终当前工程 274 项、旧版工程 46 项测试通过；Godot 4.7.2 编辑器导入、原校园导航和包含人物
+日志实际查询与三页切换的协作场景端到端均通过。

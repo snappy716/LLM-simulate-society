@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/npc_chronicle_entry.schema.json",
+  "title": "NPC chronicle entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["entry_id", "actor_id", "day", "phase", "minute", "category", "event_type", "scene_id", "related_actor_ids", "importance", "outcome", "visibility", "summary_key", "parameters", "source_event_ids", "knowledge_tags"],
+  "properties": {
+    "entry_id": {"type": "string", "minLength": 1},
+    "actor_id": {"type": "string", "minLength": 1},
+    "day": {"type": "integer", "minimum": 1},
+    "phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+    "minute": {"type": "integer", "minimum": 0, "maximum": 359},
+    "category": {"enum": ["routine", "social", "task", "trade", "organization", "injury", "night", "combat", "discovery", "story"]},
+    "event_type": {"type": "string", "minLength": 1},
+    "scene_id": {"type": ["string", "null"]},
+    "related_actor_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "importance": {"type": "integer", "minimum": 0, "maximum": 5},
+    "outcome": {"type": "string", "minLength": 1},
+    "visibility": {"enum": ["public", "observable", "private", "secret"]},
+    "summary_key": {"type": "string", "minLength": 1},
+    "parameters": {"type": "object"},
+    "source_event_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "knowledge_tags": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  }
+}

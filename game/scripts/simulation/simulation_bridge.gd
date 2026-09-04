@@ -12,6 +12,7 @@ signal campus_traversal_completed(success: bool, result: Dictionary, passage_id:
 signal campus_phase_advanced(success: bool, result: Dictionary)
 signal campus_fast_travel_completed(success: bool, result: Dictionary, destination_id: String)
 signal campus_task_operation_completed(success: bool, result: Dictionary, action_id: String, task_id: String)
+signal campus_npc_chronicle_loaded(success: bool, result: Dictionary, npc_id: String, filter_name: String)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
 
@@ -21,6 +22,7 @@ var connected := false
 var busy := false
 var _request: HTTPRequest
 var _campus_request: HTTPRequest
+var _chronicle_request: HTTPRequest
 var _retry_timer: Timer
 var _pending_operation := ""
 var campus_snapshot: Dictionary = {}
@@ -31,6 +33,9 @@ var _campus_pending_destination_id := ""
 var _campus_pending_task_id := ""
 var _campus_pending_task_action := ""
 var _campus_command_counter := 0
+var _chronicle_busy := false
+var _chronicle_npc_id := ""
+var _chronicle_filter := "recent"
 var _server_port := 8765
 var _base_url := ""
 
@@ -51,6 +56,10 @@ func _ready() -> void:
 	_campus_request.timeout = 30.0
 	_campus_request.request_completed.connect(_on_campus_request_completed)
 	add_child(_campus_request)
+	_chronicle_request = HTTPRequest.new()
+	_chronicle_request.timeout = 30.0
+	_chronicle_request.request_completed.connect(_on_chronicle_request_completed)
+	add_child(_chronicle_request)
 	_retry_timer = Timer.new()
 	_retry_timer.wait_time = 1.0
 	_retry_timer.timeout.connect(_request_snapshot)
@@ -297,6 +306,32 @@ func operate_campus_task(action_id: String, task_id: String, expected_task_revis
 		campus_task_operation_completed.emit(false, {"error": "无法发送论坛任务请求：%s" % error}, action_id, task_id)
 
 
+func request_npc_chronicle(
+	npc_id: String,
+	filter_name: String = "recent",
+	cursor: String = "",
+	limit: int = 20
+) -> void:
+	if npc_id.is_empty():
+		campus_npc_chronicle_loaded.emit(false, {"error": "未指定人物"}, npc_id, filter_name)
+		return
+	if _chronicle_busy or not connected:
+		campus_npc_chronicle_loaded.emit(false, {"error": "人物日志正在加载或服务尚未连接"}, npc_id, filter_name)
+		return
+	_chronicle_busy = true
+	_chronicle_npc_id = npc_id
+	_chronicle_filter = filter_name
+	var url := "%s/kernel/npcs/%s/chronicle?filter=%s&limit=%d" % [
+		_base_url, npc_id.uri_encode(), filter_name.uri_encode(), clampi(limit, 1, 50),
+	]
+	if not cursor.is_empty():
+		url += "&cursor=" + cursor.uri_encode()
+	var error := _chronicle_request.request(url)
+	if error != OK:
+		_chronicle_busy = false
+		campus_npc_chronicle_loaded.emit(false, {"error": "无法发送人物日志请求：%s" % error}, npc_id, filter_name)
+
+
 func phase_display_name(phase: String) -> String:
 	return {"morning": "上午", "afternoon": "下午", "evening": "晚间", "late_night": "深夜"}.get(phase, phase)
 
@@ -457,3 +492,21 @@ func _on_campus_request_completed(
 		campus_task_operation_completed.emit(bool(parsed.get("ok", false)), parsed, task_action, task_id)
 	else:
 		campus_traversal_completed.emit(bool(parsed.get("ok", false)), parsed, passage_id)
+
+
+func _on_chronicle_request_completed(
+	_result: int,
+	response_code: int,
+	_headers: PackedStringArray,
+	body: PackedByteArray
+) -> void:
+	var npc_id := _chronicle_npc_id
+	var filter_name := _chronicle_filter
+	_chronicle_busy = false
+	_chronicle_npc_id = ""
+	var parsed = JSON.parse_string(body.get_string_from_utf8())
+	if response_code != 200 or not parsed is Dictionary:
+		var error_payload: Dictionary = parsed if parsed is Dictionary else {"error": "人物日志接口返回无效响应"}
+		campus_npc_chronicle_loaded.emit(false, error_payload, npc_id, filter_name)
+		return
+	campus_npc_chronicle_loaded.emit(true, parsed, npc_id, filter_name)

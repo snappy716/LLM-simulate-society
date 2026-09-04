@@ -109,6 +109,7 @@ class KernelApiContractTests(unittest.TestCase):
         self.assertIn("road", view["passages"])
         self.assertIn("lobby", view["interior_templates"])
         self.assertNotIn("processed_commands", view)
+        self.assertNotIn("chronicles", view)
 
 
 if __name__ == "__main__":

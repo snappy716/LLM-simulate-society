@@ -210,6 +210,20 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("内在需求、秘密动机与后续计划不会直接显示", inspector)
         self.assertNotIn('_dictionary_lines(profile.get("needs"', inspector)
 
+    def test_npc_inspector_loads_private_paginated_chronicle_on_demand(self):
+        inspector = (GAME_DIR / "scripts/ui/campus_npc_inspector_ui.gd").read_text(
+            encoding="utf-8"
+        )
+        bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
+            encoding="utf-8"
+        )
+        for label in ("人物概况", "日程记录", "重要经历", "加载更早记录"):
+            self.assertIn(label, inspector)
+        self.assertIn("request_npc_chronicle", inspector)
+        self.assertIn("campus_npc_chronicle_loaded", bridge)
+        self.assertIn("/kernel/npcs/%s/chronicle", bridge)
+        self.assertNotIn('campus_snapshot["chronicles"]', inspector)
+
     def test_bridge_port_is_configurable_without_changing_windows_default(self):
         bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
             encoding="utf-8"

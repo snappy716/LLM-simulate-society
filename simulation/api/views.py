@@ -1,6 +1,8 @@
 """Small read-only projections consumed by Godot during kernel migration."""
 from __future__ import annotations
 
+import base64
+import json
 from copy import deepcopy
 from typing import Any, Dict
 
@@ -10,6 +12,139 @@ from simulation.systems.campus_schedules import current_schedule_slot
 
 KERNEL_STATUS_VIEW_VERSION = 1
 CAMPUS_WORLD_VIEW_VERSION = 10
+NPC_CHRONICLE_VIEW_VERSION = 1
+
+
+def _chronicle_cursor(actor_id: str, entry_id: str, filter_name: str) -> str:
+    raw = json.dumps(
+        {"actor_id": actor_id, "entry_id": entry_id, "filter": filter_name},
+        ensure_ascii=True, sort_keys=True, separators=(",", ":"),
+    ).encode("utf-8")
+    return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+
+
+def _parse_chronicle_cursor(cursor: str, actor_id: str, filter_name: str) -> str:
+    try:
+        raw = base64.urlsafe_b64decode(cursor + "=" * (-len(cursor) % 4))
+        payload = json.loads(raw.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("invalid chronicle cursor") from exc
+    if not isinstance(payload, dict):
+        raise ValueError("invalid chronicle cursor payload")
+    if payload.get("actor_id") != actor_id or payload.get("filter") != filter_name:
+        raise ValueError("chronicle cursor does not match this query")
+    entry_id = payload.get("entry_id")
+    if not isinstance(entry_id, str) or not entry_id:
+        raise ValueError("invalid chronicle cursor entry")
+    return entry_id
+
+
+def _chronicle_visibility(state: WorldState, entry: Dict[str, Any], viewer_id: str) -> Dict[str, str] | None:
+    if viewer_id == entry.get("actor_id"):
+        return {"certainty": "reliable", "source": "self"}
+    learned = state.chronicles.get("known_by", {}).get(viewer_id, {}).get(entry.get("entry_id"))
+    if isinstance(learned, dict):
+        return {"certainty": str(learned["certainty"]), "source": str(learned["source"])}
+    if entry.get("visibility") == "public":
+        return {"certainty": "reliable", "source": "public"}
+    place = state.places.get(str(entry.get("scene_id", "")), {})
+    place_tags = set(place.get("tags", ())) if isinstance(place, dict) else set()
+    public_routine = (
+        entry.get("visibility") == "observable"
+        and entry.get("summary_key") == "activity_completed"
+        and entry.get("phase") != "late_night"
+        and not {"private", "restricted", "night"}.intersection(place_tags)
+    )
+    if public_routine:
+        return {"certainty": "reported", "source": "campus_record"}
+    return None
+
+
+def _chronicle_display_summary(state: WorldState, entry: Dict[str, Any]) -> str:
+    parameters = entry.get("parameters", {})
+    if entry.get("summary_key") == "activity_completed":
+        activity_id = str(parameters.get("activity_id", "校园活动"))
+        place = state.places.get(str(entry.get("scene_id", "")), {})
+        place_name = place.get("name", entry.get("scene_id", "未知地点")) if isinstance(place, dict) else "未知地点"
+        return f"在{place_name}完成了{activity_id}。"
+    if entry.get("summary_key") == "routine_actions_completed":
+        actions = parameters.get("actions", ())
+        return "完成了日常安排" + (f"（{'、'.join(map(str, actions))}）" if actions else "。")
+    return str(parameters.get("public_summary", entry.get("event_type", "发生了一件事。")))
+
+
+def npc_chronicle_view(
+    state: WorldState,
+    npc_id: str,
+    *,
+    viewer_id: str = "player",
+    cursor: str = "",
+    limit: int = 20,
+    filter_name: str = "recent",
+) -> Dict[str, Any]:
+    """Return a privacy-filtered, newest-first page without polluting the world snapshot."""
+    state.require_valid()
+    if npc_id not in state.population:
+        raise ValueError(f"unknown NPC: {npc_id}")
+    if viewer_id not in state.population:
+        raise ValueError(f"unknown chronicle viewer: {viewer_id}")
+    if filter_name not in {"recent", "important", "all"}:
+        raise ValueError(f"unsupported chronicle filter: {filter_name}")
+    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 50:
+        raise ValueError("chronicle limit must be between 1 and 50")
+    aggregate = state.chronicles
+    ids = list(reversed(aggregate.get("by_actor", {}).get(npc_id, ())))
+    entries = aggregate.get("entries", {})
+    visible: list[Dict[str, Any]] = []
+    earliest_recent_day = max(1, state.clock.day - 6)
+    for entry_id in ids:
+        entry = entries.get(entry_id)
+        if not isinstance(entry, dict):
+            continue
+        if filter_name == "recent" and int(entry.get("day", 0)) < earliest_recent_day:
+            continue
+        if filter_name == "important" and int(entry.get("importance", 0)) < 2:
+            continue
+        visibility = _chronicle_visibility(state, entry, viewer_id)
+        if visibility is None:
+            continue
+        payload = deepcopy(entry)
+        payload.update(visibility)
+        payload["scene_name"] = state.places.get(str(entry.get("scene_id", "")), {}).get(
+            "name", entry.get("scene_id", "未知地点")
+        )
+        payload["related_actor_names"] = [
+            state.population.get(actor_id, {}).get("display_name", actor_id)
+            for actor_id in entry.get("related_actor_ids", ())
+        ]
+        payload["display_summary"] = _chronicle_display_summary(state, entry)
+        visible.append(payload)
+    if cursor:
+        after_id = _parse_chronicle_cursor(cursor, npc_id, filter_name)
+        position = next(
+            (index for index, item in enumerate(visible) if item["entry_id"] == after_id),
+            None,
+        )
+        if position is None:
+            raise ValueError("chronicle cursor is stale or not visible")
+        visible = visible[position + 1:]
+    page = visible[:limit]
+    has_more = len(visible) > limit
+    next_cursor = _chronicle_cursor(npc_id, page[-1]["entry_id"], filter_name) if has_more and page else ""
+    actor = state.population[npc_id]
+    return {
+        "view_version": NPC_CHRONICLE_VIEW_VERSION,
+        "world_revision": state.revision,
+        "actor": {
+            "npc_id": npc_id,
+            "display_name": actor.get("display_name", npc_id),
+        },
+        "filter": filter_name,
+        "items": page,
+        "has_more": has_more,
+        "next_cursor": next_cursor,
+        "knowledge_note": "只显示玩家已目击、公开可查、被告知或调查获得的记录。",
+    }
 
 
 def kernel_status_view(state: WorldState, *, busy: bool = False) -> Dict[str, Any]:
@@ -214,6 +349,8 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
 __all__ = [
     "CAMPUS_WORLD_VIEW_VERSION",
     "KERNEL_STATUS_VIEW_VERSION",
+    "NPC_CHRONICLE_VIEW_VERSION",
     "campus_world_view",
     "kernel_status_view",
+    "npc_chronicle_view",
 ]

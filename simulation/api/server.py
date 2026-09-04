@@ -11,6 +11,7 @@ import threading
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs, unquote, urlparse
 
 REPOSITORY_DIR = Path(__file__).resolve().parents[2]
 GAME_DIR = REPOSITORY_DIR / "game"
@@ -22,7 +23,7 @@ from simulation.api.commands import (  # noqa: E402
     command_result_view,
     parse_simulation_command,
 )
-from simulation.api.views import campus_world_view  # noqa: E402
+from simulation.api.views import campus_world_view, npc_chronicle_view  # noqa: E402
 from simulation.domain import WorldState  # noqa: E402
 from simulation.persistence import atomic_write_json  # noqa: E402
 from simulation.systems import (  # noqa: E402
@@ -66,6 +67,9 @@ from simulation.systems import (  # noqa: E402
     install_campus_social_state,
     campus_ability_invariant,
     load_campus_ability_definitions,
+    install_chronicles,
+    project_chronicle_events,
+    chronicle_invariant,
 )
 
 
@@ -87,6 +91,7 @@ class CampusKernelBridge:
         install_campus_schedules(state, graph, schedule_templates)
         action_policy = load_action_economy_policy(registry)
         install_action_economy(state, action_policy)
+        install_chronicles(state)
         activity_definitions = load_campus_activity_definitions(registry)
         activity_handler = make_campus_activity_handler(activity_definitions, action_policy)
         decision_policy = load_campus_decision_policy(
@@ -115,6 +120,8 @@ class CampusKernelBridge:
             advance_campus_phase_upkeep,
         )
         self.kernel = WorldKernel(state, rng=rng_pool)
+        self.kernel.add_event_projector(project_chronicle_events)
+        self.kernel.add_invariant(chronicle_invariant)
         self.kernel.add_invariant(action_economy_invariant)
         self.kernel.add_invariant(campus_schedule_invariant)
         self.kernel.add_invariant(campus_activity_invariant)
@@ -159,7 +166,7 @@ class CampusKernelBridge:
             self.kernel.register_handler(action_id, task_handler)
 
     def snapshot(self) -> dict:
-        return campus_world_view(self.kernel.state)
+        return self.kernel.project_view(campus_world_view)
 
     def execute(self, payload: dict) -> dict:
         command = parse_simulation_command(payload)
@@ -169,6 +176,25 @@ class CampusKernelBridge:
             "result": command_result_view(result),
             "snapshot": self.snapshot(),
         }
+
+    def chronicle(
+        self,
+        npc_id: str,
+        *,
+        cursor: str = "",
+        limit: int = 20,
+        filter_name: str = "recent",
+    ) -> dict:
+        return self.kernel.project_view(
+            lambda state: npc_chronicle_view(
+                state,
+                npc_id,
+                viewer_id="player",
+                cursor=cursor,
+                limit=limit,
+                filter_name=filter_name,
+            )
+        )
 
 
 class SimulationBridge:
@@ -231,6 +257,9 @@ class SimulationBridge:
 
     def campus_command(self, payload: dict) -> dict:
         return self.campus.execute(payload)
+
+    def campus_chronicle(self, npc_id: str, **options) -> dict:
+        return self.campus.chronicle(npc_id, **options)
 
     def _appearance(self, npc_id: str) -> dict:
         digest = hashlib.sha256(f"{self.world.cfg.seed}:{npc_id}".encode()).digest()
@@ -553,13 +582,29 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self) -> None:
-        if self.path in ("/health", "/snapshot", "/kernel/campus-snapshot"):
-            if self.path == "/health":
+        parsed_url = urlparse(self.path)
+        path = parsed_url.path
+        if path in ("/health", "/snapshot", "/kernel/campus-snapshot"):
+            if path == "/health":
                 payload = {"ok": True}
-            elif self.path == "/kernel/campus-snapshot":
+            elif path == "/kernel/campus-snapshot":
                 payload = self.bridge.campus_snapshot()
             else:
                 payload = self.bridge.snapshot()
+            self._reply(200, payload)
+        elif path.startswith("/kernel/npcs/") and path.endswith("/chronicle"):
+            npc_id = unquote(path[len("/kernel/npcs/"):-len("/chronicle")]).strip("/")
+            query = parse_qs(parsed_url.query)
+            try:
+                payload = self.bridge.campus_chronicle(
+                    npc_id,
+                    cursor=query.get("cursor", [""])[0],
+                    limit=int(query.get("limit", ["20"])[0]),
+                    filter_name=query.get("filter", ["recent"])[0],
+                )
+            except ValueError as exc:
+                self._reply(400, {"error": str(exc), "code": "invalid_chronicle_query"})
+                return
             self._reply(200, payload)
         else:
             self._reply(404, {"error": "not found"})

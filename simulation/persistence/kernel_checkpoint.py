@@ -45,6 +45,11 @@ def build_kernel_checkpoint(
     content_manifest: Optional[Dict[str, Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     state.require_valid()
+    if state.chronicles:
+        from simulation.systems.chronicles import validate_all_chronicles
+        chronicle_errors = list(validate_all_chronicles(state))
+        if chronicle_errors:
+            raise CheckpointError("invalid chronicles: " + "; ".join(chronicle_errors))
     if state.master_seed != rng.master_seed:
         raise CheckpointError("world state and RNG master seeds differ")
     body: Dict[str, Any] = {
@@ -107,6 +112,11 @@ def load_kernel_checkpoint(
         raise CheckpointError("checkpoint world and RNG master seeds differ")
     if state.content_version != content_version:
         raise CheckpointError("checkpoint world and content versions differ")
+    if state.chronicles:
+        from simulation.systems.chronicles import validate_all_chronicles
+        chronicle_errors = list(validate_all_chronicles(state))
+        if chronicle_errors:
+            raise CheckpointError("invalid checkpoint chronicles: " + "; ".join(chronicle_errors))
     if expected_content_version is not None and content_version != expected_content_version:
         raise CheckpointError(
             f"content version mismatch: save={content_version}, current={expected_content_version}"

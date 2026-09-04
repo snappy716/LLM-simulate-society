@@ -71,6 +71,13 @@ from simulation.domain.campus import (
 )
 from simulation.domain.tasks import CampusTask, ForumKind, TaskState
 from simulation.domain.events import EventDraft, SimulationEvent
+from simulation.domain.chronicles import (
+    CHRONICLE_CATEGORIES,
+    CHRONICLE_PHASES,
+    CHRONICLE_VISIBILITIES,
+    NpcChronicleEntry,
+    chronicle_dicts,
+)
 from simulation.domain.world_state import AGGREGATE_NAMES, ClockState, WorldState
 from simulation.domain.action_economy import (
     ActionEconomyPolicy,
@@ -192,6 +199,11 @@ __all__ = [
     "ClockState",
     "EventDraft",
     "SimulationEvent",
+    "CHRONICLE_CATEGORIES",
+    "CHRONICLE_PHASES",
+    "CHRONICLE_VISIBILITIES",
+    "NpcChronicleEntry",
+    "chronicle_dicts",
     "WorldState",
     "CampusLocation",
     "CampusLocationGraph",

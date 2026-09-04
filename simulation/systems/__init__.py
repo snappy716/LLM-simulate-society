@@ -220,3 +220,22 @@ from simulation.systems.transactions import (
     TransactionOutcome,
     WorldKernel,
 )
+from simulation.systems.chronicles import (
+    CHRONICLE_CERTAINTIES,
+    CHRONICLE_SCHEMA_VERSION,
+    chronicle_invariant,
+    grant_chronicle_knowledge,
+    install_chronicles,
+    project_chronicle_events,
+    validate_all_chronicles,
+)
+
+__all__.extend([
+    "CHRONICLE_CERTAINTIES",
+    "CHRONICLE_SCHEMA_VERSION",
+    "chronicle_invariant",
+    "grant_chronicle_knowledge",
+    "install_chronicles",
+    "project_chronicle_events",
+    "validate_all_chronicles",
+])

@@ -174,6 +174,21 @@ func _run_flow() -> void:
 	assert(int(movement_layer.get("last_replayed_count")) > 0)
 	for visible_npc in movement_layer.get_children():
 		assert(not visible_npc.name_label.visible)
+	var log_npc = movement_layer.get_child(0)
+	var log_profile: Dictionary = log_npc.call("get_campus_profile")
+	var log_inspector = current_scene.get_node("CampusNpcInspectorUI")
+	log_inspector.call("inspect_npc", log_npc)
+	log_inspector.call("_select_tab", "recent")
+	var log_resolution = await bridge.campus_npc_chronicle_loaded
+	assert(bool(log_resolution[0]), "NPC chronicle failed: %s" % log_resolution[1])
+	assert(String(log_resolution[2]) == String(log_profile.get("npc_id")))
+	await process_frame
+	var log_details := log_inspector.get("_details") as RichTextLabel
+	assert(log_details.text.contains("最近七日日程"))
+	assert(log_details.text.contains("第 1 天"))
+	assert(not log_details.text.contains("NPC_DECISION_MADE"))
+	log_inspector.call("_set_open", false)
+	assert(not paused)
 
 	var before_map_clock: Dictionary = (bridge.get("campus_snapshot") as Dictionary).get("clock", {}).duplicate(true)
 	var before_map_budget := int(((bridge.get("campus_snapshot") as Dictionary).get("player", {}) as Dictionary).get("action_budget", {}).get("major_remaining", -1))

@@ -154,6 +154,14 @@ class WorldKernelTests(unittest.TestCase):
         leaked.inventories["player"]["money"] = -100
         self.assertEqual(10, kernel.state.inventories["player"]["money"])
 
+    def test_project_view_returns_a_defensive_small_projection(self):
+        kernel = self.make_kernel()
+        view = kernel.project_view(
+            lambda state: {"money": state.inventories["player"]}
+        )
+        view["money"]["money"] = -100
+        self.assertEqual(10, kernel.state.inventories["player"]["money"])
+
 
 class DeterministicRngPoolTests(unittest.TestCase):
     def test_named_streams_are_reproducible_and_independent(self):
