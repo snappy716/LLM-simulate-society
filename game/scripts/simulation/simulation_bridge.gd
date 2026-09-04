@@ -13,6 +13,7 @@ signal campus_phase_advanced(success: bool, result: Dictionary)
 signal campus_fast_travel_completed(success: bool, result: Dictionary, destination_id: String)
 signal campus_task_operation_completed(success: bool, result: Dictionary, action_id: String, task_id: String)
 signal campus_club_operation_completed(success: bool, result: Dictionary, action_id: String, club_id: String)
+signal campus_party_operation_completed(success: bool, result: Dictionary, action_id: String, target_id: String)
 signal campus_npc_chronicle_loaded(success: bool, result: Dictionary, npc_id: String, filter_name: String)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
@@ -35,6 +36,8 @@ var _campus_pending_task_id := ""
 var _campus_pending_task_action := ""
 var _campus_pending_club_id := ""
 var _campus_pending_club_action := ""
+var _campus_pending_party_target_id := ""
+var _campus_pending_party_action := ""
 var _campus_command_counter := 0
 var _chronicle_busy := false
 var _chronicle_npc_id := ""
@@ -352,6 +355,45 @@ func operate_campus_club(action_id: String, club_id: String) -> void:
 		campus_club_operation_completed.emit(false, {"error": "无法发送社团请求：%s" % error}, action_id, club_id)
 
 
+func operate_campus_party(action_id: String, target_id: String = "") -> void:
+	if _campus_busy or not connected or campus_snapshot.is_empty():
+		campus_party_operation_completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他行动"}, action_id, target_id)
+		return
+	_campus_busy = true
+	_campus_pending_operation = "party"
+	_campus_pending_party_target_id = target_id
+	_campus_pending_party_action = action_id
+	_campus_command_counter += 1
+	var clock: Dictionary = campus_snapshot.get("clock", {})
+	var parameters := {}
+	if not target_id.is_empty():
+		parameters["target_id"] = target_id
+	var command := {
+		"command_id": "godot-party-%d-%d" % [Time.get_ticks_usec(), _campus_command_counter],
+		"actor_id": "player",
+		"action_id": action_id,
+		"target_ids": [],
+		"parameters": parameters,
+		"expected_world_revision": int(campus_snapshot.get("revision", 1)),
+		"issued_day": int(clock.get("day", 1)),
+		"issued_phase": String(clock.get("phase", "morning")),
+		"issued_minute": int(clock.get("minute", 0)),
+		"source": "player",
+	}
+	var error := _campus_request.request(
+		_base_url + "/kernel/command",
+		PackedStringArray(["Content-Type: application/json"]),
+		HTTPClient.METHOD_POST,
+		JSON.stringify(command)
+	)
+	if error != OK:
+		_campus_busy = false
+		_campus_pending_operation = ""
+		_campus_pending_party_target_id = ""
+		_campus_pending_party_action = ""
+		campus_party_operation_completed.emit(false, {"error": "无法发送组队请求：%s" % error}, action_id, target_id)
+
+
 func request_npc_chronicle(
 	npc_id: String,
 	filter_name: String = "recent",
@@ -503,6 +545,8 @@ func _on_campus_request_completed(
 	var task_action := _campus_pending_task_action
 	var club_id := _campus_pending_club_id
 	var club_action := _campus_pending_club_action
+	var party_target_id := _campus_pending_party_target_id
+	var party_action := _campus_pending_party_action
 	_campus_pending_operation = ""
 	_campus_pending_passage_id = ""
 	_campus_pending_destination_id = ""
@@ -510,6 +554,8 @@ func _on_campus_request_completed(
 	_campus_pending_task_action = ""
 	_campus_pending_club_id = ""
 	_campus_pending_club_action = ""
+	_campus_pending_party_target_id = ""
+	_campus_pending_party_action = ""
 	_campus_busy = false
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if response_code != 200 or not parsed is Dictionary:
@@ -528,6 +574,9 @@ func _on_campus_request_completed(
 		elif operation == "club":
 			var club_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
 			campus_club_operation_completed.emit(false, club_error, club_action, club_id)
+		elif operation == "party":
+			var party_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
+			campus_party_operation_completed.emit(false, party_error, party_action, party_target_id)
 		return
 	if operation == "snapshot":
 		campus_snapshot = parsed
@@ -545,6 +594,8 @@ func _on_campus_request_completed(
 		campus_task_operation_completed.emit(bool(parsed.get("ok", false)), parsed, task_action, task_id)
 	elif operation == "club":
 		campus_club_operation_completed.emit(bool(parsed.get("ok", false)), parsed, club_action, club_id)
+	elif operation == "party":
+		campus_party_operation_completed.emit(bool(parsed.get("ok", false)), parsed, party_action, party_target_id)
 	else:
 		campus_traversal_completed.emit(bool(parsed.get("ok", false)), parsed, passage_id)
 

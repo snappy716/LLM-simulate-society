@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/campus_party.schema.json",
+  "title": "Persistent three-person campus action party view",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["party_id", "leader_id", "purpose_id", "revision", "member_count", "max_members", "is_full", "members", "stability", "candidates", "recent_history"],
+  "properties": {
+    "party_id": {"type": "string", "minLength": 1},
+    "leader_id": {"type": "string", "minLength": 1},
+    "purpose_id": {"type": "string", "minLength": 1},
+    "revision": {"type": "integer", "minimum": 1},
+    "member_count": {"type": "integer", "minimum": 1, "maximum": 3},
+    "max_members": {"const": 3},
+    "is_full": {"type": "boolean"},
+    "members": {"type": "array", "minItems": 1, "maxItems": 3, "items": {"type": "object"}},
+    "stability": {
+      "type": "object",
+      "required": ["score", "band", "pair_count", "pressure_penalty", "relationship_skill_bonus", "active_collaboration_skills"],
+      "properties": {
+        "score": {"type": "integer", "minimum": 0, "maximum": 100},
+        "band": {"enum": ["fragile", "uncertain", "steady", "cohesive"]},
+        "pair_count": {"type": "integer", "minimum": 0, "maximum": 3},
+        "pressure_penalty": {"type": "integer", "minimum": 0},
+        "relationship_skill_bonus": {"type": "integer", "minimum": 0},
+        "active_collaboration_skills": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "candidates": {"type": "array", "items": {"type": "object"}},
+    "recent_history": {"type": "array", "maxItems": 12, "items": {"type": "object"}}
+  }
+}

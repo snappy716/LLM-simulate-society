@@ -45,6 +45,11 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ),
     ContentSource("actions/campus_schedules.json", "schedule_template", "templates"),
     ContentSource("organizations/clubs.json", "club", "clubs"),
+    ContentSource(
+        "organizations/party_policy.json",
+        "configuration",
+        singleton_id="party_policy",
+    ),
     ContentSource("situations/surface_tasks.json", "surface_task_template", "templates"),
     ContentSource(
         "situations/forum_policy.json",
@@ -213,6 +218,32 @@ class ContentRegistry:
                     + ", ".join(sorted(forbidden))
                 )
         population_config = self.all("configuration").get("campus_population", {})
+        party_policy = self.all("configuration").get("party_policy", {})
+        if party_policy:
+            for field_name in (
+                "max_members", "invitation_score_threshold", "withdrawal_score_threshold",
+                "minimum_commitment_days", "same_college_bonus", "shared_club_bonus",
+            ):
+                value = party_policy.get(field_name)
+                if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                    errors.append(f"party policy requires non-negative {field_name}")
+            access_modifiers = party_policy.get("night_access_modifiers", {})
+            if not isinstance(access_modifiers, dict) or set(access_modifiers) != {
+                "unaware", "sensitive", "capable", "willing",
+            }:
+                errors.append("party policy requires all night access modifiers")
+            relationship_skills = party_policy.get("relationship_skills", {})
+            configured_skills = set(population_config.get("relationship_skills", ()))
+            if not isinstance(relationship_skills, dict) or set(relationship_skills) != configured_skills:
+                errors.append("party policy relationship skills must match population generation")
+            elif any(
+                not isinstance(definition, dict)
+                or not definition.get("name")
+                or not definition.get("description")
+                or not isinstance(definition.get("battle_effect"), dict)
+                for definition in relationship_skills.values()
+            ):
+                errors.append("party relationship skill definitions are invalid")
         referenced_schedules = set(population_config.get("schedules", {}).values())
         unknown_schedules = referenced_schedules - schedule_ids
         if unknown_schedules:

@@ -90,6 +90,18 @@ func _run_flow() -> void:
 	assert(club_detail.text.contains("公共资源"))
 	assert(club_detail.text.contains("团队战术"))
 	assert((phone_ui.get("_club_picker") as OptionButton).item_count == 12)
+	phone_ui.call("_open_app", "party", "行动小队")
+	var party_detail := phone_ui.get("_party_detail") as RichTextLabel
+	assert(party_detail.text.contains("稳定度"))
+	assert(party_detail.text.contains("关系协作能力"))
+	var party_candidate_picker := phone_ui.get("_party_candidate_picker") as OptionButton
+	assert(party_candidate_picker.item_count > 0)
+	var party_invite_action := phone_ui.get("_party_invite_action") as Button
+	assert(not party_invite_action.disabled)
+	party_invite_action.pressed.emit()
+	var party_resolution = await bridge.campus_party_operation_completed
+	assert(bool(party_resolution[0]), "party invitation failed: %s" % party_resolution[1])
+	assert(int((bridge.get("campus_snapshot") as Dictionary).get("party", {}).get("member_count", 0)) == 2)
 	phone_ui.call("_open_app", "forums", "校园互助")
 	var forum_cards := phone_ui.get("_forum_cards") as VBoxContainer
 	assert(forum_cards.get_child_count() == 12)

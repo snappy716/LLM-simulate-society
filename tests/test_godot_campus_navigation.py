@@ -162,6 +162,18 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn('"JOIN_CAMPUS_CLUB"', phone)
         self.assertIn('"CLUB_ACTIVITY"', phone)
 
+    def test_party_app_exposes_invitation_commitment_and_stability(self):
+        phone = (GAME_DIR / "scripts/ui/campus_phone_ui.gd").read_text(encoding="utf-8")
+        bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
+            encoding="utf-8"
+        )
+        for text in ("行动小队", "稳定度", "关系协作能力", "发出邀请", "解除承诺"):
+            self.assertIn(text, phone)
+        self.assertIn("func operate_campus_party", bridge)
+        self.assertIn("campus_party_operation_completed", bridge)
+        self.assertIn('"INVITE_PARTY_MEMBER"', phone)
+        self.assertIn('"DISMISS_PARTY_MEMBER"', phone)
+
     def test_map_ui_uses_authoritative_free_travel_and_scene_mounts_all_prototypes(self):
         bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
             encoding="utf-8"

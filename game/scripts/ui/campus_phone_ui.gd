@@ -9,6 +9,7 @@ const APPS := [
 	{"id": "wallet", "name": "电子钱包", "icon": "钱", "color": Color("4f73cd")},
 	{"id": "health", "name": "健康档案", "icon": "健", "color": Color("e95d70")},
 	{"id": "clubs", "name": "社团中心", "icon": "社", "color": Color("c47a46")},
+	{"id": "party", "name": "行动小队", "icon": "队", "color": Color("477f8f")},
 	{"id": "forums", "name": "双层论坛", "icon": "坛", "color": Color("785bc7")},
 ]
 
@@ -36,6 +37,15 @@ var _club_membership_action: Button
 var _club_activity_action: Button
 var _club_feedback: Label
 var _selected_club_id := ""
+var _party_root: VBoxContainer
+var _party_detail: RichTextLabel
+var _party_candidate_picker: OptionButton
+var _party_invite_action: Button
+var _party_member_picker: OptionButton
+var _party_dismiss_action: Button
+var _party_feedback: Label
+var _selected_party_candidate_id := ""
+var _selected_party_member_id := ""
 
 
 func _ready() -> void:
@@ -45,6 +55,7 @@ func _ready() -> void:
 	SimulationBridge.campus_snapshot_updated.connect(_on_campus_snapshot_updated)
 	SimulationBridge.campus_task_operation_completed.connect(_on_task_operation_completed)
 	SimulationBridge.campus_club_operation_completed.connect(_on_club_operation_completed)
+	SimulationBridge.campus_party_operation_completed.connect(_on_party_operation_completed)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -161,6 +172,10 @@ func _build_app_page() -> VBoxContainer:
 	_club_root.visible = false
 	_club_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page.add_child(_club_root)
+	_party_root = _build_party_page()
+	_party_root.visible = false
+	_party_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_child(_party_root)
 	return page
 
 
@@ -191,6 +206,45 @@ func _build_club_page() -> VBoxContainer:
 	_club_activity_action.pressed.connect(_perform_club_activity)
 	actions.add_child(_club_activity_action)
 	root.add_child(actions)
+	return root
+
+
+func _build_party_page() -> VBoxContainer:
+	var root := VBoxContainer.new()
+	root.add_theme_constant_override("separation", 7)
+	_party_detail = RichTextLabel.new()
+	_party_detail.bbcode_enabled = true
+	_party_detail.fit_content = false
+	_party_detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_party_detail.add_theme_font_size_override("normal_font_size", 14)
+	root.add_child(_party_detail)
+	var invite_label := Label.new()
+	invite_label.text = "邀请同行者"
+	root.add_child(invite_label)
+	var invite_row := HBoxContainer.new()
+	_party_candidate_picker = OptionButton.new()
+	_party_candidate_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_party_candidate_picker.item_selected.connect(_select_party_candidate)
+	invite_row.add_child(_party_candidate_picker)
+	_party_invite_action = Button.new()
+	_party_invite_action.text = "发出邀请"
+	_party_invite_action.pressed.connect(_invite_party_candidate)
+	invite_row.add_child(_party_invite_action)
+	root.add_child(invite_row)
+	var dismiss_row := HBoxContainer.new()
+	_party_member_picker = OptionButton.new()
+	_party_member_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_party_member_picker.item_selected.connect(_select_party_member)
+	dismiss_row.add_child(_party_member_picker)
+	_party_dismiss_action = Button.new()
+	_party_dismiss_action.text = "解除承诺"
+	_party_dismiss_action.pressed.connect(_dismiss_party_member)
+	dismiss_row.add_child(_party_dismiss_action)
+	root.add_child(dismiss_row)
+	_party_feedback = Label.new()
+	_party_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_party_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	root.add_child(_party_feedback)
 	return root
 
 
@@ -277,15 +331,20 @@ func _open_app(app_id: String, app_name: String) -> void:
 	_app_title.text = app_name
 	var is_forum := app_id == "forums"
 	var is_club := app_id == "clubs"
-	_content.visible = not is_forum and not is_club
+	var is_party := app_id == "party"
+	_content.visible = not is_forum and not is_club and not is_party
 	_forum_root.visible = is_forum
 	_club_root.visible = is_club
+	_party_root.visible = is_party
 	if is_forum:
 		_forum_feedback.text = ""
 		_show_forum_list()
 	elif is_club:
 		_club_feedback.text = ""
 		_refresh_club_page()
+	elif is_party:
+		_party_feedback.text = ""
+		_refresh_party_page()
 	else:
 		_content.text = _app_text(app_id)
 	_home.visible = false
@@ -544,6 +603,8 @@ func _on_campus_snapshot_updated(_snapshot: Dictionary) -> void:
 			_refresh_forum_detail()
 	elif _club_root.visible:
 		_refresh_club_page()
+	elif _party_root.visible:
+		_refresh_party_page()
 
 
 func _refresh_club_page() -> void:
@@ -651,6 +712,93 @@ func _on_club_operation_completed(success: bool, result: Dictionary, _action_id:
 	_refresh_club_page()
 
 
+func _refresh_party_page() -> void:
+	var party: Dictionary = SimulationBridge.campus_snapshot.get("party", {})
+	if party.is_empty():
+		_party_detail.text = "队伍数据尚未同步。"
+		_party_invite_action.disabled = true
+		_party_dismiss_action.disabled = true
+		return
+	var band_names := {"fragile": "脆弱", "uncertain": "磨合中", "steady": "稳定", "cohesive": "默契"}
+	var response_names := {"likely_accept": "较愿意", "uncertain": "态度不明", "likely_decline": "较可能拒绝"}
+	var member_lines: Array[String] = []
+	for member in party.get("members", []):
+		if member is Dictionary:
+			var status := "队长" if String(member.get("status", "")) == "leader" else "已承诺至第%d天" % int(member.get("commitment_until_day", 1))
+			member_lines.append("• %s · %s" % [member.get("display_name", member.get("actor_id", "")), status])
+	var skill_lines: Array[String] = []
+	var stability: Dictionary = party.get("stability", {})
+	for skill in stability.get("active_collaboration_skills", []):
+		if skill is Dictionary and bool(skill.get("active", false)):
+			skill_lines.append("• %s（%s）" % [skill.get("name", skill.get("skill_id", "")), skill.get("source_name", "")])
+	if skill_lines.is_empty():
+		skill_lines.append("尚未形成关系协作能力")
+	_party_detail.text = "[font_size=22][b]行动小队 %d / %d[/b][/font_size]\n用途：夜相调查准备\n稳定度：%d · %s\n\n[b]当前成员[/b]\n%s\n\n[b]关系协作能力[/b]\n%s\n\n[color=#91a4bc]邀请不会消耗主要行动。NPC 会根据关系、性格、压力、共同学院/社团和夜间行动意愿自行接受或拒绝；拒绝后当天不能反复邀请。[/color]" % [
+		int(party.get("member_count", 1)), int(party.get("max_members", 3)),
+		int(stability.get("score", 0)), band_names.get(String(stability.get("band", "uncertain")), "未知"),
+		"\n".join(member_lines), "\n".join(skill_lines),
+	]
+	var previous_candidate := _selected_party_candidate_id
+	_party_candidate_picker.clear()
+	var candidate_index := 0
+	for candidate in party.get("candidates", []):
+		if not candidate is Dictionary or String(candidate.get("expected_response", "")) == "unavailable":
+			continue
+		var index := _party_candidate_picker.item_count
+		_party_candidate_picker.add_item("%s · %s" % [candidate.get("display_name", "未知"), response_names.get(String(candidate.get("expected_response", "")), "未知")])
+		_party_candidate_picker.set_item_metadata(index, candidate.get("actor_id", ""))
+		if String(candidate.get("actor_id", "")) == previous_candidate:
+			candidate_index = index
+	if _party_candidate_picker.item_count > 0:
+		_party_candidate_picker.select(candidate_index)
+		_selected_party_candidate_id = String(_party_candidate_picker.get_item_metadata(candidate_index))
+	else:
+		_selected_party_candidate_id = ""
+	_party_invite_action.disabled = bool(party.get("is_full", false)) or _selected_party_candidate_id.is_empty()
+	var previous_member := _selected_party_member_id
+	_party_member_picker.clear()
+	var member_index := 0
+	for member in party.get("members", []):
+		if not member is Dictionary or String(member.get("status", "")) == "leader":
+			continue
+		var index := _party_member_picker.item_count
+		_party_member_picker.add_item(String(member.get("display_name", member.get("actor_id", ""))))
+		_party_member_picker.set_item_metadata(index, member.get("actor_id", ""))
+		if String(member.get("actor_id", "")) == previous_member:
+			member_index = index
+	if _party_member_picker.item_count > 0:
+		_party_member_picker.select(member_index)
+		_selected_party_member_id = String(_party_member_picker.get_item_metadata(member_index))
+	else:
+		_selected_party_member_id = ""
+	_party_dismiss_action.disabled = _selected_party_member_id.is_empty()
+
+
+func _select_party_candidate(index: int) -> void:
+	_selected_party_candidate_id = String(_party_candidate_picker.get_item_metadata(index))
+
+
+func _select_party_member(index: int) -> void:
+	_selected_party_member_id = String(_party_member_picker.get_item_metadata(index))
+
+
+func _invite_party_candidate() -> void:
+	_party_feedback.text = "正在等待对方决定……"
+	SimulationBridge.operate_campus_party("INVITE_PARTY_MEMBER", _selected_party_candidate_id)
+
+
+func _dismiss_party_member() -> void:
+	_party_feedback.text = "正在解除同行承诺……"
+	SimulationBridge.operate_campus_party("DISMISS_PARTY_MEMBER", _selected_party_member_id)
+
+
+func _on_party_operation_completed(success: bool, result: Dictionary, _action_id: String, _target_id: String) -> void:
+	var command_result: Dictionary = result.get("result", {})
+	_party_feedback.text = String(command_result.get("message", result.get("error", "组队操作失败")))
+	_party_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
+	_refresh_party_page()
+
+
 func _dictionary_lines(value: Variant) -> String:
 	if not value is Dictionary or value.is_empty():
 		return "暂无数据"
@@ -694,6 +842,7 @@ func _show_home() -> void:
 	_app_page.visible = false
 	_forum_root.visible = false
 	_club_root.visible = false
+	_party_root.visible = false
 	_content.visible = true
 
 

@@ -16,7 +16,7 @@ func _run_flow() -> void:
 		await create_timer(0.05).timeout
 	var initial_snapshot: Dictionary = bridge.get("campus_snapshot")
 	assert(not initial_snapshot.is_empty(), "campus snapshot did not connect")
-	assert(initial_snapshot.get("view_version") == 12)
+	assert(initial_snapshot.get("view_version") == 13)
 	assert(int((initial_snapshot.get("task_summary", {}) as Dictionary).get("total", 0)) == 12)
 	assert(initial_snapshot.get("revision") == 1)
 	assert((initial_snapshot.get("player", {}) as Dictionary).get("current_location_id") == "south_gate_region")

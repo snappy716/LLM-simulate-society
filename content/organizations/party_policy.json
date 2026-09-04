@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "max_members": 3,
+  "invitation_score_threshold": 38,
+  "withdrawal_score_threshold": 25,
+  "minimum_commitment_days": 1,
+  "same_college_bonus": 5,
+  "shared_club_bonus": 8,
+  "night_access_modifiers": {
+    "unaware": -1000,
+    "sensitive": -1000,
+    "capable": 10,
+    "willing": 25
+  },
+  "relationship_skills": {
+    "steady_partner": {
+      "name": "稳定搭档",
+      "description": "在压力下维持队伍节奏。",
+      "stability_bonus": 6,
+      "battle_effect": {"effect_id": "formation_stability", "amount": 1}
+    },
+    "shared_focus": {
+      "name": "共同专注",
+      "description": "相互提醒，使队伍更容易保持专注。",
+      "stability_bonus": 3,
+      "battle_effect": {"effect_id": "opening_focus", "amount": 2}
+    },
+    "mutual_cover": {
+      "name": "相互掩护",
+      "description": "成员受威胁时更愿意保护彼此。",
+      "stability_bonus": 4,
+      "battle_effect": {"effect_id": "first_guard", "amount": 2}
+    },
+    "encouraging_presence": {
+      "name": "鼓舞陪伴",
+      "description": "用陪伴缓解失误后的动摇。",
+      "stability_bonus": 4,
+      "battle_effect": {"effect_id": "round_end_focus", "amount": 1}
+    },
+    "coordinated_response": {
+      "name": "协同行动",
+      "description": "熟悉彼此节奏，快速响应换位与指令。",
+      "stability_bonus": 5,
+      "battle_effect": {"effect_id": "first_reposition_discount", "amount": 1}
+    }
+  }
+}

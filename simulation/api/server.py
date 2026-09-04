@@ -73,6 +73,11 @@ from simulation.systems import (  # noqa: E402
     campus_club_invariant,
     validate_club_activity,
     club_has_activity,
+    advance_party_commitments,
+    campus_party_invariant,
+    install_campus_parties,
+    load_campus_party_policy,
+    make_campus_party_handler,
     campus_ability_invariant,
     load_campus_ability_definitions,
     install_chronicles,
@@ -97,6 +102,8 @@ class CampusKernelBridge:
         install_campus_social_state(state, registry.all("club"))
         club_policy = load_campus_club_policy(registry)
         install_campus_clubs(state, registry.all("club"), club_policy)
+        party_policy = load_campus_party_policy(registry)
+        install_campus_parties(state, party_policy)
         schedule_templates = load_campus_schedule_templates(registry, graph)
         install_campus_schedules(state, graph, schedule_templates)
         action_policy = load_action_economy_policy(registry)
@@ -151,6 +158,7 @@ class CampusKernelBridge:
         def campus_phase_upkeep(context):
             summary = advance_campus_phase_upkeep(context)
             summary.update(advance_club_upkeep(context, club_policy))
+            summary.update(advance_party_commitments(context, party_policy))
             return summary
 
         phase_upkeep = make_surface_forum_phase_upkeep(
@@ -170,6 +178,7 @@ class CampusKernelBridge:
         self.kernel.add_invariant(campus_decision_invariant)
         self.kernel.add_invariant(campus_social_invariant)
         self.kernel.add_invariant(campus_club_invariant)
+        self.kernel.add_invariant(campus_party_invariant)
         self.kernel.add_invariant(make_campus_task_invariant(activity_definitions))
         traverse_handler = make_traverse_location_handler(graph)
         self.kernel.register_handler(
@@ -213,6 +222,14 @@ class CampusKernelBridge:
             "TRANSFER_CLUB_LEADERSHIP",
         ):
             self.kernel.register_handler(action_id, club_handler)
+        party_handler = make_campus_party_handler(party_policy)
+        for action_id in (
+            "INVITE_PARTY_MEMBER",
+            "DISMISS_PARTY_MEMBER",
+            "LEAVE_PARTY",
+            "DISBAND_PARTY",
+        ):
+            self.kernel.register_handler(action_id, party_handler)
 
     def snapshot(self) -> dict:
         return self.kernel.project_view(campus_world_view)

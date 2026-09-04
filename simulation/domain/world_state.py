@@ -20,6 +20,7 @@ AGGREGATE_NAMES = (
     "inventories",
     "relationships",
     "organizations",
+    "parties",
     "forums",
     "tasks",
     "situations",
@@ -80,6 +81,7 @@ class WorldState:
     inventories: Dict[str, Any] = field(default_factory=dict)
     relationships: Dict[str, Any] = field(default_factory=dict)
     organizations: Dict[str, Any] = field(default_factory=dict)
+    parties: Dict[str, Any] = field(default_factory=dict)
     forums: Dict[str, Any] = field(default_factory=dict)
     tasks: Dict[str, Any] = field(default_factory=dict)
     situations: Dict[str, Any] = field(default_factory=dict)
