@@ -82,6 +82,13 @@ const DIALOGUE_INTENTS := [
 	{"id": "confront", "name": "当面质疑"},
 ]
 
+const SOCIAL_PROPOSALS := [
+	{"id": "party_invite", "name": "邀请加入行动小队"},
+	{"id": "task_help", "name": "请求协助当前任务"},
+	{"id": "meet_up", "name": "约定稍后见面"},
+	{"id": "follow_up", "name": "兑现已有约定"},
+]
+
 var _overlay: ColorRect
 var _title: Label
 var _details: RichTextLabel
@@ -96,6 +103,9 @@ var _dialogue_intent: OptionButton
 var _dialogue_input: LineEdit
 var _dialogue_button: Button
 var _dialogue_feedback: Label
+var _proposal_picker: OptionButton
+var _proposal_button: Button
+var _proposal_feedback: Label
 var _opened := false
 var _selected_npc: Node
 var _selected_profile: Dictionary = {}
@@ -112,6 +122,7 @@ func _ready() -> void:
 	SimulationBridge.campus_cognition_operation_completed.connect(_on_cognition_operation_completed)
 	SimulationBridge.campus_phone_message_completed.connect(_on_contact_operation_completed)
 	SimulationBridge.campus_dialogue_completed.connect(_on_dialogue_completed)
+	SimulationBridge.campus_social_proposal_completed.connect(_on_social_proposal_completed)
 
 
 func _process(_delta: float) -> void:
@@ -173,8 +184,8 @@ func _build_ui() -> void:
 
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.position = Vector2(-340, -310)
-	panel.size = Vector2(680, 620)
+	panel.position = Vector2(-340, -350)
+	panel.size = Vector2(680, 700)
 	_overlay.add_child(panel)
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
@@ -245,6 +256,24 @@ func _build_ui() -> void:
 	_dialogue_feedback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_dialogue_feedback.add_theme_color_override("font_color", Color("e0b86a"))
 	column.add_child(_dialogue_feedback)
+	var proposal_row := HBoxContainer.new()
+	proposal_row.add_theme_constant_override("separation", 8)
+	column.add_child(proposal_row)
+	_proposal_picker = OptionButton.new()
+	_proposal_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for proposal in SOCIAL_PROPOSALS:
+		_proposal_picker.add_item(String(proposal["name"]))
+		_proposal_picker.set_item_metadata(_proposal_picker.item_count - 1, String(proposal["id"]))
+	proposal_row.add_child(_proposal_picker)
+	_proposal_button = Button.new()
+	_proposal_button.text = "正式提出（免费）"
+	_proposal_button.pressed.connect(_submit_social_proposal)
+	proposal_row.add_child(_proposal_button)
+	_proposal_feedback = Label.new()
+	_proposal_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_proposal_feedback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_proposal_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	column.add_child(_proposal_feedback)
 	_contact_button = Button.new()
 	_contact_button.text = "交换联系方式（免费操作）"
 	_contact_button.pressed.connect(_add_selected_contact)
@@ -276,6 +305,7 @@ func _show_npc(npc: Node) -> void:
 	_awaken_feedback.text = ""
 	_contact_feedback.text = ""
 	_dialogue_feedback.text = ""
+	_proposal_feedback.text = ""
 	_dialogue_input.text = ""
 	_dialogue_button.disabled = true
 	_refresh_awaken_button()
@@ -488,6 +518,34 @@ func _on_dialogue_completed(success: bool, result: Dictionary, target_id: String
 		_dialogue_feedback.text = String(command_result.get("message", result.get("error", "交谈失败")))
 		_dialogue_feedback.add_theme_color_override("font_color", Color("ee8174"))
 	_dialogue_button.disabled = _dialogue_input.text.strip_edges().is_empty()
+
+
+func _submit_social_proposal() -> void:
+	var npc_id := _safe_text(_selected_profile.get("npc_id"))
+	if npc_id.is_empty() or _proposal_picker.selected < 0:
+		return
+	var proposal_type := String(_proposal_picker.get_item_metadata(_proposal_picker.selected))
+	_proposal_button.disabled = true
+	_proposal_feedback.text = "正在等待对方明确决定……"
+	SimulationBridge.operate_campus_social_proposal(npc_id, proposal_type, "in_person")
+
+
+func _on_social_proposal_completed(
+	success: bool, result: Dictionary, target_id: String, _proposal_type: String
+) -> void:
+	if _selected_profile.is_empty() or target_id != _safe_text(_selected_profile.get("npc_id")):
+		return
+	var command_result: Dictionary = result.get("result", {})
+	var payload: Dictionary = command_result.get("payload", {})
+	if payload.has("reply_text"):
+		_proposal_feedback.text = "%s：%s" % [
+			_safe_text(_selected_profile.get("display_name"), target_id),
+			_safe_text(payload.get("reply_text"), command_result.get("message", "对方已经作出决定。")),
+		]
+	else:
+		_proposal_feedback.text = String(command_result.get("message", result.get("error", "提议未能送达")))
+	_proposal_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
+	_proposal_button.disabled = false
 
 
 func _on_contact_operation_completed(

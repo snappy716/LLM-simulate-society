@@ -158,6 +158,28 @@
       "summary_reject": "{actor} 与 {target} 再次谈到此前的约定，但这次没能兑现。"
     },
     {
+      "id": "plan_meet_up",
+      "name": "约定稍后见面",
+      "base_score": 18,
+      "acceptance_threshold": 42,
+      "relationship_on_accept": {
+        "initiator": {"familiarity": 2, "closeness": 2},
+        "target": {"familiarity": 2, "trust": 1, "obligation": 1}
+      },
+      "relationship_on_reject": {
+        "initiator": {"suspicion": 1},
+        "target": {"conflict": 1}
+      },
+      "emotion_on_accept": {
+        "initiator": {"joy": 2},
+        "target": {"joy": 1}
+      },
+      "social_relief": 4,
+      "creates_hook": "meet_up",
+      "summary_accept": "{actor} 与 {target} 约定之后再找时间见面。",
+      "summary_reject": "{actor} 邀请 {target} 之后见面，但对方没有答应。"
+    },
+    {
       "id": "confront",
       "name": "当面质疑",
       "base_score": 20,

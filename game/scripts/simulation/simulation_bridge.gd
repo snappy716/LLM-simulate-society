@@ -17,6 +17,7 @@ signal campus_party_operation_completed(success: bool, result: Dictionary, actio
 signal campus_cognition_operation_completed(success: bool, result: Dictionary, action_id: String, target_id: String)
 signal campus_phone_message_completed(success: bool, result: Dictionary, action_id: String, target_id: String)
 signal campus_dialogue_completed(success: bool, result: Dictionary, target_id: String)
+signal campus_social_proposal_completed(success: bool, result: Dictionary, target_id: String, proposal_type: String)
 signal campus_npc_chronicle_loaded(success: bool, result: Dictionary, npc_id: String, filter_name: String)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
@@ -46,6 +47,8 @@ var _campus_pending_cognition_action := ""
 var _campus_pending_message_target_id := ""
 var _campus_pending_message_action := ""
 var _campus_pending_dialogue_target_id := ""
+var _campus_pending_proposal_target_id := ""
+var _campus_pending_proposal_type := ""
 var _campus_command_counter := 0
 var _chronicle_busy := false
 var _chronicle_npc_id := ""
@@ -527,6 +530,58 @@ func operate_campus_dialogue(target_id: String, intent_id: String, text: String)
 		campus_dialogue_completed.emit(false, {"error": "无法发送交谈请求：%s" % error}, target_id)
 
 
+func operate_campus_social_proposal(
+	target_id: String,
+	proposal_type: String,
+	channel: String,
+	note: String = ""
+) -> void:
+	if target_id.is_empty():
+		campus_social_proposal_completed.emit(false, {"error": "未指定提议对象"}, target_id, proposal_type)
+		return
+	if proposal_type.is_empty():
+		campus_social_proposal_completed.emit(false, {"error": "未指定提议类型"}, target_id, proposal_type)
+		return
+	if _campus_busy or not connected or campus_snapshot.is_empty():
+		campus_social_proposal_completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他操作"}, target_id, proposal_type)
+		return
+	_campus_busy = true
+	_campus_pending_operation = "social_proposal"
+	_campus_pending_proposal_target_id = target_id
+	_campus_pending_proposal_type = proposal_type
+	_campus_command_counter += 1
+	var clock: Dictionary = campus_snapshot.get("clock", {})
+	var command := {
+		"command_id": "godot-proposal-%d-%d" % [Time.get_ticks_usec(), _campus_command_counter],
+		"actor_id": "player",
+		"action_id": "MAKE_SOCIAL_PROPOSAL",
+		"target_ids": [target_id],
+		"parameters": {
+			"target_id": target_id,
+			"proposal_type": proposal_type,
+			"channel": channel,
+			"note": note.strip_edges(),
+		},
+		"expected_world_revision": int(campus_snapshot.get("revision", 1)),
+		"issued_day": int(clock.get("day", 1)),
+		"issued_phase": String(clock.get("phase", "morning")),
+		"issued_minute": int(clock.get("minute", 0)),
+		"source": "player",
+	}
+	var error := _campus_request.request(
+		_base_url + "/kernel/command",
+		PackedStringArray(["Content-Type: application/json"]),
+		HTTPClient.METHOD_POST,
+		JSON.stringify(command)
+	)
+	if error != OK:
+		_campus_busy = false
+		_campus_pending_operation = ""
+		_campus_pending_proposal_target_id = ""
+		_campus_pending_proposal_type = ""
+		campus_social_proposal_completed.emit(false, {"error": "无法发送提议请求：%s" % error}, target_id, proposal_type)
+
+
 func request_npc_chronicle(
 	npc_id: String,
 	filter_name: String = "recent",
@@ -685,6 +740,8 @@ func _on_campus_request_completed(
 	var message_target_id := _campus_pending_message_target_id
 	var message_action := _campus_pending_message_action
 	var dialogue_target_id := _campus_pending_dialogue_target_id
+	var proposal_target_id := _campus_pending_proposal_target_id
+	var proposal_type := _campus_pending_proposal_type
 	_campus_pending_operation = ""
 	_campus_pending_passage_id = ""
 	_campus_pending_destination_id = ""
@@ -699,6 +756,8 @@ func _on_campus_request_completed(
 	_campus_pending_message_target_id = ""
 	_campus_pending_message_action = ""
 	_campus_pending_dialogue_target_id = ""
+	_campus_pending_proposal_target_id = ""
+	_campus_pending_proposal_type = ""
 	_campus_busy = false
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if response_code != 200 or not parsed is Dictionary:
@@ -729,6 +788,9 @@ func _on_campus_request_completed(
 		elif operation == "dialogue":
 			var dialogue_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
 			campus_dialogue_completed.emit(false, dialogue_error, dialogue_target_id)
+		elif operation == "social_proposal":
+			var proposal_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
+			campus_social_proposal_completed.emit(false, proposal_error, proposal_target_id, proposal_type)
 		return
 	if operation == "snapshot":
 		campus_snapshot = parsed
@@ -754,6 +816,8 @@ func _on_campus_request_completed(
 		campus_phone_message_completed.emit(bool(parsed.get("ok", false)), parsed, message_action, message_target_id)
 	elif operation == "dialogue":
 		campus_dialogue_completed.emit(bool(parsed.get("ok", false)), parsed, dialogue_target_id)
+	elif operation == "social_proposal":
+		campus_social_proposal_completed.emit(bool(parsed.get("ok", false)), parsed, proposal_target_id, proposal_type)
 	else:
 		campus_traversal_completed.emit(bool(parsed.get("ok", false)), parsed, passage_id)
 

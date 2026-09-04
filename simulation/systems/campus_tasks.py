@@ -748,6 +748,19 @@ def _settle_origin_hook(state: WorldState, task: Mapping[str, Any], outcome: str
             break
 
 
+def _settle_task_support_hooks(state: WorldState, task: Mapping[str, Any], outcome: str) -> None:
+    task_id = str(task.get("task_id", ""))
+    for hook in state.cognition.get("interactions", {}).get("hooks", ()):
+        if (
+            hook.get("hook_type") == "task_support_commitment"
+            and hook.get("linked_task_id") == task_id
+            and hook.get("state") == "open"
+        ):
+            hook["state"] = "completed" if outcome == "completed" else "broken"
+            hook["resolved_day"] = state.clock.day
+            hook["resolved_phase"] = state.clock.phase
+
+
 def _unlock_follow_up_tasks(state: WorldState, task: Mapping[str, Any]) -> list[str]:
     forum = state.forums.setdefault("surface", {})
     completed = set(forum.get("completed_template_ids", ()))
@@ -796,6 +809,7 @@ def complete_assigned_task(context, actor_id: str, plan: Mapping[str, Any]) -> b
     task["unlocked_follow_up_template_ids"] = unlocked_follow_ups
     task["issuer_need_result"] = issuer_need_result
     _settle_origin_hook(context.state, task, "completed")
+    _settle_task_support_hooks(context.state, task, "completed")
     context.emit(
         "FORUM_TASK_COMPLETED",
         f"{actor.get('display_name', actor_id)} 完成了《{task['title']}》。",
@@ -890,6 +904,7 @@ def make_forum_task_handler(activity_handler):
             task["state"] = "open" if context.state.clock.day <= int(task["expires_day"]) else "expired"
             task["lock_revision"] = int(task.get("lock_revision", 0)) + 1
             actor.pop("active_forum_task_id", None)
+            _settle_task_support_hooks(context.state, task, "abandoned")
             task["social_result"] = apply_task_social_consequence(
                 context.state, command.actor_id, task, "abandoned"
             )
@@ -981,6 +996,11 @@ def make_campus_task_invariant(
             preferred_assignee = task.get("preferred_assignee_id")
             if preferred_assignee is not None and preferred_assignee not in state.population:
                 errors.append(f"task {task_id} references unknown preferred assignee")
+            helper_ids = task.get("helper_ids", [])
+            if not isinstance(helper_ids, list) or len(helper_ids) != len(set(helper_ids)):
+                errors.append(f"task {task_id} has invalid helpers")
+            elif any(helper_id not in state.population for helper_id in helper_ids):
+                errors.append(f"task {task_id} references unknown helper")
             organization_id = task.get("organization_id")
             if organization_id is not None and organization_id not in state.organizations:
                 errors.append(f"task {task_id} references unknown organization")

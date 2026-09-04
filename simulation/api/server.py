@@ -104,6 +104,9 @@ from simulation.systems import (  # noqa: E402
     install_campus_messaging,
     load_campus_messaging_policy,
     make_campus_messaging_handler,
+    campus_proposal_invariant,
+    install_campus_proposals,
+    make_player_proposal_handler,
 )
 
 
@@ -140,6 +143,7 @@ class CampusKernelBridge:
         install_campus_interactions(state)
         messaging_policy = load_campus_messaging_policy(registry)
         install_campus_messaging(state, messaging_policy)
+        install_campus_proposals(state)
         self.cognition_runtime = CognitionRuntime(cognition_policy)
         activity_definitions = load_campus_activity_definitions(registry)
         activity_handler = make_campus_activity_handler(
@@ -208,6 +212,7 @@ class CampusKernelBridge:
         self.kernel.add_invariant(cognition_invariant)
         self.kernel.add_invariant(campus_interaction_invariant)
         self.kernel.add_invariant(campus_messaging_invariant)
+        self.kernel.add_invariant(campus_proposal_invariant)
         self.kernel.add_invariant(action_economy_invariant)
         self.kernel.add_invariant(campus_schedule_invariant)
         self.kernel.add_invariant(campus_activity_invariant)
@@ -288,6 +293,15 @@ class CampusKernelBridge:
             "TALK_TO_NPC",
             make_player_dialogue_handler(
                 interaction_policy, intelligence_policy, self.cognition_runtime
+            ),
+        )
+        self.kernel.register_handler(
+            "MAKE_SOCIAL_PROPOSAL",
+            make_player_proposal_handler(
+                interaction_policy,
+                messaging_policy,
+                party_handler,
+                self.cognition_runtime,
             ),
         )
 

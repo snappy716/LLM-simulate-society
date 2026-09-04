@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/social_proposal.schema.json",
+  "title": "Committed player social proposal payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "proposal_id", "day", "phase", "channel", "player_id", "target_id",
+    "proposal_type", "intent_id", "subject_id", "status", "acceptance_score",
+    "acceptance_threshold", "note", "request_text", "reply_text", "wording_source",
+    "hook_id", "hook_transition", "relationship_deltas", "emotion_deltas",
+    "outcome_claim_ids", "phone_exchange", "action_class"
+  ],
+  "properties": {
+    "proposal_id": {"type": "string", "pattern": "^proposal:[0-9]{8}$"},
+    "day": {"type": "integer", "minimum": 1},
+    "phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+    "channel": {"enum": ["in_person", "phone"]},
+    "player_id": {"const": "player"},
+    "target_id": {"type": "string", "minLength": 1},
+    "proposal_type": {"enum": ["party_invite", "task_help", "meet_up", "follow_up"]},
+    "intent_id": {"type": "string", "minLength": 1},
+    "subject_id": {"type": ["string", "null"]},
+    "status": {"enum": ["accepted", "declined"]},
+    "acceptance_score": {"type": "number"},
+    "acceptance_threshold": {"type": "number"},
+    "note": {"type": "string", "maxLength": 240},
+    "request_text": {"type": "string", "minLength": 1},
+    "reply_text": {"type": "string", "minLength": 1, "maxLength": 240},
+    "wording_source": {"enum": ["rule", "llm"]},
+    "hook_id": {"type": ["string", "null"]},
+    "hook_transition": {"enum": ["created", "completed", "broken", null]},
+    "relationship_deltas": {"type": "object"},
+    "emotion_deltas": {"type": "object"},
+    "outcome_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "phone_exchange": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["thread_id", "request_message_id", "reply_message_id"],
+          "properties": {
+            "thread_id": {"type": "string", "minLength": 1},
+            "request_message_id": {"type": "string", "minLength": 1},
+            "reply_message_id": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    },
+    "action_class": {"const": "free"}
+  }
+}

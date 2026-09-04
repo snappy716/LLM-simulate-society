@@ -108,6 +108,20 @@ func _run_flow() -> void:
 	var read_resolution = await bridge.campus_phone_message_completed
 	assert(bool(read_resolution[0]), "phone read state failed: %s" % read_resolution[1])
 	assert(String(read_resolution[2]) == "MARK_PHONE_THREAD_READ")
+	var proposal_picker := phone_ui.get("_message_proposal_picker") as OptionButton
+	proposal_picker.select(2)
+	var proposal_button := phone_ui.get("_message_proposal_action") as Button
+	proposal_button.pressed.emit()
+	var proposal_resolution = await bridge.campus_social_proposal_completed
+	var proposal_payload: Dictionary = (proposal_resolution[1].get("result", {}) as Dictionary).get("payload", {})
+	assert(String(proposal_payload.get("proposal_type", "")) == "meet_up")
+	assert(String(proposal_payload.get("status", "")) in ["accepted", "declined"])
+	assert(String(proposal_payload.get("action_class", "")) == "free")
+	messaged_thread = (bridge.get("campus_snapshot") as Dictionary).get("messaging", {}).get("threads", {}).get(messaged_npc_id, {})
+	assert((messaged_thread.get("messages", []) as Array).size() == 4)
+	var proposal_read_resolution = await bridge.campus_phone_message_completed
+	assert(bool(proposal_read_resolution[0]), "proposal reply read state failed: %s" % proposal_read_resolution[1])
+	assert(String(proposal_read_resolution[2]) == "MARK_PHONE_THREAD_READ")
 	phone_ui.call("_open_app", "courses", "课程平台")
 	var course_content := phone_ui.get("_content") as RichTextLabel
 	assert(course_content.text.contains("学院能力"))
@@ -126,11 +140,8 @@ func _run_flow() -> void:
 	var party_candidate_picker := phone_ui.get("_party_candidate_picker") as OptionButton
 	assert(party_candidate_picker.item_count > 0)
 	var party_invite_action := phone_ui.get("_party_invite_action") as Button
-	assert(not party_invite_action.disabled)
-	party_invite_action.pressed.emit()
-	var party_resolution = await bridge.campus_party_operation_completed
-	assert(bool(party_resolution[0]), "party invitation failed: %s" % party_resolution[1])
-	assert(int((bridge.get("campus_snapshot") as Dictionary).get("party", {}).get("member_count", 0)) == 2)
+	assert(party_invite_action.disabled)
+	assert(party_invite_action.text == "先交换联系方式")
 	phone_ui.call("_open_app", "forums", "校园互助")
 	var forum_cards := phone_ui.get("_forum_cards") as VBoxContainer
 	assert(forum_cards.get_child_count() == 12)

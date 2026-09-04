@@ -45,6 +45,7 @@ var _party_member_picker: OptionButton
 var _party_dismiss_action: Button
 var _party_feedback: Label
 var _selected_party_candidate_id := ""
+var _selected_party_candidate_is_contact := false
 var _selected_party_member_id := ""
 var _message_root: VBoxContainer
 var _message_contact_picker: OptionButton
@@ -52,6 +53,8 @@ var _message_log: RichTextLabel
 var _message_input: LineEdit
 var _message_send_action: Button
 var _message_feedback: Label
+var _message_proposal_picker: OptionButton
+var _message_proposal_action: Button
 var _selected_message_contact_id := ""
 
 
@@ -64,6 +67,7 @@ func _ready() -> void:
 	SimulationBridge.campus_club_operation_completed.connect(_on_club_operation_completed)
 	SimulationBridge.campus_party_operation_completed.connect(_on_party_operation_completed)
 	SimulationBridge.campus_phone_message_completed.connect(_on_phone_message_completed)
+	SimulationBridge.campus_social_proposal_completed.connect(_on_social_proposal_completed)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -219,6 +223,23 @@ func _build_message_page() -> VBoxContainer:
 	_message_send_action.pressed.connect(_send_phone_message)
 	composer.add_child(_message_send_action)
 	root.add_child(composer)
+	var proposal_row := HBoxContainer.new()
+	_message_proposal_picker = OptionButton.new()
+	_message_proposal_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for proposal in [
+		{"id": "party_invite", "name": "邀请加入行动小队"},
+		{"id": "task_help", "name": "请求协助当前任务"},
+		{"id": "meet_up", "name": "约定稍后见面"},
+		{"id": "follow_up", "name": "兑现已有约定"},
+	]:
+		_message_proposal_picker.add_item(String(proposal["name"]))
+		_message_proposal_picker.set_item_metadata(_message_proposal_picker.item_count - 1, String(proposal["id"]))
+	proposal_row.add_child(_message_proposal_picker)
+	_message_proposal_action = Button.new()
+	_message_proposal_action.text = "正式提出"
+	_message_proposal_action.pressed.connect(_send_phone_proposal)
+	proposal_row.add_child(_message_proposal_action)
+	root.add_child(proposal_row)
 	return root
 
 
@@ -445,10 +466,12 @@ func _refresh_message_page() -> void:
 		_selected_message_contact_id = ""
 		_message_log.text = "联系人数据尚未同步。"
 		_message_send_action.disabled = true
+		_message_proposal_action.disabled = true
 		return
 	_message_contact_picker.select(selected_index)
 	_selected_message_contact_id = String(_message_contact_picker.get_item_metadata(selected_index))
 	_message_send_action.disabled = false
+	_message_proposal_action.disabled = false
 	_refresh_message_thread()
 
 
@@ -511,6 +534,36 @@ func _on_phone_message_completed(
 		if success:
 			_message_input.clear()
 	_message_send_action.disabled = false
+	_refresh_message_page()
+
+
+func _send_phone_proposal() -> void:
+	if _selected_message_contact_id.is_empty() or _message_proposal_picker.selected < 0:
+		return
+	var proposal_type := String(_message_proposal_picker.get_item_metadata(_message_proposal_picker.selected))
+	_message_feedback.text = "正在等待对方明确决定……"
+	_message_proposal_action.disabled = true
+	SimulationBridge.operate_campus_social_proposal(
+		_selected_message_contact_id, proposal_type, "phone"
+	)
+
+
+func _on_social_proposal_completed(
+	success: bool, result: Dictionary, target_id: String, proposal_type: String
+) -> void:
+	if proposal_type == "party_invite" and target_id == _selected_party_candidate_id:
+		var party_result: Dictionary = result.get("result", {})
+		var party_payload: Dictionary = party_result.get("payload", {})
+		_party_feedback.text = String(party_payload.get("reply_text", party_result.get("message", result.get("error", "邀请未能送达"))))
+		_party_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
+		_refresh_party_page()
+	if target_id != _selected_message_contact_id:
+		return
+	var command_result: Dictionary = result.get("result", {})
+	var payload: Dictionary = command_result.get("payload", {})
+	_message_feedback.text = String(payload.get("reply_text", command_result.get("message", result.get("error", "提议未能送达"))))
+	_message_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
+	_message_proposal_action.disabled = false
 	_refresh_message_page()
 
 
@@ -645,6 +698,10 @@ func _refresh_forum_detail() -> void:
 	var preferred_name: String = preferred_value if preferred_value is String else ""
 	if not preferred_name.is_empty():
 		origin_text += " · 原约定对象：%s（其他人仍可接取）" % preferred_name
+	var helper_names: Array[String] = []
+	for helper_name in task.get("helper_names", []):
+		helper_names.append(String(helper_name))
+	var helper_text := "、".join(helper_names) if not helper_names.is_empty() else "暂无"
 	var organization_reputation := int(completed_social.get("organization_reputation", 0))
 	if not organization_name.is_empty() and organization_reputation != 0:
 		social_parts.append("%s声望 %+d" % [organization_name, organization_reputation])
@@ -672,12 +729,12 @@ func _refresh_forum_detail() -> void:
 				SimulationBridge.phase_display_name(String(entry.get("phase", "morning"))),
 				entry.get("message", ""),
 			])
-	_forum_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]发起人[/b]  %s\n[b]任务来源[/b]  %s\n[b]所属组织[/b]  %s\n[b]地点[/b]  %s\n[b]截止[/b]  第 %d 天\n[b]报酬[/b]  %d 校园币\n[b]社会影响[/b]  %s\n\n[b]当前目标[/b]\n%s\n\n[b]竞争情况[/b]\n%d 人查看，%d 人正在考虑\n\n[b]动态记录[/b]\n%s" % [
+	_forum_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]发起人[/b]  %s\n[b]任务来源[/b]  %s\n[b]所属组织[/b]  %s\n[b]地点[/b]  %s\n[b]截止[/b]  第 %d 天\n[b]报酬[/b]  %d 校园币\n[b]协助者[/b]  %s\n[b]社会影响[/b]  %s\n\n[b]当前目标[/b]\n%s\n\n[b]竞争情况[/b]\n%d 人查看，%d 人正在考虑\n\n[b]动态记录[/b]\n%s" % [
 		task.get("title", "未命名任务"), task.get("description", ""),
 		task.get("issuer_name", "校园用户"), origin_text,
 		organization_name if not organization_name.is_empty() else "个人委托",
 		task.get("scene_name", "未知地点"),
-		int(task.get("expires_day", 1)), int(reward.get("wealth", 0)),
+		int(task.get("expires_day", 1)), int(reward.get("wealth", 0)), helper_text,
 		social_reward_text, task.get("objective", ""), int(task.get("viewer_count", 0)),
 		int(task.get("considering_count", 0)), "\n".join(history_lines),
 	]
@@ -893,16 +950,21 @@ func _refresh_party_page() -> void:
 		if not candidate is Dictionary or String(candidate.get("expected_response", "")) == "unavailable":
 			continue
 		var index := _party_candidate_picker.item_count
-		_party_candidate_picker.add_item("%s · %s" % [candidate.get("display_name", "未知"), response_names.get(String(candidate.get("expected_response", "")), "未知")])
+		var contact_note := "" if bool(candidate.get("is_phone_contact", false)) else " · 需先交换联系方式"
+		_party_candidate_picker.add_item("%s · %s%s" % [candidate.get("display_name", "未知"), response_names.get(String(candidate.get("expected_response", "")), "未知"), contact_note])
 		_party_candidate_picker.set_item_metadata(index, candidate.get("actor_id", ""))
+		_party_candidate_picker.set_item_tooltip(index, "phone_contact" if bool(candidate.get("is_phone_contact", false)) else "not_contact")
 		if String(candidate.get("actor_id", "")) == previous_candidate:
 			candidate_index = index
 	if _party_candidate_picker.item_count > 0:
 		_party_candidate_picker.select(candidate_index)
 		_selected_party_candidate_id = String(_party_candidate_picker.get_item_metadata(candidate_index))
+		_selected_party_candidate_is_contact = _party_candidate_picker.get_item_tooltip(candidate_index) == "phone_contact"
 	else:
 		_selected_party_candidate_id = ""
-	_party_invite_action.disabled = bool(party.get("is_full", false)) or _selected_party_candidate_id.is_empty()
+		_selected_party_candidate_is_contact = false
+	_party_invite_action.disabled = bool(party.get("is_full", false)) or _selected_party_candidate_id.is_empty() or not _selected_party_candidate_is_contact
+	_party_invite_action.text = "发出邀请" if _selected_party_candidate_is_contact else "先交换联系方式"
 	var previous_member := _selected_party_member_id
 	_party_member_picker.clear()
 	var member_index := 0
@@ -924,6 +986,9 @@ func _refresh_party_page() -> void:
 
 func _select_party_candidate(index: int) -> void:
 	_selected_party_candidate_id = String(_party_candidate_picker.get_item_metadata(index))
+	_selected_party_candidate_is_contact = _party_candidate_picker.get_item_tooltip(index) == "phone_contact"
+	_party_invite_action.disabled = _selected_party_candidate_id.is_empty() or not _selected_party_candidate_is_contact
+	_party_invite_action.text = "发出邀请" if _selected_party_candidate_is_contact else "先交换联系方式"
 
 
 func _select_party_member(index: int) -> void:
@@ -932,7 +997,9 @@ func _select_party_member(index: int) -> void:
 
 func _invite_party_candidate() -> void:
 	_party_feedback.text = "正在等待对方决定……"
-	SimulationBridge.operate_campus_party("INVITE_PARTY_MEMBER", _selected_party_candidate_id)
+	SimulationBridge.operate_campus_social_proposal(
+		_selected_party_candidate_id, "party_invite", "phone"
+	)
 
 
 func _dismiss_party_member() -> void:

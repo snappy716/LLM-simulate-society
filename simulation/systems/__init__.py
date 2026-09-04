@@ -152,6 +152,13 @@ from simulation.systems.campus_messaging import (
     load_campus_messaging_policy,
     make_campus_messaging_handler,
 )
+from simulation.systems.campus_proposals import (
+    PLAYER_PROPOSAL_ACTION_ID,
+    PLAYER_PROPOSAL_TYPES,
+    campus_proposal_invariant,
+    install_campus_proposals,
+    make_player_proposal_handler,
+)
 from simulation.systems.campus_clubs import (
     CLUB_ACTIVITY_IDS,
     advance_club_upkeep,
@@ -274,6 +281,11 @@ __all__ = [
     "install_campus_messaging",
     "load_campus_messaging_policy",
     "make_campus_messaging_handler",
+    "PLAYER_PROPOSAL_ACTION_ID",
+    "PLAYER_PROPOSAL_TYPES",
+    "campus_proposal_invariant",
+    "install_campus_proposals",
+    "make_player_proposal_handler",
     "CLUB_ACTIVITY_IDS",
     "advance_club_upkeep",
     "campus_club_invariant",

@@ -482,6 +482,7 @@ class CognitionRuntime:
         incoming_text: str,
         recent_messages: Sequence[Mapping[str, Any]],
         allowed_facts: Sequence[Mapping[str, Any]] | None = None,
+        interaction_context: Mapping[str, Any] | None = None,
     ) -> Dict[str, Any] | None:
         """Generate non-authoritative wording from an NPC's bounded knowledge."""
         if (
@@ -531,7 +532,14 @@ class CognitionRuntime:
             incoming_text=incoming_text[:240],
             allowed_facts=allowed,
             dialogue_kind="phone",
-            interaction_context={},
+            interaction_context={
+                "intent_id": interaction_context.get("intent_id"),
+                "intent_name": interaction_context.get("intent_name"),
+                "outcome": interaction_context.get("outcome"),
+                "verified_summary": str(interaction_context.get("verified_summary", ""))[:240],
+                "hook_transition": interaction_context.get("hook_transition"),
+                "proposal_type": interaction_context.get("proposal_type"),
+            } if interaction_context else {},
         )
         return self._compose_dialogue_response(
             state,

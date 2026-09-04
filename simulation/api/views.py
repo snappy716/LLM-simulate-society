@@ -13,7 +13,7 @@ from simulation.systems.campus_parties import party_policy_from_state, party_vie
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 16
+CAMPUS_WORLD_VIEW_VERSION = 17
 NPC_CHRONICLE_VIEW_VERSION = 1
 
 
@@ -258,6 +258,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
                 "created_day", "expires_day",
                 "state", "assignee_id", "lock_revision", "reward", "tags",
                 "required_skill_ids", "required_item_ids", "history",
+                "helper_ids",
                 "organization_id", "social_consequences", "social_result",
                 "chain_parent_template_id", "unlocked_follow_up_template_ids",
             )
@@ -276,6 +277,10 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             "preferred_assignee_name": state.population.get(
                 str(task.get("preferred_assignee_id", "")), {}
             ).get("display_name", ""),
+            "helper_names": [
+                state.population.get(helper_id, {}).get("display_name", helper_id)
+                for helper_id in task.get("helper_ids", ())
+            ],
         })
         if task.get("origin_kind"):
             public_tasks[task_id].update({
@@ -373,6 +378,9 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         messaging.get("contacts_by_actor", {}).get("player", ())
         if isinstance(messaging, dict) else ()
     )
+    for candidate in player_party.get("candidates", ()) if isinstance(player_party, dict) else ():
+        if isinstance(candidate, dict):
+            candidate["is_phone_contact"] = candidate.get("actor_id") in player_contact_ids
     for npc_id in cast:
         cast[npc_id]["is_phone_contact"] = npc_id in player_contact_ids
     message_contacts = [
@@ -428,6 +436,9 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         "social": {
             "player_relationships": player_relationships,
             "player_organizations": player_organizations,
+            "player_proposals": deepcopy(
+                state.cognition.get("interactions", {}).get("proposals", [])[-40:]
+            ),
         },
         "clubs": club_catalog_view(state, "player"),
         "party": player_party,

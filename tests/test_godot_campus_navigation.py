@@ -28,6 +28,11 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("campus_dialogue_completed", bridge)
         self.assertIn("当面交谈（免费，可继续追问）", inspector)
         self.assertIn('"TALK_TO_NPC"', bridge)
+        self.assertIn("func operate_campus_social_proposal", bridge)
+        self.assertIn("campus_social_proposal_completed", bridge)
+        self.assertIn('"MAKE_SOCIAL_PROPOSAL"', bridge)
+        self.assertIn("约定稍后见面", phone)
+        self.assertIn("正式提出", phone)
 
     def test_five_latest_collaboration_maps_are_catalogued_with_real_dimensions(self):
         catalog_path = GAME_DIR / "data/campus_art_catalog.json"
@@ -189,7 +194,8 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
             self.assertIn(text, phone)
         self.assertIn("func operate_campus_party", bridge)
         self.assertIn("campus_party_operation_completed", bridge)
-        self.assertIn('"INVITE_PARTY_MEMBER"', phone)
+        self.assertIn('"party_invite"', phone)
+        self.assertIn("需先交换联系方式", phone)
         self.assertIn('"DISMISS_PARTY_MEMBER"', phone)
 
     def test_map_ui_uses_authoritative_free_travel_and_scene_mounts_all_prototypes(self):
