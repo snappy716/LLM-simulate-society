@@ -10,10 +10,14 @@ from simulation.domain.world_state import WorldState
 from simulation.systems.campus_schedules import current_schedule_slot
 from simulation.systems.campus_clubs import club_catalog_view
 from simulation.systems.campus_parties import party_policy_from_state, party_view
+from simulation.systems.campus_night_world import (
+    night_world_public_view,
+    night_world_policy_from_state,
+)
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 18
+CAMPUS_WORLD_VIEW_VERSION = 19
 NPC_CHRONICLE_VIEW_VERSION = 1
 
 
@@ -398,6 +402,17 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     message_contacts.sort(key=lambda entry: (
         -int(entry["unread_count"]), not bool(entry["has_thread"]), str(entry["display_name"]),
     ))
+    night_policy = night_world_policy_from_state(state)
+    night_world = (
+        night_world_public_view(state, night_policy)
+        if night_policy is not None
+        else {
+            "enabled": False, "current_layer": "surface", "pollution": 0,
+            "pollution_stage": "stable", "can_enter": False,
+            "entry_reason": "not_installed", "can_exit": False,
+            "moon": {}, "night_forum_unlocked": False,
+        }
+    )
     return {
         "view_version": CAMPUS_WORLD_VIEW_VERSION,
         "revision": state.revision,
@@ -433,6 +448,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             ),
             "mine": sum(1 for task in public_tasks.values() if task.get("owned_by_player")),
         },
+        "night_world": night_world,
         "social": {
             "player_relationships": player_relationships,
             "player_organizations": player_organizations,

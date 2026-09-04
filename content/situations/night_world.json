@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "entry_phases": ["evening", "late_night"],
+  "entry_region_ids": [
+    "south_gate_region", "central_region", "humanities_psychology_region",
+    "science_teaching_region", "research_innovation_region",
+    "student_life_region", "east_dorm_region", "west_dorm_region",
+    "sports_health_region", "service_logistics_region"
+  ],
+  "player_entry_access": ["sensitive", "capable", "willing"],
+  "npc_entry_access": ["capable", "willing"],
+  "pollution_lock_threshold": 85,
+  "surface_morning_recovery": 2,
+  "moon_phases": [
+    {"id": "thin_crescent", "name": "薄月", "start_day": 1, "end_day": 7, "intensity": 25, "entry_pollution": 2, "exposure_pollution": 1},
+    {"id": "waxing_moon", "name": "渐盈月", "start_day": 8, "end_day": 14, "intensity": 45, "entry_pollution": 3, "exposure_pollution": 2},
+    {"id": "distorted_gibbous", "name": "蚀痕盈凸月", "start_day": 15, "end_day": 21, "intensity": 70, "entry_pollution": 4, "exposure_pollution": 3},
+    {"id": "near_full", "name": "近满污染月", "start_day": 22, "end_day": 27, "intensity": 88, "entry_pollution": 5, "exposure_pollution": 4},
+    {"id": "polluted_full_moon", "name": "污染满月", "start_day": 28, "end_day": 28, "intensity": 100, "entry_pollution": 7, "exposure_pollution": 6}
+  ]
+}

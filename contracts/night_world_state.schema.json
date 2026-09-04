@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/night_world_state.schema.json",
+  "title": "Authoritative campus night-world aggregate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "policy", "actor_states", "transition_sequence"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "policy": {"type": "object"},
+    "transition_sequence": {"type": "integer", "minimum": 0},
+    "actor_states": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["actor_id", "layer", "pollution", "last_transition_day", "last_transition_phase"],
+        "properties": {
+          "actor_id": {"type": "string", "minLength": 1},
+          "layer": {"enum": ["surface", "night"]},
+          "pollution": {"type": "integer", "minimum": 0, "maximum": 100},
+          "last_transition_day": {"type": ["integer", "null"], "minimum": 1},
+          "last_transition_phase": {"enum": ["morning", "afternoon", "evening", "late_night", null]}
+        }
+      }
+    }
+  }
+}

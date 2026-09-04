@@ -19,6 +19,7 @@ signal campus_phone_message_completed(success: bool, result: Dictionary, action_
 signal campus_dialogue_completed(success: bool, result: Dictionary, target_id: String)
 signal campus_social_proposal_completed(success: bool, result: Dictionary, target_id: String, proposal_type: String)
 signal campus_social_proposal_response_completed(success: bool, result: Dictionary, proposal_id: String)
+signal campus_night_world_operation_completed(success: bool, result: Dictionary, action_id: String)
 signal campus_npc_chronicle_loaded(success: bool, result: Dictionary, npc_id: String, filter_name: String)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
@@ -51,6 +52,7 @@ var _campus_pending_dialogue_target_id := ""
 var _campus_pending_proposal_target_id := ""
 var _campus_pending_proposal_type := ""
 var _campus_pending_proposal_id := ""
+var _campus_pending_night_action := ""
 var _campus_command_counter := 0
 var _chronicle_busy := false
 var _chronicle_npc_id := ""
@@ -621,6 +623,41 @@ func respond_campus_social_proposal(proposal_id: String, accepted: bool) -> void
 		campus_social_proposal_response_completed.emit(false, {"error": "无法发送请求答复：%s" % error}, proposal_id)
 
 
+func operate_campus_night_world(action_id: String) -> void:
+	if action_id not in ["ENTER_NIGHT_WORLD", "EXIT_NIGHT_WORLD"]:
+		campus_night_world_operation_completed.emit(false, {"error": "未知夜相操作"}, action_id)
+		return
+	if _campus_busy or not connected or campus_snapshot.is_empty():
+		campus_night_world_operation_completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他操作"}, action_id)
+		return
+	_campus_busy = true
+	_campus_pending_operation = "night_world"
+	_campus_pending_night_action = action_id
+	_campus_command_counter += 1
+	var clock: Dictionary = campus_snapshot.get("clock", {})
+	var command := {
+		"command_id": "godot-night-world-%d-%d" % [Time.get_ticks_usec(), _campus_command_counter],
+		"actor_id": "player",
+		"action_id": action_id,
+		"target_ids": [],
+		"parameters": {},
+		"expected_world_revision": int(campus_snapshot.get("revision", 1)),
+		"issued_day": int(clock.get("day", 1)),
+		"issued_phase": String(clock.get("phase", "morning")),
+		"issued_minute": int(clock.get("minute", 0)),
+		"source": "player",
+	}
+	var error := _campus_request.request(
+		_base_url + "/kernel/command", PackedStringArray(["Content-Type: application/json"]),
+		HTTPClient.METHOD_POST, JSON.stringify(command)
+	)
+	if error != OK:
+		_campus_busy = false
+		_campus_pending_operation = ""
+		_campus_pending_night_action = ""
+		campus_night_world_operation_completed.emit(false, {"error": "无法发送夜相请求：%s" % error}, action_id)
+
+
 func request_npc_chronicle(
 	npc_id: String,
 	filter_name: String = "recent",
@@ -782,6 +819,7 @@ func _on_campus_request_completed(
 	var proposal_target_id := _campus_pending_proposal_target_id
 	var proposal_type := _campus_pending_proposal_type
 	var proposal_id := _campus_pending_proposal_id
+	var night_action := _campus_pending_night_action
 	_campus_pending_operation = ""
 	_campus_pending_passage_id = ""
 	_campus_pending_destination_id = ""
@@ -799,6 +837,7 @@ func _on_campus_request_completed(
 	_campus_pending_proposal_target_id = ""
 	_campus_pending_proposal_type = ""
 	_campus_pending_proposal_id = ""
+	_campus_pending_night_action = ""
 	_campus_busy = false
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if response_code != 200 or not parsed is Dictionary:
@@ -835,6 +874,9 @@ func _on_campus_request_completed(
 		elif operation == "social_proposal_response":
 			var response_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
 			campus_social_proposal_response_completed.emit(false, response_error, proposal_id)
+		elif operation == "night_world":
+			var night_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
+			campus_night_world_operation_completed.emit(false, night_error, night_action)
 		return
 	if operation == "snapshot":
 		campus_snapshot = parsed
@@ -864,6 +906,8 @@ func _on_campus_request_completed(
 		campus_social_proposal_completed.emit(bool(parsed.get("ok", false)), parsed, proposal_target_id, proposal_type)
 	elif operation == "social_proposal_response":
 		campus_social_proposal_response_completed.emit(bool(parsed.get("ok", false)), parsed, proposal_id)
+	elif operation == "night_world":
+		campus_night_world_operation_completed.emit(bool(parsed.get("ok", false)), parsed, night_action)
 	else:
 		campus_traversal_completed.emit(bool(parsed.get("ok", false)), parsed, passage_id)
 

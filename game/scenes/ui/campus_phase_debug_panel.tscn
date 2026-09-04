@@ -9,7 +9,7 @@ anchor_right = 1.0
 offset_left = -350.0
 offset_top = 18.0
 offset_right = -20.0
-offset_bottom = 196.0
+offset_bottom = 238.0
 grow_horizontal = 0
 script = ExtResource("1_panel")
 
@@ -34,3 +34,7 @@ text = "计划：ORIENTATION_OR_CLASS @ humanities_classroom_pool\n聊天 / 购�
 
 [node name="Advance" type="Button" parent="Margin/VBox"]
 text = "结束当前时段"
+
+[node name="NightWorld" type="Button" parent="Margin/VBox"]
+text = "夜相尚未开放"
+disabled = true

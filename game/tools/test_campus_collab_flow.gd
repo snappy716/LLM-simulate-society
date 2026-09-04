@@ -250,6 +250,17 @@ func _run_flow() -> void:
 	assert(String(((incoming_resolution[1].get("result", {}) as Dictionary).get("payload", {}) as Dictionary).get("status", "")) == "declined")
 	current_phone.call("_set_open", false)
 	assert(not paused)
+	var night_world_button := phase_panel.get_node("Margin/VBox/NightWorld") as Button
+	assert(not night_world_button.disabled)
+	night_world_button.pressed.emit()
+	var night_entry_resolution = await bridge.campus_night_world_operation_completed
+	assert(bool(night_entry_resolution[0]), "night-world entry failed: %s" % night_entry_resolution[1])
+	assert(String(((bridge.get("campus_snapshot") as Dictionary).get("night_world", {}) as Dictionary).get("current_layer", "")) == "night")
+	assert(int(((bridge.get("campus_snapshot") as Dictionary).get("night_world", {}) as Dictionary).get("pollution", 0)) > 0)
+	night_world_button.pressed.emit()
+	var night_exit_resolution = await bridge.campus_night_world_operation_completed
+	assert(bool(night_exit_resolution[0]), "night-world exit failed: %s" % night_exit_resolution[1])
+	assert(String(((bridge.get("campus_snapshot") as Dictionary).get("night_world", {}) as Dictionary).get("current_layer", "")) == "surface")
 	movement_layer = current_scene.get_node("NpcMovementLayer")
 	assert(int(movement_layer.get("last_replayed_count")) > 0)
 	for visible_npc in movement_layer.get_children():

@@ -109,6 +109,12 @@ from simulation.systems import (  # noqa: E402
     advance_npc_player_proposals,
     make_npc_player_proposal_response_handler,
     make_player_proposal_handler,
+    NIGHT_WORLD_ACTION_IDS,
+    advance_campus_night_world,
+    campus_night_world_invariant,
+    install_campus_night_world,
+    load_campus_night_world_policy,
+    make_campus_night_world_handler,
 )
 
 
@@ -146,6 +152,8 @@ class CampusKernelBridge:
         messaging_policy = load_campus_messaging_policy(registry)
         install_campus_messaging(state, messaging_policy)
         install_campus_proposals(state)
+        night_world_policy = load_campus_night_world_policy(registry)
+        install_campus_night_world(state, night_world_policy)
         self.cognition_runtime = CognitionRuntime(cognition_policy)
         activity_definitions = load_campus_activity_definitions(registry)
         activity_handler = make_campus_activity_handler(
@@ -195,6 +203,7 @@ class CampusKernelBridge:
         )
         def campus_phase_upkeep(context):
             summary = advance_campus_phase_upkeep(context)
+            summary.update(advance_campus_night_world(context, night_world_policy))
             summary.update(advance_club_upkeep(context, club_policy))
             summary.update(advance_party_commitments(context, party_policy))
             self.cognition_runtime.publish_status(context.state)
@@ -225,6 +234,7 @@ class CampusKernelBridge:
         self.kernel.add_invariant(campus_intelligence_invariant)
         self.kernel.add_invariant(campus_club_invariant)
         self.kernel.add_invariant(campus_party_invariant)
+        self.kernel.add_invariant(campus_night_world_invariant)
         self.kernel.add_invariant(make_campus_task_invariant(activity_definitions))
         traverse_handler = make_traverse_location_handler(graph)
         self.kernel.register_handler(
@@ -318,6 +328,9 @@ class CampusKernelBridge:
                 party_handler,
             ),
         )
+        night_world_handler = make_campus_night_world_handler(night_world_policy)
+        for action_id in NIGHT_WORLD_ACTION_IDS:
+            self.kernel.register_handler(action_id, night_world_handler)
 
     def configure_cognition_interface(self, config: dict) -> None:
         provider = str(config.get("provider", "rule"))
