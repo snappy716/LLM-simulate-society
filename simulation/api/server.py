@@ -35,6 +35,7 @@ from simulation.systems import (  # noqa: E402
     install_campus_places,
     install_action_economy,
     install_campus_population,
+    install_campus_abilities,
     install_campus_schedules,
     load_action_economy_policy,
     load_campus_location_graph,
@@ -63,6 +64,8 @@ from simulation.systems import (  # noqa: E402
     make_task_aware_decision_selector,
     campus_social_invariant,
     install_campus_social_state,
+    campus_ability_invariant,
+    load_campus_ability_definitions,
 )
 
 
@@ -77,6 +80,8 @@ class CampusKernelBridge:
         install_campus_places(state, graph)
         records = CampusPopulationGenerator(registry, graph, rng_pool).generate()
         install_campus_population(state, records)
+        ability_definitions = load_campus_ability_definitions(registry)
+        install_campus_abilities(state, ability_definitions, registry.all("college"))
         install_campus_social_state(state, registry.all("club"))
         schedule_templates = load_campus_schedule_templates(registry, graph)
         install_campus_schedules(state, graph, schedule_templates)
@@ -113,6 +118,7 @@ class CampusKernelBridge:
         self.kernel.add_invariant(action_economy_invariant)
         self.kernel.add_invariant(campus_schedule_invariant)
         self.kernel.add_invariant(campus_activity_invariant)
+        self.kernel.add_invariant(campus_ability_invariant)
         self.kernel.add_invariant(campus_activity_effect_invariant)
         self.kernel.add_invariant(campus_decision_invariant)
         self.kernel.add_invariant(campus_social_invariant)

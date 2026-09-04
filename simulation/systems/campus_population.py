@@ -408,8 +408,15 @@ def install_campus_population(
             "commitment_pressure": 25,
         },
         "emotions": {"joy": 15, "fear": 5, "anger": 0, "sadness": 5, "shame": 0},
+        "specialization_id": "cognitive_psychology",
         "club_ids": [],
-        "skill_ids": [],
+        "skill_ids": [
+            "emotion_observation",
+            "focus_stabilization",
+            "cognitive_analysis",
+            "supportive_communication",
+            "cognitive_psychology",
+        ],
         "wealth": 500,
         "is_player": True,
     }

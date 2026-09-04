@@ -1,5 +1,15 @@
 {
   "schema_version": 1,
+  "ability_profiles": {
+    "analysis": {"surface_modifier": 2, "card_type": "knowledge", "cost": 1, "target": "enemy", "base_power": 6, "effect_ids": ["reveal_pattern"]},
+    "control": {"surface_modifier": 2, "card_type": "control", "cost": 1, "target": "enemy", "base_power": 5, "effect_ids": ["apply_disruption"]},
+    "defense": {"surface_modifier": 2, "card_type": "defense", "cost": 1, "target": "self_or_ally", "base_power": 7, "effect_ids": ["grant_guard"]},
+    "support": {"surface_modifier": 2, "card_type": "support", "cost": 1, "target": "self_or_ally", "base_power": 6, "effect_ids": ["restore_focus"]},
+    "assault": {"surface_modifier": 2, "card_type": "attack", "cost": 1, "target": "enemy", "base_power": 8, "effect_ids": ["deal_physical"]},
+    "technical": {"surface_modifier": 2, "card_type": "technique", "cost": 1, "target": "enemy", "base_power": 7, "effect_ids": ["deal_technique"]},
+    "recovery": {"surface_modifier": 2, "card_type": "support", "cost": 1, "target": "ally", "base_power": 7, "effect_ids": ["restore_health"]},
+    "specialist": {"surface_modifier": 3, "card_type": "signature", "cost": 2, "target": "contextual", "base_power": 11, "effect_ids": ["specialization_effect"]}
+  },
   "colleges": [
     {
       "id": "math_physics",
@@ -49,5 +59,70 @@
       "common_skills": ["physical_training", "ally_guard", "pursuit", "team_coordination"],
       "specializations": ["strength", "speed_technique", "sports_rehabilitation"]
     }
+  ],
+  "abilities": [
+    {"id": "precise_calculation", "name": "精确计算", "college_id": "math_physics", "source_kind": "common", "profile_id": "analysis", "check_tags": ["calculation", "research", "mechanism"]},
+    {"id": "pattern_detection", "name": "规律识别", "college_id": "math_physics", "source_kind": "common", "profile_id": "analysis", "check_tags": ["pattern", "investigation", "anomaly"]},
+    {"id": "probability_adjustment", "name": "概率修正", "college_id": "math_physics", "source_kind": "common", "profile_id": "control", "check_tags": ["prediction", "planning", "risk"]},
+    {"id": "error_control", "name": "误差控制", "college_id": "math_physics", "source_kind": "common", "profile_id": "defense", "check_tags": ["verification", "precision", "stability"]},
+    {"id": "mathematical_modeling", "name": "数学建模", "college_id": "math_physics", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["modeling", "prediction", "system"]},
+    {"id": "physics_experiment", "name": "物理实验", "college_id": "math_physics", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["experiment", "instrument", "mechanism"]},
+    {"id": "statistical_inference", "name": "统计推断", "college_id": "math_physics", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["statistics", "evidence", "prediction"]},
+
+    {"id": "sample_collection", "name": "样本采集", "college_id": "bio_chemistry", "source_kind": "common", "profile_id": "technical", "check_tags": ["sample", "investigation", "fieldwork"]},
+    {"id": "condition_detection", "name": "状态识别", "college_id": "bio_chemistry", "source_kind": "common", "profile_id": "analysis", "check_tags": ["condition", "diagnosis", "anomaly"]},
+    {"id": "reagent_handling", "name": "药剂处理", "college_id": "bio_chemistry", "source_kind": "common", "profile_id": "technical", "check_tags": ["reagent", "crafting", "laboratory"]},
+    {"id": "pollution_purification", "name": "污染净化", "college_id": "bio_chemistry", "source_kind": "common", "profile_id": "support", "check_tags": ["purification", "pollution", "treatment"]},
+    {"id": "biological_observation", "name": "生物观察", "college_id": "bio_chemistry", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["biology", "observation", "adaptation"]},
+    {"id": "chemical_preparation", "name": "化学制备", "college_id": "bio_chemistry", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["chemistry", "crafting", "reaction"]},
+    {"id": "ecology_toxicology", "name": "生态与毒理", "college_id": "bio_chemistry", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["ecology", "toxicology", "hazard"]},
+
+    {"id": "environment_observation", "name": "环境观察", "college_id": "earth_space", "source_kind": "common", "profile_id": "analysis", "check_tags": ["environment", "observation", "weather"]},
+    {"id": "lunar_phase_reading", "name": "月相判读", "college_id": "earth_space", "source_kind": "common", "profile_id": "analysis", "check_tags": ["moonlight", "prediction", "anomaly"]},
+    {"id": "route_survey", "name": "路线勘测", "college_id": "earth_space", "source_kind": "common", "profile_id": "technical", "check_tags": ["route", "navigation", "fieldwork"]},
+    {"id": "hazard_warning", "name": "风险预警", "college_id": "earth_space", "source_kind": "common", "profile_id": "defense", "check_tags": ["hazard", "warning", "safety"]},
+    {"id": "astronomy", "name": "天文观测", "college_id": "earth_space", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["astronomy", "moonlight", "instrument"]},
+    {"id": "geology", "name": "地质勘察", "college_id": "earth_space", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["geology", "terrain", "trace"]},
+    {"id": "atmosphere_geography", "name": "大气与地理", "college_id": "earth_space", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["atmosphere", "geography", "forecast"]},
+
+    {"id": "data_scan", "name": "数据扫描", "college_id": "artificial_intelligence", "source_kind": "common", "profile_id": "analysis", "check_tags": ["data", "search", "device"]},
+    {"id": "pattern_recognition", "name": "模式识别", "college_id": "artificial_intelligence", "source_kind": "common", "profile_id": "analysis", "check_tags": ["pattern", "identity", "anomaly"]},
+    {"id": "device_control", "name": "设备控制", "college_id": "artificial_intelligence", "source_kind": "common", "profile_id": "technical", "check_tags": ["device", "repair", "automation"]},
+    {"id": "information_trace", "name": "信息追踪", "college_id": "artificial_intelligence", "source_kind": "common", "profile_id": "control", "check_tags": ["network", "trace", "investigation"]},
+    {"id": "algorithms", "name": "算法设计", "college_id": "artificial_intelligence", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["algorithm", "optimization", "prediction"]},
+    {"id": "network_security", "name": "网络安全", "college_id": "artificial_intelligence", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["network", "security", "intrusion"]},
+    {"id": "robotics_hardware", "name": "机器人硬件", "college_id": "artificial_intelligence", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["robotics", "hardware", "repair"]},
+
+    {"id": "emotion_observation", "name": "情绪观察", "college_id": "psychology", "source_kind": "common", "profile_id": "analysis", "check_tags": ["emotion", "observation", "dialogue"]},
+    {"id": "focus_stabilization", "name": "专注稳定", "college_id": "psychology", "source_kind": "common", "profile_id": "support", "check_tags": ["focus", "stability", "support"]},
+    {"id": "cognitive_analysis", "name": "认知分析", "college_id": "psychology", "source_kind": "common", "profile_id": "control", "check_tags": ["cognition", "investigation", "anomaly"]},
+    {"id": "supportive_communication", "name": "支持性沟通", "college_id": "psychology", "source_kind": "common", "profile_id": "support", "check_tags": ["dialogue", "support", "mediation"]},
+    {"id": "cognitive_psychology", "name": "认知心理", "college_id": "psychology", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["cognition", "memory", "attention"]},
+    {"id": "social_psychology", "name": "社会心理", "college_id": "psychology", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["group", "relationship", "influence"]},
+    {"id": "development_support", "name": "发展与支持", "college_id": "psychology", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["development", "support", "adaptation"]},
+
+    {"id": "source_criticism", "name": "史料批判", "college_id": "humanities", "source_kind": "common", "profile_id": "analysis", "check_tags": ["source", "evidence", "archive"]},
+    {"id": "language_interpretation", "name": "语言阐释", "college_id": "humanities", "source_kind": "common", "profile_id": "support", "check_tags": ["language", "translation", "dialogue"]},
+    {"id": "narrative_detection", "name": "叙事辨析", "college_id": "humanities", "source_kind": "common", "profile_id": "control", "check_tags": ["narrative", "deception", "anomaly"]},
+    {"id": "identity_witness", "name": "身份见证", "college_id": "humanities", "source_kind": "common", "profile_id": "defense", "check_tags": ["identity", "memory", "testimony"]},
+    {"id": "history_archives", "name": "历史与档案", "college_id": "humanities", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["history", "archive", "evidence"]},
+    {"id": "literature_language", "name": "文学与语言", "college_id": "humanities", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["literature", "language", "narrative"]},
+    {"id": "journalism_communication", "name": "新闻与传播", "college_id": "humanities", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["interview", "communication", "public"]},
+
+    {"id": "injury_assessment", "name": "伤势评估", "college_id": "medicine", "source_kind": "common", "profile_id": "analysis", "check_tags": ["injury", "diagnosis", "triage"]},
+    {"id": "first_aid", "name": "急救处置", "college_id": "medicine", "source_kind": "common", "profile_id": "recovery", "check_tags": ["first_aid", "treatment", "emergency"]},
+    {"id": "condition_removal", "name": "状态解除", "college_id": "medicine", "source_kind": "common", "profile_id": "recovery", "check_tags": ["condition", "treatment", "recovery"]},
+    {"id": "recovery_assessment", "name": "恢复评估", "college_id": "medicine", "source_kind": "common", "profile_id": "support", "check_tags": ["recovery", "planning", "care"]},
+    {"id": "clinical_foundations", "name": "临床基础", "college_id": "medicine", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["clinical", "diagnosis", "treatment"]},
+    {"id": "pharmacology", "name": "药理学", "college_id": "medicine", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["medicine", "reagent", "toxicology"]},
+    {"id": "public_health", "name": "公共卫生", "college_id": "medicine", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["public_health", "group", "prevention"]},
+
+    {"id": "physical_training", "name": "体能训练", "college_id": "sports", "source_kind": "common", "profile_id": "assault", "check_tags": ["physique", "training", "endurance"]},
+    {"id": "ally_guard", "name": "队友保护", "college_id": "sports", "source_kind": "common", "profile_id": "defense", "check_tags": ["guard", "rescue", "teamwork"]},
+    {"id": "pursuit", "name": "追击", "college_id": "sports", "source_kind": "common", "profile_id": "assault", "check_tags": ["pursuit", "speed", "fieldwork"]},
+    {"id": "team_coordination", "name": "团队协同", "college_id": "sports", "source_kind": "common", "profile_id": "support", "check_tags": ["teamwork", "coordination", "leadership"]},
+    {"id": "strength", "name": "力量专项", "college_id": "sports", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["strength", "force", "endurance"]},
+    {"id": "speed_technique", "name": "速度与技巧", "college_id": "sports", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["speed", "dexterity", "pursuit"]},
+    {"id": "sports_rehabilitation", "name": "运动康复", "college_id": "sports", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["rehabilitation", "recovery", "training"]}
   ]
 }

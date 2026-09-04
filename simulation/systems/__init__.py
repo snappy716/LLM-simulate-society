@@ -49,6 +49,14 @@ from simulation.systems.campus_population import (
     CampusPopulationGenerator,
     install_campus_population,
 )
+from simulation.systems.campus_abilities import (
+    ability_modifier_for_check,
+    available_card_blueprints,
+    campus_ability_invariant,
+    grant_ability_experience,
+    install_campus_abilities,
+    load_campus_ability_definitions,
+)
 from simulation.systems.campus_schedules import (
     LOCATION_TOKENS,
     campus_schedule_invariant,
@@ -114,6 +122,12 @@ __all__ = [
     "CampusPopulationError",
     "CampusPopulationGenerator",
     "install_campus_population",
+    "ability_modifier_for_check",
+    "available_card_blueprints",
+    "campus_ability_invariant",
+    "grant_ability_experience",
+    "install_campus_abilities",
+    "load_campus_ability_definitions",
     "LOCATION_TOKENS",
     "campus_schedule_invariant",
     "current_schedule_slot",

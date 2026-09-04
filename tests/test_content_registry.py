@@ -17,6 +17,7 @@ class ContentRegistryTests(unittest.TestCase):
         self.assertEqual(36, len(registry.ids("item")))
         self.assertEqual(36, len(registry.ids("item_use")))
         self.assertEqual(8, len(registry.ids("college")))
+        self.assertEqual(56, len(registry.ids("campus_ability")))
         self.assertEqual(12, len(registry.ids("club")))
         self.assertEqual(12, len(registry.ids("schedule_template")))
         self.assertEqual(32, len(registry.ids("campus_activity")))

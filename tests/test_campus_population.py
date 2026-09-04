@@ -118,6 +118,8 @@ class CampusPopulationTests(unittest.TestCase):
         state.require_valid()
         self.assertEqual(201, len(state.population))
         self.assertEqual("south_gate_region", state.population["player"]["current_location_id"])
+        self.assertEqual("cognitive_psychology", state.population["player"]["specialization_id"])
+        self.assertEqual(5, len(state.population["player"]["skill_ids"]))
         metadata = state.metadata["campus_population"]
         self.assertEqual(200, metadata["represented_total"])
         self.assertEqual(5800, metadata["background_total"])

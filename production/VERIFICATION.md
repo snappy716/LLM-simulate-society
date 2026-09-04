@@ -12,6 +12,7 @@
 - 校园 NPC 规则决策专项：`python3 -m unittest tests.test_campus_decisions tests.test_campus_activities tests.test_campus_activity_effects tests.test_campus_kernel_bridge -v`
 - 校园论坛任务专项：`python3 -m unittest tests.test_campus_forum_tasks tests.test_campus_decisions tests.test_campus_kernel_bridge -v`
 - 校园社会后果专项：`python3 -m unittest tests.test_campus_social tests.test_campus_forum_tasks tests.test_campus_kernel_bridge tests.test_content_registry tests.test_kernel_api_contracts -v`
+- 校园学院能力与卡牌契约专项：`python3 -m unittest tests.test_campus_abilities tests.test_content_registry tests.test_campus_population tests.test_architecture_parity tests.test_godot_campus_navigation -v`
 - Python 编译：`python3 -m compileall -q simulation tests`
 - 补丁格式：`git diff --check`
 - 离线启动：`python3 -m simulation --days 0 --llm rule --quiet`
@@ -143,3 +144,12 @@ Godot 4.7.2 编辑器导入、组件、原校园导航、完整协作场景端�
 职业交易者均未超过职业每日额度。经济、物品实例与装备不变量检查均为 0 错误。
 种子长期仪式受世界内官方干预而在准备场地阶段失败，并非材料阻塞；同期产生 9 次
 `RITUAL_BLOCKED_MISSING_MATERIAL`，证明无材料的临时仪式会被显式阻断。
+
+八学院能力与卡牌战斗定义阶段验收：当前工程 261 项、旧版工程 46 项测试通过。八学院共
+56 项能力全部拥有表世界检定标签和角色绑定卡牌蓝图；每名有学院归属的角色稳定获得四项公共
+能力、一项专业分支和五张基础卡牌，社团同名技能不会导致跨学院授权。玩家可在课程平台文字页
+查看心理学院能力与卡牌类型。固定种子 42 连续运行 14 天、56 个时段，共执行 11,200 次 NPC
+计划、42,987 段合法通行和 106 次 NPC 任务完成，能力与卡池不变量错误为 0、活动阻塞为 0。
+旧式技能指令战斗占位契约已改为角色绑定卡牌、共享手牌、洞察区、行动令牌和敌方意图契约；
+实际战斗运行时尚未实现。Godot 4.7.2 编辑器导入、校园导航与协作场景端到端通过，Metal 图形
+渲染已检查课程平台能力页面。

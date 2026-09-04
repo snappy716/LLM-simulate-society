@@ -38,6 +38,9 @@ func _capture() -> void:
 
 	var phone_ui = scene.get_node("CampusPhoneUI")
 	phone_ui.call("_set_open", true)
+	phone_ui.call("_open_app", "courses", "课程平台")
+	await process_frame
+	await _save_view("user://campus_abilities_ui_capture.png", "CAMPUS_ABILITIES_UI_CAPTURE")
 	phone_ui.call("_open_app", "album", "校园相册")
 	await process_frame
 	await _save_view("user://campus_phone_ui_capture.png", "CAMPUS_PHONE_UI_CAPTURE")

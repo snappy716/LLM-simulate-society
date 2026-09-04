@@ -84,6 +84,13 @@ from simulation.domain.activities import (
     CampusActivityDefinition,
     parse_activity_definition,
 )
+from simulation.domain.abilities import (
+    ABILITY_SOURCE_KINDS,
+    CARD_TARGETS,
+    CARD_TYPES,
+    CampusAbilityDefinition,
+    CardBlueprint,
+)
 from simulation.domain.schedules import (
     CampusScheduleTemplate,
     PlannedScheduleSlot,
@@ -165,6 +172,11 @@ __all__ = [
     "AGGREGATE_NAMES",
     "ActionEconomyPolicy",
     "ACTIVITY_CATEGORIES",
+    "ABILITY_SOURCE_KINDS",
+    "CARD_TARGETS",
+    "CARD_TYPES",
+    "CampusAbilityDefinition",
+    "CardBlueprint",
     "EMOTION_NAMES",
     "NEED_NAMES",
     "CampusActivityDefinition",

@@ -9,7 +9,7 @@ from simulation.systems.campus_schedules import current_schedule_slot
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 8
+CAMPUS_WORLD_VIEW_VERSION = 9
 
 
 def kernel_status_view(state: WorldState, *, busy: bool = False) -> Dict[str, Any]:
@@ -37,6 +37,38 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     player["knowledge_progress"] = deepcopy(
         state.knowledge.get("actors", {}).get("player", {})
     )
+    ability_system = state.metadata.get("campus_abilities", {})
+    ability_definitions = ability_system.get("definitions", {})
+    card_blueprints = ability_system.get("card_blueprints", {})
+
+    def public_abilities(actor: Dict[str, Any]) -> list[Dict[str, Any]]:
+        result: list[Dict[str, Any]] = []
+        for ability_id, progress in actor.get("ability_progress", {}).items():
+            definition = ability_definitions.get(ability_id)
+            if not isinstance(definition, dict):
+                continue
+            result.append({
+                "ability_id": ability_id,
+                "name": definition.get("name", ability_id),
+                "source_kind": definition.get("source_kind", "common"),
+                "profile_id": definition.get("profile_id", ""),
+                "check_tags": deepcopy(definition.get("check_tags", [])),
+                "surface_modifier": definition.get("surface_modifier", 0),
+                "rank": progress.get("rank", 1),
+                "experience": progress.get("experience", 0),
+                "card_id": definition.get("card_id", ""),
+            })
+        return sorted(result, key=lambda entry: (entry["source_kind"] != "common", entry["ability_id"]))
+
+    def public_cards(actor: Dict[str, Any]) -> list[Dict[str, Any]]:
+        return [
+            deepcopy(card_blueprints[card_id])
+            for card_id in actor.get("card_pool_ids", ())
+            if card_id in card_blueprints
+        ]
+
+    player["abilities"] = public_abilities(player)
+    player["card_pool"] = public_cards(player)
     cast = {
         npc_id: {
             key: deepcopy(record.get(key))
@@ -67,6 +99,8 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         cast[npc_id]["knowledge_progress"] = deepcopy(
             state.knowledge.get("actors", {}).get(npc_id, {})
         )
+        cast[npc_id]["abilities"] = public_abilities(source_record)
+        cast[npc_id]["card_pool_ids"] = list(source_record.get("card_pool_ids", ()))
     schedule = state.metadata.get("campus_schedule", {})
     week_day = str((state.clock.day - 1) % 7)
     planned_occupancy = schedule.get("planned_occupancy", {})

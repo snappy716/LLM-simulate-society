@@ -142,6 +142,13 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("social_result", phone)
         self.assertIn("已结算", phone)
 
+    def test_course_app_exposes_college_abilities_and_future_card_pool(self):
+        phone = (GAME_DIR / "scripts/ui/campus_phone_ui.gd").read_text(encoding="utf-8")
+        self.assertIn("学院能力 · 心理学院", phone)
+        self.assertIn('player.get("abilities", [])', phone)
+        self.assertIn('player", {}) as Dictionary).get("card_pool", [])', phone)
+        self.assertIn("角色绑定的战斗卡牌", phone)
+
     def test_map_ui_uses_authoritative_free_travel_and_scene_mounts_all_prototypes(self):
         bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(
             encoding="utf-8"

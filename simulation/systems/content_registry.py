@@ -35,6 +35,7 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ContentSource("locations/campus_locations.json", "campus_location", "locations"),
     ContentSource("locations/campus_passages.json", "campus_passage", "passages"),
     ContentSource("actions/college_skills.json", "college", "colleges"),
+    ContentSource("actions/college_skills.json", "campus_ability", "abilities"),
     ContentSource("actions/action_economy.json", "configuration", singleton_id="action_economy"),
     ContentSource("actions/campus_activities.json", "campus_activity", "activities"),
     ContentSource(
@@ -222,6 +223,65 @@ class ContentRegistry:
         surface_task_ids = set(self.ids("surface_task_template"))
         club_ids = set(self.ids("club"))
         college_ids = set(self.ids("college"))
+        ability_ids = set(self.ids("campus_ability"))
+        if college_ids or ability_ids:
+            ability_profiles = self.document("actions/college_skills.json").get(
+                "ability_profiles", {}
+            )
+            if not isinstance(ability_profiles, dict):
+                errors.append("college skill ability_profiles must be a mapping")
+                ability_profiles = {}
+            for ability in self.all("campus_ability").values():
+                if ability.get("college_id") not in college_ids:
+                    errors.append(
+                        f"campus ability {ability.get('id')} references unknown college: "
+                        f"{ability.get('college_id')}"
+                    )
+                if ability.get("profile_id") not in ability_profiles:
+                    errors.append(
+                        f"campus ability {ability.get('id')} references unknown profile: "
+                        f"{ability.get('profile_id')}"
+                    )
+                if ability.get("source_kind") not in {"common", "specialization"}:
+                    errors.append(
+                        f"campus ability {ability.get('id')} has invalid source kind: "
+                        f"{ability.get('source_kind')}"
+                    )
+                check_tags = ability.get("check_tags")
+                if not isinstance(check_tags, list) or not check_tags or any(
+                    not isinstance(tag, str) or not tag for tag in check_tags
+                ):
+                    errors.append(
+                        f"campus ability {ability.get('id')} requires non-empty check tags"
+                    )
+            for college in self.all("college").values():
+                college_id = college.get("id")
+                expected_common = {
+                    ability_id
+                    for ability_id, ability in self.all("campus_ability").items()
+                    if ability.get("college_id") == college_id
+                    and ability.get("source_kind") == "common"
+                }
+                expected_specializations = {
+                    ability_id
+                    for ability_id, ability in self.all("campus_ability").items()
+                    if ability.get("college_id") == college_id
+                    and ability.get("source_kind") == "specialization"
+                }
+                common = set(college.get("common_skills", ()))
+                specializations = set(college.get("specializations", ()))
+                if common != expected_common:
+                    errors.append(f"college {college_id} common abilities do not match definitions")
+                if specializations != expected_specializations:
+                    errors.append(
+                        f"college {college_id} specialization abilities do not match definitions"
+                    )
+                unknown = (common | specializations) - ability_ids
+                if unknown:
+                    errors.append(
+                        f"college {college_id} references unknown abilities: "
+                        + ", ".join(sorted(unknown))
+                    )
         for template in self.all("surface_task_template").values():
             activity_id = template.get("activity_id")
             scene_id = template.get("scene_id")

@@ -79,6 +79,11 @@ func _run_flow() -> void:
 	phone_ui.call("_set_open", true)
 	assert(bool(phone_ui.call("is_open")))
 	assert(paused)
+	phone_ui.call("_open_app", "courses", "课程平台")
+	var course_content := phone_ui.get("_content") as RichTextLabel
+	assert(course_content.text.contains("学院能力"))
+	assert(course_content.text.contains("认知心理"))
+	assert(course_content.text.contains("角色绑定"))
 	phone_ui.call("_open_app", "health", "健康档案")
 	phone_ui.call("_open_app", "forums", "校园互助")
 	var forum_cards := phone_ui.get("_forum_cards") as VBoxContainer

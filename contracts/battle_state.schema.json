@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/battle_state.schema.json",
+  "title": "Shared-hand card battle state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "battle_id", "revision", "round", "scene_id", "participant_ids", "team_ids",
+    "actor_decks", "draw_piles", "discard_piles", "exhaust_piles", "shared_hand_ids",
+    "insight_row_ids", "action_tokens", "focus", "health", "pollution", "statuses",
+    "known_weaknesses", "enemy_intents", "card_instances", "result", "consequences"
+  ],
+  "properties": {
+    "battle_id": {"type": "string", "minLength": 1},
+    "revision": {"type": "integer", "minimum": 1},
+    "round": {"type": "integer", "minimum": 1},
+    "scene_id": {"type": "string", "minLength": 1},
+    "situation_id": {"type": ["string", "null"]},
+    "participant_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+    "team_ids": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}},
+    "actor_decks": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
+    "shared_hand_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "insight_row_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "action_tokens": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "focus": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "health": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "pollution": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0, "maximum": 100}},
+    "statuses": {"type": "object"},
+    "known_weaknesses": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "enemy_intents": {"type": "object"},
+    "card_instances": {"type": "object"},
+    "draw_piles": {"type": "object"},
+    "discard_piles": {"type": "object"},
+    "exhaust_piles": {"type": "object"},
+    "lost_heart_shell": {"type": "object"},
+    "coherence": {"type": ["integer", "null"], "minimum": 0},
+    "result": {"enum": ["active", "victory", "defeat", "escaped", "resolved"]},
+    "consequences": {"type": "object"}
+  }
+}

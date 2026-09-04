@@ -1,19 +1,36 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://llm-simulate-society.local/contracts/combat_command.schema.json",
-  "title": "Turn-based combat command",
+  "title": "Actor-bound card combat command",
   "type": "object",
   "additionalProperties": false,
-  "required": ["battle_id", "revision", "actor_id", "command", "target_ids"],
+  "required": ["battle_id", "revision", "actor_id", "command", "card_instance_id", "target_ids"],
   "properties": {
     "battle_id": {"type": "string", "minLength": 1},
     "revision": {"type": "integer", "minimum": 1},
     "actor_id": {"type": "string", "minLength": 1},
-    "command": {"enum": ["attack", "combat_skill", "knowledge_skill", "collaboration_skill", "use_item", "guard", "talk", "escape"]},
-    "skill_id": {"type": ["string", "null"]},
-    "item_instance_id": {"type": ["string", "null"]},
-    "target_ids": {"type": "array", "items": {"type": "string"}},
-    "evidence_id": {"type": ["string", "null"]},
+    "command": {"enum": ["play_card", "discard_card", "end_round", "escape"]},
+    "card_instance_id": {"type": ["string", "null"]},
+    "target_ids": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
     "client_request_id": {"type": ["string", "null"]}
-  }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"command": {"enum": ["play_card", "discard_card"]}}, "required": ["command"]},
+      "then": {"properties": {"card_instance_id": {"type": "string", "minLength": 1}}}
+    },
+    {
+      "if": {"properties": {"command": {"enum": ["end_round", "escape"]}}, "required": ["command"]},
+      "then": {
+        "properties": {
+          "card_instance_id": {"type": "null"},
+          "target_ids": {"maxItems": 0}
+        }
+      }
+    }
+  ]
 }

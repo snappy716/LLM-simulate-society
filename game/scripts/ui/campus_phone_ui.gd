@@ -252,7 +252,7 @@ func _app_text(app_id: String) -> String:
 	var place: Dictionary = (campus.get("places", {}) as Dictionary).get(place_id, {})
 	if app_id == "courses":
 		var plan: Dictionary = player.get("current_plan", {})
-		return "[b]第 %d 天 · %s[/b]\n\n当前计划：%s\n地点：%s\n主要行动剩余：%d" % [int(clock.get("day", 1)), SimulationBridge.phase_display_name(String(clock.get("phase", "morning"))), plan.get("activity_id", "自由安排"), plan.get("location_id", "未安排"), int((player.get("action_budget", {}) as Dictionary).get("major_remaining", 0))]
+		return "[b]第 %d 天 · %s[/b]\n当前计划：%s\n地点：%s\n主要行动剩余：%d\n\n[b]学院能力 · 心理学院[/b]\n%s\n\n[color=#9aa8bd]能力同时用于表世界检定，并生成角色绑定的战斗卡牌。[/color]" % [int(clock.get("day", 1)), SimulationBridge.phase_display_name(String(clock.get("phase", "morning"))), plan.get("activity_id", "自由安排"), plan.get("location_id", "未安排"), int((player.get("action_budget", {}) as Dictionary).get("major_remaining", 0)), _ability_lines(player.get("abilities", []))]
 	if app_id == "album":
 		var presentation := get_node("/root/CampusPresentation")
 		var current_map: Dictionary = presentation.call("get_map")
@@ -503,6 +503,33 @@ func _dictionary_lines(value: Variant) -> String:
 	var lines: Array[String] = []
 	for key in keys:
 		lines.append("%s：%s" % [key, value[key]])
+	return "\n".join(lines)
+
+
+func _ability_lines(value: Variant) -> String:
+	if not value is Array or value.is_empty():
+		return "能力数据尚未同步"
+	var type_names := {
+		"attack": "攻击", "control": "控制", "defense": "防御",
+		"knowledge": "知识", "signature": "专业", "support": "支援",
+		"technique": "技巧",
+	}
+	var lines: Array[String] = []
+	var cards: Dictionary = {}
+	for card in (SimulationBridge.campus_snapshot.get("player", {}) as Dictionary).get("card_pool", []):
+		if card is Dictionary:
+			cards[String(card.get("source_ability_id", ""))] = card
+	for ability in value:
+		if not ability is Dictionary:
+			continue
+		var ability_id := String(ability.get("ability_id", ""))
+		var card: Dictionary = cards.get(ability_id, {})
+		var specialization := " · 专业分支" if ability.get("source_kind", "common") == "specialization" else ""
+		lines.append("• %s  Lv.%d%s  [%s/耗%d]" % [
+			ability.get("name", ability_id), int(ability.get("rank", 1)), specialization,
+			type_names.get(String(card.get("card_type", "")), "能力"),
+			int(card.get("focus_cost", 0)),
+		])
 	return "\n".join(lines)
 
 
