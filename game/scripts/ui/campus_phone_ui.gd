@@ -152,7 +152,7 @@ func _app_text(app_id: String) -> String:
 	if app_id == "album":
 		var presentation := get_node("/root/CampusPresentation")
 		var current_map: Dictionary = presentation.call("get_map")
-		return "[b]当前场景[/b]\n%s\n\n已接入校园场景图片：%d 张。\n按 M 可查看和切换全部地图及迭代稿。" % [current_map.get("name", "未知"), (presentation.call("all_maps") as Array).size()]
+		return "[b]当前场景[/b]\n%s\n\n已接入校园正式候选场景：%d 张。\n按 M 可查看和切换校园区域。" % [current_map.get("name", "未知"), (presentation.call("all_maps") as Array).size()]
 	if app_id == "notes":
 		var activity: Dictionary = player.get("current_activity", {})
 		return "[b]当前位置[/b]\n%s\n\n[b]最近活动[/b]\n%s\n%s" % [place.get("name", place_id), activity.get("activity_id", "暂无"), activity.get("result", "")]

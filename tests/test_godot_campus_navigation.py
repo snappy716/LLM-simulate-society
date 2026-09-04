@@ -11,16 +11,16 @@ GAME_DIR = REPOSITORY_DIR / "game"
 
 
 class GodotCampusNavigationSourceTests(unittest.TestCase):
-    def test_all_twenty_collaboration_maps_are_catalogued_with_real_dimensions(self):
+    def test_five_latest_collaboration_maps_are_catalogued_with_real_dimensions(self):
         catalog_path = GAME_DIR / "data/campus_art_catalog.json"
         catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
         maps = catalog["maps"]
-        self.assertEqual(20, len(maps))
-        self.assertEqual(20, len({entry["id"] for entry in maps}))
-        self.assertEqual(20, len({entry["texture_path"] for entry in maps}))
+        self.assertEqual(5, len(maps))
+        self.assertEqual(5, len({entry["id"] for entry in maps}))
+        self.assertEqual(5, len({entry["texture_path"] for entry in maps}))
         self.assertEqual(
-            20,
-            len(list((GAME_DIR / "assets/maps/campus_collab/all_maps").glob("*.png"))),
+            5,
+            len(list((GAME_DIR / "assets/maps/campus_collab").glob("*.png"))),
         )
         for entry in maps:
             self.assertIn(entry["semantic_location_id"], {

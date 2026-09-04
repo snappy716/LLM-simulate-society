@@ -24,20 +24,20 @@ func _run_flow() -> void:
 	await process_frame
 
 	var presentation := root.get_node("CampusPresentation")
-	assert((presentation.call("all_maps") as Array).size() == 20)
+	assert((presentation.call("all_maps") as Array).size() == 5)
 	var map := outdoor.get_node("CampusMap") as Sprite2D
 	assert(map.texture != null)
 	assert(map.texture.get_size() == Vector2(1774, 887))
 	var camera := outdoor.get_node("Player/Camera2D") as Camera2D
 	assert(camera.limit_right == 1774)
 	assert(camera.limit_bottom == 887)
-	assert(bool(presentation.call("select_map", "living_area_v1")))
+	assert(bool(presentation.call("select_map", "living_area")))
 	await process_frame
 	assert(map.texture.get_size() == Vector2(2040, 771))
-	assert(bool(presentation.call("select_map", "dormitory_double_v4")))
+	assert(bool(presentation.call("select_map", "psychology_bridge")))
 	await process_frame
-	assert(map.texture.get_size() == Vector2(3548, 887))
-	assert(camera.limit_right == 3548)
+	assert(map.texture.get_size() == Vector2(1742, 903))
+	assert(camera.limit_right == 1742)
 	assert(bool(presentation.call("select_map", "campus_gate")))
 	await process_frame
 	assert(map.texture.get_size() == Vector2(1774, 887))
@@ -122,7 +122,7 @@ func _run_flow() -> void:
 	var before_map_clock: Dictionary = (bridge.get("campus_snapshot") as Dictionary).get("clock", {}).duplicate(true)
 	var before_map_budget := int(((bridge.get("campus_snapshot") as Dictionary).get("player", {}) as Dictionary).get("action_budget", {}).get("major_remaining", -1))
 	var map_ui = current_scene.get_node("CampusMapUI")
-	map_ui.call("_choose_map", "east_dorm_v5")
+	map_ui.call("_choose_map", "east_dormitory")
 	var map_travel_resolution = await bridge.campus_fast_travel_completed
 	assert(bool(map_travel_resolution[0]), "campus map travel failed: %s" % map_travel_resolution[1])
 	await process_frame
@@ -130,15 +130,15 @@ func _run_flow() -> void:
 	assert((after_map_snapshot.get("player", {}) as Dictionary).get("current_location_id") == "east_dorm_region")
 	assert(after_map_snapshot.get("clock", {}) == before_map_clock)
 	assert(int((after_map_snapshot.get("player", {}) as Dictionary).get("action_budget", {}).get("major_remaining", -1)) == before_map_budget)
-	assert(String(presentation.get("current_map_id")) == "east_dorm_v5")
+	assert(String(presentation.get("current_map_id")) == "east_dormitory")
 	map = current_scene.get_node("CampusMap") as Sprite2D
 	assert(map.texture.get_size() == Vector2(1774, 887))
 	var same_region_revision := int(after_map_snapshot.get("revision", -1))
-	map_ui.call("_choose_map", "dormitory_double_v4")
+	map_ui.call("_choose_map", "east_dormitory")
 	await process_frame
-	assert(String(presentation.get("current_map_id")) == "dormitory_double_v4")
+	assert(String(presentation.get("current_map_id")) == "east_dormitory")
 	assert(int((bridge.get("campus_snapshot") as Dictionary).get("revision", -2)) == same_region_revision)
-	assert((current_scene.get_node("CampusMap") as Sprite2D).texture.get_size() == Vector2(3548, 887))
+	assert((current_scene.get_node("CampusMap") as Sprite2D).texture.get_size() == Vector2(1774, 887))
 
 	print("CAMPUS_COLLAB_FLOW_OK")
 	current_scene.queue_free()

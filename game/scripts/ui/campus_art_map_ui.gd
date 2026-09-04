@@ -48,12 +48,12 @@ func _build_ui() -> void:
 	column.add_theme_constant_override("separation", 10)
 	margin.add_child(column)
 	var title := Label.new()
-	title.text = "校园地图与美术版本"
+	title.text = "校园地图"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 26)
 	column.add_child(title)
 	var hint := Label.new()
-	hint.text = "选择地点或同一地点的美术迭代稿；校园移动不消耗分钟和主要行动。"
+	hint.text = "选择校园区域；校园移动不消耗分钟和主要行动。"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(hint)
 	var scroll := ScrollContainer.new()
@@ -82,8 +82,7 @@ func _rebuild_buttons() -> void:
 	for entry in get_node("/root/CampusPresentation").call("all_maps"):
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(255, 54)
-		button.text = "%s%s\n%s" % [
-			"★ " if bool(entry.get("primary", false)) else "",
+		button.text = "%s\n%s" % [
 			String(entry.get("name", entry.get("id", ""))),
 			String(entry.get("group", "校园")),
 		]
