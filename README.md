@@ -16,6 +16,9 @@ Project A 是一个正在开发中的 2D 等距视角城镇 RPG 原型，目标�
 - [校园地点、人口与 Godot 导航灰盒](design/CAMPUS_MAP_AND_POPULATION.md)
 - [表世界论坛与玩家/NPC 任务竞争](design/CAMPUS_FORUM_TASKS.md)
 - [任务关系、社团声望与后续任务链](design/CAMPUS_SOCIAL_CONSEQUENCES.md)
+- [当前程序实现 To Do](design/IMPLEMENTATION_TODO.md)
+- [NPC 日程与人物日志设计](design/NPC_ACTIVITY_LOG_SYSTEM.md)
+- [人物牌与三排卡牌战斗框架](design/CARD_COMBAT_FRAMEWORK.md)
 
 本分支先建立可测试的校园领域边界、数据内容和契约，现有 Godot 地图、人物动画、物品交易与旧模拟仍可运行。后续按系统逐项接入，不进行一次性破坏性重写。
 
