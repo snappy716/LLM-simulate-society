@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/phone_message.schema.json",
+  "title": "Campus Phone Message",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "message_id",
+    "thread_id",
+    "sender_id",
+    "receiver_id",
+    "day",
+    "phase",
+    "minute",
+    "text",
+    "source",
+    "reply_to_message_id",
+    "shared_claim_id"
+  ],
+  "properties": {
+    "message_id": {"type": "string", "pattern": "^phone_message:[0-9]{8}$"},
+    "thread_id": {"type": "string", "pattern": "^phone_thread:"},
+    "sender_id": {"type": "string", "minLength": 1},
+    "receiver_id": {"type": "string", "minLength": 1},
+    "day": {"type": "integer", "minimum": 1},
+    "phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+    "minute": {"type": "integer", "minimum": 0, "maximum": 359},
+    "text": {"type": "string", "minLength": 1, "maxLength": 240},
+    "source": {"enum": ["player", "rule", "llm", "narrative"]},
+    "reply_to_message_id": {"type": ["string", "null"]},
+    "shared_claim_id": {"type": ["string", "null"]}
+  }
+}

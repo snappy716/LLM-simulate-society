@@ -98,6 +98,11 @@ from simulation.systems import (  # noqa: E402
     campus_interaction_invariant,
     install_campus_interactions,
     load_campus_interaction_policy,
+    advance_campus_phone_messages,
+    campus_messaging_invariant,
+    install_campus_messaging,
+    load_campus_messaging_policy,
+    make_campus_messaging_handler,
 )
 
 
@@ -132,6 +137,8 @@ class CampusKernelBridge:
         install_campus_cognition(state, cognition_policy)
         interaction_policy = load_campus_interaction_policy(registry)
         install_campus_interactions(state)
+        messaging_policy = load_campus_messaging_policy(registry)
+        install_campus_messaging(state, messaging_policy)
         self.cognition_runtime = CognitionRuntime(cognition_policy)
         activity_definitions = load_campus_activity_definitions(registry)
         activity_handler = make_campus_activity_handler(
@@ -199,6 +206,7 @@ class CampusKernelBridge:
         self.kernel.add_invariant(chronicle_invariant)
         self.kernel.add_invariant(cognition_invariant)
         self.kernel.add_invariant(campus_interaction_invariant)
+        self.kernel.add_invariant(campus_messaging_invariant)
         self.kernel.add_invariant(action_economy_invariant)
         self.kernel.add_invariant(campus_schedule_invariant)
         self.kernel.add_invariant(campus_activity_invariant)
@@ -231,10 +239,15 @@ class CampusKernelBridge:
                     phase_upkeep,
                     decision_selector,
                     complete_assigned_task,
-                    lambda context: advance_campus_interactions(
-                        context, interaction_policy, intelligence_policy,
-                        self.cognition_runtime,
-                    ),
+                    lambda context: {
+                        **advance_campus_interactions(
+                            context, interaction_policy, intelligence_policy,
+                            self.cognition_runtime,
+                        ),
+                        **advance_campus_phone_messages(
+                            context, messaging_policy, intelligence_policy,
+                        ),
+                    },
                 ),
             ),
         )
@@ -265,6 +278,9 @@ class CampusKernelBridge:
         ):
             self.kernel.register_handler(action_id, party_handler)
         self.kernel.register_handler("AWAKEN_NPC", make_awaken_npc_handler(cognition_policy))
+        messaging_handler = make_campus_messaging_handler(messaging_policy)
+        for action_id in ("ADD_PHONE_CONTACT", "SEND_PHONE_MESSAGE", "MARK_PHONE_THREAD_READ"):
+            self.kernel.register_handler(action_id, messaging_handler)
 
     def configure_cognition_interface(self, config: dict) -> None:
         provider = str(config.get("provider", "rule"))

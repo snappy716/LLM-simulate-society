@@ -11,6 +11,20 @@ GAME_DIR = REPOSITORY_DIR / "game"
 
 
 class GodotCampusNavigationSourceTests(unittest.TestCase):
+    def test_phone_messages_have_contact_thread_input_and_free_command_bridge(self):
+        phone = (GAME_DIR / "scripts/ui/campus_phone_ui.gd").read_text(encoding="utf-8")
+        bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(encoding="utf-8")
+        for text in (
+            "_build_message_page", "_refresh_message_thread", "_send_phone_message",
+            '"SEND_PHONE_MESSAGE"', '"MARK_PHONE_THREAD_READ"', "不消耗主要行动",
+        ):
+            self.assertIn(text, phone)
+        self.assertIn("func operate_campus_message", bridge)
+        self.assertIn("campus_phone_message_completed", bridge)
+        inspector = (GAME_DIR / "scripts/ui/campus_npc_inspector_ui.gd").read_text(encoding="utf-8")
+        self.assertIn('"ADD_PHONE_CONTACT"', inspector)
+        self.assertIn("交换联系方式（免费操作）", inspector)
+
     def test_five_latest_collaboration_maps_are_catalogued_with_real_dimensions(self):
         catalog_path = GAME_DIR / "data/campus_art_catalog.json"
         catalog = json.loads(catalog_path.read_text(encoding="utf-8"))

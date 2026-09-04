@@ -46,6 +46,13 @@ var _party_dismiss_action: Button
 var _party_feedback: Label
 var _selected_party_candidate_id := ""
 var _selected_party_member_id := ""
+var _message_root: VBoxContainer
+var _message_contact_picker: OptionButton
+var _message_log: RichTextLabel
+var _message_input: LineEdit
+var _message_send_action: Button
+var _message_feedback: Label
+var _selected_message_contact_id := ""
 
 
 func _ready() -> void:
@@ -56,6 +63,7 @@ func _ready() -> void:
 	SimulationBridge.campus_task_operation_completed.connect(_on_task_operation_completed)
 	SimulationBridge.campus_club_operation_completed.connect(_on_club_operation_completed)
 	SimulationBridge.campus_party_operation_completed.connect(_on_party_operation_completed)
+	SimulationBridge.campus_phone_message_completed.connect(_on_phone_message_completed)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -176,7 +184,42 @@ func _build_app_page() -> VBoxContainer:
 	_party_root.visible = false
 	_party_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page.add_child(_party_root)
+	_message_root = _build_message_page()
+	_message_root.visible = false
+	_message_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_child(_message_root)
 	return page
+
+
+func _build_message_page() -> VBoxContainer:
+	var root := VBoxContainer.new()
+	root.add_theme_constant_override("separation", 7)
+	_message_contact_picker = OptionButton.new()
+	_message_contact_picker.item_selected.connect(_select_message_contact)
+	root.add_child(_message_contact_picker)
+	_message_log = RichTextLabel.new()
+	_message_log.bbcode_enabled = true
+	_message_log.fit_content = false
+	_message_log.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_message_log.add_theme_font_size_override("normal_font_size", 14)
+	root.add_child(_message_log)
+	_message_feedback = Label.new()
+	_message_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_message_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	root.add_child(_message_feedback)
+	var composer := HBoxContainer.new()
+	_message_input = LineEdit.new()
+	_message_input.placeholder_text = "输入消息（不消耗主要行动）"
+	_message_input.max_length = 240
+	_message_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_message_input.text_submitted.connect(_send_phone_message_from_input)
+	composer.add_child(_message_input)
+	_message_send_action = Button.new()
+	_message_send_action.text = "发送"
+	_message_send_action.pressed.connect(_send_phone_message)
+	composer.add_child(_message_send_action)
+	root.add_child(composer)
+	return root
 
 
 func _build_club_page() -> VBoxContainer:
@@ -332,10 +375,12 @@ func _open_app(app_id: String, app_name: String) -> void:
 	var is_forum := app_id == "forums"
 	var is_club := app_id == "clubs"
 	var is_party := app_id == "party"
-	_content.visible = not is_forum and not is_club and not is_party
+	var is_message := app_id == "messages"
+	_content.visible = not is_forum and not is_club and not is_party and not is_message
 	_forum_root.visible = is_forum
 	_club_root.visible = is_club
 	_party_root.visible = is_party
+	_message_root.visible = is_message
 	if is_forum:
 		_forum_feedback.text = ""
 		_show_forum_list()
@@ -345,6 +390,9 @@ func _open_app(app_id: String, app_name: String) -> void:
 	elif is_party:
 		_party_feedback.text = ""
 		_refresh_party_page()
+	elif is_message:
+		_message_feedback.text = ""
+		_refresh_message_page()
 	else:
 		_content.text = _app_text(app_id)
 	_home.visible = false
@@ -373,7 +421,97 @@ func _app_text(app_id: String) -> String:
 		return "[b]需求[/b]\n%s\n\n[b]情绪[/b]\n%s" % [_dictionary_lines(player.get("needs", {})), _dictionary_lines(player.get("emotions", {}))]
 	if app_id == "market":
 		return "[b]校园商城[/b]\n\n物品、商店库存、价格和原子结算已经存在。\n本页目前是手机入口，下一阶段把文字交易面板嵌入此处。"
-	return "[b]校园通讯[/b]\n\n联系人、聊天和关系系统入口已经保留。\nNPC 对话与消息内容将在认知层接入后显示。"
+	return "[b]校园通讯[/b]\n\n联系人和持久聊天记录已经接入。"
+
+
+func _refresh_message_page() -> void:
+	var messaging: Dictionary = SimulationBridge.campus_snapshot.get("messaging", {})
+	var contacts: Array = messaging.get("contacts", [])
+	var previous := _selected_message_contact_id
+	_message_contact_picker.clear()
+	var selected_index := 0
+	for contact in contacts:
+		if not contact is Dictionary:
+			continue
+		var contact_id := String(contact.get("actor_id", ""))
+		var unread := int(contact.get("unread_count", 0))
+		var prefix := "[%d条未读] " % unread if unread > 0 else ""
+		var index := _message_contact_picker.item_count
+		_message_contact_picker.add_item("%s%s" % [prefix, contact.get("display_name", contact_id)])
+		_message_contact_picker.set_item_metadata(index, contact_id)
+		if contact_id == previous:
+			selected_index = index
+	if _message_contact_picker.item_count == 0:
+		_selected_message_contact_id = ""
+		_message_log.text = "联系人数据尚未同步。"
+		_message_send_action.disabled = true
+		return
+	_message_contact_picker.select(selected_index)
+	_selected_message_contact_id = String(_message_contact_picker.get_item_metadata(selected_index))
+	_message_send_action.disabled = false
+	_refresh_message_thread()
+
+
+func _refresh_message_thread() -> void:
+	var messaging: Dictionary = SimulationBridge.campus_snapshot.get("messaging", {})
+	var threads: Dictionary = messaging.get("threads", {})
+	var thread: Dictionary = threads.get(_selected_message_contact_id, {})
+	var lines: Array[String] = []
+	for message in thread.get("messages", []):
+		if not message is Dictionary:
+			continue
+		var mine := String(message.get("sender_id", "")) == "player"
+		var author := "我" if mine else String(thread.get("counterpart_name", "联系人"))
+		var safe_text := String(message.get("text", "")).replace("[", "［").replace("]", "］")
+		lines.append("[color=#91a4bc]D%d %s[/color]  [b]%s[/b]\n%s" % [
+			int(message.get("day", 1)),
+			SimulationBridge.phase_display_name(String(message.get("phase", "morning"))),
+			author, safe_text,
+		])
+	if lines.is_empty():
+		_message_log.text = "[color=#91a4bc]还没有聊天记录。你们不需要处于同一地点即可联系。[/color]"
+	else:
+		_message_log.text = "\n\n".join(lines)
+		_message_log.scroll_to_line(max(0, _message_log.get_line_count() - 1))
+	if int(thread.get("unread_count", 0)) > 0 and not SimulationBridge.is_campus_busy():
+		SimulationBridge.operate_campus_message("MARK_PHONE_THREAD_READ", _selected_message_contact_id)
+
+
+func _select_message_contact(index: int) -> void:
+	_selected_message_contact_id = String(_message_contact_picker.get_item_metadata(index))
+	_message_feedback.text = ""
+	_refresh_message_thread()
+
+
+func _send_phone_message() -> void:
+	_send_phone_message_from_input(_message_input.text)
+
+
+func _send_phone_message_from_input(text: String) -> void:
+	var cleaned := text.strip_edges()
+	if cleaned.is_empty() or _selected_message_contact_id.is_empty():
+		_message_feedback.text = "请输入要发送的内容。"
+		return
+	_message_feedback.text = "正在发送……"
+	_message_send_action.disabled = true
+	SimulationBridge.operate_campus_message(
+		"SEND_PHONE_MESSAGE", _selected_message_contact_id, cleaned
+	)
+
+
+func _on_phone_message_completed(
+	success: bool, result: Dictionary, action_id: String, target_id: String
+) -> void:
+	if target_id != _selected_message_contact_id:
+		return
+	var command_result: Dictionary = result.get("result", {})
+	if action_id == "SEND_PHONE_MESSAGE":
+		_message_feedback.text = String(command_result.get("message", result.get("error", "消息发送失败")))
+		_message_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
+		if success:
+			_message_input.clear()
+	_message_send_action.disabled = false
+	_refresh_message_page()
 
 
 func _set_forum_filter(filter_id: String) -> void:
@@ -613,6 +751,8 @@ func _on_campus_snapshot_updated(_snapshot: Dictionary) -> void:
 		_refresh_club_page()
 	elif _party_root.visible:
 		_refresh_party_page()
+	elif _message_root.visible:
+		_refresh_message_page()
 
 
 func _refresh_club_page() -> void:

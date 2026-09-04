@@ -13,7 +13,7 @@ from simulation.systems.campus_parties import party_policy_from_state, party_vie
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 15
+CAMPUS_WORLD_VIEW_VERSION = 16
 NPC_CHRONICLE_VIEW_VERSION = 1
 
 
@@ -343,6 +343,53 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             )
         },
     }
+    messaging = state.cognition.get("messaging", {})
+    message_records = messaging.get("messages", {}) if isinstance(messaging, dict) else {}
+    player_threads: Dict[str, Dict[str, Any]] = {}
+    for thread in messaging.get("threads", {}).values() if isinstance(messaging, dict) else ():
+        if not isinstance(thread, dict) or "player" not in thread.get("participant_ids", ()):
+            continue
+        counterpart_id = next(
+            (actor_id for actor_id in thread.get("participant_ids", ()) if actor_id != "player"),
+            "",
+        )
+        if counterpart_id not in state.population:
+            continue
+        messages = [
+            deepcopy(message_records[message_id])
+            for message_id in thread.get("message_ids", ())[-40:]
+            if isinstance(message_records.get(message_id), dict)
+        ]
+        player_threads[counterpart_id] = {
+            "thread_id": thread.get("thread_id"),
+            "counterpart_id": counterpart_id,
+            "counterpart_name": state.population[counterpart_id].get("display_name", counterpart_id),
+            "unread_count": int(thread.get("unread_by_actor", {}).get("player", 0)),
+            "last_message_day": thread.get("last_message_day"),
+            "last_message_phase": thread.get("last_message_phase"),
+            "messages": messages,
+        }
+    player_contact_ids = set(
+        messaging.get("contacts_by_actor", {}).get("player", ())
+        if isinstance(messaging, dict) else ()
+    )
+    for npc_id in cast:
+        cast[npc_id]["is_phone_contact"] = npc_id in player_contact_ids
+    message_contacts = [
+        {
+            "actor_id": actor_id,
+            "display_name": actor.get("display_name", actor_id),
+            "role_kind": actor.get("role_kind", ""),
+            "college_id": actor.get("college_id", ""),
+            "has_thread": actor_id in player_threads,
+            "unread_count": int(player_threads.get(actor_id, {}).get("unread_count", 0)),
+        }
+        for actor_id, actor in state.population.items()
+        if actor_id in player_contact_ids and isinstance(actor, dict)
+    ]
+    message_contacts.sort(key=lambda entry: (
+        -int(entry["unread_count"]), not bool(entry["has_thread"]), str(entry["display_name"]),
+    ))
     return {
         "view_version": CAMPUS_WORLD_VIEW_VERSION,
         "revision": state.revision,
@@ -385,6 +432,15 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         "clubs": club_catalog_view(state, "player"),
         "party": player_party,
         "cognition": cognition_status,
+        "messaging": {
+            "contacts": message_contacts,
+            "threads": player_threads,
+            "unread_total": sum(
+                int(thread.get("unread_count", 0)) for thread in player_threads.values()
+            ),
+            "max_text_length": int(messaging.get("policy", {}).get("max_text_length", 240))
+            if isinstance(messaging, dict) else 240,
+        },
     }
 
 

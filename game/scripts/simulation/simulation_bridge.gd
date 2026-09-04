@@ -15,6 +15,7 @@ signal campus_task_operation_completed(success: bool, result: Dictionary, action
 signal campus_club_operation_completed(success: bool, result: Dictionary, action_id: String, club_id: String)
 signal campus_party_operation_completed(success: bool, result: Dictionary, action_id: String, target_id: String)
 signal campus_cognition_operation_completed(success: bool, result: Dictionary, action_id: String, target_id: String)
+signal campus_phone_message_completed(success: bool, result: Dictionary, action_id: String, target_id: String)
 signal campus_npc_chronicle_loaded(success: bool, result: Dictionary, npc_id: String, filter_name: String)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
@@ -41,6 +42,8 @@ var _campus_pending_party_target_id := ""
 var _campus_pending_party_action := ""
 var _campus_pending_cognition_target_id := ""
 var _campus_pending_cognition_action := ""
+var _campus_pending_message_target_id := ""
+var _campus_pending_message_action := ""
 var _campus_command_counter := 0
 var _chronicle_busy := false
 var _chronicle_npc_id := ""
@@ -92,6 +95,10 @@ func advance_time() -> void:
 	var error := _request.request(_base_url + "/step", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, "{}")
 	if error != OK:
 		_finish_with_error("无法发送时间推进请求：%s" % error)
+
+
+func is_campus_busy() -> bool:
+	return _campus_busy
 
 
 func configure_interface(config: Dictionary) -> void:
@@ -436,6 +443,48 @@ func operate_campus_cognition(action_id: String, target_id: String) -> void:
 		campus_cognition_operation_completed.emit(false, {"error": "无法发送觉醒请求：%s" % error}, action_id, target_id)
 
 
+func operate_campus_message(action_id: String, target_id: String, text: String = "") -> void:
+	if target_id.is_empty():
+		campus_phone_message_completed.emit(false, {"error": "未指定联系人"}, action_id, target_id)
+		return
+	if _campus_busy or not connected or campus_snapshot.is_empty():
+		campus_phone_message_completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他操作"}, action_id, target_id)
+		return
+	_campus_busy = true
+	_campus_pending_operation = "message"
+	_campus_pending_message_target_id = target_id
+	_campus_pending_message_action = action_id
+	_campus_command_counter += 1
+	var clock: Dictionary = campus_snapshot.get("clock", {})
+	var parameters := {"target_id": target_id}
+	if action_id == "SEND_PHONE_MESSAGE":
+		parameters["text"] = text
+	var command := {
+		"command_id": "godot-message-%d-%d" % [Time.get_ticks_usec(), _campus_command_counter],
+		"actor_id": "player",
+		"action_id": action_id,
+		"target_ids": [target_id],
+		"parameters": parameters,
+		"expected_world_revision": int(campus_snapshot.get("revision", 1)),
+		"issued_day": int(clock.get("day", 1)),
+		"issued_phase": String(clock.get("phase", "morning")),
+		"issued_minute": int(clock.get("minute", 0)),
+		"source": "player",
+	}
+	var error := _campus_request.request(
+		_base_url + "/kernel/command",
+		PackedStringArray(["Content-Type: application/json"]),
+		HTTPClient.METHOD_POST,
+		JSON.stringify(command)
+	)
+	if error != OK:
+		_campus_busy = false
+		_campus_pending_operation = ""
+		_campus_pending_message_target_id = ""
+		_campus_pending_message_action = ""
+		campus_phone_message_completed.emit(false, {"error": "无法发送手机消息：%s" % error}, action_id, target_id)
+
+
 func request_npc_chronicle(
 	npc_id: String,
 	filter_name: String = "recent",
@@ -591,6 +640,8 @@ func _on_campus_request_completed(
 	var party_action := _campus_pending_party_action
 	var cognition_target_id := _campus_pending_cognition_target_id
 	var cognition_action := _campus_pending_cognition_action
+	var message_target_id := _campus_pending_message_target_id
+	var message_action := _campus_pending_message_action
 	_campus_pending_operation = ""
 	_campus_pending_passage_id = ""
 	_campus_pending_destination_id = ""
@@ -602,6 +653,8 @@ func _on_campus_request_completed(
 	_campus_pending_party_action = ""
 	_campus_pending_cognition_target_id = ""
 	_campus_pending_cognition_action = ""
+	_campus_pending_message_target_id = ""
+	_campus_pending_message_action = ""
 	_campus_busy = false
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if response_code != 200 or not parsed is Dictionary:
@@ -626,6 +679,9 @@ func _on_campus_request_completed(
 		elif operation == "cognition":
 			var cognition_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
 			campus_cognition_operation_completed.emit(false, cognition_error, cognition_action, cognition_target_id)
+		elif operation == "message":
+			var message_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
+			campus_phone_message_completed.emit(false, message_error, message_action, message_target_id)
 		return
 	if operation == "snapshot":
 		campus_snapshot = parsed
@@ -647,6 +703,8 @@ func _on_campus_request_completed(
 		campus_party_operation_completed.emit(bool(parsed.get("ok", false)), parsed, party_action, party_target_id)
 	elif operation == "cognition":
 		campus_cognition_operation_completed.emit(bool(parsed.get("ok", false)), parsed, cognition_action, cognition_target_id)
+	elif operation == "message":
+		campus_phone_message_completed.emit(bool(parsed.get("ok", false)), parsed, message_action, message_target_id)
 	else:
 		campus_traversal_completed.emit(bool(parsed.get("ok", false)), parsed, passage_id)
 

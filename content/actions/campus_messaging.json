@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "max_text_length": 240,
+  "max_messages_per_thread": 80,
+  "max_autonomous_conversations_per_phase": 3,
+  "pair_cooldown_phases": 1,
+  "autonomous_social_need_threshold": 68,
+  "player_auto_reply": true
+}

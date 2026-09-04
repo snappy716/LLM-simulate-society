@@ -79,6 +79,24 @@ func _run_flow() -> void:
 	phone_ui.call("_set_open", true)
 	assert(bool(phone_ui.call("is_open")))
 	assert(paused)
+	phone_ui.call("_open_app", "messages", "校园通讯")
+	var message_picker := phone_ui.get("_message_contact_picker") as OptionButton
+	assert(message_picker.item_count == 3)
+	var phone_budget_before := int(((bridge.get("campus_snapshot") as Dictionary).get("player", {}) as Dictionary).get("action_budget", {}).get("major_remaining", -1))
+	var message_input := phone_ui.get("_message_input") as LineEdit
+	message_input.text = "你好，我们之后可以聊聊校园里的事吗？"
+	var message_send := phone_ui.get("_message_send_action") as Button
+	message_send.pressed.emit()
+	var message_resolution = await bridge.campus_phone_message_completed
+	assert(bool(message_resolution[0]), "phone message failed: %s" % message_resolution[1])
+	assert(String(message_resolution[2]) == "SEND_PHONE_MESSAGE")
+	var messaged_npc_id := String(message_resolution[3])
+	var messaged_thread: Dictionary = (bridge.get("campus_snapshot") as Dictionary).get("messaging", {}).get("threads", {}).get(messaged_npc_id, {})
+	assert((messaged_thread.get("messages", []) as Array).size() == 2)
+	assert(int(((bridge.get("campus_snapshot") as Dictionary).get("player", {}) as Dictionary).get("action_budget", {}).get("major_remaining", -1)) == phone_budget_before)
+	var read_resolution = await bridge.campus_phone_message_completed
+	assert(bool(read_resolution[0]), "phone read state failed: %s" % read_resolution[1])
+	assert(String(read_resolution[2]) == "MARK_PHONE_THREAD_READ")
 	phone_ui.call("_open_app", "courses", "课程平台")
 	var course_content := phone_ui.get("_content") as RichTextLabel
 	assert(course_content.text.contains("学院能力"))

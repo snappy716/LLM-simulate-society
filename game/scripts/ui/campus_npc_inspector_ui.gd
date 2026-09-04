@@ -80,6 +80,8 @@ var _tab_buttons: Dictionary = {}
 var _load_more: Button
 var _awaken_button: Button
 var _awaken_feedback: Label
+var _contact_button: Button
+var _contact_feedback: Label
 var _opened := false
 var _selected_npc: Node
 var _selected_profile: Dictionary = {}
@@ -94,6 +96,7 @@ func _ready() -> void:
 	_build_ui()
 	SimulationBridge.campus_npc_chronicle_loaded.connect(_on_chronicle_loaded)
 	SimulationBridge.campus_cognition_operation_completed.connect(_on_cognition_operation_completed)
+	SimulationBridge.campus_phone_message_completed.connect(_on_contact_operation_completed)
 
 
 func _process(_delta: float) -> void:
@@ -196,6 +199,14 @@ func _build_ui() -> void:
 	_load_more.visible = false
 	_load_more.pressed.connect(_load_more_chronicle)
 	column.add_child(_load_more)
+	_contact_button = Button.new()
+	_contact_button.text = "交换联系方式（免费操作）"
+	_contact_button.pressed.connect(_add_selected_contact)
+	column.add_child(_contact_button)
+	_contact_feedback = Label.new()
+	_contact_feedback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_contact_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	column.add_child(_contact_feedback)
 	_awaken_button = Button.new()
 	_awaken_button.text = "记名觉醒（长期深度认知）"
 	_awaken_button.pressed.connect(_awaken_selected_npc)
@@ -217,7 +228,9 @@ func _show_npc(npc: Node) -> void:
 	_chronicle_loading = false
 	_title.text = _safe_text(_selected_profile.get("display_name"), _safe_text(_selected_profile.get("npc_id"), "校园成员"))
 	_awaken_feedback.text = ""
+	_contact_feedback.text = ""
 	_refresh_awaken_button()
+	_refresh_contact_button()
 	_select_tab("overview")
 	_set_open(true)
 	_request_chronicle("recent")
@@ -371,6 +384,38 @@ func _refresh_awaken_button() -> void:
 	_awaken_button.text = "已记名觉醒" if awakened else "记名觉醒（%d / %d）" % [
 		int(cognition.get("awakened_count", 0)), int(cognition.get("awakened_slot_limit", 6)),
 	]
+
+
+func _refresh_contact_button() -> void:
+	if _selected_profile.is_empty():
+		_contact_button.visible = false
+		return
+	_contact_button.visible = true
+	var is_contact := bool(_selected_profile.get("is_phone_contact", false))
+	_contact_button.disabled = is_contact
+	_contact_button.text = "已在手机联系人中" if is_contact else "交换联系方式（免费操作）"
+
+
+func _add_selected_contact() -> void:
+	var npc_id := _safe_text(_selected_profile.get("npc_id"))
+	if npc_id.is_empty():
+		return
+	_contact_button.disabled = true
+	_contact_feedback.text = "正在交换联系方式……"
+	SimulationBridge.operate_campus_message("ADD_PHONE_CONTACT", npc_id)
+
+
+func _on_contact_operation_completed(
+	success: bool, result: Dictionary, action_id: String, target_id: String
+) -> void:
+	if action_id != "ADD_PHONE_CONTACT" or _selected_profile.is_empty() or target_id != _safe_text(_selected_profile.get("npc_id")):
+		return
+	var command_result: Dictionary = result.get("result", {})
+	_contact_feedback.text = String(command_result.get("message", result.get("error", "添加联系人失败")))
+	_contact_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
+	if success:
+		_selected_profile = (SimulationBridge.campus_snapshot.get("population", {}) as Dictionary).get(target_id, _selected_profile)
+	_refresh_contact_button()
 
 
 func _awaken_selected_npc() -> void:
