@@ -52,5 +52,13 @@
         }
       }
     }
+    ,"preferred_assignee_id": {"type": ["string", "null"]}
+    ,"origin_kind": {"enum": ["need", "interaction_hook"]}
+    ,"origin_ref_id": {"type": "string", "minLength": 1}
+    ,"origin_summary": {"type": "string", "minLength": 1}
+    ,"issuer_need_key": {"type": ["string", "null"]}
+    ,"issuer_need_before": {"type": ["integer", "null"], "minimum": 0, "maximum": 100}
+    ,"issuer_need_delta_on_completion": {"type": "integer"}
+    ,"issuer_need_result": {"type": "object"}
   }
 }

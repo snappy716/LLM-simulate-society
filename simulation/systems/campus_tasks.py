@@ -31,6 +31,7 @@ class CampusForumPolicy:
     npc_claim_delay_phases_max: int
     npc_execute_delay_phases: int
     protected_schedule_priority: int
+    emergent_tasks: Dict[str, Any]
     social_consequences: Dict[str, Dict[str, Any]]
 
     def __post_init__(self) -> None:
@@ -44,6 +45,20 @@ class CampusForumPolicy:
             raise ValueError("NPC task execution must be delayed by at least one phase")
         if not 0 <= self.protected_schedule_priority <= 100:
             raise ValueError("protected schedule priority must be between 0 and 100")
+        max_emergent = self.emergent_tasks.get("max_per_day")
+        max_hook = self.emergent_tasks.get("max_hook_per_day")
+        cooldown = self.emergent_tasks.get("source_cooldown_days")
+        if isinstance(max_emergent, bool) or not isinstance(max_emergent, int) or max_emergent < 0:
+            raise ValueError("emergent task daily limit must be a non-negative integer")
+        if isinstance(max_hook, bool) or not isinstance(max_hook, int) or not 0 <= max_hook <= max_emergent:
+            raise ValueError("emergent hook task limit must fit inside the daily limit")
+        if isinstance(cooldown, bool) or not isinstance(cooldown, int) or cooldown < 1:
+            raise ValueError("emergent task source cooldown must be positive")
+        for need_name, rule in self.emergent_tasks.get("need_rules", {}).items():
+            if not isinstance(rule, dict) or not 0 <= int(rule.get("threshold", -1)) <= 100:
+                raise ValueError(f"invalid emergent task need rule: {need_name}")
+        if not isinstance(self.emergent_tasks.get("hook_rules", {}), dict):
+            raise ValueError("emergent task hook rules must be a mapping")
         for outcome in ("completed", "abandoned", "expired"):
             consequence = self.social_consequences.get(outcome)
             if not isinstance(consequence, dict):
@@ -63,7 +78,7 @@ class CampusForumPolicy:
 
 def load_campus_forum_policy(registry: ContentRegistry) -> CampusForumPolicy:
     payload = registry.get("configuration", "forum_policy")
-    return CampusForumPolicy(
+    policy = CampusForumPolicy(
         daily_surface_task_count=int(payload.get("daily_surface_task_count", 0)),
         npc_viewers_per_phase_min=int(payload.get("npc_viewers_per_phase_min", 0)),
         npc_viewers_per_phase_max=int(payload.get("npc_viewers_per_phase_max", 0)),
@@ -71,8 +86,20 @@ def load_campus_forum_policy(registry: ContentRegistry) -> CampusForumPolicy:
         npc_claim_delay_phases_max=int(payload.get("npc_claim_delay_phases_max", 0)),
         npc_execute_delay_phases=int(payload.get("npc_execute_delay_phases", 0)),
         protected_schedule_priority=int(payload.get("protected_schedule_priority", 90)),
+        emergent_tasks=deepcopy(payload.get("emergent_tasks", {})),
         social_consequences=deepcopy(payload.get("social_consequences", {})),
     )
+    template_ids = set(registry.ids("surface_task_template"))
+    configured_templates = {
+        str(rule.get("template_id", ""))
+        for group_name in ("need_rules", "hook_rules")
+        for rule in policy.emergent_tasks.get(group_name, {}).values()
+        if isinstance(rule, dict)
+    }
+    unknown = configured_templates - template_ids
+    if unknown:
+        raise ValueError(f"emergent tasks reference unknown templates: {sorted(unknown)}")
+    return policy
 
 
 def load_surface_task_templates(registry: ContentRegistry) -> Dict[str, Dict[str, Any]]:
@@ -231,6 +258,7 @@ def install_campus_forums(
             "unlocked_template_ids": [],
             "pending_follow_up_template_ids": [],
             "published_single_run_template_ids": [],
+            "emergent_last_published_day_by_source": {},
         },
         "night": {
             "forum_id": "night",
@@ -241,6 +269,218 @@ def install_campus_forums(
     }
     state.tasks = {}
     publish_surface_tasks(state, templates, policy, rng_pool.stream("campus_forum"))
+
+
+def _emergent_source_is_available(
+    state: WorldState,
+    source_key: str,
+    policy: CampusForumPolicy,
+) -> bool:
+    forum = state.forums["surface"]
+    last_day = forum.get("emergent_last_published_day_by_source", {}).get(source_key)
+    if isinstance(last_day, int) and state.clock.day - last_day < int(
+        policy.emergent_tasks["source_cooldown_days"]
+    ):
+        return False
+    return not any(
+        isinstance(task, dict)
+        and task.get("origin_ref_id") == source_key
+        and task.get("state") not in TERMINAL_STATES
+        for task in state.tasks.values()
+    )
+
+
+def _emergent_candidates(
+    state: WorldState,
+    policy: CampusForumPolicy,
+    rng,
+) -> list[Dict[str, Any]]:
+    candidates: list[Dict[str, Any]] = []
+    need_rules = policy.emergent_tasks.get("need_rules", {})
+    for actor_id, actor in sorted(state.population.items()):
+        if actor_id == "player" or not isinstance(actor, dict):
+            continue
+        for need_name, rule in sorted(need_rules.items()):
+            value = int(actor.get("needs", {}).get(need_name, 0))
+            threshold = int(rule.get("threshold", 101))
+            source_key = f"need:{actor_id}:{need_name}"
+            if value < threshold or not _emergent_source_is_available(state, source_key, policy):
+                continue
+            candidates.append({
+                "score": value + (8 if actor_id in state.cognition.get("focused_ids", ()) else 0)
+                + rng.uniform(-3.0, 3.0),
+                "origin_kind": "need",
+                "origin_ref_id": source_key,
+                "issuer_id": actor_id,
+                "preferred_assignee_id": None,
+                "need_name": need_name,
+                "need_value": value,
+                "rule": rule,
+                "hook": None,
+            })
+    hook_rules = policy.emergent_tasks.get("hook_rules", {})
+    for hook in state.cognition.get("interactions", {}).get("hooks", ()):
+        if not isinstance(hook, dict) or hook.get("state") != "open":
+            continue
+        rule = hook_rules.get(str(hook.get("hook_type", "")))
+        source_key = f"hook:{hook.get('hook_id', '')}"
+        if not isinstance(rule, dict) or not _emergent_source_is_available(state, source_key, policy):
+            continue
+        age = max(
+            0,
+            phase_index(state.clock.day, state.clock.phase)
+            - phase_index(int(hook["created_day"]), str(hook["created_phase"])),
+        )
+        if age < 1:
+            continue
+        candidates.append({
+            "score": 125 + age + rng.uniform(-2.0, 2.0),
+            "origin_kind": "interaction_hook",
+            "origin_ref_id": source_key,
+            "issuer_id": str(hook["actor_id"]),
+            "preferred_assignee_id": str(hook["target_id"]),
+            "need_name": None,
+            "need_value": None,
+            "rule": rule,
+            "hook": hook,
+        })
+    return sorted(
+        candidates,
+        key=lambda item: (-float(item["score"]), item["origin_ref_id"]),
+    )
+
+
+def publish_emergent_surface_tasks(
+    context,
+    templates: Mapping[str, Mapping[str, Any]],
+    policy: CampusForumPolicy,
+) -> list[str]:
+    """Turn real NPC pressure and unresolved promises into bounded forum work."""
+    if context.state.clock.phase != PHASES[0].value:
+        return []
+    limit = int(policy.emergent_tasks.get("max_per_day", 0))
+    if limit <= 0:
+        return []
+    rng = context.rng.stream("campus_emergent_tasks")
+    forum = context.state.forums["surface"]
+    published: list[str] = []
+    sequence = int(forum.get("published_total", 0))
+    current_index = phase_index(context.state.clock.day, context.state.clock.phase)
+    candidates = _emergent_candidates(context.state, policy, rng)
+    hook_limit = int(policy.emergent_tasks.get("max_hook_per_day", 0))
+    hook_candidates = [item for item in candidates if item["origin_kind"] == "interaction_hook"]
+    need_candidates = [item for item in candidates if item["origin_kind"] == "need"]
+    selected = [*hook_candidates[:hook_limit], *need_candidates[: max(0, limit - hook_limit)]]
+    for candidate in selected[:limit]:
+        rule = candidate["rule"]
+        template = templates[str(rule["template_id"])]
+        issuer_id = str(candidate["issuer_id"])
+        issuer = context.state.population[issuer_id]
+        issuer_name = str(issuer.get("display_name", issuer_id))
+        scene_id = str(template["scene_id"])
+        if rule.get("scene_policy") == "issuer_primary":
+            scene_id = str(issuer.get("primary_location_id", scene_id))
+        sequence += 1
+        origin_token = str(candidate["origin_ref_id"]).replace(":", "_")
+        task_id = (
+            f"surface:d{context.state.clock.day:02d}:{sequence:04d}:"
+            f"emergent_{origin_token}"
+        )
+        organization_id = None
+        issuer_clubs = list(issuer.get("club_ids", ()))
+        if candidate["origin_kind"] == "interaction_hook" and issuer_clubs:
+            target = context.state.population.get(candidate["preferred_assignee_id"], {})
+            shared = sorted(set(issuer_clubs) & set(target.get("club_ids", ())))
+            organization_id = shared[0] if shared else None
+        elif candidate["need_name"] == "commitment_pressure" and issuer_clubs:
+            organization_id = issuer_clubs[0]
+        claim_delay = rng.randint(
+            policy.npc_claim_delay_phases_min,
+            policy.npc_claim_delay_phases_max,
+        )
+        tags = list(dict.fromkeys([*template.get("tags", ()), *rule.get("tags", ())]))
+        task = {
+            "task_id": task_id,
+            "template_id": str(template["id"]),
+            "forum": "surface",
+            "issuer_id": issuer_id,
+            "title": str(rule["title"]),
+            "description": str(rule["description"]).format(issuer=issuer_name),
+            "objective": str(rule["objective"]),
+            "action_id": str(template["activity_id"]),
+            "activity_id": str(template["activity_id"]),
+            "allowed_phases": list(template.get("allowed_phases", ())),
+            "scene_id": scene_id,
+            "execution_region_id": str(
+                context.state.places[scene_id].get("region_id") or scene_id
+            ),
+            "created_day": context.state.clock.day,
+            "expires_day": context.state.clock.day + int(template.get("expires_after_days", 2)) - 1,
+            "state": "open",
+            "assignee_id": None,
+            "lock_revision": 0,
+            "viewer_ids": [],
+            "considering_ids": [],
+            "helper_ids": [],
+            "required_skill_ids": list(template.get("required_skill_ids", ())),
+            "required_item_ids": list(template.get("required_item_ids", ())),
+            "reward": {"wealth": max(0, int(rule.get("reward_wealth", 0)))},
+            "tags": tags,
+            "preferred_college_ids": [issuer["college_id"]] if issuer.get("college_id") else [],
+            "preferred_club_ids": issuer_clubs,
+            "preferred_assignee_id": candidate["preferred_assignee_id"],
+            "organization_id": organization_id,
+            "social_consequences": deepcopy(policy.social_consequences),
+            "follow_up_template_ids": [],
+            "chain_parent_template_id": None,
+            "npc_claim_phase_index": current_index + claim_delay,
+            "npc_execute_after_phase_index": None,
+            "origin_kind": candidate["origin_kind"],
+            "origin_ref_id": candidate["origin_ref_id"],
+            "origin_summary": (
+                "由未解决的双方约定产生" if candidate["origin_kind"] == "interaction_hook"
+                else f"由发布者的{candidate['need_name']}需求产生"
+            ),
+            "issuer_need_key": candidate["need_name"],
+            "issuer_need_before": candidate["need_value"],
+            "issuer_need_delta_on_completion": int(rule.get("issuer_need_delta", 0)),
+            "history": [
+                _history(
+                    context.state.clock.day,
+                    context.state.clock.phase,
+                    "published",
+                    "NPC 根据自己的实际需求或约定发布了任务。",
+                )
+            ],
+        }
+        context.state.tasks[task_id] = task
+        published.append(task_id)
+        forum.setdefault("emergent_last_published_day_by_source", {})[
+            candidate["origin_ref_id"]
+        ] = context.state.clock.day
+        hook = candidate.get("hook")
+        if isinstance(hook, dict):
+            hook["state"] = "task_posted"
+            hook["linked_task_id"] = task_id
+        context.emit(
+            "FORUM_TASK_PUBLISHED",
+            f"{issuer_name}发布了《{task['title']}》。",
+            actor_ids=[issuer_id],
+            target_ids=[candidate["preferred_assignee_id"]]
+            if candidate["preferred_assignee_id"] else [],
+            scene_id=scene_id,
+            payload={
+                "task_id": task_id,
+                "forum": "surface",
+                "origin_kind": task["origin_kind"],
+                "origin_ref_id": task["origin_ref_id"],
+            },
+            visibility="public",
+            severity=2,
+            knowledge_tags=["forum", "task", "emergent", task["origin_kind"]],
+        )
+    forum["published_total"] = sequence
+    return published
 
 
 def _actor_has_active_task(state: WorldState, actor_id: str) -> bool:
@@ -270,6 +510,8 @@ def _candidate_score(
         score += 40.0
     if set(task.get("required_skill_ids", ())).issubset(set(actor.get("skill_ids", ()))):
         score += 20.0
+    if task.get("preferred_assignee_id") == actor_id:
+        score += 45.0
     personality = actor.get("personality", {})
     needs = actor.get("needs", {})
     score += 0.16 * float(personality.get("altruism", 50))
@@ -295,6 +537,7 @@ def advance_surface_forum(
     rng = context.rng.stream("campus_forum")
     summary = {
         "forum_published_count": 0,
+        "forum_emergent_published_count": 0,
         "forum_expired_count": 0,
         "forum_new_view_count": 0,
         "forum_consider_count": 0,
@@ -318,6 +561,7 @@ def advance_surface_forum(
             task.setdefault("history", []).append(
                 _history(context.state.clock.day, context.state.clock.phase, "expired", "任务已超过截止日期。")
             )
+            _settle_origin_hook(context.state, task, "expired")
             context.emit(
                 "FORUM_TASK_EXPIRED",
                 f"《{task['title']}》已超过截止日期。",
@@ -334,6 +578,8 @@ def advance_surface_forum(
     if context.state.clock.phase == PHASES[0].value:
         published = publish_surface_tasks(context.state, templates, policy, rng)
         summary["forum_published_count"] = len(published)
+        emergent = publish_emergent_surface_tasks(context, templates, policy)
+        summary["forum_emergent_published_count"] = len(emergent)
 
     now = phase_index(context.state.clock.day, context.state.clock.phase)
     npc_ids = [actor_id for actor_id in sorted(context.state.population) if actor_id != "player"]
@@ -470,6 +716,38 @@ def _apply_reward(state: WorldState, actor_id: str, task: Mapping[str, Any]) -> 
     return {"wealth": wealth}
 
 
+def _apply_issuer_need_result(state: WorldState, task: Mapping[str, Any]) -> Dict[str, Any]:
+    need_name = task.get("issuer_need_key")
+    delta = int(task.get("issuer_need_delta_on_completion", 0))
+    issuer = state.population.get(str(task.get("issuer_id", "")))
+    if not isinstance(need_name, str) or not need_name or not isinstance(issuer, dict) or delta == 0:
+        return {}
+    needs = issuer.setdefault("needs", {})
+    before = int(needs.get(need_name, 0))
+    after = max(0, min(100, before + delta))
+    needs[need_name] = after
+    return {
+        "issuer_id": task["issuer_id"],
+        "need_key": need_name,
+        "before": before,
+        "after": after,
+        "delta": after - before,
+    }
+
+
+def _settle_origin_hook(state: WorldState, task: Mapping[str, Any], outcome: str) -> None:
+    if task.get("origin_kind") != "interaction_hook":
+        return
+    source_key = str(task.get("origin_ref_id", ""))
+    hook_id = source_key.removeprefix("hook:")
+    for hook in state.cognition.get("interactions", {}).get("hooks", ()):
+        if hook.get("hook_id") == hook_id and hook.get("state") == "task_posted":
+            hook["state"] = "completed" if outcome == "completed" else "expired"
+            hook["resolved_day"] = state.clock.day
+            hook["resolved_phase"] = state.clock.phase
+            break
+
+
 def _unlock_follow_up_tasks(state: WorldState, task: Mapping[str, Any]) -> list[str]:
     forum = state.forums.setdefault("surface", {})
     completed = set(forum.get("completed_template_ids", ()))
@@ -497,6 +775,7 @@ def complete_assigned_task(context, actor_id: str, plan: Mapping[str, Any]) -> b
     task["state"] = "in_progress"
     task["lock_revision"] = int(task.get("lock_revision", 0)) + 1
     reward = _apply_reward(context.state, actor_id, task)
+    issuer_need_result = _apply_issuer_need_result(context.state, task)
     social_result = apply_task_social_consequence(
         context.state, actor_id, task, "completed"
     )
@@ -515,6 +794,8 @@ def complete_assigned_task(context, actor_id: str, plan: Mapping[str, Any]) -> b
     actor.pop("active_forum_task_id", None)
     task["social_result"] = social_result
     task["unlocked_follow_up_template_ids"] = unlocked_follow_ups
+    task["issuer_need_result"] = issuer_need_result
+    _settle_origin_hook(context.state, task, "completed")
     context.emit(
         "FORUM_TASK_COMPLETED",
         f"{actor.get('display_name', actor_id)} 完成了《{task['title']}》。",
@@ -526,6 +807,9 @@ def complete_assigned_task(context, actor_id: str, plan: Mapping[str, Any]) -> b
             "reward": reward,
             "social_result": social_result,
             "unlocked_follow_up_template_ids": unlocked_follow_ups,
+            "issuer_need_result": issuer_need_result,
+            "origin_kind": task.get("origin_kind", "template"),
+            "origin_ref_id": task.get("origin_ref_id"),
         },
         knowledge_tags=["forum", "task", "completed"],
     )
@@ -663,6 +947,7 @@ def make_forum_task_handler(activity_handler):
                     "unlocked_follow_up_template_ids": list(
                         task.get("unlocked_follow_up_template_ids", ())
                     ),
+                    "issuer_need_result": deepcopy(task.get("issuer_need_result", {})),
                 },
             )
 
@@ -693,6 +978,9 @@ def make_campus_task_invariant(
                 errors.append(f"task {task_id} references unknown activity")
             if task.get("issuer_id") not in state.population:
                 errors.append(f"task {task_id} references unknown issuer")
+            preferred_assignee = task.get("preferred_assignee_id")
+            if preferred_assignee is not None and preferred_assignee not in state.population:
+                errors.append(f"task {task_id} references unknown preferred assignee")
             organization_id = task.get("organization_id")
             if organization_id is not None and organization_id not in state.organizations:
                 errors.append(f"task {task_id} references unknown organization")
@@ -736,4 +1024,5 @@ __all__ = [
     "make_task_aware_decision_selector",
     "phase_index",
     "publish_surface_tasks",
+    "publish_emergent_surface_tasks",
 ]

@@ -110,6 +110,7 @@ from simulation.systems.campus_tasks import (
     make_task_aware_decision_selector,
     phase_index,
     publish_surface_tasks,
+    publish_emergent_surface_tasks,
 )
 from simulation.systems.campus_social import (
     DEFAULT_RELATIONSHIP,
@@ -226,6 +227,7 @@ __all__ = [
     "make_task_aware_decision_selector",
     "phase_index",
     "publish_surface_tasks",
+    "publish_emergent_surface_tasks",
     "DEFAULT_RELATIONSHIP",
     "adjust_organization_reputation",
     "adjust_relationship",

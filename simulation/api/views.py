@@ -13,7 +13,7 @@ from simulation.systems.campus_parties import party_policy_from_state, party_vie
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 14
+CAMPUS_WORLD_VIEW_VERSION = 15
 NPC_CHRONICLE_VIEW_VERSION = 1
 
 
@@ -273,7 +273,16 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             "organization_name": (
                 state.organizations.get(str(task.get("organization_id", "")), {}).get("name", "")
             ),
+            "preferred_assignee_name": state.population.get(
+                str(task.get("preferred_assignee_id", "")), {}
+            ).get("display_name", ""),
         })
+        if task.get("origin_kind"):
+            public_tasks[task_id].update({
+                "origin_kind": task.get("origin_kind"),
+                "origin_summary": task.get("origin_summary", ""),
+                "preferred_assignee_id": task.get("preferred_assignee_id"),
+            })
     task_counts: Dict[str, int] = {}
     for task in public_tasks.values():
         state_name = str(task.get("state", "unknown"))

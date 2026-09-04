@@ -234,6 +234,12 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("内在需求、秘密动机与后续计划不会直接显示", inspector)
         self.assertNotIn('_dictionary_lines(profile.get("needs"', inspector)
 
+    def test_forum_detail_explains_dynamic_task_origin_without_hidden_need_values(self):
+        phone = (GAME_DIR / "scripts/ui/campus_phone_ui.gd").read_text(encoding="utf-8")
+        self.assertIn("任务来源", phone)
+        self.assertIn("其他人仍可接取", phone)
+        self.assertNotIn('task.get("issuer_need_before"', phone)
+
     def test_npc_inspector_loads_private_paginated_chronicle_on_demand(self):
         inspector = (GAME_DIR / "scripts/ui/campus_npc_inspector_ui.gd").read_text(
             encoding="utf-8"

@@ -142,6 +142,15 @@ def _open_hook(state: WorldState, first_id: str, second_id: str) -> Dict[str, An
     return None
 
 
+def _has_active_pair_hook(state: WorldState, first_id: str, second_id: str) -> bool:
+    pair = {first_id, second_id}
+    return any(
+        hook.get("state") in {"open", "task_posted"}
+        and {hook.get("actor_id"), hook.get("target_id")} == pair
+        for hook in state.cognition["interactions"].get("hooks", ())
+    )
+
+
 def _legal_intents(
     state: WorldState,
     actor_id: str,
@@ -267,9 +276,13 @@ def _expire_hooks(state: WorldState, now: int, policy: CampusInteractionPolicy) 
         if hook.get("state") == "open" and now > int(hook.get("expires_phase_index", now)):
             hook["state"] = "expired"
             expired += 1
-    open_hooks = [hook for hook in hooks if hook.get("state") == "open"]
-    terminal_hooks = [hook for hook in hooks if hook.get("state") != "open"]
-    hooks[:] = [*terminal_hooks[-policy.max_recent_interactions:], *open_hooks]
+    active_hooks = [
+        hook for hook in hooks if hook.get("state") in {"open", "task_posted"}
+    ]
+    terminal_hooks = [
+        hook for hook in hooks if hook.get("state") not in {"open", "task_posted"}
+    ]
+    hooks[:] = [*terminal_hooks[-policy.max_recent_interactions:], *active_hooks]
     return expired
 
 
@@ -283,7 +296,7 @@ def _create_hook(
 ) -> str | None:
     interactions = state.cognition["interactions"]
     open_hooks = [hook for hook in interactions["hooks"] if hook.get("state") == "open"]
-    if len(open_hooks) >= policy.max_open_hooks or _open_hook(state, actor_id, target_id):
+    if len(open_hooks) >= policy.max_open_hooks or _has_active_pair_hook(state, actor_id, target_id):
         return None
     interactions["hook_sequence"] += 1
     hook_id = f"social_hook:{interactions['hook_sequence']:06d}"
@@ -537,8 +550,10 @@ def campus_interaction_invariant(state: WorldState) -> Iterable[str]:
         hook_ids.add(hook_id)
         if hook.get("actor_id") not in state.population or hook.get("target_id") not in state.population:
             errors.append(f"campus interaction hook {hook_id} references unknown actors")
-        if hook.get("state") not in {"open", "completed", "broken", "expired"}:
+        if hook.get("state") not in {"open", "task_posted", "completed", "broken", "expired"}:
             errors.append(f"campus interaction hook {hook_id} has invalid state")
+        if hook.get("state") == "task_posted" and hook.get("linked_task_id") not in state.tasks:
+            errors.append(f"campus interaction hook {hook_id} references unknown linked task")
     return errors
 
 

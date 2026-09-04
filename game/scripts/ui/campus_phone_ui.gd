@@ -500,6 +500,13 @@ func _refresh_forum_detail() -> void:
 		if amount != 0:
 			social_parts.append("%s %+d" % [relationship_labels[dimension], amount])
 	var organization_name := String(task.get("organization_name", ""))
+	var origin_value: Variant = task.get("origin_summary", "")
+	var origin_summary: String = origin_value if origin_value is String else ""
+	var origin_text := origin_summary if not origin_summary.is_empty() else "固定校园委托"
+	var preferred_value: Variant = task.get("preferred_assignee_name", "")
+	var preferred_name: String = preferred_value if preferred_value is String else ""
+	if not preferred_name.is_empty():
+		origin_text += " · 原约定对象：%s（其他人仍可接取）" % preferred_name
 	var organization_reputation := int(completed_social.get("organization_reputation", 0))
 	if not organization_name.is_empty() and organization_reputation != 0:
 		social_parts.append("%s声望 %+d" % [organization_name, organization_reputation])
@@ -527,9 +534,10 @@ func _refresh_forum_detail() -> void:
 				SimulationBridge.phase_display_name(String(entry.get("phase", "morning"))),
 				entry.get("message", ""),
 			])
-	_forum_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]发起人[/b]  %s\n[b]所属组织[/b]  %s\n[b]地点[/b]  %s\n[b]截止[/b]  第 %d 天\n[b]报酬[/b]  %d 校园币\n[b]社会影响[/b]  %s\n\n[b]当前目标[/b]\n%s\n\n[b]竞争情况[/b]\n%d 人查看，%d 人正在考虑\n\n[b]动态记录[/b]\n%s" % [
+	_forum_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]发起人[/b]  %s\n[b]任务来源[/b]  %s\n[b]所属组织[/b]  %s\n[b]地点[/b]  %s\n[b]截止[/b]  第 %d 天\n[b]报酬[/b]  %d 校园币\n[b]社会影响[/b]  %s\n\n[b]当前目标[/b]\n%s\n\n[b]竞争情况[/b]\n%d 人查看，%d 人正在考虑\n\n[b]动态记录[/b]\n%s" % [
 		task.get("title", "未命名任务"), task.get("description", ""),
-		task.get("issuer_name", "校园用户"), organization_name if not organization_name.is_empty() else "个人委托",
+		task.get("issuer_name", "校园用户"), origin_text,
+		organization_name if not organization_name.is_empty() else "个人委托",
 		task.get("scene_name", "未知地点"),
 		int(task.get("expires_day", 1)), int(reward.get("wealth", 0)),
 		social_reward_text, task.get("objective", ""), int(task.get("viewer_count", 0)),

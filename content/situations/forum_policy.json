@@ -7,6 +7,86 @@
   "npc_claim_delay_phases_max": 4,
   "npc_execute_delay_phases": 1,
   "protected_schedule_priority": 90,
+  "emergent_tasks": {
+    "max_per_day": 4,
+    "max_hook_per_day": 2,
+    "source_cooldown_days": 2,
+    "need_rules": {
+      "social": {
+        "threshold": 76,
+        "template_id": "canteen_survey",
+        "title": "想找人一起聊聊",
+        "description": "{issuer}最近总是一个人，希望有人能抽空陪伴并聊聊近况。",
+        "objective": "在对方常活动的区域完成一次陪伴交流。",
+        "scene_policy": "issuer_primary",
+        "issuer_need_delta": -22,
+        "reward_wealth": 10,
+        "tags": ["social", "companionship"]
+      },
+      "curiosity": {
+        "threshold": 78,
+        "template_id": "archive_index_review",
+        "title": "一起核对一条校园资料",
+        "description": "{issuer}遇到一条暂时无法确认的资料，希望找人一起去图书馆交叉核对。",
+        "objective": "在图书馆完成资料核验并反馈结果。",
+        "scene_policy": "template",
+        "issuer_need_delta": -18,
+        "reward_wealth": 15,
+        "tags": ["research", "curiosity"]
+      },
+      "commitment_pressure": {
+        "threshold": 76,
+        "template_id": "club_poster_copy",
+        "title": "临时事务需要帮手",
+        "description": "{issuer}手上的安排已经堆在一起，希望有人协助处理其中一项校园事务。",
+        "objective": "到约定地点完成分担的事务。",
+        "scene_policy": "issuer_primary",
+        "issuer_need_delta": -20,
+        "reward_wealth": 20,
+        "tags": ["assistance", "commitment"]
+      },
+      "safety": {
+        "threshold": 72,
+        "template_id": "security_notice_check",
+        "title": "希望有人陪同确认安全隐患",
+        "description": "{issuer}对附近的一处情况感到不安，希望有人陪同查看并留下记录。",
+        "objective": "前往保卫处附近完成安全确认。",
+        "scene_policy": "template",
+        "issuer_need_delta": -16,
+        "reward_wealth": 15,
+        "tags": ["safety", "escort"]
+      }
+    },
+    "hook_rules": {
+      "task_help": {
+        "template_id": "dorm_common_room_sort",
+        "title": "兑现先前答应的协助",
+        "description": "{issuer}把此前谈到的求助整理成了明确事项，等待愿意帮忙的人完成。",
+        "objective": "到对方常活动的区域完成约定事项。",
+        "scene_policy": "issuer_primary",
+        "reward_wealth": 15,
+        "tags": ["promise", "assistance"]
+      },
+      "club_promise": {
+        "template_id": "club_poster_copy",
+        "title": "落实之前商量的社团安排",
+        "description": "{issuer}发布了此前谈妥的社团事项，等待成员把安排落实。",
+        "objective": "在社团活动室完成约定的准备工作。",
+        "scene_policy": "template",
+        "reward_wealth": 10,
+        "tags": ["promise", "club"]
+      },
+      "check_in": {
+        "template_id": "canteen_survey",
+        "title": "找个时间再聊聊近况",
+        "description": "{issuer}希望把此前的关心继续下去，并找一个安静的时机确认近况。",
+        "objective": "到对方常活动的区域完成一次后续交流。",
+        "scene_policy": "issuer_primary",
+        "reward_wealth": 0,
+        "tags": ["promise", "support"]
+      }
+    }
+  },
   "social_consequences": {
     "completed": {
       "issuer_relationship": {
