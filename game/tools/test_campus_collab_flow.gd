@@ -80,6 +80,27 @@ func _run_flow() -> void:
 	assert(bool(phone_ui.call("is_open")))
 	assert(paused)
 	phone_ui.call("_open_app", "health", "健康档案")
+	phone_ui.call("_open_app", "forums", "校园互助")
+	var forum_cards := phone_ui.get("_forum_cards") as VBoxContainer
+	assert(forum_cards.get_child_count() == 12)
+	var first_task_card := forum_cards.get_child(0) as Button
+	first_task_card.pressed.emit()
+	var view_resolution = await bridge.campus_task_operation_completed
+	assert(bool(view_resolution[0]), "forum view failed: %s" % view_resolution[1])
+	var selected_task_id := String(phone_ui.get("_selected_task_id"))
+	assert(not selected_task_id.is_empty())
+	var primary_task_button := phone_ui.get("_forum_primary_action") as Button
+	assert(not primary_task_button.disabled)
+	primary_task_button.pressed.emit()
+	var claim_resolution = await bridge.campus_task_operation_completed
+	assert(bool(claim_resolution[0]), "forum claim failed: %s" % claim_resolution[1])
+	var claimed_task: Dictionary = (bridge.get("campus_snapshot") as Dictionary).get("tasks", {}).get(selected_task_id, {})
+	assert(bool(claimed_task.get("owned_by_player", false)))
+	var abandon_task_button := phone_ui.get("_forum_abandon_action") as Button
+	assert(abandon_task_button.visible)
+	abandon_task_button.pressed.emit()
+	var abandon_resolution = await bridge.campus_task_operation_completed
+	assert(bool(abandon_resolution[0]), "forum abandon failed: %s" % abandon_resolution[1])
 	phone_ui.call("_set_open", false)
 	assert(not paused)
 	assert(not bool(phone_ui.call("is_open")))

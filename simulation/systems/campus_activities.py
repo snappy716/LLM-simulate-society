@@ -42,6 +42,7 @@ def make_scheduled_npc_phase_executor(
     activity_handler=None,
     phase_upkeep=None,
     decision_selector=None,
+    activity_completed=None,
 ):
     """Build a phase-start callback that moves and activates every scheduled NPC.
 
@@ -64,6 +65,8 @@ def make_scheduled_npc_phase_executor(
             "blocked_actor_count": 0,
             "schedule_follow_count": 0,
             "rule_choice_count": 0,
+            "task_choice_count": 0,
+            "task_completed_count": 0,
             "decision_reason_counts": {},
         }
         decision_reasons: Counter[str] = Counter()
@@ -113,6 +116,8 @@ def make_scheduled_npc_phase_executor(
             decision_reason = str(plan.get("decision_reason", "schedule_commitment"))
             if decision_source == "schedule":
                 summary["schedule_follow_count"] += 1
+            elif decision_source == "task":
+                summary["task_choice_count"] += 1
             else:
                 summary["rule_choice_count"] += 1
             decision_reasons[decision_reason] += 1
@@ -219,6 +224,8 @@ def make_scheduled_npc_phase_executor(
                 route_step_count=route_step_count,
             )
             actor["current_activity"]["effects"] = activity_outcome.payload.get("effects", {})
+            if activity_completed is not None and activity_completed(context, actor_id, plan):
+                summary["task_completed_count"] += 1
             context.emit(
                 "NPC_ACTIVITY_COMPLETED",
                 f"{actor_id} 在 {destination_id} 完成 {plan.get('activity_id')}。",

@@ -153,11 +153,13 @@ class CampusDecisionTests(unittest.TestCase):
             first_trace.append((
                 execution["schedule_follow_count"],
                 execution["rule_choice_count"],
+                execution["task_choice_count"],
                 tuple(sorted(execution["decision_reason_counts"].items())),
             ))
             totals.update({
                 "schedule": execution["schedule_follow_count"],
                 "rule": execution["rule_choice_count"],
+                "task": execution["task_choice_count"],
             })
             state = first.kernel.state
             for actor_id, actor in state.population.items():
@@ -189,6 +191,7 @@ class CampusDecisionTests(unittest.TestCase):
             second_trace.append((
                 execution["schedule_follow_count"],
                 execution["rule_choice_count"],
+                execution["task_choice_count"],
                 tuple(sorted(execution["decision_reason_counts"].items())),
             ))
         self.assertEqual(first_trace[:4], second_trace)

@@ -44,6 +44,12 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ),
     ContentSource("actions/campus_schedules.json", "schedule_template", "templates"),
     ContentSource("organizations/clubs.json", "club", "clubs"),
+    ContentSource("situations/surface_tasks.json", "surface_task_template", "templates"),
+    ContentSource(
+        "situations/forum_policy.json",
+        "configuration",
+        singleton_id="forum_policy",
+    ),
     ContentSource("npcs/generation_rules.json", "configuration", singleton_id="npc_generation"),
     ContentSource("npcs/campus_population.json", "configuration", singleton_id="campus_population"),
     ContentSource("main_story/demo_calendar.json", "configuration", singleton_id="demo_calendar"),
@@ -213,6 +219,17 @@ class ContentRegistry:
                 "campus population references unknown schedules: "
                 + ", ".join(sorted(unknown_schedules))
             )
+        for template in self.all("surface_task_template").values():
+            activity_id = template.get("activity_id")
+            scene_id = template.get("scene_id")
+            if activity_id not in activity_ids:
+                errors.append(
+                    f"surface task {template.get('id')} references unknown activity: {activity_id}"
+                )
+            if scene_id not in campus_node_ids:
+                errors.append(
+                    f"surface task {template.get('id')} references unknown campus location: {scene_id}"
+                )
         if errors:
             raise ContentValidationError("invalid content references: " + "; ".join(errors))
 

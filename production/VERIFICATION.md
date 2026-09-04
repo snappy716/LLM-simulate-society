@@ -10,6 +10,7 @@
 - NPC 寻路与活动专项：`python3 -m unittest tests.test_campus_activities tests.test_campus_locations tests.test_campus_kernel_bridge tests.test_godot_campus_navigation -v`
 - 校园活动效果专项：`python3 -m unittest tests.test_campus_activity_effects tests.test_campus_activities tests.test_campus_kernel_bridge tests.test_content_registry -v`
 - 校园 NPC 规则决策专项：`python3 -m unittest tests.test_campus_decisions tests.test_campus_activities tests.test_campus_activity_effects tests.test_campus_kernel_bridge -v`
+- 校园论坛任务专项：`python3 -m unittest tests.test_campus_forum_tasks tests.test_campus_decisions tests.test_campus_kernel_bridge -v`
 - Python 编译：`python3 -m compileall -q simulation tests`
 - 补丁格式：`git diff --check`
 - 离线启动：`python3 -m simulation --days 0 --llm rule --quiet`
@@ -117,6 +118,15 @@ Godot 4.7.2 编辑器导入、组件、原校园导航、完整协作场景端�
 生理需求可以触发重新比较；相同种子得到相同决策轨迹。Godot 校园快照升级到 v6，只公开
 实际活动与地点，不公开内部评分。Godot 4.7.2 编辑器导入、组件、校园导航、五区协作场景和
 旧主场景启动全部通过；校园导航端到端确认晚上存在自主改选 NPC 且可见路线照常回放。
+
+表世界论坛与任务竞争阶段验收：当前工程 248 项、旧版工程 46 项测试通过。校园内核初始发布
+12 个任务，之后每天上午从 16 个模板中发布 12 个。固定种子 42 连续运行 7 天、28 个时段，
+共执行 5,600 次 NPC 活动、21,073 段合法通行，产生 1,144 次新增任务浏览、77 次 NPC 原子抢单
+和 56 次 NPC 到场完成；24 个逾期、4 个仍锁定、12 个新任务仍开放或被考虑，没有路径、权限、
+活动或行动额度阻塞。玩家浏览、接取、放弃、到场完成和奖励结算专项通过；校园快照升级到 v7，
+未公开浏览者名单、NPC 评分和预定抢单时段。Godot 4.7.2 编辑器导入、组件、原校园导航、五区
+协作场景和旧主场景全部通过；协作流程在手机暂停状态下实际完成查看、锁定与放弃，并已图形渲染
+检查论坛列表和任务详情页。
 
 本轮固定种子 42 的 14 天结果：共 16,385 个事件，497 笔商店成交、264 笔私人成交、
 236 次统一物品使用；普通重复交易者平均间隔 3.71 天、最短 2 天且同日重复为 0；

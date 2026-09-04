@@ -11,6 +11,7 @@ signal campus_snapshot_updated(snapshot: Dictionary)
 signal campus_traversal_completed(success: bool, result: Dictionary, passage_id: String)
 signal campus_phase_advanced(success: bool, result: Dictionary)
 signal campus_fast_travel_completed(success: bool, result: Dictionary, destination_id: String)
+signal campus_task_operation_completed(success: bool, result: Dictionary, action_id: String, task_id: String)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
 
@@ -27,12 +28,17 @@ var _campus_busy := false
 var _campus_pending_operation := ""
 var _campus_pending_passage_id := ""
 var _campus_pending_destination_id := ""
+var _campus_pending_task_id := ""
+var _campus_pending_task_action := ""
 var _campus_command_counter := 0
 var _server_port := 8765
 var _base_url := ""
 
 
 func _ready() -> void:
+	# Phone/map overlays pause the scene tree, but local HTTP commands must still
+	# finish so task claims and other UI actions cannot deadlock.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	var configured_port := OS.get_environment("GODOT_SIM_PORT")
 	if not configured_port.is_empty() and configured_port.is_valid_int():
 		_server_port = clampi(int(configured_port), 1024, 65535)
@@ -249,6 +255,48 @@ func fast_travel_campus(destination_id: String) -> void:
 		campus_fast_travel_completed.emit(false, {"error": "无法发送校园地图移动请求：%s" % error}, destination_id)
 
 
+func operate_campus_task(action_id: String, task_id: String, expected_task_revision: int = -1) -> void:
+	if task_id.is_empty():
+		campus_task_operation_completed.emit(false, {"error": "未指定论坛任务"}, action_id, task_id)
+		return
+	if _campus_busy or not connected or campus_snapshot.is_empty():
+		campus_task_operation_completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他行动"}, action_id, task_id)
+		return
+	_campus_busy = true
+	_campus_pending_operation = "task"
+	_campus_pending_task_id = task_id
+	_campus_pending_task_action = action_id
+	_campus_command_counter += 1
+	var clock: Dictionary = campus_snapshot.get("clock", {})
+	var parameters := {"task_id": task_id}
+	if expected_task_revision >= 0:
+		parameters["expected_task_revision"] = expected_task_revision
+	var command := {
+		"command_id": "godot-task-%d-%d" % [Time.get_ticks_usec(), _campus_command_counter],
+		"actor_id": "player",
+		"action_id": action_id,
+		"target_ids": [],
+		"parameters": parameters,
+		"expected_world_revision": int(campus_snapshot.get("revision", 1)),
+		"issued_day": int(clock.get("day", 1)),
+		"issued_phase": String(clock.get("phase", "morning")),
+		"issued_minute": int(clock.get("minute", 0)),
+		"source": "player",
+	}
+	var error := _campus_request.request(
+		_base_url + "/kernel/command",
+		PackedStringArray(["Content-Type: application/json"]),
+		HTTPClient.METHOD_POST,
+		JSON.stringify(command)
+	)
+	if error != OK:
+		_campus_busy = false
+		_campus_pending_operation = ""
+		_campus_pending_task_id = ""
+		_campus_pending_task_action = ""
+		campus_task_operation_completed.emit(false, {"error": "无法发送论坛任务请求：%s" % error}, action_id, task_id)
+
+
 func phase_display_name(phase: String) -> String:
 	return {"morning": "上午", "afternoon": "下午", "evening": "晚间", "late_night": "深夜"}.get(phase, phase)
 
@@ -370,9 +418,13 @@ func _on_campus_request_completed(
 	var operation := _campus_pending_operation
 	var passage_id := _campus_pending_passage_id
 	var destination_id := _campus_pending_destination_id
+	var task_id := _campus_pending_task_id
+	var task_action := _campus_pending_task_action
 	_campus_pending_operation = ""
 	_campus_pending_passage_id = ""
 	_campus_pending_destination_id = ""
+	_campus_pending_task_id = ""
+	_campus_pending_task_action = ""
 	_campus_busy = false
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if response_code != 200 or not parsed is Dictionary:
@@ -385,6 +437,9 @@ func _on_campus_request_completed(
 		elif operation == "fast_travel":
 			var travel_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
 			campus_fast_travel_completed.emit(false, travel_error, destination_id)
+		elif operation == "task":
+			var task_error: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
+			campus_task_operation_completed.emit(false, task_error, task_action, task_id)
 		return
 	if operation == "snapshot":
 		campus_snapshot = parsed
@@ -398,5 +453,7 @@ func _on_campus_request_completed(
 		campus_phase_advanced.emit(bool(parsed.get("ok", false)), parsed)
 	elif operation == "fast_travel":
 		campus_fast_travel_completed.emit(bool(parsed.get("ok", false)), parsed, destination_id)
+	elif operation == "task":
+		campus_task_operation_completed.emit(bool(parsed.get("ok", false)), parsed, task_action, task_id)
 	else:
 		campus_traversal_completed.emit(bool(parsed.get("ok", false)), parsed, passage_id)

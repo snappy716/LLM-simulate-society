@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "daily_surface_task_count": 12,
+  "npc_viewers_per_phase_min": 2,
+  "npc_viewers_per_phase_max": 6,
+  "npc_claim_delay_phases_min": 1,
+  "npc_claim_delay_phases_max": 4,
+  "npc_execute_delay_phases": 1,
+  "protected_schedule_priority": 90
+}
