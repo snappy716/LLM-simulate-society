@@ -4,13 +4,12 @@
   "title": "Campus club runtime view",
   "type": "object",
   "additionalProperties": false,
-  "required": ["organization_id", "name", "category", "member_count", "member_limit", "leader_id", "leader_name", "resources", "surface_skill", "team_tactic", "viewer_membership", "admission", "activity_phases"],
+  "required": ["organization_id", "name", "category", "member_count", "leader_id", "leader_name", "resources", "surface_skill", "team_tactic", "viewer_membership", "admission", "activity_slots", "activity_open_now"],
   "properties": {
     "organization_id": {"type": "string", "minLength": 1},
     "name": {"type": "string", "minLength": 1},
     "category": {"type": "string", "minLength": 1},
     "member_count": {"type": "integer", "minimum": 1},
-    "member_limit": {"type": "integer", "minimum": 2},
     "leader_id": {"type": "string", "minLength": 1},
     "leader_name": {"type": "string", "minLength": 1},
     "resources": {
@@ -28,6 +27,7 @@
     "team_tactic": {"type": "object"},
     "viewer_membership": {"type": ["object", "null"]},
     "admission": {"type": "object"},
-    "activity_phases": {"type": "array", "items": {"enum": ["morning", "afternoon", "evening", "late_night"]}, "uniqueItems": true}
+    "activity_slots": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "activity_open_now": {"type": "boolean"}
   }
 }

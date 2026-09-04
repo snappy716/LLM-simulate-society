@@ -158,6 +158,7 @@ def make_campus_activity_handler(
     definitions: Mapping[str, CampusActivityDefinition],
     policy,
     activity_settled=None,
+    activity_validator=None,
 ):
     def perform(context, command) -> TransactionOutcome:
         actor = context.state.population.get(command.actor_id)
@@ -168,6 +169,10 @@ def make_campus_activity_handler(
             return TransactionOutcome(False, False, "unknown_activity", "校园活动不存在。")
         if context.state.clock.phase not in definition.allowed_phases:
             return TransactionOutcome(False, False, "activity_wrong_phase", "当前时段不能进行这项活动。")
+        if activity_validator is not None:
+            validation = activity_validator(context, command, definition)
+            if validation is not None:
+                return validation
 
         current_location = str(actor.get("current_location_id", ""))
         declared_location = str(command.parameters.get("location_id", current_location))

@@ -597,23 +597,29 @@ func _refresh_club_detail() -> void:
 	var admission: Dictionary = club.get("admission", {})
 	var admission_text: String = "已具备申请条件" if bool(admission.get("eligible", false)) else {
 		"already_member": "你已经是成员",
-		"membership_limit": "已达到两社团上限",
-		"club_full": "社团名额已满",
 		"requirements_not_met": "需要相关学院背景、社团任务声望或足够社交能力",
 	}.get(String(admission.get("reason", "")), "暂不符合条件")
-	_club_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]负责人[/b]  %s\n[b]成员[/b]  %d / %d\n[b]公共资源[/b]  %d / %d（%s）\n\n[b]你的身份[/b]\n%s\n[b]入社评估[/b]\n%s\n\n[b]表世界实践[/b]  %s\n[b]团队战术[/b]  %s · 消耗 %d 公共资源\n[color=#91a4bc]团队战术需要至少两名同社团成员，并由骨干或负责人组织；正式卡牌效果将在战斗阶段接入。[/color]" % [
+	var schedule_lines: Array[String] = []
+	var weekday_names := ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+	for slot in club.get("activity_slots", []):
+		if slot is Dictionary:
+			var days: Array[String] = []
+			for day in slot.get("days", []):
+				days.append(weekday_names[clampi(int(day), 0, 6)])
+			schedule_lines.append("%s %s" % ["、".join(days), SimulationBridge.phase_display_name(String(slot.get("phase", "")))])
+	_club_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]负责人[/b]  %s\n[b]成员[/b]  %d（无硬性人数上限）\n[b]公共资源[/b]  %d / %d（%s）\n[b]活动时间[/b]  %s\n\n[b]你的身份[/b]\n%s\n[b]入社评估[/b]\n%s\n\n[b]表世界实践[/b]  %s\n[b]团队战术[/b]  %s · 消耗 %d 公共资源\n[color=#91a4bc]可加入多个社团；能否实际参加由活动时间冲突和主要行动次数决定。团队战术需要至少两名同社团成员，并由骨干或负责人组织。[/color]" % [
 		club.get("name", _selected_club_id), club.get("category", ""),
 		club.get("leader_name", "未知"), int(club.get("member_count", 0)),
-		int(club.get("member_limit", 0)), int(resources.get("current", 0)),
+		int(resources.get("current", 0)),
 		int(resources.get("capacity", 0)), resources.get("resource_id", ""),
-		identity_text, admission_text, club.get("surface_skill", ""),
+		"；".join(schedule_lines), identity_text, admission_text, club.get("surface_skill", ""),
 		tactic.get("name", tactic.get("tactic_id", "")), int(tactic.get("resource_cost", 0)),
 	]
 	var player: Dictionary = campus.get("player", {})
 	var clock: Dictionary = campus.get("clock", {})
 	var at_club := String(player.get("current_location_id", "")) == "club_room_pool"
 	var phase := String(clock.get("phase", "morning"))
-	var reception_open: bool = phase in club.get("activity_phases", [])
+	var reception_open := phase != "late_night"
 	if membership.is_empty():
 		_club_membership_action.text = "申请加入"
 		_club_membership_action.disabled = not bool(admission.get("eligible", false)) or not at_club or not reception_open
@@ -621,7 +627,7 @@ func _refresh_club_detail() -> void:
 		_club_membership_action.text = "退出社团"
 		_club_membership_action.disabled = String(membership.get("rank", "")) == "leader"
 	var major_remaining := int((player.get("action_budget", {}) as Dictionary).get("major_remaining", 0))
-	_club_activity_action.disabled = membership.is_empty() or not at_club or not reception_open or major_remaining <= 0
+	_club_activity_action.disabled = membership.is_empty() or not at_club or not bool(club.get("activity_open_now", false)) or major_remaining <= 0
 
 
 func _perform_club_membership_action() -> void:
@@ -632,10 +638,8 @@ func _perform_club_membership_action() -> void:
 
 
 func _perform_club_activity() -> void:
-	var phase := String((SimulationBridge.campus_snapshot.get("clock", {}) as Dictionary).get("phase", "afternoon"))
-	var action_id := "CLUB_OR_SELF_STUDY" if phase == "evening" else "CLUB_OR_PERSONAL_ACTIVITY"
 	_club_feedback.text = "正在结算社团活动……"
-	SimulationBridge.operate_campus_club(action_id, _selected_club_id)
+	SimulationBridge.operate_campus_club("CLUB_ACTIVITY", _selected_club_id)
 
 
 func _on_club_operation_completed(success: bool, result: Dictionary, _action_id: String, club_id: String) -> void:

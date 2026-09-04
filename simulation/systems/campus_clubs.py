@@ -78,6 +78,7 @@ def install_campus_clubs(
             "night_skill": str(definition.get("night_skill", "")),
             "signature_resource": str(definition.get("signature_resource", "")),
             "college_overlap_ids": list(definition.get("college_overlap_ids", ())),
+            "activity_slots": deepcopy(definition.get("activity_slots", ())),
             "memberships": memberships,
             "leader_id": leader_id,
             "resources": {
@@ -110,6 +111,37 @@ def _membership(state: WorldState, club_id: str, actor_id: str) -> Dict[str, Any
         return None
     membership = club.get("memberships", {}).get(actor_id)
     return membership if isinstance(membership, dict) else None
+
+
+def club_has_activity(state: WorldState, club_id: str, day: int, phase: str) -> bool:
+    club = state.organizations.get(club_id)
+    if not isinstance(club, dict):
+        return False
+    weekday = (day - 1) % 7
+    return any(
+        isinstance(slot, dict)
+        and slot.get("phase") == phase
+        and weekday in slot.get("days", ())
+        for slot in club.get("activity_slots", ())
+    )
+
+
+def validate_club_activity(context, command, definition) -> TransactionOutcome | None:
+    """Validate an explicitly selected club before generic activity effects run."""
+    if definition.activity_id not in CLUB_ACTIVITY_IDS and definition.category != "club":
+        return None
+    club_id = str(command.parameters.get("club_id", ""))
+    if not club_id:
+        return None
+    if club_id not in context.state.organizations:
+        return TransactionOutcome(False, False, "unknown_club", "社团不存在。")
+    if _membership(context.state, club_id, command.actor_id) is None:
+        return TransactionOutcome(False, False, "not_a_member", "当前不是该社团成员。")
+    if not club_has_activity(
+        context.state, club_id, context.state.clock.day, context.state.clock.phase
+    ):
+        return TransactionOutcome(False, False, "club_activity_not_scheduled", "该社团当前没有安排活动。")
+    return None
 
 
 def _append_history(club: Dict[str, Any], state: WorldState, event: str, **payload: Any) -> None:
@@ -184,6 +216,9 @@ def settle_club_activity(
     club_ids = [
         club_id for club_id in actor.get("club_ids", ())
         if _membership(context.state, club_id, command.actor_id) is not None
+        and club_has_activity(
+            context.state, club_id, context.state.clock.day, context.state.clock.phase
+        )
     ]
     requested = str(command.parameters.get("club_id", ""))
     if requested:
@@ -191,7 +226,10 @@ def settle_club_activity(
             raise ValueError(f"actor {command.actor_id} is not a member of {requested}")
         club_id = requested
     elif club_ids:
-        club_id = sorted(club_ids)[(context.state.clock.day - 1) % len(club_ids)]
+        digest = hashlib.sha256(
+            f"{context.state.master_seed}:club-attendance:{context.state.clock.day}:{context.state.clock.phase}:{command.actor_id}".encode("utf-8")
+        ).digest()
+        club_id = sorted(club_ids)[int.from_bytes(digest[:2], "big") % len(club_ids)]
     else:
         return {"club_activity": False, "reason": "no_membership"}
     membership = _membership(context.state, club_id, command.actor_id)
@@ -273,7 +311,11 @@ def advance_club_upkeep(context, policy: CampusClubPolicy) -> Dict[str, int]:
     aggregate["last_upkeep_marker"] = marker
     for club_id, club in sorted(context.state.organizations.items()):
         previous_day = context.state.clock.day - 1
-        if previous_day >= 1:
+        previous_day_had_activity = previous_day >= 1 and any(
+            club_has_activity(context.state, club_id, previous_day, phase)
+            for phase in ("morning", "afternoon", "evening")
+        )
+        if previous_day_had_activity:
             for membership in club["memberships"].values():
                 if not str(membership.get("last_attendance_marker", "")).startswith(
                     f"{previous_day}:"
@@ -288,13 +330,11 @@ def advance_club_upkeep(context, policy: CampusClubPolicy) -> Dict[str, int]:
         _append_history(club, context.state, "daily_upkeep", resource_spent=spent)
         summary["club_upkeep_count"] += 1
         summary["club_resource_spent"] += spent
-    # One deterministic club recruits per day. This keeps membership changes
-    # legible in a seven-day chapter while proving that clubs do not wait for
-    # the player to act.
+    # Every club and student decides independently. There is deliberately no
+    # campus-wide daily quota or hard membership cap; repeated memberships make
+    # later applications less attractive through commitment pressure instead.
     if context.state.clock.day >= 2:
-        club_ids = sorted(context.state.organizations)
-        rotated = club_ids[(context.state.clock.day - 2) % len(club_ids):] + club_ids[:(context.state.clock.day - 2) % len(club_ids)]
-        for club_id in rotated:
+        for club_id in sorted(context.state.organizations):
             club = context.state.organizations[club_id]
             candidates = []
             for actor_id, actor in context.state.population.items():
@@ -303,37 +343,45 @@ def advance_club_upkeep(context, policy: CampusClubPolicy) -> Dict[str, int]:
                 admission = _admission_status(context.state, actor_id, club_id, policy)
                 if not admission["eligible"]:
                     continue
+                digest = hashlib.sha256(
+                    f"{context.state.master_seed}:club-recruit:{context.state.clock.day}:{club_id}:{actor_id}".encode("utf-8")
+                ).digest()
+                daily_impulse = int.from_bytes(digest[:2], "big") % 101
                 score = (
-                    100 if admission["college_overlap"] else 0
-                ) + int(actor.get("personality", {}).get("openness", 50))
+                    (35 if admission["college_overlap"] else 0)
+                    + int(actor.get("personality", {}).get("openness", 50))
+                    + int(actor.get("personality", {}).get("extraversion", 50)) // 2
+                    + daily_impulse
+                    - len(actor.get("club_ids", ())) * policy.existing_membership_penalty
+                    - int(actor.get("needs", {}).get("commitment_pressure", 0)) // 2
+                )
+                if score < policy.recruitment_score_threshold:
+                    continue
                 candidates.append((score, actor_id, actor))
-            if not candidates:
-                continue
-            _, actor_id, actor = max(candidates, key=lambda item: (item[0], item[1]))
-            actor.setdefault("club_ids", []).append(club_id)
-            for skill_id in (club["surface_skill"], club["night_skill"]):
-                if skill_id not in actor.setdefault("skill_ids", []):
-                    actor["skill_ids"].append(skill_id)
-            anchor = f"club:{club_id}"
-            if anchor not in actor.setdefault("identity_anchor_ids", []):
-                actor["identity_anchor_ids"].append(anchor)
-            club["member_ids"].append(actor_id)
+            for candidate_score, actor_id, actor in sorted(candidates, reverse=True):
+                actor.setdefault("club_ids", []).append(club_id)
+                for skill_id in (club["surface_skill"], club["night_skill"]):
+                    if skill_id not in actor.setdefault("skill_ids", []):
+                        actor["skill_ids"].append(skill_id)
+                anchor = f"club:{club_id}"
+                if anchor not in actor.setdefault("identity_anchor_ids", []):
+                    actor["identity_anchor_ids"].append(anchor)
+                club["member_ids"].append(actor_id)
+                club["memberships"][actor_id] = {
+                    "actor_id": actor_id, "rank": "member", "contribution": 0,
+                    "attendance_count": 0, "absence_count": 0,
+                    "joined_day": context.state.clock.day, "last_attendance_marker": "",
+                    "promotion_history": [],
+                }
+                _append_history(club, context.state, "autonomous_recruitment", actor_id=actor_id, decision_score=candidate_score)
+                context.emit(
+                    "CLUB_MEMBER_RECRUITED",
+                    f"{actor.get('display_name', actor_id)} 自主加入了 {club['name']}。",
+                    actor_ids=[actor_id], payload={"club_id": club_id, "club_name": club["name"], "rank": "member", "decision_score": candidate_score},
+                    visibility="public", severity=2, knowledge_tags=["club", "organization", "membership", "autonomous"],
+                )
+                summary["club_recruit_count"] += 1
             club["member_ids"].sort()
-            club["memberships"][actor_id] = {
-                "actor_id": actor_id, "rank": "member", "contribution": 0,
-                "attendance_count": 0, "absence_count": 0,
-                "joined_day": context.state.clock.day, "last_attendance_marker": "",
-                "promotion_history": [],
-            }
-            _append_history(club, context.state, "autonomous_recruitment", actor_id=actor_id)
-            context.emit(
-                "CLUB_MEMBER_RECRUITED",
-                f"{actor.get('display_name', actor_id)} 接受招募并加入了 {club['name']}。",
-                actor_ids=[actor_id], payload={"club_id": club_id, "club_name": club["name"], "rank": "member"},
-                visibility="public", severity=2, knowledge_tags=["club", "organization", "membership", "autonomous"],
-            )
-            summary["club_recruit_count"] = 1
-            break
     return summary
 
 
@@ -349,10 +397,6 @@ def _admission_status(
         return {"eligible": False, "reason": "unknown_actor_or_club"}
     if actor_id in club.get("memberships", {}):
         return {"eligible": False, "reason": "already_member"}
-    if len(actor.get("club_ids", ())) >= 2:
-        return {"eligible": False, "reason": "membership_limit"}
-    if len(club.get("member_ids", ())) >= policy.member_limit:
-        return {"eligible": False, "reason": "club_full"}
     reputation = int(club.get("reputation_by_actor", {}).get(actor_id, 0))
     completed = int(club.get("completed_tasks_by_actor", {}).get(actor_id, 0))
     overlap = actor.get("college_id") in club.get("college_overlap_ids", ())
@@ -386,9 +430,9 @@ def club_catalog_view(state: WorldState, viewer_id: str = "player") -> Dict[str,
         resource_capacity=int(raw_policy["resource_capacity"]),
         initial_resource=int(raw_policy["initial_resource"]),
         core_member_limit=int(raw_policy["core_member_limit"]),
-        member_limit=int(raw_policy["member_limit"]),
         tactic_resource_cost=int(raw_policy["tactic_resource_cost"]),
-        activity_phases=tuple(raw_policy["activity_phases"]),
+        recruitment_score_threshold=int(raw_policy["recruitment_score_threshold"]),
+        existing_membership_penalty=int(raw_policy["existing_membership_penalty"]),
     )
     result: Dict[str, Any] = {}
     for club_id, club in sorted(state.organizations.items()):
@@ -406,7 +450,6 @@ def club_catalog_view(state: WorldState, viewer_id: str = "player") -> Dict[str,
             "name": club.get("name", club_id),
             "category": club.get("category", ""),
             "member_count": len(club.get("member_ids", ())),
-            "member_limit": policy.member_limit,
             "leader_id": leader_id,
             "leader_name": state.population.get(leader_id, {}).get("display_name", leader_id),
             "resources": deepcopy(club.get("resources", {})),
@@ -414,7 +457,10 @@ def club_catalog_view(state: WorldState, viewer_id: str = "player") -> Dict[str,
             "team_tactic": tactic,
             "viewer_membership": deepcopy(membership) if isinstance(membership, dict) else None,
             "admission": admission,
-            "activity_phases": list(policy.activity_phases),
+            "activity_slots": deepcopy(club.get("activity_slots", [])),
+            "activity_open_now": club_has_activity(
+                state, club_id, state.clock.day, state.clock.phase
+            ),
         }
     return result
 
@@ -431,8 +477,8 @@ def make_campus_club_handler(policy: CampusClubPolicy):
         if command.action_id == "JOIN_CAMPUS_CLUB":
             if actor.get("current_location_id") != "club_room_pool":
                 return TransactionOutcome(False, False, "club_wrong_location", "需要先到社团活动室申请入社。")
-            if context.state.clock.phase not in policy.activity_phases:
-                return TransactionOutcome(False, False, "club_wrong_phase", "当前不是社团接待时段。")
+            if context.state.clock.phase == "late_night":
+                return TransactionOutcome(False, False, "club_wrong_phase", "深夜不能办理普通入社手续。")
             admission = _admission_status(context.state, command.actor_id, club_id, policy)
             if not admission["eligible"]:
                 return TransactionOutcome(False, False, str(admission["reason"]), "尚未满足该社团的入社条件。", payload=admission)
@@ -559,6 +605,7 @@ def campus_club_invariant(state: WorldState) -> Iterable[str]:
 
 __all__ = [
     "CLUB_ACTIVITY_IDS", "advance_club_upkeep", "campus_club_invariant",
+    "club_has_activity",
     "club_catalog_view", "install_campus_clubs", "load_campus_club_policy",
-    "make_campus_club_handler", "settle_club_activity",
+    "make_campus_club_handler", "settle_club_activity", "validate_club_activity",
 ]

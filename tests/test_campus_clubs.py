@@ -50,9 +50,9 @@ class CampusClubRuntimeTests(unittest.TestCase):
         bridge = CampusKernelBridge(42)
         view = bridge.snapshot()["clubs"]
         club_fields = {
-            "organization_id", "name", "category", "member_count", "member_limit",
+            "organization_id", "name", "category", "member_count",
             "leader_id", "leader_name", "resources", "surface_skill", "team_tactic",
-            "viewer_membership", "admission", "activity_phases",
+            "viewer_membership", "admission", "activity_slots", "activity_open_now",
         }
         membership_fields = {
             "actor_id", "rank", "contribution", "attendance_count", "absence_count",
@@ -70,7 +70,7 @@ class CampusClubRuntimeTests(unittest.TestCase):
         enter_club_room_in_afternoon(bridge)
         joined = execute(bridge, "JOIN_CAMPUS_CLUB", {"club_id": "psychology_reading"})
         self.assertTrue(joined["ok"], joined)
-        activity = execute(bridge, "CLUB_OR_PERSONAL_ACTIVITY", {
+        activity = execute(bridge, "CLUB_ACTIVITY", {
             "location_id": "club_room_pool", "club_id": "psychology_reading",
         })
         self.assertTrue(activity["ok"], activity)
@@ -117,9 +117,14 @@ class CampusClubRuntimeTests(unittest.TestCase):
             self.assertGreaterEqual(club["resources"]["current"], before[club_id] - 4)
             self.assertEqual(4, club["resources"]["spent_total"])
             self.assertEqual(2, club["last_upkeep_day"])
-            self.assertTrue(any(
-                record["absence_count"] >= 1 for record in club["memberships"].values()
-            ))
+        self.assertTrue(any(
+            record["absence_count"] >= 1
+            for record in state.organizations["psychology_reading"]["memberships"].values()
+        ))
+        self.assertTrue(all(
+            record["absence_count"] == 0
+            for record in state.organizations["astronomy"]["memberships"].values()
+        ))
 
     def test_clubs_autonomously_recruit_and_write_a_chronicle(self):
         bridge = CampusKernelBridge(42)
@@ -129,14 +134,40 @@ class CampusClubRuntimeTests(unittest.TestCase):
             last = execute(bridge, "ADVANCE_PHASE")
             self.assertTrue(last["ok"], last)
         after = sum(len(club["member_ids"]) for club in bridge.kernel.state.organizations.values())
-        self.assertEqual(before + 1, after)
-        recruited = next(
+        self.assertGreater(after, before)
+        recruited_events = [
             event for event in last["result"]["events"]
             if event["event_type"] == "CLUB_MEMBER_RECRUITED"
-        )
+        ]
+        self.assertGreater(len(recruited_events), 1)
+        recruited = recruited_events[0]
         actor_id = recruited["actor_ids"][0]
         entries = bridge.chronicle(actor_id, filter_name="important", limit=20)["items"]
         self.assertTrue(any(entry["event_type"] == "CLUB_MEMBER_RECRUITED" for entry in entries))
+
+    def test_player_can_join_more_than_two_clubs_without_a_hard_cap(self):
+        bridge = CampusKernelBridge(42)
+        enter_club_room_in_afternoon(bridge)
+        for club_id in ("psychology_reading", "debate", "volunteer_service"):
+            joined = execute(bridge, "JOIN_CAMPUS_CLUB", {"club_id": club_id})
+            self.assertTrue(joined["ok"], joined)
+        self.assertEqual(
+            ["psychology_reading", "debate", "volunteer_service"],
+            bridge.kernel.state.population["player"]["club_ids"],
+        )
+
+    def test_explicit_activity_obeys_each_clubs_weekly_slots(self):
+        bridge = CampusKernelBridge(42)
+        club = bridge.kernel.state.organizations["astronomy"]
+        leader_id = club["leader_id"]
+        actor = bridge.kernel.state.population[leader_id]
+        before_revision = bridge.snapshot()["revision"]
+        result = execute(bridge, "CLUB_ACTIVITY", {
+            "club_id": "astronomy", "location_id": actor["current_location_id"],
+        }, actor_id=leader_id)
+        self.assertFalse(result["ok"])
+        self.assertEqual("club_activity_not_scheduled", result["result"]["code"])
+        self.assertEqual(before_revision, bridge.snapshot()["revision"])
 
     def test_leader_can_atomically_transfer_role_to_a_core_member(self):
         bridge = CampusKernelBridge(42)

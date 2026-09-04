@@ -160,7 +160,7 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("func operate_campus_club", bridge)
         self.assertIn("campus_club_operation_completed", bridge)
         self.assertIn('"JOIN_CAMPUS_CLUB"', phone)
-        self.assertIn('"CLUB_OR_PERSONAL_ACTIVITY"', phone)
+        self.assertIn('"CLUB_ACTIVITY"', phone)
 
     def test_map_ui_uses_authoritative_free_travel_and_scene_mounts_all_prototypes(self):
         bridge = (GAME_DIR / "scripts/simulation/simulation_bridge.gd").read_text(

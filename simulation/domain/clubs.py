@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Mapping, Tuple
+from typing import Any, Dict, Mapping
 
 
 CLUB_RANKS = ("member", "core_member", "leader")
@@ -19,9 +19,9 @@ class CampusClubPolicy:
     resource_capacity: int
     initial_resource: int
     core_member_limit: int
-    member_limit: int
     tactic_resource_cost: int
-    activity_phases: Tuple[str, ...]
+    recruitment_score_threshold: int
+    existing_membership_penalty: int
 
     def __post_init__(self) -> None:
         if tuple(self.rank_thresholds) != CLUB_RANKS:
@@ -32,18 +32,17 @@ class CampusClubPolicy:
         for name in (
             "activity_contribution", "activity_resource_gain", "daily_resource_cost",
             "task_contribution", "task_resource_gain",
-            "resource_capacity", "initial_resource", "core_member_limit", "member_limit",
-            "tactic_resource_cost",
+            "resource_capacity", "initial_resource", "core_member_limit",
+            "tactic_resource_cost", "recruitment_score_threshold",
+            "existing_membership_penalty",
         ):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
                 raise ValueError(f"club policy {name} must be a non-negative integer")
         if self.initial_resource > self.resource_capacity:
             raise ValueError("initial club resources cannot exceed capacity")
-        if self.core_member_limit < 1 or self.member_limit < self.core_member_limit + 1:
-            raise ValueError("club member limits cannot support leadership")
-        if not self.activity_phases:
-            raise ValueError("club activity phases are required")
+        if self.core_member_limit < 1:
+            raise ValueError("club core-member limit must be positive")
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -56,9 +55,9 @@ class CampusClubPolicy:
             "resource_capacity": self.resource_capacity,
             "initial_resource": self.initial_resource,
             "core_member_limit": self.core_member_limit,
-            "member_limit": self.member_limit,
             "tactic_resource_cost": self.tactic_resource_cost,
-            "activity_phases": list(self.activity_phases),
+            "recruitment_score_threshold": self.recruitment_score_threshold,
+            "existing_membership_penalty": self.existing_membership_penalty,
         }
 
 
@@ -76,9 +75,9 @@ def parse_club_policy(document: Mapping[str, Any]) -> CampusClubPolicy:
         resource_capacity=int(raw.get("resource_capacity", 100)),
         initial_resource=int(raw.get("initial_resource", 40)),
         core_member_limit=int(raw.get("core_member_limit", 3)),
-        member_limit=int(raw.get("member_limit", 18)),
         tactic_resource_cost=int(raw.get("tactic_resource_cost", 8)),
-        activity_phases=tuple(raw.get("activity_phases", ("afternoon", "evening"))),
+        recruitment_score_threshold=int(raw.get("recruitment_score_threshold", 175)),
+        existing_membership_penalty=int(raw.get("existing_membership_penalty", 25)),
     )
 
 

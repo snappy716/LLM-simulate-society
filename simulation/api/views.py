@@ -12,7 +12,7 @@ from simulation.systems.campus_clubs import club_catalog_view
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 11
+CAMPUS_WORLD_VIEW_VERSION = 12
 NPC_CHRONICLE_VIEW_VERSION = 1
 
 

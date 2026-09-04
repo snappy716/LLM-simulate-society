@@ -71,6 +71,8 @@ from simulation.systems import (  # noqa: E402
     settle_club_activity,
     advance_club_upkeep,
     campus_club_invariant,
+    validate_club_activity,
+    club_has_activity,
     campus_ability_invariant,
     load_campus_ability_definitions,
     install_chronicles,
@@ -107,13 +109,32 @@ class CampusKernelBridge:
             lambda context, command, definition: settle_club_activity(
                 context, command, definition, club_policy
             ),
+            validate_club_activity,
         )
         decision_policy = load_campus_decision_policy(
             registry, activity_definitions, graph
         )
-        decision_selector = make_campus_npc_decision_selector(
+        base_decision_selector = make_campus_npc_decision_selector(
             graph, activity_definitions, decision_policy
         )
+        def decision_selector(context, actor_id, schedule_plan, destination_occupancy):
+            plan = base_decision_selector(
+                context, actor_id, schedule_plan, destination_occupancy
+            )
+            actor = context.state.population.get(actor_id, {})
+            if (
+                plan
+                and plan.get("activity_id") == "CLUB_ACTIVITY"
+                and not any(
+                    club_has_activity(
+                        context.state, club_id,
+                        context.state.clock.day, context.state.clock.phase,
+                    )
+                    for club_id in actor.get("club_ids", ())
+                )
+            ):
+                return schedule_plan
+            return plan
         task_templates = load_surface_task_templates(registry)
         for task_template in task_templates.values():
             task_template["allowed_phases"] = list(

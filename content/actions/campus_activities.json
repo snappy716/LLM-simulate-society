@@ -22,6 +22,7 @@
     {"id": "CAMPUS_EXPLORATION", "profile_id": "exploration", "action_class": "major", "allowed_phases": ["morning", "afternoon", "evening"]},
     {"id": "CAMPUS_SERVICE_SHIFT", "profile_id": "work", "action_class": "major", "allowed_phases": ["morning", "afternoon", "evening"]},
     {"id": "CASE_NOTES", "profile_id": "research", "action_class": "major", "allowed_phases": ["evening"]},
+    {"id": "CLUB_ACTIVITY", "profile_id": "club", "action_class": "major", "allowed_phases": ["morning", "afternoon", "evening"]},
     {"id": "CLUB_OR_PERSONAL_ACTIVITY", "profile_id": "club", "action_class": "major", "allowed_phases": ["afternoon"]},
     {"id": "CLUB_OR_SELF_STUDY", "profile_id": "club", "action_class": "major", "allowed_phases": ["evening"]},
     {"id": "COUNSELING_SHIFT", "profile_id": "care_work", "action_class": "major", "allowed_phases": ["morning", "afternoon"]},

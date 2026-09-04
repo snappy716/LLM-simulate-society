@@ -30,6 +30,15 @@
       "reason": "social_need"
     },
     {
+      "id": "join_club_morning",
+      "activity_id": "CLUB_ACTIVITY",
+      "location": "club_room_pool",
+      "allowed_phases": ["morning"],
+      "priority": 40,
+      "required_club": true,
+      "reason": "club_commitment"
+    },
+    {
       "id": "join_club_activity",
       "activity_id": "CLUB_OR_PERSONAL_ACTIVITY",
       "location": "club_room_pool",

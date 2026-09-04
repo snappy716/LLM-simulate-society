@@ -196,8 +196,6 @@ class CampusNPCProfile:
             raise ValueError("npc_id is required")
         if len(self.core_values) > 3:
             raise ValueError("at most three ordered core values are allowed")
-        if len(self.club_ids) > 2:
-            raise ValueError("at most two club memberships are allowed")
         for field_name in (
             "club_ids", "relationship_skill_ids", "core_values",
             "moral_boundaries", "identity_anchor_ids",

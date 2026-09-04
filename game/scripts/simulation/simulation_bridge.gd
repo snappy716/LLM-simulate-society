@@ -324,7 +324,7 @@ func operate_campus_club(action_id: String, club_id: String) -> void:
 	var clock: Dictionary = campus_snapshot.get("clock", {})
 	var player: Dictionary = campus_snapshot.get("player", {})
 	var parameters := {"club_id": club_id}
-	if action_id in ["CLUB_OR_PERSONAL_ACTIVITY", "CLUB_OR_SELF_STUDY"]:
+	if action_id in ["CLUB_ACTIVITY", "CLUB_OR_PERSONAL_ACTIVITY", "CLUB_OR_SELF_STUDY"]:
 		parameters["location_id"] = String(player.get("current_location_id", ""))
 	var command := {
 		"command_id": "godot-club-%d-%d" % [Time.get_ticks_usec(), _campus_command_counter],

@@ -111,11 +111,13 @@ from simulation.systems.campus_clubs import (
     CLUB_ACTIVITY_IDS,
     advance_club_upkeep,
     campus_club_invariant,
+    club_has_activity,
     club_catalog_view,
     install_campus_clubs,
     load_campus_club_policy,
     make_campus_club_handler,
     settle_club_activity,
+    validate_club_activity,
 )
 
 __all__ = [
@@ -179,11 +181,13 @@ __all__ = [
     "CLUB_ACTIVITY_IDS",
     "advance_club_upkeep",
     "campus_club_invariant",
+    "club_has_activity",
     "club_catalog_view",
     "install_campus_clubs",
     "load_campus_club_policy",
     "make_campus_club_handler",
     "settle_club_activity",
+    "validate_club_activity",
     "IntelligenceSystem",
     "ItemUseSystem",
     "ItemInstanceSystem",

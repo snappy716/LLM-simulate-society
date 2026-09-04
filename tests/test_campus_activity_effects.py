@@ -85,7 +85,7 @@ class CampusActivityEffectTests(unittest.TestCase):
     def test_all_schedule_activities_have_valid_data_driven_effects(self):
         registry = ContentRegistry.load_default(REPOSITORY_DIR / "content")
         definitions = load_campus_activity_definitions(registry)
-        self.assertEqual(32, len(definitions))
+        self.assertEqual(33, len(definitions))
         self.assertEqual("free", definitions["REST"].action_class)
         self.assertEqual("study", definitions["ATTEND_CLASS"].category)
         self.assertEqual("work", definitions["MEDICAL_SHIFT"].category)

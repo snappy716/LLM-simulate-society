@@ -51,7 +51,7 @@ class CampusDecisionTests(unittest.TestCase):
         return result
 
     def test_policy_declares_legal_data_driven_candidates(self):
-        self.assertEqual(8, len(self.policy.alternatives))
+        self.assertEqual(9, len(self.policy.alternatives))
         self.assertEqual(
             {
                 "REST",
@@ -59,6 +59,7 @@ class CampusDecisionTests(unittest.TestCase):
                 "SOCIAL_OR_SELF_STUDY",
                 "CLUB_OR_PERSONAL_ACTIVITY",
                 "CLUB_OR_SELF_STUDY",
+                "CLUB_ACTIVITY",
                 "PERSONAL_ACTIVITY",
                 "CAMPUS_EXPLORATION",
                 "CAMPUS_SERVICE_SHIFT",

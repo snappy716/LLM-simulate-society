@@ -296,8 +296,8 @@ class ContentRegistry:
             for field_name in (
                 "activity_contribution", "activity_resource_gain", "task_contribution",
                 "task_resource_gain", "daily_resource_cost", "resource_capacity",
-                "initial_resource", "core_member_limit", "member_limit",
-                "tactic_resource_cost",
+                "initial_resource", "core_member_limit", "tactic_resource_cost",
+                "recruitment_score_threshold", "existing_membership_penalty",
             ):
                 value = club_runtime_policy.get(field_name)
                 if isinstance(value, bool) or not isinstance(value, int) or value < 0:
@@ -313,6 +313,20 @@ class ContentRegistry:
                     f"club {club_id} references unknown college overlaps: "
                     + ", ".join(sorted(unknown_overlaps))
                 )
+            activity_slots = club.get("activity_slots")
+            if not isinstance(activity_slots, list) or not activity_slots:
+                errors.append(f"club {club_id} requires activity_slots")
+            else:
+                for slot in activity_slots:
+                    if (
+                        not isinstance(slot, dict)
+                        or slot.get("phase") not in {"morning", "afternoon", "evening"}
+                        or not isinstance(slot.get("days"), list)
+                        or not slot["days"]
+                        or any(isinstance(day, bool) or not isinstance(day, int) or not 0 <= day <= 6 for day in slot["days"])
+                        or len(slot["days"]) != len(set(slot["days"]))
+                    ):
+                        errors.append(f"club {club_id} has invalid activity slot")
             for field_name in ("surface_skill", "night_skill"):
                 skill_id = club.get(field_name)
                 if not isinstance(skill_id, str) or not skill_id:
