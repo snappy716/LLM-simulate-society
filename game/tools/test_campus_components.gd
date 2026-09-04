@@ -6,7 +6,7 @@ func _init() -> void:
 	assert(trigger_scene != null)
 	var trigger = trigger_scene.instantiate()
 	assert(trigger != null)
-	assert(trigger.collision_mask == 1)
+	assert(trigger.collision_mask == 2)
 	trigger.passage_id = "road_gate_to_student_life"
 	assert(trigger.passage_id == "road_gate_to_student_life")
 

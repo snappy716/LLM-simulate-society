@@ -40,6 +40,36 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
                 width, height = struct.unpack(">II", image.read(8))
             self.assertEqual([width, height], entry["map_size"], entry["id"])
 
+    def test_latest_art_maps_form_one_reciprocal_walkable_network(self):
+        catalog = json.loads((GAME_DIR / "data/campus_art_catalog.json").read_text(encoding="utf-8"))
+        passages = json.loads(
+            (REPOSITORY_DIR / "content/locations/campus_passages.json").read_text(encoding="utf-8")
+        )["passages"]
+        passage_ids = {entry["id"] for entry in passages}
+        maps = {entry["id"]: entry for entry in catalog["maps"]}
+        adjacency = {map_id: set() for map_id in maps}
+        edges = set()
+        for map_id, entry in maps.items():
+            self.assertTrue(entry.get("edge_exits"), map_id)
+            for exit_config in entry["edge_exits"]:
+                self.assertIn(exit_config["passage_id"], passage_ids)
+                self.assertIn(exit_config["target_map_id"], maps)
+                self.assertIn(exit_config["edge"], {"left", "right", "top", "bottom"})
+                self.assertEqual(2, len(exit_config["target_arrival_ratio"]))
+                adjacency[map_id].add(exit_config["target_map_id"])
+                edges.add((map_id, exit_config["target_map_id"], exit_config["passage_id"]))
+        for source, target, passage_id in edges:
+            self.assertIn((target, source, passage_id), edges)
+        visited = set()
+        pending = [catalog["default_map_id"]]
+        while pending:
+            current = pending.pop()
+            if current in visited:
+                continue
+            visited.add(current)
+            pending.extend(adjacency[current] - visited)
+        self.assertEqual(set(maps), visited)
+
     def test_existing_blueprint_tool_has_explicit_boundary_position_type(self):
         generator = (
             GAME_DIR / "tools/generate_full_city_orthographic_blueprint.gd"
@@ -65,7 +95,13 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
 
     def test_player_is_identifiable_by_transition_triggers(self):
         player = (GAME_DIR / "scripts/player/player_controller.gd").read_text(encoding="utf-8")
+        player_scene = (GAME_DIR / "scenes/characters/player.tscn").read_text(encoding="utf-8")
+        trigger_scene = (
+            GAME_DIR / "scenes/world/components/campus_transition_trigger.tscn"
+        ).read_text(encoding="utf-8")
         self.assertIn('add_to_group("player")', player)
+        self.assertIn("collision_layer = 2", player_scene)
+        self.assertIn("collision_mask = 2", trigger_scene)
 
     def test_debug_scenes_reuse_player_camera_without_duplicate_child(self):
         outdoors = (GAME_DIR / "scenes/debug/campus_navigation_test.tscn").read_text(
@@ -136,6 +172,8 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn('add_to_group("campus_art_camera")', controller)
         self.assertIn("camera.limit_right = int(_map_size.x)", controller)
         self.assertIn("edge_scroll_speed", controller)
+        self.assertIn("_configure_edge_transitions", controller)
+        self.assertIn("target_arrival_ratio", controller)
 
     def test_campus_scene_keeps_authoritative_npcs_visible_and_inspectable(self):
         scene = (GAME_DIR / "scenes/campus/campus_collab_test.tscn").read_text(

@@ -11,7 +11,18 @@
       "visible_region_ids": ["south_gate_region", "central_region"],
       "map_size": [1774, 887],
       "spawn": [888, 690],
-      "walk_rect": [30, 620, 1714, 130]
+      "walk_rect": [30, 620, 1714, 130],
+      "edge_exits": [
+        {
+          "id": "ToLivingArea",
+          "label": "前往生活区",
+          "edge": "right",
+          "position_ratio": 0.52,
+          "passage_id": "road_gate_to_student_life",
+          "target_map_id": "living_area",
+          "target_arrival_ratio": [0.50, 0.74]
+        }
+      ]
     },
     {
       "id": "living_area",
@@ -22,7 +33,45 @@
       "visible_region_ids": ["student_life_region", "service_logistics_region"],
       "map_size": [2040, 771],
       "spawn": [1020, 620],
-      "walk_rect": [30, 465, 1980, 275]
+      "walk_rect": [30, 465, 1980, 275],
+      "edge_exits": [
+        {
+          "id": "ToCampusGate",
+          "label": "返回校门",
+          "edge": "bottom",
+          "position_ratio": 0.50,
+          "passage_id": "road_gate_to_student_life",
+          "target_map_id": "campus_gate",
+          "target_arrival_ratio": [0.86, 0.50]
+        },
+        {
+          "id": "ToEastDormitory",
+          "label": "前往东区宿舍",
+          "edge": "right",
+          "position_ratio": 0.62,
+          "passage_id": "road_student_life_to_east_dorm",
+          "target_map_id": "east_dormitory",
+          "target_arrival_ratio": [0.10, 0.62]
+        },
+        {
+          "id": "ToWestDormitory",
+          "label": "前往西区宿舍",
+          "edge": "left",
+          "position_ratio": 0.62,
+          "passage_id": "road_student_life_to_west_dorm",
+          "target_map_id": "west_dormitory",
+          "target_arrival_ratio": [0.90, 0.62]
+        },
+        {
+          "id": "ToPsychologyBridge",
+          "label": "前往心理学院",
+          "edge": "top",
+          "position_ratio": 0.25,
+          "passage_id": "lakeside_path_humanities_to_student_life",
+          "target_map_id": "psychology_bridge",
+          "target_arrival_ratio": [0.62, 0.82]
+        }
+      ]
     },
     {
       "id": "east_dormitory",
@@ -33,7 +82,18 @@
       "visible_region_ids": ["east_dorm_region", "student_life_region"],
       "map_size": [1774, 887],
       "spawn": [887, 700],
-      "walk_rect": [30, 470, 1714, 390]
+      "walk_rect": [30, 470, 1714, 390],
+      "edge_exits": [
+        {
+          "id": "ToLivingArea",
+          "label": "返回生活区",
+          "edge": "left",
+          "position_ratio": 0.62,
+          "passage_id": "road_student_life_to_east_dorm",
+          "target_map_id": "living_area",
+          "target_arrival_ratio": [0.90, 0.62]
+        }
+      ]
     },
     {
       "id": "west_dormitory",
@@ -44,7 +104,18 @@
       "visible_region_ids": ["west_dorm_region", "sports_health_region"],
       "map_size": [1774, 887],
       "spawn": [887, 700],
-      "walk_rect": [30, 470, 1714, 390]
+      "walk_rect": [30, 470, 1714, 390],
+      "edge_exits": [
+        {
+          "id": "ToLivingArea",
+          "label": "返回生活区",
+          "edge": "right",
+          "position_ratio": 0.62,
+          "passage_id": "road_student_life_to_west_dorm",
+          "target_map_id": "living_area",
+          "target_arrival_ratio": [0.10, 0.62]
+        }
+      ]
     },
     {
       "id": "psychology_bridge",
@@ -55,7 +126,18 @@
       "visible_region_ids": ["humanities_psychology_region", "central_region"],
       "map_size": [1742, 903],
       "spawn": [1060, 810],
-      "walk_rect": [30, 475, 1682, 398]
+      "walk_rect": [30, 475, 1682, 398],
+      "edge_exits": [
+        {
+          "id": "ToLivingArea",
+          "label": "返回生活区",
+          "edge": "bottom",
+          "position_ratio": 0.62,
+          "passage_id": "lakeside_path_humanities_to_student_life",
+          "target_map_id": "living_area",
+          "target_arrival_ratio": [0.62, 0.18]
+        }
+      ]
     }
   ]
 }

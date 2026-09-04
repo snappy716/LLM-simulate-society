@@ -34,23 +34,14 @@ max_visible_npcs = 18
 playback_speed = 220.0
 use_scene_route_anchors = true
 
-[node name="RoadBoundary" parent="." instance=ExtResource("6_trigger")]
-position = Vector2(1480, 635)
-scale = Vector2(6.5, 1)
-passage_id = "road_gate_to_student_life"
+[node name="MapEdgeTransitions" type="Node2D" parent="."]
+
+[node name="MapEdgeLabels" type="Node2D" parent="."]
 
 [node name="StudentCenterEntrance" parent="." instance=ExtResource("6_trigger")]
 position = Vector2(294, 604)
 scale = Vector2(2.2, 1)
 passage_id = "parent:student_center"
-
-[node name="SouthRoadArrival" parent="." instance=ExtResource("7_anchor")]
-position = Vector2(1480, 690)
-anchor_id = "region:south_gate_region:entry:road_gate_to_student_life"
-
-[node name="StudentRoadArrival" parent="." instance=ExtResource("7_anchor")]
-position = Vector2(1480, 586)
-anchor_id = "region:student_life_region:entry:road_gate_to_student_life"
 
 [node name="StudentCenterOutdoorArrival" parent="." instance=ExtResource("7_anchor")]
 position = Vector2(294, 646)
@@ -126,7 +117,7 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 18
-text = "校园美术联调 · WASD 移动 · E 查看附近 NPC · R 随机人物模块\nM 校园地图/传送 · T 手机 · 左下角镜头缩放 · 画面上下边缘浏览"
+text = "校园美术联调 · WASD 移动/走到边缘换区 · E 查看附近 NPC · R 随机人物模块\nM 校园地图/快速移动 · T 手机 · 左下角镜头缩放 · 画面上下边缘浏览"
 
 [node name="CurrentMap" type="Label" parent="UI"]
 offset_left = 18.0

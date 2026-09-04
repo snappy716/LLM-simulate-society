@@ -88,15 +88,13 @@ func _run_flow() -> void:
 	assert(bool(movement_layer.get("use_scene_route_anchors")))
 	assert(get_nodes_in_group("campus_route_anchor").size() >= 10)
 
-	var road = outdoor.get_node("RoadBoundary")
-	road.call("request_traversal")
-	var road_resolution = await road.traversal_resolved
-	assert(bool(road_resolution[0]), "collab road traversal failed: %s" % road_resolution[1])
-	var road_snapshot: Dictionary = bridge.get("campus_snapshot")
-	assert((road_snapshot.get("player", {}) as Dictionary).get("current_location_id") == "student_life_region")
-	assert(current_scene == outdoor)
+	var before_walk_clock: Dictionary = (bridge.get("campus_snapshot") as Dictionary).get("clock", {}).duplicate(true)
+	var before_walk_budget := int(((bridge.get("campus_snapshot") as Dictionary).get("player", {}) as Dictionary).get("action_budget", {}).get("major_remaining", -1))
+	await _walk_edge(outdoor, bridge, presentation, "ToLivingArea", "living_area", "student_life_region")
 
 	var entrance = outdoor.get_node("StudentCenterEntrance")
+	assert(entrance.monitoring)
+	var expected_outdoor_return := (outdoor.get_node("StudentCenterOutdoorArrival") as Node2D).global_position
 	entrance.call("request_traversal")
 	var entrance_resolution = await entrance.traversal_resolved
 	assert(bool(entrance_resolution[0]), "collab entrance failed: %s" % entrance_resolution[1])
@@ -120,10 +118,22 @@ func _run_flow() -> void:
 	assert(current_scene.name == "CampusCollabTest")
 	var returned_player := current_scene.get_node("Player") as Node2D
 	for _attempt in range(30):
-		if returned_player.position.distance_to(Vector2(294, 646)) < 1.0:
+		if returned_player.position.distance_to(expected_outdoor_return) < 1.0:
 			break
 		await process_frame
-	assert(returned_player.position.distance_to(Vector2(294, 646)) < 1.0)
+	assert(returned_player.position.distance_to(expected_outdoor_return) < 1.0)
+
+	# Every latest art map is connected by a bidirectional, authoritative edge.
+	await _walk_edge(current_scene, bridge, presentation, "ToEastDormitory", "east_dormitory", "east_dorm_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToLivingArea", "living_area", "student_life_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToWestDormitory", "west_dormitory", "west_dorm_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToLivingArea", "living_area", "student_life_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToPsychologyBridge", "psychology_bridge", "humanities_psychology_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToLivingArea", "living_area", "student_life_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToCampusGate", "campus_gate", "south_gate_region")
+	var after_walk_snapshot: Dictionary = bridge.get("campus_snapshot")
+	assert(after_walk_snapshot.get("clock", {}) == before_walk_clock)
+	assert(int((after_walk_snapshot.get("player", {}) as Dictionary).get("action_budget", {}).get("major_remaining", -1)) == before_walk_budget)
 
 	var phase_panel := current_scene.get_node("UI/PhasePanel")
 	var advance_button := phase_panel.get_node("Margin/VBox/Advance") as Button
@@ -166,3 +176,26 @@ func _run_flow() -> void:
 	await process_frame
 	await process_frame
 	quit(0)
+
+
+func _walk_edge(
+	scene: Node,
+	bridge: Node,
+	presentation: Node,
+	trigger_name: String,
+	target_map_id: String,
+	target_location_id: String
+) -> void:
+	var trigger = scene.get_node("MapEdgeTransitions/%s" % trigger_name)
+	# Moving the real CharacterBody2D into the Area2D verifies automatic walking
+	# activation, rather than bypassing the scene with a direct method call.
+	var player := scene.get_node("Player") as Node2D
+	player.global_position = trigger.global_position
+	var resolution = await trigger.traversal_resolved
+	assert(bool(resolution[0]), "edge %s failed: %s" % [trigger_name, resolution[1]])
+	await process_frame
+	assert(current_scene == scene)
+	assert(String(presentation.get("current_map_id")) == target_map_id)
+	assert(not bool(bridge.get("_campus_busy")), "arrival triggered an unintended second traversal")
+	var snapshot: Dictionary = bridge.get("campus_snapshot")
+	assert((snapshot.get("player", {}) as Dictionary).get("current_location_id") == target_location_id)
