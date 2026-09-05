@@ -170,6 +170,19 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("social_result", phone)
         self.assertIn("已结算", phone)
 
+    def test_forum_ui_exposes_separate_surface_and_discovered_night_channels(self):
+        phone = (GAME_DIR / "scripts/ui/campus_phone_ui.gd").read_text(encoding="utf-8")
+        for text in (
+            "表世界 · 校园广场",
+            "里世界 · 未发现",
+            "里世界 · 可浏览",
+            "里世界 · 行动中",
+            "进入夜相后可接取",
+        ):
+            self.assertIn(text, phone)
+        self.assertIn('task.get("forum", "surface")', phone)
+        self.assertIn('night_forum_accessible', phone)
+
     def test_course_app_exposes_college_abilities_and_future_card_pool(self):
         phone = (GAME_DIR / "scripts/ui/campus_phone_ui.gd").read_text(encoding="utf-8")
         self.assertIn("学院能力 · 心理学院", phone)

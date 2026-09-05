@@ -115,6 +115,9 @@ from simulation.systems import (  # noqa: E402
     install_campus_night_world,
     load_campus_night_world_policy,
     make_campus_night_world_handler,
+    advance_campus_night_forum,
+    campus_night_task_invariant,
+    load_night_task_templates,
 )
 
 
@@ -195,6 +198,11 @@ class CampusKernelBridge:
             )
         forum_policy = load_campus_forum_policy(registry)
         install_campus_forums(state, task_templates, forum_policy, rng_pool)
+        night_task_templates = load_night_task_templates(registry)
+        for task_template in night_task_templates.values():
+            task_template["allowed_phases"] = list(
+                activity_definitions[task_template["activity_id"]].allowed_phases
+            )
         decision_selector = make_task_aware_decision_selector(
             decision_selector,
             activity_definitions,
@@ -204,6 +212,13 @@ class CampusKernelBridge:
         def campus_phase_upkeep(context):
             summary = advance_campus_phase_upkeep(context)
             summary.update(advance_campus_night_world(context, night_world_policy))
+            summary.update(advance_campus_night_forum(
+                context,
+                graph,
+                night_task_templates,
+                night_world_policy,
+                forum_policy.social_consequences,
+            ))
             summary.update(advance_club_upkeep(context, club_policy))
             summary.update(advance_party_commitments(context, party_policy))
             self.cognition_runtime.publish_status(context.state)
@@ -235,6 +250,7 @@ class CampusKernelBridge:
         self.kernel.add_invariant(campus_club_invariant)
         self.kernel.add_invariant(campus_party_invariant)
         self.kernel.add_invariant(campus_night_world_invariant)
+        self.kernel.add_invariant(campus_night_task_invariant)
         self.kernel.add_invariant(make_campus_task_invariant(activity_definitions))
         traverse_handler = make_traverse_location_handler(graph)
         self.kernel.register_handler(

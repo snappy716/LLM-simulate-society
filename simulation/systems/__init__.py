@@ -180,6 +180,11 @@ from simulation.systems.campus_night_world import (
     night_world_public_view,
     pollution_stage,
 )
+from simulation.systems.campus_night_tasks import (
+    advance_campus_night_forum,
+    campus_night_task_invariant,
+    load_night_task_templates,
+)
 from simulation.systems.campus_clubs import (
     CLUB_ACTIVITY_IDS,
     advance_club_upkeep,
@@ -326,6 +331,9 @@ __all__ = [
     "night_world_policy_from_state",
     "night_world_public_view",
     "pollution_stage",
+    "advance_campus_night_forum",
+    "campus_night_task_invariant",
+    "load_night_task_templates",
     "CLUB_ACTIVITY_IDS",
     "advance_club_upkeep",
     "campus_club_invariant",

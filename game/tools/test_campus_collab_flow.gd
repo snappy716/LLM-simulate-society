@@ -255,8 +255,24 @@ func _run_flow() -> void:
 	night_world_button.pressed.emit()
 	var night_entry_resolution = await bridge.campus_night_world_operation_completed
 	assert(bool(night_entry_resolution[0]), "night-world entry failed: %s" % night_entry_resolution[1])
-	assert(String(((bridge.get("campus_snapshot") as Dictionary).get("night_world", {}) as Dictionary).get("current_layer", "")) == "night")
-	assert(int(((bridge.get("campus_snapshot") as Dictionary).get("night_world", {}) as Dictionary).get("pollution", 0)) > 0)
+	var entered_snapshot: Dictionary = bridge.get("campus_snapshot")
+	var entered_night: Dictionary = entered_snapshot.get("night_world", {})
+	assert(String(entered_night.get("current_layer", "")) == "night")
+	assert(int(entered_night.get("pollution", 0)) > 0)
+	assert(bool(entered_night.get("night_forum_unlocked", false)))
+	assert(bool(entered_night.get("night_forum_accessible", false)))
+	assert(int(entered_night.get("active_npc_count", 0)) >= 6)
+	assert(int((((entered_snapshot.get("task_summary", {}) as Dictionary).get("by_forum", {}) as Dictionary).get("night", {}) as Dictionary).get("total", 0)) == 20)
+	current_phone.call("_set_open", true)
+	current_phone.call("_open_app", "forums", "双层论坛")
+	current_phone.call("_set_forum_channel", "night")
+	await process_frame
+	var night_cards := current_phone.get("_forum_cards") as VBoxContainer
+	var night_access_note := current_phone.get("_forum_access_note") as Label
+	assert(night_cards.get_child_count() > 0)
+	assert(night_access_note.text.contains("当前可竞争接取"))
+	current_phone.call("_set_open", false)
+	assert(not paused)
 	night_world_button.pressed.emit()
 	var night_exit_resolution = await bridge.campus_night_world_operation_completed
 	assert(bool(night_exit_resolution[0]), "night-world exit failed: %s" % night_exit_resolution[1])

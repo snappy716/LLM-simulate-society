@@ -4,21 +4,26 @@
   "title": "Authoritative campus night-world aggregate",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "policy", "actor_states", "transition_sequence"],
+  "required": ["schema_version", "policy", "actor_states", "active_day", "active_actor_ids", "last_night_day", "last_night_actor_count", "transition_sequence"],
   "properties": {
     "schema_version": {"const": 1},
     "policy": {"type": "object"},
+    "active_day": {"type": ["integer", "null"], "minimum": 1},
+    "active_actor_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "last_night_day": {"type": ["integer", "null"], "minimum": 1},
+    "last_night_actor_count": {"type": "integer", "minimum": 0},
     "transition_sequence": {"type": "integer", "minimum": 0},
     "actor_states": {
       "type": "object",
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["actor_id", "layer", "pollution", "last_transition_day", "last_transition_phase"],
+        "required": ["actor_id", "layer", "pollution", "night_forum_discovered", "last_transition_day", "last_transition_phase"],
         "properties": {
           "actor_id": {"type": "string", "minLength": 1},
           "layer": {"enum": ["surface", "night"]},
           "pollution": {"type": "integer", "minimum": 0, "maximum": 100},
+          "night_forum_discovered": {"type": "boolean"},
           "last_transition_day": {"type": ["integer", "null"], "minimum": 1},
           "last_transition_phase": {"enum": ["morning", "afternoon", "evening", "late_night", null]}
         }

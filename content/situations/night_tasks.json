@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "templates": [
+    {
+      "id": "mirror_lake_echo_trace",
+      "title": "追踪镜湖边的重复脚步",
+      "description": "巡查者报告镜湖边出现了与行人步伐完全同步的第二组脚步声。",
+      "objective": "沿镜湖广场完成一次异常轨迹记录。",
+      "activity_id": "NIGHT_RECON",
+      "scene_id": "mirror_lake_square",
+      "preferred_college_ids": ["earth_space", "psychology"],
+      "tags": ["night", "recon", "echo"],
+      "reward": {"wealth": 18}
+    },
+    {
+      "id": "library_missing_index",
+      "title": "核对图书馆消失的索引",
+      "description": "夜相中的书架出现了现实馆藏中不存在的借阅编号。",
+      "objective": "确认索引指向的书架并留下可靠记录。",
+      "activity_id": "NIGHT_RECON",
+      "scene_id": "central_region",
+      "preferred_college_ids": ["humanities", "artificial_intelligence"],
+      "tags": ["night", "recon", "memory"],
+      "reward": {"wealth": 20}
+    },
+    {
+      "id": "dorm_corridor_stabilize",
+      "title": "稳定宿舍走廊的错位门牌",
+      "description": "一段宿舍走廊正在重复出现不存在的房间号。",
+      "objective": "校准门牌顺序并阻止错位继续扩散。",
+      "activity_id": "NIGHT_STABILIZE",
+      "scene_id": "east_dorm_region",
+      "preferred_college_ids": ["math_physics", "psychology"],
+      "tags": ["night", "stabilize", "dormitory"],
+      "reward": {"wealth": 22}
+    },
+    {
+      "id": "west_dorm_name_residue",
+      "title": "回收西区宿舍的姓名残响",
+      "description": "公告栏上有几处姓名被月光擦去，只留下模糊笔迹。",
+      "objective": "在痕迹完全消失前完成拓印与稳定。",
+      "activity_id": "NIGHT_STABILIZE",
+      "scene_id": "west_dorm_region",
+      "preferred_college_ids": ["humanities", "psychology"],
+      "tags": ["night", "stabilize", "identity"],
+      "reward": {"wealth": 22}
+    },
+    {
+      "id": "south_gate_lost_student",
+      "title": "接应南门外徘徊的学生",
+      "description": "一名误入夜相的学生不断重复自己的报到日期。",
+      "objective": "找到对方的身份锚点并护送其脱离异常区域。",
+      "activity_id": "NIGHT_RESCUE",
+      "scene_id": "south_gate_region",
+      "preferred_college_ids": ["psychology", "medicine"],
+      "tags": ["night", "rescue", "identity"],
+      "reward": {"wealth": 26}
+    },
+    {
+      "id": "sports_center_exhaustion",
+      "title": "救援体育中心的循环跑者",
+      "description": "一名学生被困在没有终点的跑道上，身体状态正在迅速恶化。",
+      "objective": "打断循环并完成紧急状态评估。",
+      "activity_id": "NIGHT_RESCUE",
+      "scene_id": "sports_health_region",
+      "preferred_college_ids": ["sports", "medicine"],
+      "tags": ["night", "rescue", "loop"],
+      "reward": {"wealth": 28}
+    },
+    {
+      "id": "hospital_shadow_triage",
+      "title": "处理医院候诊区的影子拥堵",
+      "description": "候诊者的影子脱离本体并堵塞了夜相通道。",
+      "objective": "识别高风险影子并完成分流封控。",
+      "activity_id": "NIGHT_CONTAINMENT",
+      "scene_id": "sports_health_region",
+      "preferred_college_ids": ["medicine", "bio_chemistry"],
+      "tags": ["night", "containment", "medical"],
+      "reward": {"wealth": 30}
+    },
+    {
+      "id": "ai_lab_false_signal",
+      "title": "封存创新中心的伪求救信号",
+      "description": "一段无法追溯来源的求救信息正在诱导终端用户进入封闭区域。",
+      "objective": "定位信号节点并切断异常传播链。",
+      "activity_id": "NIGHT_CONTAINMENT",
+      "scene_id": "research_innovation_region",
+      "preferred_college_ids": ["artificial_intelligence", "math_physics"],
+      "tags": ["night", "containment", "signal"],
+      "reward": {"wealth": 30}
+    },
+    {
+      "id": "observatory_moon_measurement",
+      "title": "复测观测台的月光偏差",
+      "description": "观测台记录到无法用天气解释的月光强度跳变。",
+      "objective": "完成一次交叉测量并标注污染峰值。",
+      "activity_id": "NIGHT_RECON",
+      "scene_id": "science_teaching_region",
+      "preferred_college_ids": ["earth_space", "math_physics"],
+      "tags": ["night", "recon", "moonlight"],
+      "reward": {"wealth": 24}
+    },
+    {
+      "id": "maintenance_tunnel_seal",
+      "title": "封闭后勤区的异常缝隙",
+      "description": "维修通道墙面出现了通往未知空间的狭窄裂口。",
+      "objective": "确认裂口边界并完成临时封闭。",
+      "activity_id": "NIGHT_CONTAINMENT",
+      "scene_id": "service_logistics_region",
+      "preferred_college_ids": ["bio_chemistry", "earth_space"],
+      "tags": ["night", "containment", "passage"],
+      "reward": {"wealth": 28}
+    }
+  ]
+}

@@ -11,6 +11,14 @@
   "npc_entry_access": ["capable", "willing"],
   "pollution_lock_threshold": 85,
   "surface_morning_recovery": 2,
+  "night_forum": {
+    "daily_task_count": 20,
+    "active_npc_min": 6,
+    "active_npc_max": 12,
+    "task_views_per_npc_min": 2,
+    "task_views_per_npc_max": 4,
+    "npc_execute_delay_phases": 1
+  },
   "moon_phases": [
     {"id": "thin_crescent", "name": "薄月", "start_day": 1, "end_day": 7, "intensity": 25, "entry_pollution": 2, "exposure_pollution": 1},
     {"id": "waxing_moon", "name": "渐盈月", "start_day": 8, "end_day": 14, "intensity": 45, "entry_pollution": 3, "exposure_pollution": 2},

@@ -21,6 +21,12 @@ class CampusNightWorldPolicy:
     npc_entry_access: tuple[str, ...]
     pollution_lock_threshold: int
     surface_morning_recovery: int
+    daily_night_task_count: int
+    active_npc_min: int
+    active_npc_max: int
+    task_views_per_npc_min: int
+    task_views_per_npc_max: int
+    npc_execute_delay_phases: int
     moon_phases: tuple[Mapping[str, Any], ...]
 
     def __post_init__(self) -> None:
@@ -32,6 +38,16 @@ class CampusNightWorldPolicy:
             raise ValueError("night-world pollution lock threshold must be between 1 and 100")
         if not 0 <= self.surface_morning_recovery <= 100:
             raise ValueError("night-world recovery must be between 0 and 100")
+        if self.daily_night_task_count < 1:
+            raise ValueError("night forum must publish at least one task")
+        if not 1 <= self.active_npc_min <= self.active_npc_max:
+            raise ValueError("night-world active NPC range is invalid")
+        if self.daily_night_task_count < self.active_npc_max:
+            raise ValueError("night forum task count must cover the maximum active NPC count")
+        if not 1 <= self.task_views_per_npc_min <= self.task_views_per_npc_max:
+            raise ValueError("night forum viewer range is invalid")
+        if self.npc_execute_delay_phases < 0:
+            raise ValueError("night forum execution delay cannot be negative")
         expected_day = 1
         for phase in self.moon_phases:
             if int(phase.get("start_day", 0)) != expected_day:
@@ -49,6 +65,7 @@ class CampusNightWorldPolicy:
 
 def load_campus_night_world_policy(registry) -> CampusNightWorldPolicy:
     payload = registry.get("configuration", "night_world")
+    forum = payload.get("night_forum", {})
     return CampusNightWorldPolicy(
         entry_phases=tuple(map(str, payload.get("entry_phases", ()))),
         entry_region_ids=tuple(map(str, payload.get("entry_region_ids", ()))),
@@ -56,6 +73,12 @@ def load_campus_night_world_policy(registry) -> CampusNightWorldPolicy:
         npc_entry_access=tuple(map(str, payload.get("npc_entry_access", ()))),
         pollution_lock_threshold=int(payload.get("pollution_lock_threshold", 0)),
         surface_morning_recovery=int(payload.get("surface_morning_recovery", 0)),
+        daily_night_task_count=int(forum.get("daily_task_count", 0)),
+        active_npc_min=int(forum.get("active_npc_min", 0)),
+        active_npc_max=int(forum.get("active_npc_max", 0)),
+        task_views_per_npc_min=int(forum.get("task_views_per_npc_min", 0)),
+        task_views_per_npc_max=int(forum.get("task_views_per_npc_max", 0)),
+        npc_execute_delay_phases=int(forum.get("npc_execute_delay_phases", -1)),
         moon_phases=tuple(deepcopy(payload.get("moon_phases", ()))),
     )
 
@@ -72,6 +95,12 @@ def install_campus_night_world(state: WorldState, policy: CampusNightWorldPolicy
             "npc_entry_access": list(policy.npc_entry_access),
             "pollution_lock_threshold": policy.pollution_lock_threshold,
             "surface_morning_recovery": policy.surface_morning_recovery,
+            "daily_night_task_count": policy.daily_night_task_count,
+            "active_npc_min": policy.active_npc_min,
+            "active_npc_max": policy.active_npc_max,
+            "task_views_per_npc_min": policy.task_views_per_npc_min,
+            "task_views_per_npc_max": policy.task_views_per_npc_max,
+            "npc_execute_delay_phases": policy.npc_execute_delay_phases,
             "moon_phases": deepcopy(list(policy.moon_phases)),
         },
         "actor_states": {
@@ -79,11 +108,16 @@ def install_campus_night_world(state: WorldState, policy: CampusNightWorldPolicy
                 "actor_id": actor_id,
                 "layer": "surface",
                 "pollution": 0,
+                "night_forum_discovered": False,
                 "last_transition_day": None,
                 "last_transition_phase": None,
             }
             for actor_id in sorted(state.population)
         },
+        "active_day": None,
+        "active_actor_ids": [],
+        "last_night_day": None,
+        "last_night_actor_count": 0,
         "transition_sequence": 0,
     }
 
@@ -99,6 +133,12 @@ def night_world_policy_from_state(state: WorldState) -> CampusNightWorldPolicy |
         npc_entry_access=tuple(map(str, payload.get("npc_entry_access", ()))),
         pollution_lock_threshold=int(payload.get("pollution_lock_threshold", 0)),
         surface_morning_recovery=int(payload.get("surface_morning_recovery", 0)),
+        daily_night_task_count=int(payload.get("daily_night_task_count", 0)),
+        active_npc_min=int(payload.get("active_npc_min", 0)),
+        active_npc_max=int(payload.get("active_npc_max", 0)),
+        task_views_per_npc_min=int(payload.get("task_views_per_npc_min", 0)),
+        task_views_per_npc_max=int(payload.get("task_views_per_npc_max", 0)),
+        npc_execute_delay_phases=int(payload.get("npc_execute_delay_phases", -1)),
         moon_phases=tuple(deepcopy(payload.get("moon_phases", ()))),
     )
 
@@ -184,6 +224,7 @@ def make_campus_night_world_handler(policy: CampusNightWorldPolicy):
                 )
             moon = assessment["moon"]
             actor_state["layer"] = "night"
+            actor_state["night_forum_discovered"] = True
             actor_state["pollution"] = min(
                 100, int(actor_state["pollution"]) + int(moon["entry_pollution"])
             )
@@ -267,6 +308,7 @@ def night_world_public_view(state: WorldState, policy: CampusNightWorldPolicy) -
     aggregate = state.situations.get("night_world", {})
     actor_state = aggregate.get("actor_states", {}).get("player", {
         "actor_id": "player", "layer": "surface", "pollution": 0,
+        "night_forum_discovered": False,
         "last_transition_day": None, "last_transition_phase": None,
     })
     assessment = night_entry_assessment(state, "player", policy) if aggregate else {
@@ -282,7 +324,15 @@ def night_world_public_view(state: WorldState, policy: CampusNightWorldPolicy) -
         "entry_reason": str(assessment.get("reason", "not_installed")),
         "can_exit": actor_state.get("layer") == "night",
         "moon": moon,
-        "night_forum_unlocked": False,
+        "night_forum_unlocked": bool(actor_state.get("night_forum_discovered", False)),
+        "night_forum_accessible": actor_state.get("layer") == "night",
+        "active_npc_count": sum(
+            1
+            for actor_id in aggregate.get("active_actor_ids", ())
+            if actor_id != "player"
+            and aggregate.get("actor_states", {}).get(actor_id, {}).get("layer") == "night"
+        ),
+        "last_night_npc_count": int(aggregate.get("last_night_actor_count", 0)),
     }
 
 
@@ -305,11 +355,29 @@ def campus_night_world_invariant(state: WorldState) -> Iterable[str]:
         pollution = actor_state.get("pollution")
         if isinstance(pollution, bool) or not isinstance(pollution, int) or not 0 <= pollution <= 100:
             errors.append(f"night-world pollution for {actor_id} is invalid")
+        if not isinstance(actor_state.get("night_forum_discovered"), bool):
+            errors.append(f"night-world forum discovery for {actor_id} is invalid")
         if state.clock.phase in {"morning", "afternoon"} and actor_state.get("layer") == "night":
             errors.append(f"night-world actor {actor_id} remained in night layer during daylight")
     sequence = aggregate.get("transition_sequence")
     if isinstance(sequence, bool) or not isinstance(sequence, int) or sequence < 0:
         errors.append("night-world transition sequence is invalid")
+    active_ids = aggregate.get("active_actor_ids")
+    if not isinstance(active_ids, list) or len(active_ids) != len(set(active_ids)):
+        errors.append("night-world active actor list is invalid")
+    elif any(actor_id not in state.population or actor_id == "player" for actor_id in active_ids):
+        errors.append("night-world active actor list references an invalid NPC")
+    active_day = aggregate.get("active_day")
+    if active_day is not None and (isinstance(active_day, bool) or not isinstance(active_day, int) or active_day < 1):
+        errors.append("night-world active day is invalid")
+    last_night_day = aggregate.get("last_night_day")
+    if last_night_day is not None and (
+        isinstance(last_night_day, bool) or not isinstance(last_night_day, int) or last_night_day < 1
+    ):
+        errors.append("night-world last night day is invalid")
+    last_count = aggregate.get("last_night_actor_count")
+    if isinstance(last_count, bool) or not isinstance(last_count, int) or last_count < 0:
+        errors.append("night-world last active count is invalid")
     return errors
 
 

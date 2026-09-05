@@ -183,6 +183,7 @@ def publish_surface_tasks(
             "task_id": task_id,
             "template_id": template_id,
             "forum": "surface",
+            "world_layer": "surface",
             "issuer_id": issuer_id,
             "title": str(template["title"]),
             "description": str(template["description"]),
@@ -263,8 +264,15 @@ def install_campus_forums(
         "night": {
             "forum_id": "night",
             "name": "夜间异常论坛",
-            "enabled": False,
-            "unlock_hint": "尚未获得访问权限",
+            "enabled": True,
+            "access_policy": "discover_on_first_entry",
+            "last_published_day": 0,
+            "published_total": 0,
+            "completed_template_ids": [],
+            "unlocked_template_ids": [],
+            "pending_follow_up_template_ids": [],
+            "published_single_run_template_ids": [],
+            "unlock_hint": "首次进入夜相后开放浏览；只有身处夜相时才能接取和执行",
         },
     }
     state.tasks = {}
@@ -403,6 +411,7 @@ def publish_emergent_surface_tasks(
             "task_id": task_id,
             "template_id": str(template["id"]),
             "forum": "surface",
+            "world_layer": "surface",
             "issuer_id": issuer_id,
             "title": str(rule["title"]),
             "description": str(rule["description"]).format(issuer=issuer_name),
@@ -546,6 +555,7 @@ def advance_surface_forum(
     for task_id, task in context.state.tasks.items():
         if (
             isinstance(task, dict)
+            and task.get("forum") == "surface"
             and task.get("state") not in TERMINAL_STATES
             and context.state.clock.day > int(task.get("expires_day", 0))
         ):
@@ -585,7 +595,11 @@ def advance_surface_forum(
     npc_ids = [actor_id for actor_id in sorted(context.state.population) if actor_id != "player"]
     for task_id in sorted(context.state.tasks):
         task = context.state.tasks[task_id]
-        if not isinstance(task, dict) or task.get("state") not in AVAILABLE_STATES:
+        if (
+            not isinstance(task, dict)
+            or task.get("forum") != "surface"
+            or task.get("state") not in AVAILABLE_STATES
+        ):
             continue
         candidates = [
             actor_id for actor_id in npc_ids
@@ -762,7 +776,8 @@ def _settle_task_support_hooks(state: WorldState, task: Mapping[str, Any], outco
 
 
 def _unlock_follow_up_tasks(state: WorldState, task: Mapping[str, Any]) -> list[str]:
-    forum = state.forums.setdefault("surface", {})
+    forum_id = str(task.get("forum", "surface"))
+    forum = state.forums.setdefault(forum_id, {})
     completed = set(forum.get("completed_template_ids", ()))
     completed.add(str(task.get("template_id", "")))
     forum["completed_template_ids"] = sorted(item for item in completed if item)
@@ -825,7 +840,12 @@ def complete_assigned_task(context, actor_id: str, plan: Mapping[str, Any]) -> b
             "origin_kind": task.get("origin_kind", "template"),
             "origin_ref_id": task.get("origin_ref_id"),
         },
-        knowledge_tags=["forum", "task", "completed"],
+        visibility="secret" if task.get("forum") == "night" else "public",
+        severity=3 if task.get("forum") == "night" else 1,
+        knowledge_tags=[
+            "forum", "task", "completed",
+            *(["night"] if task.get("forum") == "night" else []),
+        ],
     )
     return True
 
@@ -849,6 +869,15 @@ def make_forum_task_handler(activity_handler):
         actor = context.state.population.get(command.actor_id)
         if not isinstance(actor, dict):
             return TransactionOutcome(False, False, "unknown_actor", "行动者不存在。")
+        if task.get("forum") == "night":
+            actor_night = context.state.situations.get("night_world", {}).get(
+                "actor_states", {}
+            ).get(command.actor_id, {})
+            discovered = bool(actor_night.get("night_forum_discovered", False))
+            if action == "VIEW_FORUM_TASK" and not discovered:
+                return TransactionOutcome(False, False, "night_forum_locked", "尚未发现夜间异常论坛。")
+            if action in {"CLAIM_FORUM_TASK", "COMPLETE_FORUM_TASK"} and actor_night.get("layer") != "night":
+                return TransactionOutcome(False, False, "night_layer_required", "必须身处夜相才能接取或执行这项任务。")
 
         if action == "VIEW_FORUM_TASK":
             if command.actor_id in task["viewer_ids"]:
@@ -860,7 +889,7 @@ def make_forum_task_handler(activity_handler):
                 "FORUM_TASK_VIEWED",
                 f"{actor.get('display_name', command.actor_id)} 查看了《{task['title']}》。",
                 actor_ids=[command.actor_id],
-                payload={"task_id": task_id},
+                payload={"task_id": task_id, "forum": task.get("forum", "surface")},
                 visibility="private",
                 knowledge_tags=["forum", "task"],
             )
@@ -892,8 +921,13 @@ def make_forum_task_handler(activity_handler):
                 actor_ids=[command.actor_id],
                 target_ids=[task["issuer_id"]],
                 scene_id=task["scene_id"],
-                payload={"task_id": task_id, "forum": "surface"},
-                knowledge_tags=["forum", "task"],
+                payload={"task_id": task_id, "forum": task.get("forum", "surface")},
+                visibility="secret" if task.get("forum") == "night" else "public",
+                severity=3 if task.get("forum") == "night" else 1,
+                knowledge_tags=[
+                    "forum", "task",
+                    *(["night"] if task.get("forum") == "night" else []),
+                ],
             )
             return TransactionOutcome(True, True, "success", "任务已锁定给你。", commit=True)
 
@@ -921,7 +955,12 @@ def make_forum_task_handler(activity_handler):
                     "task_id": task_id,
                     "social_result": deepcopy(task.get("social_result", {})),
                 },
-                knowledge_tags=["forum", "task", "abandoned"],
+                visibility="secret" if task.get("forum") == "night" else "public",
+                severity=3 if task.get("forum") == "night" else 1,
+                knowledge_tags=[
+                    "forum", "task", "abandoned",
+                    *(["night"] if task.get("forum") == "night" else []),
+                ],
             )
             return TransactionOutcome(True, True, "success", "任务已放弃。", commit=True)
 
@@ -985,6 +1024,10 @@ def make_campus_task_invariant(
                 errors.append(f"task {task_id} id mismatch")
             if task.get("state") not in TASK_STATES:
                 errors.append(f"task {task_id} has invalid state")
+            if task.get("forum") not in {"surface", "night"}:
+                errors.append(f"task {task_id} has invalid forum")
+            if task.get("world_layer") != task.get("forum"):
+                errors.append(f"task {task_id} world layer differs from forum")
             if task.get("scene_id") not in state.places:
                 errors.append(f"task {task_id} references unknown place")
             if task.get("execution_region_id") not in state.places:

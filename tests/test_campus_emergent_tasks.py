@@ -162,6 +162,7 @@ class CampusEmergentTaskTests(unittest.TestCase):
             published_events.extend(
                 event for event in result["result"]["events"]
                 if event["event_type"] == "FORUM_TASK_PUBLISHED"
+                and event.get("payload", {}).get("forum") == "surface"
             )
         self.assertGreater(len(published_events), 0)
         self.assertLessEqual(len(published_events), 4)

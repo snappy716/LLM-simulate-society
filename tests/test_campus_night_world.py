@@ -77,7 +77,7 @@ class CampusNightWorldTests(unittest.TestCase):
         self.assertEqual("surface", morning["snapshot"]["night_world"]["current_layer"])
         self.assertEqual(1, morning["snapshot"]["night_world"]["pollution"])
         phase_execution = morning["result"]["payload"]["phase_execution"]
-        self.assertEqual(1, phase_execution["night_auto_exit_count"])
+        self.assertGreaterEqual(phase_execution["night_auto_exit_count"], 1)
         self.assertGreaterEqual(phase_execution["pollution_recovery_count"], 1)
         self.assertEqual([], list(campus_night_world_invariant(bridge.kernel.state)))
 

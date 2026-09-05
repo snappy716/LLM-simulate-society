@@ -61,6 +61,7 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
         singleton_id="party_policy",
     ),
     ContentSource("situations/surface_tasks.json", "surface_task_template", "templates"),
+    ContentSource("situations/night_tasks.json", "night_task_template", "templates"),
     ContentSource(
         "situations/forum_policy.json",
         "configuration",

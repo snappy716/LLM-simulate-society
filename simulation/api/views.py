@@ -17,7 +17,7 @@ from simulation.systems.campus_night_world import (
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 19
+CAMPUS_WORLD_VIEW_VERSION = 20
 NPC_CHRONICLE_VIEW_VERSION = 1
 
 
@@ -248,8 +248,14 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     planned_occupancy = schedule.get("planned_occupancy", {})
     current_occupancy = planned_occupancy.get(week_day, {}).get(state.clock.phase, {})
     public_tasks = {}
+    player_night_state = state.situations.get("night_world", {}).get(
+        "actor_states", {}
+    ).get("player", {})
+    night_forum_discovered = bool(player_night_state.get("night_forum_discovered", False))
     for task_id, task in state.tasks.items():
         if not isinstance(task, dict):
+            continue
+        if task.get("forum") == "night" and not night_forum_discovered:
             continue
         issuer = state.population.get(str(task.get("issuer_id", "")), {})
         assignee = state.population.get(str(task.get("assignee_id", "")), {})
@@ -257,7 +263,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         public_tasks[task_id] = {
             key: deepcopy(task.get(key))
             for key in (
-                "task_id", "template_id", "forum", "issuer_id", "title", "description", "objective",
+                "task_id", "template_id", "forum", "world_layer", "issuer_id", "title", "description", "objective",
                 "action_id", "activity_id", "allowed_phases", "scene_id", "execution_region_id",
                 "created_day", "expires_day",
                 "state", "assignee_id", "lock_revision", "reward", "tags",
@@ -296,6 +302,22 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     for task in public_tasks.values():
         state_name = str(task.get("state", "unknown"))
         task_counts[state_name] = task_counts.get(state_name, 0) + 1
+    task_counts_by_forum: Dict[str, Dict[str, int]] = {}
+    for forum_id in ("surface", "night"):
+        forum_tasks = [task for task in public_tasks.values() if task.get("forum") == forum_id]
+        by_state: Dict[str, int] = {}
+        for task in forum_tasks:
+            state_name = str(task.get("state", "unknown"))
+            by_state[state_name] = by_state.get(state_name, 0) + 1
+        task_counts_by_forum[forum_id] = {
+            "total": len(forum_tasks),
+            "available": sum(
+                count for name, count in by_state.items()
+                if name in {"open", "viewed", "considering"}
+            ),
+            "mine": sum(1 for task in forum_tasks if task.get("owned_by_player")),
+            "completed": by_state.get("completed", 0),
+        }
     player_relationships = {}
     for issuer_id, targets in state.relationships.items():
         if not isinstance(targets, dict):
@@ -413,6 +435,15 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             "moon": {}, "night_forum_unlocked": False,
         }
     )
+    public_forums = deepcopy(state.forums)
+    night_forum = public_forums.setdefault("night", {})
+    night_forum["enabled"] = bool(night_world.get("night_forum_unlocked", False))
+    night_forum["accessible"] = bool(night_world.get("night_forum_accessible", False))
+    night_forum["access_state"] = (
+        "active" if night_forum["accessible"]
+        else "read_only" if night_forum["enabled"]
+        else "locked"
+    )
     return {
         "view_version": CAMPUS_WORLD_VIEW_VERSION,
         "revision": state.revision,
@@ -437,7 +468,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             "current_planned_occupancy": deepcopy(current_occupancy),
             "capacity_redirect_count": schedule.get("capacity_redirect_count", 0),
         },
-        "forums": deepcopy(state.forums),
+        "forums": public_forums,
         "tasks": public_tasks,
         "task_summary": {
             "total": len(public_tasks),
@@ -447,6 +478,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
                 if name in {"open", "viewed", "considering"}
             ),
             "mine": sum(1 for task in public_tasks.values() if task.get("owned_by_player")),
+            "by_forum": task_counts_by_forum,
         },
         "night_world": night_world,
         "social": {

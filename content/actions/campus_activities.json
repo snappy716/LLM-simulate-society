@@ -13,6 +13,10 @@
     "work": {"category": "work", "need_deltas": {"rest": 7, "food": 5, "money": -7, "achievement": -5, "commitment_pressure": -9}, "emotion_deltas": {"joy": 1, "shame": -1}, "knowledge_topic": "professional_practice", "knowledge_gain": 4, "wealth_delta": 8},
     "care_work": {"category": "work", "need_deltas": {"rest": 9, "food": 6, "money": -7, "safety": 1, "achievement": -6, "commitment_pressure": -10}, "emotion_deltas": {"joy": 2, "fear": 1, "sadness": 1}, "knowledge_topic": "professional_practice", "knowledge_gain": 5, "wealth_delta": 10},
     "patrol": {"category": "work", "need_deltas": {"rest": 9, "food": 6, "money": -7, "safety": -3, "achievement": -5, "commitment_pressure": -10}, "emotion_deltas": {"joy": 1, "fear": 1}, "knowledge_topic": "campus_security", "knowledge_gain": 5, "wealth_delta": 10},
+    "night_recon": {"category": "exploration", "need_deltas": {"rest": 8, "food": 5, "safety": 5, "achievement": -5, "curiosity": -9, "commitment_pressure": -6}, "emotion_deltas": {"joy": 1, "fear": 3}, "knowledge_topic": "night_anomaly", "knowledge_gain": 8, "wealth_delta": 0},
+    "night_stabilize": {"category": "research", "need_deltas": {"rest": 9, "food": 5, "safety": 4, "achievement": -7, "curiosity": -7, "commitment_pressure": -8}, "emotion_deltas": {"joy": 2, "fear": 2}, "knowledge_topic": "night_stabilization", "knowledge_gain": 9, "wealth_delta": 0},
+    "night_rescue": {"category": "social", "need_deltas": {"rest": 10, "food": 6, "safety": 6, "social": -5, "achievement": -7, "commitment_pressure": -10}, "emotion_deltas": {"joy": 3, "fear": 4, "sadness": 1}, "knowledge_topic": "night_rescue", "knowledge_gain": 8, "wealth_delta": 0},
+    "night_containment": {"category": "work", "need_deltas": {"rest": 11, "food": 6, "safety": 7, "achievement": -8, "commitment_pressure": -11}, "emotion_deltas": {"joy": 2, "fear": 4, "anger": 1}, "knowledge_topic": "night_containment", "knowledge_gain": 9, "wealth_delta": 0},
     "rest": {"category": "rest", "need_deltas": {"rest": -32, "food": 4, "safety": -3, "social": 1}, "emotion_deltas": {"joy": 2, "fear": -3, "anger": -3, "sadness": -2, "shame": -1}, "knowledge_topic": "", "knowledge_gain": 0, "wealth_delta": 0}
   },
   "activities": [
@@ -33,6 +37,10 @@
     {"id": "MAINTENANCE_SHIFT", "profile_id": "work", "action_class": "major", "allowed_phases": ["morning", "afternoon"]},
     {"id": "MEDICAL_SHIFT", "profile_id": "care_work", "action_class": "major", "allowed_phases": ["morning", "afternoon", "evening"]},
     {"id": "NIGHT_SECURITY_SHIFT", "profile_id": "patrol", "action_class": "major", "allowed_phases": ["late_night"]},
+    {"id": "NIGHT_RECON", "profile_id": "night_recon", "action_class": "major", "allowed_phases": ["evening", "late_night"]},
+    {"id": "NIGHT_STABILIZE", "profile_id": "night_stabilize", "action_class": "major", "allowed_phases": ["evening", "late_night"]},
+    {"id": "NIGHT_RESCUE", "profile_id": "night_rescue", "action_class": "major", "allowed_phases": ["evening", "late_night"]},
+    {"id": "NIGHT_CONTAINMENT", "profile_id": "night_containment", "action_class": "major", "allowed_phases": ["evening", "late_night"]},
     {"id": "ON_CALL_MAINTENANCE", "profile_id": "work", "action_class": "major", "allowed_phases": ["morning", "evening"]},
     {"id": "ON_CALL_MEDICAL_SHIFT", "profile_id": "care_work", "action_class": "major", "allowed_phases": ["late_night"]},
     {"id": "ON_CALL_SUPPORT", "profile_id": "care_work", "action_class": "major", "allowed_phases": ["afternoon"]},

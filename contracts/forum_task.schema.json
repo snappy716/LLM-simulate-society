@@ -4,10 +4,11 @@
   "title": "Surface or night forum task",
   "type": "object",
   "additionalProperties": false,
-  "required": ["task_id", "forum", "issuer_id", "title", "action_id", "scene_id", "created_day", "expires_day", "state", "lock_revision"],
+  "required": ["task_id", "forum", "world_layer", "issuer_id", "title", "action_id", "scene_id", "created_day", "expires_day", "state", "lock_revision"],
   "properties": {
     "task_id": {"type": "string", "minLength": 1},
     "forum": {"enum": ["surface", "night"]},
+    "world_layer": {"enum": ["surface", "night"]},
     "issuer_id": {"type": "string", "minLength": 1},
     "title": {"type": "string", "minLength": 1},
     "description": {"type": "string", "minLength": 1},

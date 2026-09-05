@@ -29,6 +29,10 @@ var _forum_primary_action: Button
 var _forum_abandon_action: Button
 var _forum_feedback: Label
 var _forum_filter := "available"
+var _forum_channel := "surface"
+var _forum_surface_button: Button
+var _forum_night_button: Button
+var _forum_access_note: Label
 var _selected_task_id := ""
 var _club_root: VBoxContainer
 var _club_picker: OptionButton
@@ -338,17 +342,22 @@ func _build_forum_page() -> VBoxContainer:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 8)
 	var channel_bar := HBoxContainer.new()
-	var surface := Button.new()
-	surface.text = "校园广场"
-	surface.disabled = true
-	surface.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	channel_bar.add_child(surface)
-	var night := Button.new()
-	night.text = "夜间 · 未解锁"
-	night.disabled = true
-	night.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	channel_bar.add_child(night)
+	_forum_surface_button = Button.new()
+	_forum_surface_button.text = "表世界 · 校园广场"
+	_forum_surface_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_forum_surface_button.pressed.connect(_set_forum_channel.bind("surface"))
+	channel_bar.add_child(_forum_surface_button)
+	_forum_night_button = Button.new()
+	_forum_night_button.text = "里世界 · 未发现"
+	_forum_night_button.disabled = true
+	_forum_night_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_forum_night_button.pressed.connect(_set_forum_channel.bind("night"))
+	channel_bar.add_child(_forum_night_button)
 	root.add_child(channel_bar)
+	_forum_access_note = Label.new()
+	_forum_access_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_forum_access_note.add_theme_color_override("font_color", Color("91a4bc"))
+	root.add_child(_forum_access_note)
 
 	_forum_list_view = VBoxContainer.new()
 	_forum_list_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -426,6 +435,7 @@ func _open_app(app_id: String, app_name: String) -> void:
 	_message_root.visible = is_message
 	if is_forum:
 		_forum_feedback.text = ""
+		_refresh_forum_channels()
 		_show_forum_list()
 	elif is_club:
 		_club_feedback.text = ""
@@ -648,6 +658,42 @@ func _set_forum_filter(filter_id: String) -> void:
 	_refresh_forum_list()
 
 
+func _set_forum_channel(channel_id: String) -> void:
+	if channel_id == "night":
+		var forum: Dictionary = (SimulationBridge.campus_snapshot.get("forums", {}) as Dictionary).get("night", {})
+		if not bool(forum.get("enabled", false)):
+			return
+	_forum_channel = channel_id
+	_selected_task_id = ""
+	_refresh_forum_channels()
+	_show_forum_list()
+
+
+func _refresh_forum_channels() -> void:
+	if _forum_surface_button == null or _forum_night_button == null:
+		return
+	var campus: Dictionary = SimulationBridge.campus_snapshot
+	var night_forum: Dictionary = (campus.get("forums", {}) as Dictionary).get("night", {})
+	var night_world: Dictionary = campus.get("night_world", {})
+	var unlocked := bool(night_forum.get("enabled", false))
+	var accessible := bool(night_forum.get("accessible", false))
+	_forum_surface_button.disabled = _forum_channel == "surface"
+	_forum_night_button.disabled = not unlocked or _forum_channel == "night"
+	_forum_night_button.text = (
+		"里世界 · 行动中" if accessible
+		else "里世界 · 可浏览" if unlocked
+		else "里世界 · 未发现"
+	)
+	if _forum_channel == "night":
+		_forum_access_note.text = (
+			"夜相频道 · 当前可竞争接取和执行异常委托。今晚有 %d 名 NPC 在行动。" % int(night_world.get("active_npc_count", 0))
+			if accessible
+			else "夜相频道 · 当前仅可查看记录；进入夜相后才能接取和执行。"
+		)
+	else:
+		_forum_access_note.text = "校园公开频道 · 委托会被玩家与 NPC 持续浏览、锁定和完成。"
+
+
 func _show_forum_list() -> void:
 	_selected_task_id = ""
 	_forum_list_view.visible = true
@@ -662,7 +708,9 @@ func _refresh_forum_list() -> void:
 		_forum_cards.remove_child(child)
 		child.queue_free()
 	var campus: Dictionary = SimulationBridge.campus_snapshot
-	var summary: Dictionary = campus.get("task_summary", {})
+	_refresh_forum_channels()
+	var all_summary: Dictionary = campus.get("task_summary", {})
+	var summary: Dictionary = (all_summary.get("by_forum", {}) as Dictionary).get(_forum_channel, {})
 	var summary_label := _forum_list_view.get_node("TaskSummary") as Label
 	summary_label.text = "今日动态 · %d 个可接 · %d 个由你锁定" % [
 		int(summary.get("available", 0)), int(summary.get("mine", 0))
@@ -696,6 +744,8 @@ func _refresh_forum_list() -> void:
 
 
 func _task_matches_filter(task: Dictionary) -> bool:
+	if String(task.get("forum", "surface")) != _forum_channel:
+		return false
 	var state := String(task.get("state", ""))
 	if _forum_filter == "mine":
 		return bool(task.get("owned_by_player", false))
@@ -769,7 +819,9 @@ func _refresh_forum_detail() -> void:
 	var organization_name := String(task.get("organization_name", ""))
 	var origin_value: Variant = task.get("origin_summary", "")
 	var origin_summary: String = origin_value if origin_value is String else ""
-	var origin_text := origin_summary if not origin_summary.is_empty() else "固定校园委托"
+	var origin_text := origin_summary if not origin_summary.is_empty() else (
+		"夜相巡查网络" if task.get("forum") == "night" else "固定校园委托"
+	)
 	var preferred_value: Variant = task.get("preferred_assignee_name", "")
 	var preferred_name: String = preferred_value if preferred_value is String else ""
 	if not preferred_name.is_empty():
@@ -805,9 +857,10 @@ func _refresh_forum_detail() -> void:
 				SimulationBridge.phase_display_name(String(entry.get("phase", "morning"))),
 				entry.get("message", ""),
 			])
-	_forum_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]发起人[/b]  %s\n[b]任务来源[/b]  %s\n[b]所属组织[/b]  %s\n[b]地点[/b]  %s\n[b]截止[/b]  第 %d 天\n[b]报酬[/b]  %d 校园币\n[b]协助者[/b]  %s\n[b]社会影响[/b]  %s\n\n[b]当前目标[/b]\n%s\n\n[b]竞争情况[/b]\n%d 人查看，%d 人正在考虑\n\n[b]动态记录[/b]\n%s" % [
+	var layer_name := "里世界" if task.get("forum") == "night" else "表世界"
+	_forum_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]层域[/b]  %s\n[b]发起人[/b]  %s\n[b]任务来源[/b]  %s\n[b]所属组织[/b]  %s\n[b]地点[/b]  %s\n[b]截止[/b]  第 %d 天\n[b]报酬[/b]  %d 校园币\n[b]协助者[/b]  %s\n[b]社会影响[/b]  %s\n\n[b]当前目标[/b]\n%s\n\n[b]竞争情况[/b]\n%d 人查看，%d 人正在考虑\n\n[b]动态记录[/b]\n%s" % [
 		task.get("title", "未命名任务"), task.get("description", ""),
-		task.get("issuer_name", "校园用户"), origin_text,
+		layer_name, task.get("issuer_name", "校园用户"), origin_text,
 		organization_name if not organization_name.is_empty() else "个人委托",
 		task.get("scene_name", "未知地点"),
 		int(task.get("expires_day", 1)), int(reward.get("wealth", 0)), helper_text,
@@ -816,11 +869,14 @@ func _refresh_forum_detail() -> void:
 	]
 	var state := String(task.get("state", ""))
 	var owned := bool(task.get("owned_by_player", false))
+	var requires_night: bool = String(task.get("forum", "surface")) == "night"
+	var night_accessible := bool((SimulationBridge.campus_snapshot.get("night_world", {}) as Dictionary).get("night_forum_accessible", false))
 	_forum_abandon_action.visible = owned and state in ["locked", "in_progress"]
 	_forum_primary_action.visible = true
 	_forum_primary_action.disabled = false
 	if state in ["open", "viewed", "considering"]:
-		_forum_primary_action.text = "接下任务 · 免费操作"
+		_forum_primary_action.text = "接下任务 · 免费操作" if not requires_night or night_accessible else "进入夜相后可接取"
+		_forum_primary_action.disabled = requires_night and not night_accessible
 	elif owned and state == "locked":
 		var player: Dictionary = SimulationBridge.campus_snapshot.get("player", {})
 		var player_location = player.get("current_location_id")
@@ -835,7 +891,7 @@ func _refresh_forum_detail() -> void:
 			_forum_primary_action.text = "当前时段无法执行"
 		else:
 			_forum_primary_action.text = "完成当前目标"
-		_forum_primary_action.disabled = not at_location or not phase_allowed
+		_forum_primary_action.disabled = not at_location or not phase_allowed or (requires_night and not night_accessible)
 	else:
 		_forum_primary_action.text = _task_state_label(task)
 		_forum_primary_action.disabled = true
