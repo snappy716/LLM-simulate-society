@@ -1,5 +1,6 @@
 {
   "schema_version": 1,
+  "source_package": "Project-c-0.1(1).rar",
   "default_map_id": "campus_gate",
   "maps": [
     {
@@ -8,7 +9,7 @@
       "group": "教学区",
       "texture_path": "res://assets/maps/campus_collab/campus_gate.png",
       "semantic_location_id": "south_gate_region",
-      "visible_region_ids": ["south_gate_region", "central_region"],
+      "visible_region_ids": ["south_gate_region"],
       "map_size": [1774, 887],
       "spawn": [888, 690],
       "walk_rect": [30, 620, 1714, 130],
@@ -63,6 +64,15 @@
           "target_arrival_ratio": [0.90, 0.62]
         },
         {
+          "id": "ToLibrary",
+          "label": "前往图书馆",
+          "edge": "top",
+          "position_ratio": 0.72,
+          "passage_id": "road_student_life_to_central",
+          "target_map_id": "library",
+          "target_arrival_ratio": [0.50, 0.70]
+        },
+        {
           "id": "ToPsychologyBridge",
           "label": "前往心理学院",
           "edge": "top",
@@ -101,11 +111,20 @@
       "group": "宿舍区",
       "texture_path": "res://assets/maps/campus_collab/west_dormitory.png",
       "semantic_location_id": "west_dorm_region",
-      "visible_region_ids": ["west_dorm_region", "sports_health_region"],
+      "visible_region_ids": ["west_dorm_region"],
       "map_size": [1774, 887],
       "spawn": [887, 700],
       "walk_rect": [30, 470, 1714, 390],
       "edge_exits": [
+        {
+          "id": "ToSportsField",
+          "label": "前往运动场",
+          "edge": "left",
+          "position_ratio": 0.85,
+          "passage_id": "road_west_dorm_to_sports",
+          "target_map_id": "sports_field",
+          "target_arrival_ratio": [0.90, 0.50]
+        },
         {
           "id": "ToLivingArea",
           "label": "返回生活区",
@@ -123,11 +142,29 @@
       "group": "心理学院与桥",
       "texture_path": "res://assets/maps/campus_collab/psychology_bridge.png",
       "semantic_location_id": "humanities_psychology_region",
-      "visible_region_ids": ["humanities_psychology_region", "central_region"],
+      "visible_region_ids": ["humanities_psychology_region"],
       "map_size": [1742, 903],
       "spawn": [1060, 810],
       "walk_rect": [30, 475, 1682, 398],
       "edge_exits": [
+        {
+          "id": "ToLibrary",
+          "label": "前往图书馆",
+          "edge": "right",
+          "position_ratio": 0.85,
+          "passage_id": "road_central_to_humanities",
+          "target_map_id": "library",
+          "target_arrival_ratio": [0.10, 0.50]
+        },
+        {
+          "id": "ToSportsField",
+          "label": "前往运动场",
+          "edge": "left",
+          "position_ratio": 0.85,
+          "passage_id": "road_humanities_to_sports",
+          "target_map_id": "sports_field",
+          "target_arrival_ratio": [0.10, 0.50]
+        },
         {
           "id": "ToLivingArea",
           "label": "返回生活区",
@@ -136,6 +173,68 @@
           "passage_id": "lakeside_path_humanities_to_student_life",
           "target_map_id": "living_area",
           "target_arrival_ratio": [0.62, 0.18]
+        }
+      ]
+    },
+    {
+      "id": "library",
+      "name": "图书馆广场",
+      "group": "中央学习区",
+      "texture_path": "res://assets/maps/campus_collab/library.png",
+      "semantic_location_id": "central_region",
+      "visible_region_ids": ["central_region"],
+      "map_size": [1774, 887],
+      "spawn": [887, 754],
+      "walk_rect": [30, 715, 1714, 90],
+      "edge_exits": [
+        {
+          "id": "ToLivingArea",
+          "label": "返回生活区",
+          "edge": "bottom",
+          "position_ratio": 0.50,
+          "passage_id": "road_student_life_to_central",
+          "target_map_id": "living_area",
+          "target_arrival_ratio": [0.72, 0.18]
+        },
+        {
+          "id": "ToPsychologyBridge",
+          "label": "前往心理学院",
+          "edge": "left",
+          "position_ratio": 0.50,
+          "passage_id": "road_central_to_humanities",
+          "target_map_id": "psychology_bridge",
+          "target_arrival_ratio": [0.90, 0.85]
+        }
+      ]
+    },
+    {
+      "id": "sports_field",
+      "name": "运动场",
+      "group": "体育健康区",
+      "texture_path": "res://assets/maps/campus_collab/sports_field.png",
+      "semantic_location_id": "sports_health_region",
+      "visible_region_ids": ["sports_health_region"],
+      "map_size": [1672, 941],
+      "spawn": [836, 835],
+      "walk_rect": [35, 785, 1602, 90],
+      "edge_exits": [
+        {
+          "id": "ToWestDormitory",
+          "label": "前往西区宿舍",
+          "edge": "right",
+          "position_ratio": 0.50,
+          "passage_id": "road_west_dorm_to_sports",
+          "target_map_id": "west_dormitory",
+          "target_arrival_ratio": [0.10, 0.85]
+        },
+        {
+          "id": "ToPsychologyBridge",
+          "label": "前往心理学院",
+          "edge": "left",
+          "position_ratio": 0.50,
+          "passage_id": "road_humanities_to_sports",
+          "target_map_id": "psychology_bridge",
+          "target_arrival_ratio": [0.10, 0.85]
         }
       ]
     }

@@ -2,6 +2,8 @@
 
 > 状态：目标架构与渐进迁移基线
 >
+> 2026-09-05：实施顺序与实际进度以 `IMPLEMENTATION_ROADMAP.md` 为准。第 17～18 节保留初版计划/历史地基记录，不代表当前运行时状态。新 UI 随功能交付；调查证据提前到知识成长与失心者之前，不再等主线阶段。当前七图基线见 `ART_COLLABORATION_INTEGRATION.md`。
+>
 > 引擎：Godot 4.x，目标发行 Windows，macOS 用于开发测试
 >
 > 前置设计：`design/CAMPUS_WORLD_AND_GAMEPLAY_DESIGN.md`

@@ -1,5 +1,20 @@
 # 重构验证清单
 
+## 2026-09-05：新实施路线与七图基线回补
+
+- 当前执行顺序改为 `design/IMPLEMENTATION_ROADMAP.md`；旧 To Do 仅保留历史编号。
+- 新美术包七图逐文件 SHA-256 核验；原五图无变更，新增图书馆 V3、运动场 V2；未导入废稿缓存或外部脚本。
+- 目录尺寸、出生点、地面矩形、真实道路端点、双向连通、中央/体育区域独立投影均有测试。
+- 修复切图时物理空间尚留旧坐标导致连续触发出口：新出口延迟两个物理帧启用并收窄出口法线方向范围；切图清理旧地图 NPC 移动回放。
+- 修正旧测试对“校门必须有人”的假设，改为实际前往生活区见 NPC、看日志；不借中央区人物制造校门人群。
+- 当前工程 `python3 -m unittest discover -s tests -q`：368 项通过（668.658 秒，包含七日无人推进）；旧工程 46 项通过。末次 Godot 脚本修改后素材/源码专项 26 项再次通过。
+- Godot 4.7.2 编辑器导入、`CAMPUS_COMPONENTS_OK`、`CAMPUS_NAVIGATION_FLOW_OK`、`CAMPUS_COMBAT_ROUND_FLOW_OK` 通过。
+- `test_campus_collab_flow.gd` 在 headless 和 Metal 图形模式都输出 `CAMPUS_COLLAB_FLOW_OK`：覆盖七图道路往返、室内返回、手机对话、人物日志、论坛竞争、夜相与战斗准备。使用独立 `GODOT_SIM_PORT` 隔离实例，避免互相连接测试世界。
+- computer-use 手动打开地图列表并进入图书馆、运动场，确认真实图形渲染与地面落点。未把截图、缓存或私人配置纳入提交。
+- 未花费真实 LLM 额度；未做 Windows 实机验收；未宣称物品已接入校园或敌方战斗已完成。
+
+## 通用验收与历史记录
+
 - 旧版测试：`cd emergent_town_demo && python3 -m unittest discover -s tests -v`
 - 新版测试：`python3 -m unittest discover -s tests -v`
 - 校园架构专项：`python3 -m unittest tests.test_campus_demo_architecture -v`
@@ -24,7 +39,7 @@
 - Godot 4.7 导入：`Godot --headless --editor --path game --quit`
 - Godot 校园导航端到端：`Godot --headless --path game --script res://tools/test_campus_navigation_flow.gd`，必须输出 `CAMPUS_NAVIGATION_FLOW_OK`。
 - Godot 协作美术联调：`Godot --headless --path game --script res://tools/test_campus_collab_flow.gd`，必须输出 `CAMPUS_COLLAB_FLOW_OK`；图形渲染可运行 `res://tools/capture_campus_collab.gd`。
-- 校园美术完整性：`campus_art_catalog.json` 必须只有 5 个最新版条目，每个 PNG 文件存在且 IHDR 尺寸与目录一致；地图跨区必须走 `FAST_TRAVEL_CAMPUS`，不得直接修改地点。
+- 校园美术完整性：`campus_art_catalog.json` 必须只有新版交付的 7 个条目，PNG SHA-256、尺寸、出生点与可行走范围有效；地图快速移动走 `FAST_TRAVEL_CAMPUS`，步行走权威道路，不得直接修改地点。
 - 校园 NPC 呈现：进入最新版校园场景后应保留当前区域真实在场 NPC；靠近后按 `E` 可查看公开状态，
   面板不得显示需求原始数值、秘密、内部层级或未来计划，并须与地图、手机界面互斥。
 - NPC 人物日志：推进至少两个时段后靠近 NPC 按 `E`，分别检查“日程记录”和“重要经历”；
@@ -35,7 +50,7 @@
   手牌移入来源角色弃牌堆、每人每轮一次基础指令、伤害/护盾/恢复/观察/干扰，以及最后一击与任务奖励原子结算。
 - 夜相切层：上午入口必须禁用；晚间进入不得扣主要行动，须显示月相并增加污染；返回后人物、库存、
   地点与关系必须保持同一份状态；留至深夜继续暴露，天亮强制退出并执行表世界恢复。
-- 五区步行互通：实际往返校门、生活区、东/西宿舍和心理学院地图；每次边缘切换都须经对应
+- 七区步行互通：实际往返校门、生活区、东/西宿舍、心理学院、图书馆和运动场地图；每次边缘切换都须经对应
   `TRAVERSE_CAMPUS_PASSAGE` 道路，目标进入点不得立即反向触发，且不得改变时钟或主要行动余额。
 - Godot 运行：启动 `game/project.godot`，确认后端连接、200 NPC 首个快照与城市地图加载。
 - Windows 目标检查：Windows 使用 `python`，macOS/Linux 使用 `python3`；不得提交平台绝对路径。

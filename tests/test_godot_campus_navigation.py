@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import struct
 import unittest
 from pathlib import Path
@@ -49,15 +50,16 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn("约定稍后见面", phone)
         self.assertIn("正式提出", phone)
 
-    def test_five_latest_collaboration_maps_are_catalogued_with_real_dimensions(self):
+    def test_seven_latest_collaboration_maps_are_catalogued_with_real_dimensions(self):
         catalog_path = GAME_DIR / "data/campus_art_catalog.json"
         catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
         maps = catalog["maps"]
-        self.assertEqual(5, len(maps))
-        self.assertEqual(5, len({entry["id"] for entry in maps}))
-        self.assertEqual(5, len({entry["texture_path"] for entry in maps}))
+        self.assertEqual("Project-c-0.1(1).rar", catalog["source_package"])
+        self.assertEqual(7, len(maps))
+        self.assertEqual(7, len({entry["id"] for entry in maps}))
+        self.assertEqual(7, len({entry["texture_path"] for entry in maps}))
         self.assertEqual(
-            5,
+            7,
             len(list((GAME_DIR / "assets/maps/campus_collab").glob("*.png"))),
         )
         for entry in maps:
@@ -67,6 +69,8 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
                 "east_dorm_region",
                 "west_dorm_region",
                 "humanities_psychology_region",
+                "central_region",
+                "sports_health_region",
             })
             texture_path = entry["texture_path"].removeprefix("res://")
             image_path = GAME_DIR / texture_path
@@ -77,6 +81,30 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
                 self.assertEqual(b"IHDR", image.read(4))
                 width, height = struct.unpack(">II", image.read(8))
             self.assertEqual([width, height], entry["map_size"], entry["id"])
+            x, y, w, h = entry["walk_rect"]
+            self.assertTrue(0 <= x < x + w <= width)
+            self.assertTrue(0 <= y < y + h <= height)
+            sx, sy = entry["spawn"]
+            self.assertTrue(x <= sx <= x + w and y <= sy <= y + h, entry["id"])
+
+    def test_maps_match_the_reviewed_new_delivery(self):
+        expected = {
+            "campus_gate": "7a0d08d064bcf01628d3ed34f99544498c1e0052bec8fb9b766e01dbffd7831d",
+            "east_dormitory": "7ca331f067344c13699cf32bfbdc99c5be5e19967e662f3696e276591d852c32",
+            "living_area": "da8064eb1167dce3bb56419f0ee9eeb48cea0723e14a38d639ec373344fbb164",
+            "psychology_bridge": "09b5bdcdfb44a4399060dbbf63a03592b9a1a7817b634a86fa78858f6664cdd8",
+            "west_dormitory": "4f2be076746bc8f025c5c79a9f7b9acf7553cafcc26f623474ff0017d3bc68fb",
+            "library": "7bccb9eba0e2d761d096275b8d89235c518f3888d49cb2ed276b73ce95c80dd7",
+            "sports_field": "b43950d24ffd5f6e92a3eb9c1454e8e935dadf7142e8e04092db8695636e5dbb",
+        }
+        for map_id, digest in expected.items():
+            path = GAME_DIR / "assets/maps/campus_collab" / f"{map_id}.png"
+            self.assertEqual(digest, hashlib.sha256(path.read_bytes()).hexdigest(), map_id)
+
+    def test_library_and_sports_npcs_are_not_projected_on_other_maps(self):
+        maps = json.loads((GAME_DIR / "data/campus_art_catalog.json").read_text())["maps"]
+        for region, owner in [("central_region", "library"), ("sports_health_region", "sports_field")]:
+            self.assertEqual([owner], [entry["id"] for entry in maps if region in entry["visible_region_ids"]])
 
     def test_latest_art_maps_form_one_reciprocal_walkable_network(self):
         catalog = json.loads((GAME_DIR / "data/campus_art_catalog.json").read_text(encoding="utf-8"))
@@ -84,6 +112,7 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
             (REPOSITORY_DIR / "content/locations/campus_passages.json").read_text(encoding="utf-8")
         )["passages"]
         passage_ids = {entry["id"] for entry in passages}
+        passage_by_id = {entry["id"]: entry for entry in passages}
         maps = {entry["id"]: entry for entry in catalog["maps"]}
         adjacency = {map_id: set() for map_id in maps}
         edges = set()
@@ -94,6 +123,12 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
                 self.assertIn(exit_config["target_map_id"], maps)
                 self.assertIn(exit_config["edge"], {"left", "right", "top", "bottom"})
                 self.assertEqual(2, len(exit_config["target_arrival_ratio"]))
+                self.assertTrue(all(0 < value < 1 for value in exit_config["target_arrival_ratio"]))
+                passage = passage_by_id[exit_config["passage_id"]]
+                self.assertEqual(
+                    {passage["from_id"], passage["to_id"]},
+                    {entry["semantic_location_id"], maps[exit_config["target_map_id"]]["semantic_location_id"]},
+                )
                 adjacency[map_id].add(exit_config["target_map_id"])
                 edges.add((map_id, exit_config["target_map_id"], exit_config["passage_id"]))
         for source, target, passage_id in edges:

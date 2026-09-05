@@ -41,6 +41,9 @@ func _on_snapshot_updated(snapshot: Dictionary) -> void:
 
 
 func _on_map_changed(entry: Dictionary) -> void:
+	# Routes use the previous picture's coordinates. Do not carry those actors
+	# into the next region while waiting for their visual replay to finish.
+	_clear_replay()
 	_current_map_entry = entry.duplicate(true)
 	call_deferred("_refresh_residents")
 

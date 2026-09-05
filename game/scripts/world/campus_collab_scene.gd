@@ -177,13 +177,24 @@ func _configure_edge_transitions(entry: Dictionary) -> void:
 			continue
 		var exit_config: Dictionary = value
 		var trigger = EDGE_TRIGGER_SCENE.instantiate()
+		# Physics still holds the old player transform during a map swap.
+		# Arm new areas only after the arrival transform has reached physics.
+		trigger.monitoring = false
 		trigger.name = String(exit_config.get("id", "MapEdge"))
 		trigger.passage_id = String(exit_config.get("passage_id", ""))
 		trigger.position = _edge_world_position(exit_config)
 		trigger.scale = _edge_trigger_scale(exit_config)
 		trigger.traversal_resolved.connect(_on_edge_traversal_resolved.bind(exit_config.duplicate(true)))
 		container.add_child(trigger)
+		_arm_edge_after_arrival(trigger)
 		_add_edge_label(label_container, exit_config, trigger.position)
+
+
+func _arm_edge_after_arrival(trigger: Area2D) -> void:
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	if is_instance_valid(trigger) and not trigger.is_queued_for_deletion() and trigger.is_inside_tree():
+		trigger.set_deferred("monitoring", true)
 
 
 func _edge_world_position(exit_config: Dictionary) -> Vector2:
@@ -203,7 +214,8 @@ func _edge_world_position(exit_config: Dictionary) -> Vector2:
 
 func _edge_trigger_scale(exit_config: Dictionary) -> Vector2:
 	var edge := String(exit_config.get("edge", "right"))
-	return Vector2(1.5, 3.0) if edge in ["left", "right"] else Vector2(3.0, 1.5)
+	# Keep a narrow normal axis so small ground strips have a safe arrival zone.
+	return Vector2(0.75, 3.0) if edge in ["left", "right"] else Vector2(3.0, 0.75)
 
 
 func _add_edge_label(container: Node2D, exit_config: Dictionary, edge_position: Vector2) -> void:

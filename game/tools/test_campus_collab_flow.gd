@@ -24,7 +24,7 @@ func _run_flow() -> void:
 	await process_frame
 
 	var presentation := root.get_node("CampusPresentation")
-	assert((presentation.call("all_maps") as Array).size() == 5)
+	assert((presentation.call("all_maps") as Array).size() == 7)
 	var map := outdoor.get_node("CampusMap") as Sprite2D
 	assert(map.texture != null)
 	assert(map.texture.get_size() == Vector2(1774, 887))
@@ -38,6 +38,15 @@ func _run_flow() -> void:
 	await process_frame
 	assert(map.texture.get_size() == Vector2(1742, 903))
 	assert(camera.limit_right == 1742)
+	assert(bool(presentation.call("select_map", "library")))
+	await process_frame
+	assert(map.texture.get_size() == Vector2(1774, 887))
+	assert(camera.limit_right == 1774)
+	assert(bool(presentation.call("select_map", "sports_field")))
+	await process_frame
+	assert(map.texture.get_size() == Vector2(1672, 941))
+	assert(camera.limit_right == 1672)
+	assert(camera.limit_bottom == 941)
 	assert(bool(presentation.call("select_map", "campus_gate")))
 	await process_frame
 	assert(map.texture.get_size() == Vector2(1774, 887))
@@ -53,14 +62,18 @@ func _run_flow() -> void:
 	randomize_event.pressed = true
 	player.call("_unhandled_input", randomize_event)
 	assert((player.get("appearance") as Dictionary) != old_appearance)
+	# The gate is allowed to be empty. Meet actual residents in the living area
+	# instead of borrowing central-region NPCs for a visually busy start screen.
+	await _walk_edge(outdoor, bridge, presentation, "ToLivingArea", "living_area", "student_life_region")
 	var movement_layer = outdoor.get_node("NpcMovementLayer")
 	for _attempt in range(20):
 		if int(movement_layer.call("visible_resident_count")) > 0:
 			break
 		await process_frame
 	assert(int(movement_layer.call("visible_resident_count")) > 0)
-	var nearby_npc = movement_layer.call("nearest_interactable_npc", player.global_position, 100.0)
+	var nearby_npc = movement_layer.call("nearest_interactable_npc", player.global_position, 3000.0)
 	assert(nearby_npc != null)
+	player.global_position = nearby_npc.global_position
 	assert(not nearby_npc.name_label.visible)
 	var inspector = outdoor.get_node("CampusNpcInspectorUI")
 	inspector.call("inspect_npc", nearby_npc)
@@ -170,6 +183,7 @@ func _run_flow() -> void:
 	assert(outdoor.has_node("CameraControls"))
 	assert(bool(movement_layer.get("use_scene_route_anchors")))
 	assert(get_nodes_in_group("campus_route_anchor").size() >= 10)
+	await _walk_edge(outdoor, bridge, presentation, "ToCampusGate", "campus_gate", "south_gate_region")
 
 	var before_walk_clock: Dictionary = (bridge.get("campus_snapshot") as Dictionary).get("clock", {}).duplicate(true)
 	var before_walk_budget := int(((bridge.get("campus_snapshot") as Dictionary).get("player", {}) as Dictionary).get("action_budget", {}).get("major_remaining", -1))
@@ -210,8 +224,16 @@ func _run_flow() -> void:
 	await _walk_edge(current_scene, bridge, presentation, "ToEastDormitory", "east_dormitory", "east_dorm_region")
 	await _walk_edge(current_scene, bridge, presentation, "ToLivingArea", "living_area", "student_life_region")
 	await _walk_edge(current_scene, bridge, presentation, "ToWestDormitory", "west_dormitory", "west_dorm_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToSportsField", "sports_field", "sports_health_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToWestDormitory", "west_dormitory", "west_dorm_region")
 	await _walk_edge(current_scene, bridge, presentation, "ToLivingArea", "living_area", "student_life_region")
 	await _walk_edge(current_scene, bridge, presentation, "ToPsychologyBridge", "psychology_bridge", "humanities_psychology_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToSportsField", "sports_field", "sports_health_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToPsychologyBridge", "psychology_bridge", "humanities_psychology_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToLibrary", "library", "central_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToPsychologyBridge", "psychology_bridge", "humanities_psychology_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToLivingArea", "living_area", "student_life_region")
+	await _walk_edge(current_scene, bridge, presentation, "ToLibrary", "library", "central_region")
 	await _walk_edge(current_scene, bridge, presentation, "ToLivingArea", "living_area", "student_life_region")
 	await _walk_edge(current_scene, bridge, presentation, "ToCampusGate", "campus_gate", "south_gate_region")
 	var after_walk_snapshot: Dictionary = bridge.get("campus_snapshot")
@@ -328,6 +350,14 @@ func _run_flow() -> void:
 	var night_exit_resolution = await bridge.campus_night_world_operation_completed
 	assert(bool(night_exit_resolution[0]), "night-world exit failed: %s" % night_exit_resolution[1])
 	assert(String(((bridge.get("campus_snapshot") as Dictionary).get("night_world", {}) as Dictionary).get("current_layer", "")) == "surface")
+	# Finish at a populated, authoritative region for the journal test. A gate
+	# with no resident NPCs must not depend on unfinished movement animations.
+	bridge.call("fast_travel_campus", "student_life_region")
+	var journal_travel = await bridge.campus_fast_travel_completed
+	assert(bool(journal_travel[0]))
+	presentation.call("select_map", "living_area")
+	await process_frame
+	await process_frame
 	movement_layer = current_scene.get_node("NpcMovementLayer")
 	assert(int(movement_layer.get("last_replayed_count")) > 0)
 	for visible_npc in movement_layer.get_children():
@@ -386,12 +416,21 @@ func _walk_edge(
 	target_location_id: String
 ) -> void:
 	var trigger = scene.get_node("MapEdgeTransitions/%s" % trigger_name)
+	print("WALK_EDGE %s -> %s" % [presentation.get("current_map_id"), target_map_id])
+	for _attempt in range(10):
+		await physics_frame
+		if trigger.monitoring:
+			break
+	assert(trigger.monitoring, "edge failed to arm after arrival")
 	# Moving the real CharacterBody2D into the Area2D verifies automatic walking
 	# activation, rather than bypassing the scene with a direct method call.
 	var player := scene.get_node("Player") as Node2D
 	player.global_position = trigger.global_position
 	var resolution = await trigger.traversal_resolved
 	assert(bool(resolution[0]), "edge %s failed: %s" % [trigger_name, resolution[1]])
+	await process_frame
+	await physics_frame
+	await physics_frame
 	await process_frame
 	assert(current_scene == scene)
 	assert(String(presentation.get("current_map_id")) == target_map_id)

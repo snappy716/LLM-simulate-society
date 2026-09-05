@@ -1,5 +1,29 @@
 # Project-c-0.1 美术、场景与交互原型接入记录
 
+## 当前基线：新版七图（2026-09-05）
+
+本节取代下文旧包“五图”选稿结论。新交付为 `Project-c-0.1(1).rar`，实际资源目录仅含七张地图；压缩包 `.godot/imported` 中仍有废稿名称，但那是缓存，不能据此恢复废稿。
+
+| 源文件 | 游戏文件 | 权威语义区域 |
+| --- | --- | --- |
+| campus.png | campus_gate.png | south_gate_region |
+| campus_living_area_pixel-v2.png | living_area.png | student_life_region |
+| student_dormitory_1_2-male-v5.png | east_dormitory.png | east_dorm_region |
+| student_dormitory_3_4-female-v3.png | west_dormitory.png | west_dorm_region |
+| ucas_bridge_dominant_pixel-v6.png | psychology_bridge.png | humanities_psychology_region |
+| campus_library_pixel-v3.png | library.png | central_region |
+| campus_sports_area_pixel-v2.png | sports_field.png | sports_health_region |
+
+逐文件 SHA-256 对照确认原五图未变化，新增图书馆 1774×887、运动场 1672×941。七图均保留原像素，不修改美术内容。只导入这两张缺失图片，不复制缓存、脚本或重复角色素材。
+
+原五区网络保留，新增生活区↔图书馆、图书馆↔心理学院、心理学院↔运动场、西宿舍↔运动场。该连接沿用游戏逻辑校园，不宣称复刻现实校园布局。地图列表快速移动和边缘通行都必须经权威命令校验。
+
+图书馆图表现外部广场，不等于自动进入图书馆室内；运动场先沿前方地面粗略活动，不放开到看台屋顶。当前使用保守地面矩形，精确碰撞、台阶、前景遮挡及室内/室外人物分离仍需后续完成。其余未有专图的逻辑区域继续保留。
+
+所有图都仍用于开发联调，公开发行前应补齐美术来源许可和虚构化招牌；没有删除用户的原包、旧工程或 Git 历史。后续工作顺序见 `IMPLEMENTATION_ROADMAP.md`。
+
+## 历史记录：首次交付五图选稿
+
 > 评审对象：美术协作者提供的 `Project-c-0.1.rar`
 >
 > 接入原则：每个区域只采用最新版，同时接入可复用交互能力；不覆盖模拟内核，不执行外部脚本
