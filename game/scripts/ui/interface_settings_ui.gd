@@ -14,9 +14,12 @@ const PROVIDERS := ["rule", "openai_compatible", "ollama"]
 
 var profiles: Array[Dictionary] = []
 var selected_index := -1
+var _paused_before_open := false
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	add_to_group("interface_settings_ui")
 	panel.visible = false
 	for label in ["规则模式（离线）", "OpenAI 兼容接口", "Ollama（本地）"]:
 		provider.add_item(label)
@@ -32,16 +35,39 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		panel.visible = not panel.visible
 		if panel.visible:
-			_load_profiles()
+			_close()
+		else:
+			for group_name in ["campus_phone_ui", "campus_map_ui", "campus_npc_inspector_ui"]:
+				var other := get_tree().get_first_node_in_group(group_name)
+				if other != null and other.is_open():
+					return
+			open_settings()
 		get_viewport().set_input_as_handled()
+
+
+func is_open() -> bool:
+	return panel != null and panel.visible
+
+
+func open_settings() -> void:
+	if is_open():
+		return
+	_paused_before_open = get_tree().paused
+	_load_profiles()
+	panel.visible = true
+	get_tree().paused = true
+
+
+func _settings_path() -> String:
+	var override_path := OS.get_environment("GODOT_SIM_SETTINGS_PATH")
+	return SETTINGS_PATH if override_path.is_empty() else override_path
 
 
 func _load_profiles() -> void:
 	profiles.clear()
 	var config := ConfigFile.new()
-	if config.load(SETTINGS_PATH) == OK:
+	if config.load(_settings_path()) == OK:
 		for section in config.get_sections():
 			profiles.append({
 				"name": config.get_value(section, "name", section),
@@ -123,7 +149,7 @@ func _save_profiles() -> void:
 		var section := "profile_%03d" % index
 		for key in profiles[index]:
 			config.set_value(section, key, profiles[index][key])
-	var error := config.save(SETTINGS_PATH)
+	var error := config.save(_settings_path())
 	if error != OK:
 		status.text = "本地配置保存失败：%s" % error
 
@@ -151,3 +177,4 @@ func _interface_configured(success: bool, result: Dictionary) -> void:
 
 func _close() -> void:
 	panel.visible = false
+	get_tree().paused = _paused_before_open

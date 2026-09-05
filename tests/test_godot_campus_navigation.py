@@ -149,9 +149,11 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("var position: int = MARGIN + int(boundary) * CELL", generator)
 
-    def test_project_registers_navigation_without_replacing_legacy_main_scene(self):
+    def test_project_starts_campus_and_keeps_stable_user_storage_name(self):
         project = (GAME_DIR / "project.godot").read_text(encoding="utf-8")
-        self.assertIn('run/main_scene="res://scenes/debug/integration_test.tscn"', project)
+        self.assertIn('run/main_scene="res://scenes/campus/campus_collab_test.tscn"', project)
+        self.assertIn('config/name="project-a-0.2"', project)
+        self.assertIn('InterfaceSettings="*res://scenes/ui/interface_settings_ui.tscn"', project)
         self.assertIn('CampusNavigation="*res://scripts/world/campus_navigation.gd"', project)
 
     def test_reusable_trigger_and_anchor_scenes_exist(self):

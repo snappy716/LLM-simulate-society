@@ -147,7 +147,7 @@ offset_top = 310.0
 offset_right = 752.0
 offset_bottom = 354.0
 theme_override_colors/font_color = Color(0.85, 0.75, 0.45, 1)
-text = "应用后不会立即请求模型。\n仅在深夜结束、生成次日计划时使用。"
+text = "应用配置本身不调用模型。\n校园对话与 NPC 决策会使用当前接口。"
 
 [node name="SaveApply" type="Button" parent="Panel/Window"]
 offset_left = 402.0

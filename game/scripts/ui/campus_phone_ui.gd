@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const APPS := [
+	{"id": "settings", "name": "接口设置", "icon": "设", "color": Color("61748c")},
 	{"id": "saves", "name": "存读档", "icon": "档", "color": Color("557e91")},
 	{"id": "messages", "name": "校园通讯", "icon": "讯", "color": Color("35c96f")},
 	{"id": "courses", "name": "课程平台", "icon": "课", "color": Color("3988e8")},
@@ -111,6 +112,8 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if InterfaceSettings.is_open():
+		return
 	if event.is_action_pressed("toggle_phone"):
 		_set_open(not _opened)
 		get_viewport().set_input_as_handled()
@@ -586,6 +589,10 @@ func _build_forum_page() -> VBoxContainer:
 
 
 func _open_app(app_id: String, app_name: String) -> void:
+	if app_id == "settings":
+		_set_open(false)
+		InterfaceSettings.open_settings()
+		return
 	_app_title.text = app_name
 	var is_save := app_id == "saves"
 	_save_root.visible = is_save

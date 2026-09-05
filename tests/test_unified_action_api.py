@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from simulation.api.server import SimulationBridge
+from simulation.api.legacy_bridge import SimulationBridge  # Explicit retired-runtime fixture only.
 
 
 class UnifiedActionApiTests(unittest.TestCase):

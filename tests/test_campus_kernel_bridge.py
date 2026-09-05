@@ -61,9 +61,9 @@ class CampusKernelBridgeTests(unittest.TestCase):
             "source": "player",
         }
 
-    def test_side_by_side_snapshot_has_campus_places_and_persistent_cast(self):
+    def test_single_world_snapshot_has_campus_places_and_persistent_cast(self):
         campus = self.bridge.campus_snapshot()
-        legacy = self.bridge.snapshot()
+        self.assertFalse(hasattr(self.bridge, "world"))
         self.assertEqual(23, campus["view_version"])
         self.assertEqual(200, len(campus["population"]))
         self.assertEqual(6000, campus["population_summary"]["campus_total"])
@@ -72,7 +72,6 @@ class CampusKernelBridgeTests(unittest.TestCase):
         self.assertEqual(1, campus["action_economy"]["player"]["major_remaining"])
         self.assertEqual("ORIENTATION_OR_CLASS", campus["player"]["current_plan"]["activity_id"])
         self.assertEqual(201, sum(campus["schedule"]["current_planned_occupancy"].values()))
-        self.assertEqual(2, legacy["schema_version"])
 
     def test_strict_kernel_command_crosses_continuous_region_boundary(self):
         command = self.command("godot-road-1", "road_gate_to_student_life")

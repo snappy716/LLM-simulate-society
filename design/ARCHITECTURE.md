@@ -12,8 +12,9 @@
 
 2026-09-05 用户已允许删除旧城镇，原先“保留旧目录”的约束撤销。
 独立的 `project-a-0.2/`、`emergent_town_demo/` 和原 ZIP 已退出仓库，历史版本可从 Git 恢复。
-当前 `simulation/runtime.py`、旧快照握手和部分 Godot 共用组件仍有校园依赖，
-不是已经完成全仓库旧城镇下线；需按 `LEGACY_RETIREMENT.md` 先解耦再删除。
+当前正式入口只启动校园；旧桥接已隔离为仅供显式历史测试的 `simulation/api/legacy_bridge.py`，
+不再以旧快照握手或初始化旧世界。旧客户端、素材及部分共用内容仍待按
+`LEGACY_RETIREMENT.md` 裁剪，不宣称已完成全仓库旧城镇下线。
 
 ```text
 game/                         Godot 项目
@@ -37,8 +38,9 @@ production/                   发布和迁移检查
 Godot。`content` 与 `contracts` 是数据边界，供两端共同读取。
 
 领域实体、人口生成、关系网络、经济补给、事件日志和快照写入已经由对应
-模块实际负责。`simulation/runtime.py` 保留跨系统的回合编排；尚未单独拆出的
-复杂流程通过稳定边界转发，后续可逐个迁移，不需要改变 Godot API 或玩法规则。
+模块实际负责。校园由 `CampusKernelBridge` 注册统一事务处理器并协调时段，
+`WorldState` 是状态权威。`simulation/runtime.py` 只属于待退休的旧原型，
+不是校园的回合调度器；生产包启动不会导入它。
 
 物品与交易已经使用数据驱动内容和独立领域模型实现：`domain/inventory.py` 负责
 物品、背包、商店和回执，`systems/economy.py` 负责报价、不变量与原子结算，

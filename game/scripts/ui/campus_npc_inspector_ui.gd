@@ -144,6 +144,8 @@ func _process(_delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if InterfaceSettings.is_open():
+		return
 	if event.is_action_pressed("interact_npc"):
 		if _opened:
 			_set_open(false)

@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from simulation.api.server import SimulationBridge
+from simulation.api.legacy_bridge import SimulationBridge  # Explicit retired-runtime fixture only.
 from simulation.persistence import migrate_snapshot
 
 REPOSITORY_DIR = Path(__file__).resolve().parents[1]

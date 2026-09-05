@@ -1,4 +1,4 @@
-from simulation.runtime import main
+from simulation.api.server import main
 
 
 if __name__ == "__main__":

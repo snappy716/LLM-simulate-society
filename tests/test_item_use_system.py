@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 from simulation import runtime as sim
-from simulation.api.server import SimulationBridge
+from simulation.api.legacy_bridge import SimulationBridge  # Explicit retired-runtime fixture only.
 
 
 class ItemUseSystemTests(unittest.TestCase):

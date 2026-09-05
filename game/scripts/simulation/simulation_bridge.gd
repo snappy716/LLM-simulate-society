@@ -803,7 +803,7 @@ func _request_snapshot() -> void:
 	if busy or _request.get_http_client_status() != HTTPClient.STATUS_DISCONNECTED:
 		return
 	_pending_operation = "snapshot"
-	var error := _request.request(_base_url + "/snapshot")
+	var error := _request.request(_base_url + "/kernel/campus-snapshot")
 	if error != OK:
 		connected = false
 
@@ -871,13 +871,14 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
 			snapshot_updated.emit(snapshot)
 		action_completed.emit(bool(parsed.get("ok", false)), parsed)
 		return
-	snapshot = parsed
+	if not parsed.has("view_version") or not parsed.has("population") or not parsed.has("player"):
+		_finish_with_error("连接目标不是校园服务，请关闭旧服务后重试。")
+		return
+	campus_snapshot = parsed
 	connected = true
 	_retry_timer.stop()
-	connection_state_changed.emit(true, "模拟服务已连接")
-	snapshot_updated.emit(snapshot)
-	if campus_snapshot.is_empty():
-		refresh_campus_snapshot()
+	connection_state_changed.emit(true, "校园服务已连接")
+	campus_snapshot_updated.emit(campus_snapshot)
 	if operation == "step":
 		busy = false
 		advance_state_changed.emit(false)

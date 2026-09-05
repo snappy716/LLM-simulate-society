@@ -15,6 +15,8 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if InterfaceSettings.is_open():
+		return
 	if event.is_action_pressed("toggle_map"):
 		_set_open(not _opened)
 		get_viewport().set_input_as_handled()

@@ -1,5 +1,7 @@
-"""Emergent-town simulation package."""
+"""Campus simulation package; old prototype imports are explicit and lazy."""
 
-from simulation.runtime import Config, Phase, World
-
-__all__ = ["Config", "Phase", "World"]
+def __getattr__(name):
+    if name in {"Config", "Phase", "World"}:
+        from simulation import runtime
+        return getattr(runtime, name)
+    raise AttributeError(name)

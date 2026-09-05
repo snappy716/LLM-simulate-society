@@ -1,237 +1,83 @@
-# Project A
+# Project A · 校园社会模拟 Demo
 
-> 2026-09-05：用户已允许清理旧城镇。两个独立旧工程与原压缩包已退出仓库，可从 Git 历史恢复；校园当前使用 `game/` 和 `simulation/`。仍被校园借用的旧握手/运行时需先解耦，详见 [旧城镇下线清单](design/LEGACY_RETIREMENT.md)。以下早期原型介绍保留为历史说明，不代表已完成全量下线。
+当前开发入口：`game/project.godot`。运行项目直接进入校园，生产服务只创建一个校园世界，不再同时运行旧城镇。
 
-> 后续开发入口：[当前实施路线与进度审计](design/IMPLEMENTATION_ROADMAP.md)。先补齐新旧状态与功能 UI，再继续卡牌战斗；场景基于新版七张校园地图。下方早期原型介绍不代表当前功能完成度。
+执行顺序见 [实施路线](design/IMPLEMENTATION_ROADMAP.md)；当前正在按 [旧城镇下线清单](design/LEGACY_RETIREMENT.md) 清理剩余依赖，完成后继续 UI 统一。Demo 尚未整体完成。
 
-Project A 是一个正在开发中的 2D 等距视角城镇 RPG 原型，目标是把可探索的 Godot 游戏世界与持续运行的 LLM/规则驱动社会模拟结合起来。
+## 已可测试的内容
 
-当前版本重点验证以下流程：在等距城市地图中控制玩家、生成并显示 200 名具有稳定外观的 NPC、按时间段推进世界、查看 NPC 的状态与计划，以及将模拟人物放置到带有语义标签的城市区域中。
+- 七张校园地图、区域/入口通行、玩家移动和镜头、模块化人物、可见 NPC 行走与人物日志。
+- 200 名持久 NPC、课程/社团日程、关系互动、双层论坛、任务竞争、手机联系人和对话、行动小队。
+- 校园唯一钱包和库存、文字商店、物品转交/使用/装备、自主采购、私人报价和结算、商店付费次日补货。
+- 人物牌三排部署、抽弃牌、共享费用、出牌与基础效果；跨场生命/专注保留，战斗间治疗，表世界充分休息全部恢复。
+- 三个手动存档槽、覆盖备份和完整校园检查点恢复；通用 OpenAI 兼容接口、本地 Ollama、离线规则模式。
 
-> 当前仍为开发原型，并非完整游戏。校园双论坛、手机对话、社团与组队已有运行时；校园库存、钱包、文字商店、跨战斗生命值、战斗间治疗和表世界休息回满已接通。卡牌战斗尚缺敌方回合，校园 NPC 自主交易、完整调查成长与主线仍需贯通。
+完整敌方回合、调查与证据、知识成长、长期多步 LLM 计划、持续局势和四阶段主线仍需实现。当前规则模拟和局部 LLM 互动不能等同于已经实现无限自由的自主社会。
 
-## 校园 Demo 目标架构
+## 启动与操作
 
-项目下一阶段将原型迁移为 28 天的大型校园社会模拟 RPG。玩家白天进行校园生活、关系、调查与成长，夜间可以进入受污染月光影响的“夜相”；约 200 名持久化 NPC 即使没有玩家和 LLM 也能交易、接取任务、组织行动并改变世界，约 20 个深度认知槽位用于当前重要人物，其中玩家最多永久觉醒 6 名自己选择的随机 NPC。
+1. 保持 `game/`、`simulation/`、`content/` 为同一仓库下的兄弟目录。
+2. 安装 Godot 4.7 系列及可从 PATH 调用的 Python；Windows 使用 `python`，macOS/Linux 使用 `python3`。
+3. 在 Godot 导入 `game/project.godot`，运行项目（F5），无需先打开旧城镇场景。
+4. 按 T 打开手机，可访问存读档、接口设置、商城、交易、日志相关人物功能、社团、小队与论坛。
 
-- [Demo 世界、玩法与主线大纲](design/CAMPUS_WORLD_AND_GAMEPLAY_DESIGN.md)
-- [Godot/Python 目标技术架构与迁移顺序](design/CAMPUS_DEMO_ARCHITECTURE.md)
-- [第一阶段程序底座与验收结果](design/PROGRAM_FOUNDATION.md)
-- [校园地点、人口与 Godot 导航灰盒](design/CAMPUS_MAP_AND_POPULATION.md)
-- [表世界论坛与玩家/NPC 任务竞争](design/CAMPUS_FORUM_TASKS.md)
-- [任务关系、社团声望与后续任务链](design/CAMPUS_SOCIAL_CONSEQUENCES.md)
-- [十二核心社团运行系统](design/CAMPUS_CLUB_RUNTIME.md)
-- [关系邀请与行动小队运行系统](design/CAMPUS_PARTY_RUNTIME.md)
-- [当前程序实现 To Do](design/IMPLEMENTATION_TODO.md)
-- [NPC 日程与人物日志设计](design/NPC_ACTIVITY_LOG_SYSTEM.md)
-- [人物牌与三排卡牌战斗框架](design/CARD_COMBAT_FRAMEWORK.md)
-- [人物牌与三排部署运行时](design/CAMPUS_COMBAT_DEPLOYMENT_RUNTIME.md)
-- [卡牌战斗回合底座](design/CAMPUS_COMBAT_ROUND_RUNTIME.md)
-- [卡牌出牌与效果运行时](design/CAMPUS_COMBAT_ACTION_RUNTIME.md)
+| 操作 | 入口 |
+| --- | --- |
+| 移动 | WASD / 方向键 |
+| 校园地图 | M |
+| 手机 | T |
+| 附近 NPC 交互 | E；点击人物查看信息 |
+| API 设置 | 手机“接口设置”；无其他面板时 Esc |
+| 存读档 | 手机“存读档” |
+| 推进时段 | 场景中的“结束当前时段” |
 
-本分支先建立可测试的校园领域边界、数据内容和契约，现有 Godot 地图、人物动画、物品交易与旧模拟仍可运行。后续按系统逐项接入，不进行一次性破坏性重写。
+上午、下午、晚上、凌晨四时段不变。聊天、购物、吃饭和普通移动不消耗主要行动。普通休息与回满资源的充分休息仍按已有规则区分。
 
-## 当前功能
+## LLM 与存档
 
-- 64×32 等距 Tile 城市地图与临时 Terrain。
-- 玩家移动、碰撞和镜头跟随。
-- 分层人物换装：皮肤、头发、衣服、裤装、鞋和武器。
-- `idle` 与 `run` 分层动画。
-- 基于 `npc_id + world_seed` 的确定性 NPC 外观。
-- 200 名 NPC 的职业、关系、记忆、愿望、计划和场景位置。
-- Morning、Afternoon、Evening、Late Night 四时段世界推进。
-- Q 键人物名册、人物详情、idle 第一帧预览与快速定位。
-- M 键世界地图、玩家位置显示、缩放和平移。
-- Godot 内置地图矫正模式，可同步修改正交蓝图和游戏 Tile。
-- Esc 键 LLM 接口配置面板。
-- 离线规则、DeepSeek、DeepSeek 兼容服务和本地 Ollama。
-- 21 个公共场景与私人住宅区域的地图语义映射。
-- 36 种故事用途物品、5 家文字商店、玩家/NPC 背包与统一买卖结算。
+启动默认离线，不因本地旧配置或环境里存在 API Key 就自动启用模型。玩家在接口设置中填写 Base URL、模型名和自己的 Key，保存并应用后，校园对话和 NPC 决策才会使用该提供器。应用配置本身不调用模型；开发测试不消耗付费 API。玩家聊天不增加硬次数上限。
 
-## 项目结构
+接口配置保存在本机 `user://llm_interfaces.cfg`；手动存档位于 `user://campus_saves`，不包含 API Key。本次保留原 `config/name="project-a-0.2"` 作为用户数据路径兼容标识，避免改变名称后找不到既有配置和存档；它不表示仍启动旧城镇。
 
-```text
-ProjectA-GitHub/
-├── game/                     # 当前 Godot 4 项目入口
-├── simulation/               # 领域、行动、系统、认知、叙事、存档与 API
-├── content/                  # 地点、NPC、组织、物品、行动与故事数据
-├── contracts/                # Godot/Python JSON Schema
-├── tests/                    # 校园回归、契约及仍使用的兼容功能测试
-├── design/                   # 架构设计
-└── production/               # 发布验证清单
+读档使用现有区域安全落点，不保存精确像素站位。只支持已知的有限校园迁移，未知旧档拒绝强行转换，详见 [存读档边界](design/CAMPUS_SAVE_RUNTIME.md)。
+
+## 服务与验证
+
+通常 Godot 自动启动本地服务；手动启动可在仓库根目录运行：
+
+```sh
+python3 -m simulation --port 8765
 ```
 
-新开发入口为 `game/` 与 `simulation/`。原版目录已移除，恢复请使用 Git 历史；校园及仍在使用的兼容功能继续自动化测试。详细依赖规则见 [`design/ARCHITECTURE.md`](design/ARCHITECTURE.md)。
+Windows 将 `python3` 换成 `python`。服务已手动启动时，为 Godot 设置 `GODOT_SIM_EXTERNAL_SERVER=1`，端口可由 `GODOT_SIM_PORT` 指定。
 
-## 环境要求
+正式接口包括 `/health`、`/configure`、`/kernel/campus-snapshot`、`/kernel/command`、`/kernel/saves` 与人物日志。旧城镇的 `/snapshot`、`/step`、`/trade`、`/use-item`、`/action` 返回 410，不自动转译为校园操作。
 
-- Godot 4.7 或兼容的 Godot 4.x 版本。
-- Python 3.10 或更高版本。
-- Windows、Linux 或 macOS；Python 命令需要能从系统 PATH 中调用。
-- 可选：Ollama，或可用的 DeepSeek/兼容接口。
-
-离线规则模式不需要 API Key，也不会访问外部 LLM。
-
-## 快速开始
-
-1. 克隆或下载仓库。
-2. 确认 `game` 与 `simulation` 保持在仓库根目录。
-3. 确认终端能够执行：
-
-   ```text
-   python --version
-   ```
-
-4. 使用 Godot 打开：
-
-   ```text
-   game/project.godot
-   ```
-
-5. 运行项目。主场景已配置为：
-
-   ```text
-   res://scenes/debug/integration_test.tscn
-   ```
-
-Godot 第一次打开时会导入 PNG 人物图集和地图资源，首次加载会比后续运行稍慢。
-
-## 游戏操作
-
-| 操作 | 按键 |
-|---|---|
-| 移动 | `WASD` 或方向键 |
-| 随机更换玩家外观 | `R` |
-| 打开/关闭世界地图 | `M` |
-| 打开/关闭 NPC 名册 | `Q` |
-| 查看附近 NPC | 靠近后按 `E` |
-| 打开/关闭物品与交易面板 | `I` |
-| 打开/关闭接口面板 | `Esc` |
-| 进入/退出地图矫正 | 地图打开时按 `E` |
-
-世界时间通过画面上的“下一时间段”按钮推进。
-
-### NPC 人物日志
-
-靠近 NPC 后按 `E` 打开人物面板，可切换“人物概况”“日程记录”和“重要经历”。
-日程页显示玩家已知的最近七日实际活动，经历页显示任务、关系、组织和后续战斗等
-重要事件；校内公开记录、亲眼所见与传闻会标明不同来源，未知秘密不会显示。
-人物日志按需分页读取，不会把 200 名 NPC 的完整历史放入地图快照。
-
-### 物品与交易
-
-按 `I` 打开文字灰盒交易面板。左侧选择商店，中间查看库存、营业状态与买卖价，
-右侧查看玩家资金、负重和背包。当前按钮每次交易一件物品；打烊、资金不足、
-库存不足、超重或合法性不符时不会发生部分扣款。
-
-物品与商店数据位于 `content/items/`，详细规则见
-[`design/ITEMS_AND_TRADING.md`](design/ITEMS_AND_TRADING.md)。
-
-### 世界地图
-
-- 鼠标滚轮或界面按钮：缩放地图。
-- 鼠标右键/中键拖动：平移地图。
-- 地图上的标记显示玩家当前位置。
-
-### 地图矫正模式
-
-- 左键绘制当前选择的地图类型。
-- `Ctrl+Z`：撤销。
-- `Ctrl+Y`：重做。
-- `Ctrl+S`：保存，并同步更新正交蓝图和游戏地图。
-
-矫正前建议单独备份地图数据。协作时尽量避免多人同时修改同一份地图布局文件。
-
-## NPC 与世界时间
-
-按 `Q` 打开人物名册后，可以：
-
-- 浏览所有模拟 NPC。
-- 查看人物状态、职业、记忆、愿望和当前计划。
-- 查看由其分层外观组成的 idle 第一帧。
-- 点击“到达这个人的位置”，传送到该 NPC 附近。
-
-每名 NPC 会根据当前时段计划中的 `scene_id` 出现在对应地图区域。当前版本只改变人物出现位置，暂未实现 NPC 在地图上的连续动作和交互动画。
-
-## LLM 接口
-
-按 `Esc` 打开接口配置面板，可以新建并保存多个本地配置：
-
-- `规则模式（离线）`：完全本地运行。
-- `DeepSeek`：使用 DeepSeek API。
-- `DeepSeek兼容接口`：连接采用同类请求格式的服务。
-- `Ollama（本地）`：连接本机 Ollama 模型。
-
-点击“保存并应用”只会切换接口，不会立即产生外部请求。所选接口会从下一个校园时段开始，仅在预算允许时用于深度 NPC 的合法候选选择。
-
-默认仍为离线规则模式。当前硬限制为每时段最多 4 次、每游戏日最多 12 次、每日预估最多 24000 Token、单次输出最多 160 Token；接口异常或返回非法候选时自动回退规则决策。正式接口还必须填写服务方提供的 Base URL。
-
-接口配置保存在 Godot 的：
-
-```text
-user://llm_interfaces.cfg
-```
-
-API Key 不会写入项目仓库，但该本地配置文件本身没有加密。不要提交密钥、`.env` 或 `config.local.json`。
-
-模型名称与认知安全边界见 [`design/NPC_COGNITION_LLM_RUNTIME.md`](design/NPC_COGNITION_LLM_RUNTIME.md)。
-
-详细说明见 [`game/SIMULATION_INTEGRATION.md`](game/SIMULATION_INTEGRATION.md)。
-
-## 单独运行世界模拟
-
-在仓库根目录执行离线模拟：
-
-```powershell
-python3 -m simulation --days 3 --llm rule
-```
-
-运行测试：
-
-```powershell
+```sh
 python3 -m unittest discover -s tests -v
+python3 -m tests.run_campus_trade_soak --days 7 --seed 42
 ```
 
-模拟产生的快照、人物日志和事件追踪会写入 `runs/`，该目录中的运行结果默认不提交 Git。
+Godot 启动验收脚本：`game/tools/test_campus_startup_flow.gd`。测试时用独立 `GODOT_SIM_PORT`、`GODOT_SIM_SAVE_DIR` 及 `GODOT_SIM_SETTINGS_PATH`，不要覆盖自己的存档/接口文件。完整结果见 [验收记录](production/VERIFICATION.md)。Mac 图形测试不替代 Windows 实机发布验收。
 
-## 数据与确定性
-
-- 相同的世界种子与 NPC ID 会产生相同人物外观。
-- NPC 的公共场景到城市区域映射位于 `game/data/simulation/scene_regions.json`。
-- 人物美术目录位于 `game/data/appearance_catalog.json`。
-- 地图逻辑布局与人工修正数据位于 `game/data/maps/`。
-
-修改数据结构时，应同步检查 Godot 桥接脚本与 Python 快照格式。
-
-## 美术素材与许可
-
-本协作仓库包含游戏运行所需的人物分层动画素材。项目所有者已确认素材作者允许项目协作者使用和通过本项目仓库共享。使用者仍须阅读并遵守：
+## 架构与历史
 
 ```text
-game/assets/characters/gandalf_hardcore/READ ME.txt
+game/             Godot 场景、输入、UI 与表现
+simulation/       权威领域、行动、系统、认知、叙事、存档、API
+content/          校园内容与待裁剪的共用数据
+contracts/        请求、事件与投影 Schema
+tests/            校园测试及剩余显式兼容测试
+design/           世界观、架构和执行路线
+production/       验证与发布记录
 ```
 
-不要把人物素材从本项目中单独提取、重新打包、转售或用于原许可禁止的用途。
+旧独立目录 `emergent_town_demo/`、`project-a-0.2/` 和原 ZIP 已删除，可从 Git 历史恢复。旧运行时和旧 Godot 工具尚未全部物理删除；`simulation/api/legacy_bridge.py` 仅供尚未退休的历史功能测试显式导入，不挂载生产 HTTP。七图及校园使用的人物素材继续保留。
 
-仅用于制作地图时参考、且游戏运行不需要的第三方地图截图未包含在仓库中。确定性地图蓝图、道路数据和临时 Tile 已保留。
+- [世界与玩法大纲](design/CAMPUS_WORLD_AND_GAMEPLAY_DESIGN.md)
+- [目标架构](design/CAMPUS_DEMO_ARCHITECTURE.md)
+- [卡牌战斗框架](design/CARD_COMBAT_FRAMEWORK.md)
+- [人物日志](design/NPC_ACTIVITY_LOG_SYSTEM.md)
+- [素材来源与许可](game/THIRD_PARTY_ASSETS.md)
 
-## 协作约定
-
-- 不提交 API Key、个人配置和本地接口文件。
-- 不提交 `.godot/`、`__pycache__/`、`.import` 和运行日志。
-- 新增 NPC 字段时，同时更新 Python 快照输出、Godot bridge 和人物详情 UI。
-- 新增地图语义区域时，同时更新地图布局和 `scene_regions.json`。
-- 提交前至少运行 Python 测试，并在 Godot 中启动一次主测试场景。
-
-## 当前开发方向
-
-- 约束式校园 NPC 生成、六项属性、人格与多维关系。
-- 表世界论坛、NPC/玩家公平任务竞争、原子锁定与社会后果（第一版已实现）。
-- 八学院能力、十二核心社团、课程和校园生活。
-- 20 个 LLM 深度槽位与玩家最多 6 人的记名/觉醒系统。
-- 夜相、污染、三排人物部署卡牌回合制与 NPC 后台战斗。
-- 28 天四阶段主线、知识理解、动态参与者与多结局。
-
-## 版本
-
-当前开发入口：`game/` + `simulation/`；原独立工程已退出仓库，历史版本仍可从 Git 恢复。当前运行时遗留依赖按 `design/LEGACY_RETIREMENT.md` 分批解耦。
+开发分支使用 `codex/`，每批测试后提交；不自动合并 main，不把私人配置、API Key、运行数据或截图上传仓库。

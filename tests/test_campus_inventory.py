@@ -204,14 +204,14 @@ class CampusInventoryTests(unittest.TestCase):
             mutate(state)
             self.assertTrue(list(campus_inventory_invariant(state)))
 
-    def test_bridge_economy_command_does_not_touch_old_world(self):
+    def test_bridge_economy_command_needs_no_old_world(self):
         from simulation.api.server import SimulationBridge
         bridge = SimulationBridge()
-        old = bridge.world.player_wealth
+        self.assertFalse(hasattr(bridge, "world"))
         command = self.command("USE_ITEM")
         response = bridge.campus.execute(command.to_dict())
         self.assertTrue(response["ok"])
-        self.assertEqual(old, bridge.world.player_wealth)
+        self.assertFalse(hasattr(bridge, "world"))
         self.assertEqual(1, response["snapshot"]["economy"]["inventory"]["quantities"]["bread_loaf"])
 
 
