@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/campus_item_command.schema.json",
+  "title": "Campus authoritative item command",
+  "type": "object",
+  "description": "POST /kernel/command. Response snapshot.economy is additive to campus view v23. Prices are server derived; old /trade and /use-item remain legacy-only.",
+  "allOf": [
+    {"$ref":"simulation_command.schema.json"},
+    {
+      "properties":{
+        "action_id":{"enum":["BUY_ITEM","SELL_ITEM","USE_ITEM","GIVE_ITEM","DROP_ITEM","PICK_UP_ITEM","EQUIP_ITEM","UNEQUIP_ITEM"]},
+        "parameters":{
+          "type":"object",
+          "required":["item_id"],
+          "properties":{
+            "item_id":{"type":"string","minLength":1},
+            "quantity":{"type":"integer","minimum":1,"maximum":999},
+            "shop_id":{"type":"string"},
+            "target_id":{"type":"string"}
+          }
+        }
+      }
+    }
+  ]
+}

@@ -45,6 +45,7 @@ def build_kernel_checkpoint(
     content_manifest: Optional[Dict[str, Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     state.require_valid()
+    _validate_campus_inventory(state)
     if state.chronicles:
         from simulation.systems.chronicles import validate_all_chronicles
         chronicle_errors = list(validate_all_chronicles(state))
@@ -110,6 +111,7 @@ def load_kernel_checkpoint(
         raise CheckpointError(f"invalid checkpoint payload: {exc}") from exc
     if state.master_seed != rng.master_seed:
         raise CheckpointError("checkpoint world and RNG master seeds differ")
+    _validate_campus_inventory(state)
     if state.content_version != content_version:
         raise CheckpointError("checkpoint world and content versions differ")
     if state.chronicles:
@@ -124,6 +126,16 @@ def load_kernel_checkpoint(
     if not isinstance(manifest, dict):
         raise CheckpointError("content manifest must be an object")
     return LoadedCheckpoint(state=state, rng=rng, content_manifest=manifest)
+
+
+def _validate_campus_inventory(state: WorldState) -> None:
+    # Generic kernel fixtures and pre-campus checkpoints keep their own shapes.
+    if "schema_version" not in state.inventories:
+        return
+    from simulation.systems.campus_inventory import campus_inventory_invariant
+    errors = list(campus_inventory_invariant(state))
+    if errors:
+        raise CheckpointError("invalid campus inventory: " + "; ".join(errors))
 
 
 __all__ = [

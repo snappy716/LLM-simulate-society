@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "currency": "元",
+  "max_weight": 20,
+  "items": [
+    {"id":"bread_loaf","name":"全麦面包","description":"校园超市出售的便携食品。","food_reduction":25},
+    {"id":"dried_meat","name":"袋装肉干","description":"可以随身携带的零食。","food_reduction":18},
+    {"id":"restaurant_meal","name":"食堂套餐","description":"一份普通的校园食堂饭菜。","food_reduction":45},
+    {"id":"bandage_roll","name":"医用绷带","description":"用于处理外伤；须先接通持续伤势与治疗机制。"},
+    {"id":"antiseptic_bottle","name":"消毒液","description":"伤口清洁用品；须先接通伤势与感染机制。"},
+    {"id":"blank_notebook","name":"随身笔记本","description":"调查用品；调查笔记联动尚未接通。"},
+    {"id":"makeup_kit","name":"舞台化妆盒","description":"社团演出用品；身份伪装检定尚未接通。"},
+    {"id":"leather_gloves","name":"工作手套","description":"可装备到手部；劳动与战斗加成后续接入。","slot":"hands"},
+    {"id":"padded_coat","name":"加厚外套","description":"可装备到身体；防护结算后续接入。","slot":"body"}
+  ],
+  "starter_items":{"bread_loaf":2,"blank_notebook":1},
+  "profession_items":{"medical_staff":{"bandage_roll":2,"antiseptic_bottle":1},"maintenance_staff":{"leather_gloves":1}},
+  "protected_items":{"medical_staff":{"bandage_roll":1,"antiseptic_bottle":1},"maintenance_staff":{"leather_gloves":1}},
+  "shops":[
+    {"id":"campus_market","name":"校园超市","location_id":"supermarket_sales_floor","cash":3000,"sell_percent":50,"stock":{"bread_loaf":200,"dried_meat":80,"blank_notebook":100,"makeup_kit":8,"leather_gloves":30,"padded_coat":15}},
+    {"id":"campus_pharmacy","name":"校园药房","location_id":"hospital_pharmacy","cash":2000,"sell_percent":40,"stock":{"bandage_roll":100,"antiseptic_bottle":60}},
+    {"id":"campus_canteen_counter","name":"食堂窗口","location_id":"canteen_dining_hall","cash":3000,"sell_percent":0,"stock":{"restaurant_meal":300}}
+  ]
+}

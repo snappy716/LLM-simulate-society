@@ -19,6 +19,7 @@ var _home: Control
 var _app_page: VBoxContainer
 var _app_title: Label
 var _content: RichTextLabel
+var _inventory_root: VBoxContainer
 var _time_label: Label
 var _opened := false
 var _forum_root: VBoxContainer
@@ -210,6 +211,9 @@ func _build_app_page() -> VBoxContainer:
 	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_content.add_theme_font_size_override("normal_font_size", 15)
 	page.add_child(_content)
+	_inventory_root = preload("res://scripts/ui/campus_inventory_panel.gd").new()
+	_inventory_root.visible = false
+	page.add_child(_inventory_root)
 	_forum_root = _build_forum_page()
 	_forum_root.visible = false
 	_forum_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -571,7 +575,11 @@ func _open_app(app_id: String, app_name: String) -> void:
 	var is_party := app_id == "party"
 	var is_combat := app_id == "combat"
 	var is_message := app_id == "messages"
-	_content.visible = not is_forum and not is_club and not is_party and not is_combat and not is_message
+	var is_inventory := app_id == "market"
+	_inventory_root.visible = is_inventory
+	if is_inventory:
+		_inventory_root.call("refresh")
+	_content.visible = not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory
 	_forum_root.visible = is_forum
 	_club_root.visible = is_club
 	_party_root.visible = is_party
@@ -616,11 +624,11 @@ func _app_text(app_id: String) -> String:
 		var activity: Dictionary = player.get("current_activity", {})
 		return "[b]当前位置[/b]\n%s\n\n[b]最近活动[/b]\n%s\n%s" % [place.get("name", place_id), activity.get("activity_id", "暂无"), activity.get("result", "")]
 	if app_id == "wallet":
-		return "[b]账户概览[/b]\n\n校园生活资金：%d\n\n交易仍使用现有物品与交易内核，后续把商城按钮直接接到商品目录。" % int(player.get("wealth", 0))
+		return "[b]账户概览[/b]\n\n校园生活资金：%d 元\n\n余额与活动、购物使用同一账户。\n打开校园商城可查看背包、到店交易或操作物品。" % int(player.get("wealth", 0))
 	if app_id == "health":
 		return "[b]需求[/b]\n%s\n\n[b]情绪[/b]\n%s" % [_dictionary_lines(player.get("needs", {})), _dictionary_lines(player.get("emotions", {}))]
 	if app_id == "market":
-		return "[b]校园商城[/b]\n\n物品、商店库存、价格和原子结算已经存在。\n本页目前是手机入口，下一阶段把文字交易面板嵌入此处。"
+		return "背包与校园商店已接入校园权威状态；请到店交易。"
 	return "[b]校园通讯[/b]\n\n联系人和持久聊天记录已经接入。"
 
 

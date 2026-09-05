@@ -24,6 +24,7 @@ class ContentSource:
 
 
 DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
+    ContentSource("items/campus_economy.json", "configuration", singleton_id="campus_economy"),
     ContentSource("items/catalog.json", "item", "items"),
     ContentSource("items/uses.json", "item_use", "uses", id_field="item_id"),
     ContentSource("items/shops.json", "shop", "shops"),
@@ -172,6 +173,24 @@ class ContentRegistry:
         campus_region_ids = set(self.ids("campus_region"))
         campus_location_ids = set(self.ids("campus_location"))
         campus_node_ids = campus_region_ids | campus_location_ids
+        campus_economy = self.all("configuration").get("campus_economy")
+        if campus_economy:
+            campus_items = [entry.get("id") for entry in campus_economy.get("items", [])]
+            if len(set(campus_items)) != len(campus_items) or not set(campus_items).issubset(item_ids):
+                errors.append("campus economy references duplicate or unknown items")
+            shop_ids = set()
+            for shop in campus_economy.get("shops", []):
+                if shop.get("id") in shop_ids or shop.get("location_id") not in campus_node_ids:
+                    errors.append("campus economy has duplicate shop or unknown location")
+                shop_ids.add(shop.get("id"))
+                if type(shop.get("cash")) is not int or shop["cash"] < 0:
+                    errors.append("campus shop cash must be a non-negative integer")
+                if type(shop.get("sell_percent")) is not int or not 0 <= shop["sell_percent"] <= 100:
+                    errors.append("campus shop sell percent must be in 0..100")
+                if not set(shop.get("stock", {})).issubset(campus_items):
+                    errors.append("campus shop stock references unavailable campus item")
+                if any(type(qty) is not int or qty < 1 for qty in shop.get("stock", {}).values()):
+                    errors.append("campus shop stock must contain positive integers")
         template_ids = set(self.ids("interior_template"))
         for location in self.all("campus_location").values():
             if location.get("region_id") not in campus_region_ids:

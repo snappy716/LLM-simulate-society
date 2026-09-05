@@ -13,6 +13,19 @@
 - computer-use 手动打开地图列表并进入图书馆、运动场，确认真实图形渲染与地面落点。未把截图、缓存或私人配置纳入提交。
 - 未花费真实 LLM 额度；未做 Windows 实机验收；未宣称物品已接入校园或敌方战斗已完成。
 
+## 2026-09-05 / 路线第 2 步 2A 第一批：校园库存、到店交易与物品操作
+
+- 起始提交 `9b28719`；仅改 `codex/campus-demo-architecture`，不合并 main，不删除旧工程。用户未跟踪的 `design/WORLD_SETTING_LOST_CITY.md` 不纳入提交。
+- 新增 `tests/test_campus_inventory.py` 22 项：单一余额、201 份库存、资源守恒、重复命令幂等、旧修订拒绝、客户端价格不可信、非法数量、异地/关店/跨世界层拒绝、余额/库存/负重不足回滚、食物真实需求效果、装备保护、职业工具保留、转交/地面拾取、战斗锁、投影隔离、检查点续接与旧世界不变。
+- 最终全局 `python3 -m unittest discover -s tests -q`：390 项通过，438.071 秒（含既有校园七日无人推进）；旧目录 46 项通过。中间一轮发现契约根类型声明和精简内容包兼容问题，修复后相关 43 项及最终全局均通过。没有用多日无交易推进冒充 NPC 自主交易测试。
+- Godot 4.7.2 导入通过；组件、导航、七图协作、卡牌回合分别输出 `CAMPUS_COMPONENTS_OK` / `CAMPUS_NAVIGATION_FLOW_OK` / `CAMPUS_COLLAB_FLOW_OK` / `CAMPUS_COMBAT_ROUND_FLOW_OK`。
+- 新 `game/tools/test_campus_inventory_flow.gd` 在 headless 与真实 Metal 图形模式均输出 `CAMPUS_INVENTORY_FLOW_OK`。覆盖校门→生活区→超市入口→卖场、购买、食用、放下/拾取、钱包同步、不扣时段和主要行动。
+- 使用 computer-use 操作真实 Godot 手机：从拾取切回购买，点击购买后余额 496→492、面包 2→3；用同实例校园快照核对仍为第 1 天上午、minute=0、major_remaining=1。修复初测的 GDScript 类型推断与室外区域营业字段差异；价格调整到详情顶部，避免小窗口中藏在描述下方。
+- 测试实例使用独立 `GODOT_SIM_PORT=19001...19011`；新专项有 90 秒失败超时，图形保留模式支持 `-- --keep-open`。
+- `compileall` 和 `git diff --check` 通过；未调用真实付费 LLM；未做 Windows 实机验收。图形截图、私人设置、密钥不提交。
+- 范围限制：药品/伪装/调查用品尚不产生效果；装备不宣称已有防护加成；NPC 私人报价与自动交易仍待接入；没有玩家存读档 UI。**第 2 步整体仍在进行中。**
+- 新待确认前置：跨战斗持续生命值/伤势的规则；确认后继续身体状态与治疗，再继续 NPC 自主交易，最后验收整个第 2 步。
+
 ## 通用验收与历史记录
 
 - 旧版测试：`cd emergent_town_demo && python3 -m unittest discover -s tests -v`

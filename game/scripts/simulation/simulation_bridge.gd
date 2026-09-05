@@ -22,6 +22,7 @@ signal campus_social_proposal_completed(success: bool, result: Dictionary, targe
 signal campus_social_proposal_response_completed(success: bool, result: Dictionary, proposal_id: String)
 signal campus_night_world_operation_completed(success: bool, result: Dictionary, action_id: String)
 signal campus_npc_chronicle_loaded(success: bool, result: Dictionary, npc_id: String, filter_name: String)
+signal campus_inventory_operation_completed(success: bool, result: Dictionary)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
 
@@ -414,6 +415,29 @@ func operate_campus_party(action_id: String, target_id: String = "") -> void:
 		_campus_pending_party_target_id = ""
 		_campus_pending_party_action = ""
 		campus_party_operation_completed.emit(false, {"error": "无法发送组队请求：%s" % error}, action_id, target_id)
+
+
+func operate_campus_inventory(action_id: String, parameters: Dictionary = {}) -> void:
+	if _campus_busy or not connected or campus_snapshot.is_empty():
+		campus_inventory_operation_completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他行动"})
+		return
+	_campus_busy = true
+	_campus_pending_operation = "inventory"
+	_campus_command_counter += 1
+	var clock: Dictionary = campus_snapshot.get("clock", {})
+	var command := {
+		"command_id": "godot-inventory-%d-%d" % [Time.get_ticks_usec(), _campus_command_counter],
+		"actor_id": "player", "action_id": action_id, "target_ids": [],
+		"parameters": parameters.duplicate(true),
+		"expected_world_revision": int(campus_snapshot.get("revision", 1)),
+		"issued_day": int(clock.get("day", 1)), "issued_phase": String(clock.get("phase", "morning")),
+		"issued_minute": int(clock.get("minute", 0)), "source": "player",
+	}
+	var error := _campus_request.request(_base_url + "/kernel/command", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, JSON.stringify(command))
+	if error != OK:
+		_campus_busy = false
+		_campus_pending_operation = ""
+		campus_inventory_operation_completed.emit(false, {"error": "无法发送校园物品请求：%s" % error})
 
 
 func operate_campus_combat(action_id: String, parameters: Dictionary = {}) -> void:
@@ -890,7 +914,9 @@ func _on_campus_request_completed(
 	_campus_busy = false
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if response_code != 200 or not parsed is Dictionary:
-		if operation == "traverse":
+		if operation == "inventory":
+			campus_inventory_operation_completed.emit(false, parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"})
+		elif operation == "traverse":
 			var error_payload: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
 			campus_traversal_completed.emit(false, error_payload, passage_id)
 		elif operation == "advance_phase":
@@ -938,7 +964,9 @@ func _on_campus_request_completed(
 	if updated_snapshot is Dictionary:
 		campus_snapshot = updated_snapshot
 		campus_snapshot_updated.emit(campus_snapshot)
-	if operation == "advance_phase":
+	if operation == "inventory":
+		campus_inventory_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
+	elif operation == "advance_phase":
 		campus_phase_advanced.emit(bool(parsed.get("ok", false)), parsed)
 	elif operation == "fast_travel":
 		campus_fast_travel_completed.emit(bool(parsed.get("ok", false)), parsed, destination_id)
