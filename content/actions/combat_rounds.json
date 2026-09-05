@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "deck_size_per_actor": 8,
+  "cards_drawn_per_actor": 2,
+  "initial_command_points": 3,
+  "command_point_growth_per_round": 1,
+  "maximum_command_points": 6,
+  "required_generic_card_ids": ["general:brace", "general:center"],
+  "fallback_card_id": "general:steady_action",
+  "generic_card_blueprints": [
+    {
+      "card_id": "general:brace",
+      "name": "稳固架势",
+      "source_ability_id": "basic_combat_training",
+      "actor_bound": true,
+      "card_type": "defense",
+      "command_cost": 1,
+      "target": "self_or_ally",
+      "range_pattern": "any_ally",
+      "base_power": 7,
+      "effect_ids": ["grant_guard"]
+    },
+    {
+      "card_id": "general:center",
+      "name": "调整呼吸",
+      "source_ability_id": "basic_combat_training",
+      "actor_bound": true,
+      "card_type": "support",
+      "command_cost": 1,
+      "target": "self_or_ally",
+      "range_pattern": "any_ally",
+      "base_power": 5,
+      "effect_ids": ["restore_focus"]
+    },
+    {
+      "card_id": "general:steady_action",
+      "name": "稳定行动",
+      "source_ability_id": "basic_combat_training",
+      "actor_bound": true,
+      "card_type": "technique",
+      "command_cost": 1,
+      "target": "enemy",
+      "range_pattern": "any_enemy",
+      "base_power": 6,
+      "effect_ids": ["deal_technique"]
+    }
+  ]
+}

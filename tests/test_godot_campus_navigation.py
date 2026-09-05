@@ -41,7 +41,11 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn('"START_BATTLE_PREPARATION"', phone)
         self.assertIn('"DEPLOY_COMBAT_CHARACTER"', phone)
         self.assertIn('"CONFIRM_BATTLE_DEPLOYMENT"', phone)
+        self.assertIn('"START_CARD_COMBAT"', phone)
+        self.assertIn('"END_COMBAT_ROUND"', phone)
+        self.assertIn("共享指令点", phone)
         self.assertIn("锁定后本场不能替补", phone)
+        self.assertTrue((GAME_DIR / "tools/test_campus_combat_round_flow.gd").is_file())
         self.assertIn("约定稍后见面", phone)
         self.assertIn("正式提出", phone)
 

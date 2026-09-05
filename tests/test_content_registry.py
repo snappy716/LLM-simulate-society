@@ -33,6 +33,7 @@ class ContentRegistryTests(unittest.TestCase):
         self.assertIn("campus_decisions", registry.ids("configuration"))
         self.assertIn("campus_interactions", registry.ids("configuration"))
         self.assertIn("party_policy", registry.ids("configuration"))
+        self.assertIn("combat_rounds", registry.ids("configuration"))
 
     def test_content_version_is_reproducible_and_manifest_is_portable(self):
         first = ContentRegistry.load_default(REPOSITORY_DIR / "content")

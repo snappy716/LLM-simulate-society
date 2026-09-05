@@ -123,6 +123,7 @@ from simulation.systems import (  # noqa: E402
     campus_combat_invariant,
     install_campus_combat,
     load_combat_deployment_policy,
+    load_combat_round_policy,
     make_campus_combat_handler,
 )
 
@@ -164,7 +165,8 @@ class CampusKernelBridge:
         night_world_policy = load_campus_night_world_policy(registry)
         install_campus_night_world(state, night_world_policy)
         combat_policy = load_combat_deployment_policy(registry)
-        install_campus_combat(state, combat_policy)
+        combat_round_policy = load_combat_round_policy(registry)
+        install_campus_combat(state, combat_policy, combat_round_policy)
         self.cognition_runtime = CognitionRuntime(cognition_policy)
         activity_definitions = load_campus_activity_definitions(registry)
         activity_handler = make_campus_activity_handler(
@@ -357,7 +359,7 @@ class CampusKernelBridge:
         night_world_handler = make_campus_night_world_handler(night_world_policy)
         for action_id in NIGHT_WORLD_ACTION_IDS:
             self.kernel.register_handler(action_id, night_world_handler)
-        combat_handler = make_campus_combat_handler(combat_policy, graph)
+        combat_handler = make_campus_combat_handler(combat_policy, combat_round_policy, graph)
         for action_id in COMBAT_ACTION_IDS:
             self.kernel.register_handler(action_id, combat_handler)
 

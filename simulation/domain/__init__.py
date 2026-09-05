@@ -83,7 +83,9 @@ from simulation.domain.combat import (
     COMBAT_ROWS,
     DEPLOYMENT_STATES,
     CombatDeploymentPolicy,
+    CombatRoundPolicy,
     parse_combat_deployment_policy,
+    parse_combat_round_policy,
 )
 from simulation.domain.action_economy import (
     ActionEconomyPolicy,
@@ -229,7 +231,9 @@ __all__ = [
     "COMBAT_ROWS",
     "DEPLOYMENT_STATES",
     "CombatDeploymentPolicy",
+    "CombatRoundPolicy",
     "parse_combat_deployment_policy",
+    "parse_combat_round_policy",
     "CampusLocation",
     "CampusLocationGraph",
     "CampusPassage",

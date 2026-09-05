@@ -36,7 +36,7 @@ class CampusForumTaskTests(unittest.TestCase):
     def test_initial_surface_board_is_public_but_private_scheduling_does_not_leak(self):
         bridge = CampusKernelBridge(42)
         snapshot = bridge.snapshot()
-        self.assertEqual(21, snapshot["view_version"])
+        self.assertEqual(22, snapshot["view_version"])
         self.assertEqual(12, snapshot["task_summary"]["total"])
         self.assertEqual(12, snapshot["task_summary"]["available"])
         self.assertTrue(snapshot["forums"]["surface"]["enabled"])

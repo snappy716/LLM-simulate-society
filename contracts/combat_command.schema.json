@@ -9,7 +9,7 @@
     "battle_id": {"type": "string", "minLength": 1},
     "revision": {"type": "integer", "minimum": 1},
     "actor_id": {"type": "string", "minLength": 1},
-    "command": {"enum": ["deploy_character", "reposition_character", "play_card", "discard_card", "end_round", "escape"]},
+    "command": {"enum": ["deploy_character", "reposition_character", "start_combat", "play_card", "discard_card", "end_round", "escape"]},
     "card_instance_id": {"type": ["string", "null"]},
     "character_card_instance_id": {"type": ["string", "null"]},
     "destination_row": {"type": ["string", "null"], "enum": ["front", "middle", "back", null]},
@@ -43,7 +43,7 @@
       }
     },
     {
-      "if": {"properties": {"command": {"enum": ["end_round", "escape"]}}, "required": ["command"]},
+      "if": {"properties": {"command": {"enum": ["start_combat", "end_round", "escape"]}}, "required": ["command"]},
       "then": {
         "properties": {
           "card_instance_id": {"type": "null"},

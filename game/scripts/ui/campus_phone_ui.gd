@@ -62,6 +62,9 @@ var _combat_deploy_action: Button
 var _combat_withdraw_action: Button
 var _combat_confirm_action: Button
 var _combat_cancel_action: Button
+var _combat_start_action: Button
+var _combat_hand_detail: RichTextLabel
+var _combat_end_round_action: Button
 var _combat_feedback: Label
 var _selected_combat_task_id := ""
 var _selected_character_card_id := ""
@@ -419,6 +422,23 @@ func _build_combat_page() -> VBoxContainer:
 	_combat_cancel_action.pressed.connect(_cancel_combat_preparation)
 	confirmation_actions.add_child(_combat_cancel_action)
 	root.add_child(confirmation_actions)
+	var round_actions := HBoxContainer.new()
+	_combat_start_action = Button.new()
+	_combat_start_action.text = "开始战斗"
+	_combat_start_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_combat_start_action.pressed.connect(_start_card_combat)
+	round_actions.add_child(_combat_start_action)
+	_combat_end_round_action = Button.new()
+	_combat_end_round_action.text = "结束本轮"
+	_combat_end_round_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_combat_end_round_action.pressed.connect(_end_combat_round)
+	round_actions.add_child(_combat_end_round_action)
+	root.add_child(round_actions)
+	_combat_hand_detail = RichTextLabel.new()
+	_combat_hand_detail.bbcode_enabled = true
+	_combat_hand_detail.custom_minimum_size = Vector2(0, 92)
+	_combat_hand_detail.add_theme_font_size_override("normal_font_size", 13)
+	root.add_child(_combat_hand_detail)
 	_combat_feedback = Label.new()
 	_combat_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_combat_feedback.add_theme_color_override("font_color", Color("e0b86a"))
@@ -1299,6 +1319,9 @@ func _refresh_combat_page() -> void:
 		_combat_withdraw_action.disabled = true
 		_combat_confirm_action.disabled = true
 		_combat_cancel_action.disabled = true
+		_combat_start_action.disabled = true
+		_combat_end_round_action.disabled = true
+		_combat_hand_detail.text = "[color=#91a4bc]锁定阵型后可生成个人八张牌组与共享战术手牌。[/color]"
 		return
 
 	var row_names := {"front": "前排", "middle": "中排", "back": "后排"}
@@ -1311,10 +1334,15 @@ func _refresh_combat_page() -> void:
 			var deployed_card: Dictionary = cards.get(String(card_id_value), {})
 			names.append(String(deployed_card.get("display_name", "未知人物")))
 		lines.append("[b]%s[/b]  %s" % [row_names[row_id], " / ".join(names) if not names.is_empty() else "—"])
-	var phase_name := "准备中" if String(active.get("phase", "")) == "setup" else "阵型已锁定"
+	var phase_names := {
+		"setup": "准备中", "ready": "阵型已锁定", "player_turn": "玩家行动",
+		"enemy_turn": "敌方行动", "round_end": "轮次结算", "resolved": "战斗结束",
+	}
+	var phase_name := String(phase_names.get(String(active.get("phase", "")), "战斗中"))
 	_combat_formation_detail.text = "[font_size=21][b]%s[/b][/font_size]  ·  %s\n%s\n\n[color=#91a4bc]每排最多两人；玩家必须上场。锁定后本场不能替补，倒下角色离场且其未使用指令牌失效。[/color]" % [
 		phase_name, active.get("battle_id", ""), "\n".join(lines)
 	]
+	_refresh_combat_hand(active, cards)
 	var previous_card := _selected_character_card_id
 	_combat_character_picker.clear()
 	var card_ids: Array = cards.keys()
@@ -1346,6 +1374,39 @@ func _refresh_combat_page() -> void:
 	_refresh_combat_character_controls(active)
 
 
+func _refresh_combat_hand(active: Dictionary, characters: Dictionary) -> void:
+	var phase := String(active.get("phase", ""))
+	if phase == "setup":
+		_combat_hand_detail.text = "[color=#91a4bc]先完成人物牌部署。[/color]"
+		return
+	if phase == "ready":
+		_combat_hand_detail.text = "[b]阵型已确认[/b]\n开始后，每名上场角色从个人八张牌组抽取两张，加入共享战术手牌。"
+		return
+	var team_id := "party:player"
+	var points := int((active.get("command_points", {}) as Dictionary).get(team_id, 0))
+	var cap := int(active.get("command_point_cap", 0))
+	var actor_names: Dictionary = {}
+	for character_value in characters.values():
+		if character_value is Dictionary:
+			actor_names[String(character_value.get("actor_id", ""))] = String(character_value.get("display_name", "人物"))
+	var card_instances: Dictionary = active.get("card_instances", {})
+	var hand_lines: Array[String] = []
+	for instance_id_value in active.get("shared_hand_ids", []):
+		var instance: Dictionary = card_instances.get(String(instance_id_value), {})
+		if instance.is_empty():
+			continue
+		hand_lines.append("• %s / %s  [耗%d · %s]" % [
+			actor_names.get(String(instance.get("owner_actor_id", "")), "人物"),
+			instance.get("display_name", instance.get("card_id", "指令牌")),
+			int(instance.get("command_cost", 0)),
+			instance.get("card_type", "card"),
+		])
+	_combat_hand_detail.text = "[b]第 %d 轮 · 共享指令点 %d/%d[/b]\n%s" % [
+		int(active.get("round", 1)), points, cap,
+		"\n".join(hand_lines) if not hand_lines.is_empty() else "暂无可用手牌",
+	]
+
+
 func _refresh_combat_character_controls(active: Dictionary) -> void:
 	var cards: Dictionary = active.get("character_cards", {})
 	var card: Dictionary = cards.get(_selected_character_card_id, {})
@@ -1363,6 +1424,8 @@ func _refresh_combat_character_controls(active: Dictionary) -> void:
 			break
 	_combat_confirm_action.disabled = not setup or not player_deployed
 	_combat_cancel_action.disabled = String(active.get("phase", "")) not in ["setup", "ready"]
+	_combat_start_action.disabled = String(active.get("phase", "")) != "ready"
+	_combat_end_round_action.disabled = String(active.get("phase", "")) != "player_turn"
 
 
 func _select_combat_task(index: int) -> void:
@@ -1432,6 +1495,22 @@ func _confirm_combat_deployment() -> void:
 		return
 	_combat_feedback.text = "正在锁定阵型……"
 	SimulationBridge.operate_campus_combat("CONFIRM_BATTLE_DEPLOYMENT", parameters)
+
+
+func _start_card_combat() -> void:
+	var parameters := _active_combat_parameters()
+	if parameters.is_empty():
+		return
+	_combat_feedback.text = "正在洗入个人牌组并抽取首轮手牌……"
+	SimulationBridge.operate_campus_combat("START_CARD_COMBAT", parameters)
+
+
+func _end_combat_round() -> void:
+	var parameters := _active_combat_parameters()
+	if parameters.is_empty():
+		return
+	_combat_feedback.text = "正在弃置未保留手牌并进入下一轮……"
+	SimulationBridge.operate_campus_combat("END_COMBAT_ROUND", parameters)
 
 
 func _cancel_combat_preparation() -> void:

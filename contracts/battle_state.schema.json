@@ -7,8 +7,8 @@
   "required": [
     "battle_id", "revision", "phase", "round", "scene_id", "participant_ids", "team_ids",
     "character_cards", "formations", "reserve_character_card_ids",
-    "actor_decks", "draw_piles", "discard_piles", "exhaust_piles", "shared_hand_ids",
-    "insight_row_ids", "command_points", "command_point_cap", "focus", "health", "pollution", "statuses",
+    "actor_decks", "draw_piles", "discard_piles", "exhaust_piles", "reshuffle_counts", "shared_hand_ids",
+    "insight_row_ids", "base_command_used_actor_ids", "command_points", "command_point_cap", "focus", "health", "pollution", "statuses",
     "known_weaknesses", "enemy_intents", "card_instances", "result", "consequences"
   ],
   "properties": {
@@ -50,6 +50,8 @@
     "draw_piles": {"type": "object"},
     "discard_piles": {"type": "object"},
     "exhaust_piles": {"type": "object"},
+    "reshuffle_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "base_command_used_actor_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "lost_heart_shell": {"type": "object"},
     "coherence": {"type": ["integer", "null"], "minimum": 0},
     "result": {"enum": ["active", "victory", "defeat", "escaped", "resolved"]},

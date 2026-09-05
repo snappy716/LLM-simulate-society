@@ -1,6 +1,7 @@
 """Authoritative character-card selection and three-row deployment runtime."""
 from __future__ import annotations
 
+from collections import Counter
 from copy import deepcopy
 from typing import Any, Dict, Iterable, Mapping
 
@@ -8,7 +9,9 @@ from simulation.domain.campus import BaseAttributes, derive_stats
 from simulation.domain.combat import (
     COMBAT_ROWS,
     CombatDeploymentPolicy,
+    CombatRoundPolicy,
     parse_combat_deployment_policy,
+    parse_combat_round_policy,
 )
 from simulation.domain.locations import CampusLocationGraph
 from simulation.domain.world_state import WorldState
@@ -18,7 +21,7 @@ from simulation.systems.content_registry import ContentRegistry
 from simulation.systems.transactions import TransactionOutcome
 
 
-CAMPUS_COMBAT_SCHEMA_VERSION = 1
+CAMPUS_COMBAT_SCHEMA_VERSION = 2
 COMBAT_ACTION_IDS = {
     "START_BATTLE_PREPARATION",
     "DEPLOY_COMBAT_CHARACTER",
@@ -26,11 +29,17 @@ COMBAT_ACTION_IDS = {
     "REPOSITION_COMBAT_CHARACTER",
     "CONFIRM_BATTLE_DEPLOYMENT",
     "CANCEL_BATTLE_PREPARATION",
+    "START_CARD_COMBAT",
+    "END_COMBAT_ROUND",
 }
 
 
 def load_combat_deployment_policy(registry: ContentRegistry) -> CombatDeploymentPolicy:
     return parse_combat_deployment_policy(registry.get("configuration", "combat_deployment"))
+
+
+def load_combat_round_policy(registry: ContentRegistry) -> CombatRoundPolicy:
+    return parse_combat_round_policy(registry.get("configuration", "combat_rounds"))
 
 
 def combat_policy_from_state(state: WorldState) -> CombatDeploymentPolicy:
@@ -40,7 +49,18 @@ def combat_policy_from_state(state: WorldState) -> CombatDeploymentPolicy:
     return parse_combat_deployment_policy(payload)
 
 
-def install_campus_combat(state: WorldState, policy: CombatDeploymentPolicy) -> None:
+def combat_round_policy_from_state(state: WorldState) -> CombatRoundPolicy:
+    payload = state.metadata.get("campus_combat", {}).get("round_policy")
+    if not isinstance(payload, dict):
+        raise ValueError("campus combat round policy is not installed")
+    return parse_combat_round_policy(payload)
+
+
+def install_campus_combat(
+    state: WorldState,
+    policy: CombatDeploymentPolicy,
+    round_policy: CombatRoundPolicy,
+) -> None:
     if state.battles:
         raise ValueError("campus battles are already initialized")
     if "campus_combat" in state.metadata:
@@ -50,6 +70,7 @@ def install_campus_combat(state: WorldState, policy: CombatDeploymentPolicy) -> 
     state.metadata["campus_combat"] = {
         "schema_version": CAMPUS_COMBAT_SCHEMA_VERSION,
         "policy": policy.to_dict(),
+        "round_policy": round_policy.to_dict(),
         "battle_sequence": 0,
         "active_battle_by_actor": {},
     }
@@ -321,8 +342,10 @@ def _new_battle(
         "draw_piles": {actor_id: [] for actor_id in candidate_ids},
         "discard_piles": {actor_id: [] for actor_id in candidate_ids},
         "exhaust_piles": {actor_id: [] for actor_id in candidate_ids},
+        "reshuffle_counts": {actor_id: 0 for actor_id in candidate_ids},
         "shared_hand_ids": [],
         "insight_row_ids": [],
+        "base_command_used_actor_ids": [],
         "command_points": {team_id: 3},
         "command_point_cap": 3,
         "focus": {
@@ -439,6 +462,233 @@ def _assemble_actor(
     return None
 
 
+def _combat_card_blueprints(
+    state: WorldState,
+    round_policy: CombatRoundPolicy,
+) -> Dict[str, Dict[str, Any]]:
+    blueprints = {
+        str(card_id): deepcopy(dict(payload))
+        for card_id, payload in state.metadata.get("campus_abilities", {}).get(
+            "card_blueprints", {}
+        ).items()
+        if isinstance(payload, dict)
+    }
+    blueprints.update({
+        str(card_id): deepcopy(dict(payload))
+        for card_id, payload in round_policy.generic_card_blueprints.items()
+    })
+    return blueprints
+
+
+def configured_actor_deck(
+    state: WorldState,
+    battle: Mapping[str, Any],
+    actor_id: str,
+    round_policy: CombatRoundPolicy,
+) -> list[str]:
+    """Build the reproducible eight-card list; duplicate blueprints are legal."""
+    blueprints = _combat_card_blueprints(state, round_policy)
+    character = next(
+        (
+            value for value in battle.get("character_cards", {}).values()
+            if isinstance(value, dict) and value.get("actor_id") == actor_id
+        ),
+        None,
+    )
+    if not isinstance(character, dict) or character.get("deployment_state") != "deployed":
+        raise ValueError("only deployed actors receive a combat deck")
+    owned = [
+        str(card_id) for card_id in character.get("command_card_ids", ())
+        if str(card_id) in blueprints
+    ]
+    repeatable = owned or [round_policy.fallback_card_id]
+    selected = list(round_policy.required_generic_card_ids)
+    selected.extend(owned)
+    cursor = 0
+    while len(selected) < round_policy.deck_size_per_actor:
+        selected.append(repeatable[cursor % len(repeatable)])
+        cursor += 1
+    selected = selected[:round_policy.deck_size_per_actor]
+    if any(card_id not in blueprints for card_id in selected):
+        raise ValueError(f"combat deck for {actor_id} references an unknown card")
+    card_types = {str(blueprints[card_id].get("card_type", "")) for card_id in selected}
+    if "defense" not in card_types:
+        raise ValueError(f"combat deck for {actor_id} requires a defense card")
+    if not card_types.intersection({"defense", "support", "control", "knowledge"}):
+        raise ValueError(f"combat deck for {actor_id} requires a non-damage card")
+    return selected
+
+
+def _shuffle_draw_pile(context, battle: Dict[str, Any], actor_id: str, *, initial: bool) -> None:
+    pile = battle["draw_piles"][actor_id]
+    if initial:
+        stream_name = f"combat.deck.{battle['battle_id']}.{actor_id}.initial"
+    else:
+        count = int(battle["reshuffle_counts"].get(actor_id, 0)) + 1
+        battle["reshuffle_counts"][actor_id] = count
+        stream_name = f"combat.deck.{battle['battle_id']}.{actor_id}.reshuffle.{count}"
+    context.rng.stream(stream_name).shuffle(pile)
+
+
+def _draw_one_card(context, battle: Dict[str, Any], actor_id: str) -> str | None:
+    draw_pile = battle["draw_piles"][actor_id]
+    discard_pile = battle["discard_piles"][actor_id]
+    if not draw_pile and discard_pile:
+        draw_pile.extend(discard_pile)
+        discard_pile.clear()
+        for instance_id in draw_pile:
+            battle["card_instances"][instance_id]["zone"] = "draw"
+        _shuffle_draw_pile(context, battle, actor_id, initial=False)
+    if not draw_pile:
+        return None
+    instance_id = draw_pile.pop(0)
+    battle["card_instances"][instance_id]["zone"] = "hand"
+    battle["shared_hand_ids"].append(instance_id)
+    return instance_id
+
+
+def _draw_round_hand(
+    context,
+    battle: Dict[str, Any],
+    round_policy: CombatRoundPolicy,
+) -> list[str]:
+    drawn: list[str] = []
+    deployed_actor_ids = {
+        str(card.get("actor_id"))
+        for card in battle["character_cards"].values()
+        if isinstance(card, dict) and card.get("deployment_state") == "deployed"
+    }
+    for actor_id in battle["participant_ids"]:
+        if actor_id not in deployed_actor_ids:
+            continue
+        for _ in range(round_policy.cards_drawn_per_actor):
+            instance_id = _draw_one_card(context, battle, actor_id)
+            if instance_id is not None:
+                drawn.append(instance_id)
+    return drawn
+
+
+def start_card_combat(
+    context,
+    battle: Dict[str, Any],
+    round_policy: CombatRoundPolicy,
+) -> Dict[str, Any]:
+    if battle.get("phase") != "ready":
+        raise ValueError("card combat can only start from a locked formation")
+    state = context.state
+    blueprints = _combat_card_blueprints(state, round_policy)
+    battle["actor_decks"] = {}
+    battle["draw_piles"] = {}
+    battle["discard_piles"] = {}
+    battle["exhaust_piles"] = {}
+    battle["reshuffle_counts"] = {}
+    battle["card_instances"] = {}
+    battle["shared_hand_ids"] = []
+    battle["base_command_used_actor_ids"] = []
+    for actor_id in battle["participant_ids"]:
+        blueprint_ids = configured_actor_deck(
+            state, battle, actor_id, round_policy
+        )
+        battle["actor_decks"][actor_id] = list(blueprint_ids)
+        battle["draw_piles"][actor_id] = []
+        battle["discard_piles"][actor_id] = []
+        battle["exhaust_piles"][actor_id] = []
+        battle["reshuffle_counts"][actor_id] = 0
+        for slot, blueprint_id in enumerate(blueprint_ids, start=1):
+            blueprint = blueprints[blueprint_id]
+            instance_id = f"{battle['battle_id']}:card:{actor_id}:{slot:02d}"
+            battle["card_instances"][instance_id] = {
+                "card_instance_id": instance_id,
+                "card_id": blueprint_id,
+                "display_name": str(blueprint.get("name", blueprint_id)),
+                "source_ability_id": str(blueprint.get("source_ability_id", "")),
+                "owner_actor_id": actor_id,
+                "actor_bound": True,
+                "card_type": str(blueprint["card_type"]),
+                "command_cost": int(blueprint["command_cost"]),
+                "target": str(blueprint["target"]),
+                "range_pattern": str(blueprint["range_pattern"]),
+                "base_power": int(blueprint["base_power"]),
+                "effect_ids": list(map(str, blueprint["effect_ids"])),
+                "zone": "draw",
+                "retained": False,
+            }
+            battle["draw_piles"][actor_id].append(instance_id)
+        _shuffle_draw_pile(context, battle, actor_id, initial=True)
+    battle["round"] = 1
+    battle["command_point_cap"] = round_policy.initial_command_points
+    for team_id in battle["team_ids"]:
+        battle["command_points"][team_id] = round_policy.initial_command_points
+    battle["phase"] = "player_turn"
+    drawn = _draw_round_hand(context, battle, round_policy)
+    battle["revision"] = int(battle["revision"]) + 1
+    context.emit(
+        "COMBAT_ROUND_STARTED",
+        "阵型稳定下来，行动小队抽取了第一轮共享战术手牌。",
+        actor_ids=battle["participant_ids"], scene_id=battle["scene_id"],
+        payload={
+            "battle_id": battle["battle_id"], "round": 1,
+            "command_point_cap": battle["command_point_cap"],
+            "drawn_card_instance_ids": list(drawn), "runtime_started": True,
+        },
+        visibility="private", severity=4,
+        knowledge_tags=["combat", "cards", "round", "formation"],
+    )
+    return {"drawn_card_instance_ids": drawn}
+
+
+def end_combat_round(
+    context,
+    battle: Dict[str, Any],
+    round_policy: CombatRoundPolicy,
+) -> Dict[str, Any]:
+    if battle.get("phase") != "player_turn":
+        raise ValueError("only the player turn can end the combat round")
+    retained_ids: list[str] = []
+    discarded_ids: list[str] = []
+    for instance_id in list(battle["shared_hand_ids"]):
+        instance = battle["card_instances"][instance_id]
+        if bool(instance.get("retained", False)):
+            retained_ids.append(instance_id)
+            continue
+        actor_id = str(instance["owner_actor_id"])
+        battle["shared_hand_ids"].remove(instance_id)
+        battle["discard_piles"][actor_id].append(instance_id)
+        instance["zone"] = "discard"
+        discarded_ids.append(instance_id)
+    battle["round"] = int(battle["round"]) + 1
+    battle["command_point_cap"] = min(
+        round_policy.maximum_command_points,
+        round_policy.initial_command_points
+        + (int(battle["round"]) - 1) * round_policy.command_point_growth_per_round,
+    )
+    for team_id in battle["team_ids"]:
+        battle["command_points"][team_id] = int(battle["command_point_cap"])
+    battle["base_command_used_actor_ids"] = []
+    drawn = _draw_round_hand(context, battle, round_policy)
+    battle["revision"] = int(battle["revision"]) + 1
+    context.emit(
+        "COMBAT_ROUND_STARTED",
+        f"行动小队进入第 {battle['round']} 轮并补满共享指令点。",
+        actor_ids=battle["participant_ids"], scene_id=battle["scene_id"],
+        payload={
+            "battle_id": battle["battle_id"], "round": battle["round"],
+            "command_point_cap": battle["command_point_cap"],
+            "discarded_card_instance_ids": discarded_ids,
+            "retained_card_instance_ids": retained_ids,
+            "drawn_card_instance_ids": drawn,
+            "enemy_resolution_status": "pending_effect_pipeline",
+        },
+        visibility="private", severity=3,
+        knowledge_tags=["combat", "cards", "round"],
+    )
+    return {
+        "discarded_card_instance_ids": discarded_ids,
+        "retained_card_instance_ids": retained_ids,
+        "drawn_card_instance_ids": drawn,
+    }
+
+
 def incapacitate_character(context, battle: Dict[str, Any], card_id: str) -> Dict[str, Any]:
     """Shared step-16 hook: remove a downed actor and invalidate its pending cards."""
     card = battle.get("character_cards", {}).get(card_id)
@@ -460,6 +710,10 @@ def incapacitate_character(context, battle: Dict[str, Any], card_id: str) -> Dic
             continue
         if instance_id in battle.get("shared_hand_ids", ()):
             battle["shared_hand_ids"].remove(instance_id)
+        for zone_name in ("draw_piles", "discard_piles"):
+            pile = battle.get(zone_name, {}).get(actor_id, [])
+            if instance_id in pile:
+                pile.remove(instance_id)
         instance["zone"] = "exhaust"
         pile = battle["exhaust_piles"].setdefault(actor_id, [])
         if instance_id not in pile:
@@ -485,15 +739,18 @@ def incapacitate_character(context, battle: Dict[str, Any], card_id: str) -> Dic
 
 
 def advance_campus_combat(context) -> Dict[str, int]:
-    """Remove unfinished setup safely when daylight or task state invalidates it."""
+    """Remove unresolved combat safely when daylight or task state invalidates it."""
     state = context.state
-    summary = {"battle_preparation_interrupted_count": 0}
+    summary = {
+        "battle_preparation_interrupted_count": 0,
+        "battle_interrupted_count": 0,
+    }
     metadata = state.metadata.get("campus_combat", {})
     mapping = metadata.get("active_battle_by_actor", {})
     if not isinstance(mapping, dict):
         return summary
     for battle_id, battle in list(state.battles.items()):
-        if not isinstance(battle, dict) or battle.get("phase") not in {"setup", "ready"}:
+        if not isinstance(battle, dict) or battle.get("phase") == "resolved":
             continue
         task = state.tasks.get(str(battle.get("situation_id", "")), {})
         leader_id = next(
@@ -518,9 +775,12 @@ def advance_campus_combat(context) -> Dict[str, int]:
         for actor_id in actor_ids:
             del mapping[actor_id]
         del state.battles[battle_id]
+        preparation = battle.get("phase") in {"setup", "ready"}
+        event_type = "BATTLE_PREPARATION_INTERRUPTED" if preparation else "BATTLE_INTERRUPTED"
         context.emit(
-            "BATTLE_PREPARATION_INTERRUPTED",
-            "时段或任务状态变化中止了尚未结算的战斗准备。",
+            event_type,
+            "时段或任务状态变化中止了尚未结算的战斗准备。" if preparation
+            else "晨光或任务状态变化中止了尚未完成的卡牌战斗。",
             actor_ids=actor_ids, scene_id=battle.get("scene_id"),
             payload={
                 "battle_id": battle_id,
@@ -529,12 +789,15 @@ def advance_campus_combat(context) -> Dict[str, int]:
             visibility="private", severity=3,
             knowledge_tags=["combat", "party", "formation", "night"],
         )
-        summary["battle_preparation_interrupted_count"] += 1
+        summary[
+            "battle_preparation_interrupted_count" if preparation else "battle_interrupted_count"
+        ] += 1
     return summary
 
 
 def make_campus_combat_handler(
     policy: CombatDeploymentPolicy,
+    round_policy: CombatRoundPolicy,
     graph: CampusLocationGraph,
 ):
     def handle(context, command) -> TransactionOutcome:
@@ -606,6 +869,40 @@ def make_campus_combat_handler(
                 knowledge_tags=["combat", "party", "formation"],
             )
             return TransactionOutcome(True, True, "success", "已取消战斗准备。", commit=True)
+
+        if command.action_id == "START_CARD_COMBAT":
+            if battle["phase"] != "ready":
+                return TransactionOutcome(
+                    False, False, "formation_not_ready", "需要先部署人物牌并锁定阵型。"
+                )
+            runtime = start_card_combat(context, battle, round_policy)
+            return TransactionOutcome(
+                True, True, "success", "卡牌战斗已开始，第一轮共享手牌已抽取。",
+                commit=True,
+                payload={
+                    "battle_id": battle["battle_id"],
+                    "battle_revision": battle["revision"],
+                    "round": battle["round"],
+                    **runtime,
+                },
+            )
+
+        if command.action_id == "END_COMBAT_ROUND":
+            if battle["phase"] != "player_turn":
+                return TransactionOutcome(
+                    False, False, "wrong_battle_phase", "当前不能结束玩家回合。"
+                )
+            runtime = end_combat_round(context, battle, round_policy)
+            return TransactionOutcome(
+                True, True, "success", f"已进入第 {battle['round']} 轮。",
+                commit=True,
+                payload={
+                    "battle_id": battle["battle_id"],
+                    "battle_revision": battle["revision"],
+                    "round": battle["round"],
+                    **runtime,
+                },
+            )
 
         card, card_id = _card_from_command(battle, command.parameters)
         if command.action_id in {
@@ -755,13 +1052,13 @@ def make_campus_combat_handler(
                     "battle_id": battle["battle_id"],
                     "formation": deepcopy(battle["formations"][team_id]),
                     "replacement_allowed_after_start": False,
-                    "runtime_status": "cards_pending_step_16",
+                    "runtime_status": "ready_to_start_card_rounds",
                 },
                 visibility="private", severity=4,
                 knowledge_tags=["combat", "party", "formation", "commitment"],
             )
             return TransactionOutcome(
-                True, True, "success", "阵型已锁定；卡牌回合结算将在下一阶段接入。",
+                True, True, "success", "阵型已锁定，可以开始卡牌战斗。",
                 commit=True, payload={"battle_id": battle["battle_id"], "battle_revision": battle["revision"]},
             )
         return TransactionOutcome(False, False, "unknown_combat_action", "未知战斗准备行动。")
@@ -775,6 +1072,7 @@ def campus_combat_view(
     policy: CombatDeploymentPolicy,
     graph: CampusLocationGraph | None = None,
 ) -> Dict[str, Any]:
+    round_policy = combat_round_policy_from_state(state)
     active = active_battle_for_actor(state, viewer_id)
     tasks = _owned_night_tasks(state, viewer_id)
     actor_region = _actor_region_id(state, viewer_id)
@@ -815,6 +1113,10 @@ def campus_combat_view(
             "initial_deployment_cost": 0,
             "combat_reposition_cost": policy.reposition_command_cost,
             "replacement_allowed_after_start": False,
+            "deck_size_per_actor": round_policy.deck_size_per_actor,
+            "cards_drawn_per_actor": round_policy.cards_drawn_per_actor,
+            "initial_command_points": round_policy.initial_command_points,
+            "maximum_command_points": round_policy.maximum_command_points,
         },
         "active_battle": deepcopy(active) if isinstance(active, dict) else None,
     }
@@ -829,6 +1131,7 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
     errors: list[str] = []
     try:
         policy = parse_combat_deployment_policy(metadata.get("policy", {}))
+        round_policy = parse_combat_round_policy(metadata.get("round_policy", {}))
     except (TypeError, ValueError) as exc:
         return (f"campus combat policy is invalid: {exc}",)
     sequence = metadata.get("battle_sequence")
@@ -898,6 +1201,72 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
         for actor_id in participants if isinstance(participants, list) else ():
             if mapping.get(actor_id) != battle_id:
                 errors.append(f"battle {battle_id} active participant {actor_id} is not mapped")
+        if battle.get("phase") in {"player_turn", "enemy_turn", "round_end"}:
+            participant_set = set(participants) if isinstance(participants, list) else set()
+            actor_decks = battle.get("actor_decks")
+            draw_piles = battle.get("draw_piles")
+            discard_piles = battle.get("discard_piles")
+            exhaust_piles = battle.get("exhaust_piles")
+            reshuffles = battle.get("reshuffle_counts")
+            instances = battle.get("card_instances")
+            hand = battle.get("shared_hand_ids")
+            insight = battle.get("insight_row_ids")
+            if not all(isinstance(value, dict) for value in (
+                actor_decks, draw_piles, discard_piles, exhaust_piles, reshuffles, instances,
+            )) or not isinstance(hand, list) or not isinstance(insight, list):
+                errors.append(f"battle {battle_id} card runtime ledgers are invalid")
+                continue
+            if any(set(ledger) != participant_set for ledger in (
+                actor_decks, draw_piles, discard_piles, exhaust_piles, reshuffles,
+            )):
+                errors.append(f"battle {battle_id} card runtime actor ledgers differ from participants")
+            ledger_ids = list(hand) + list(insight)
+            zone_by_id = {instance_id: "hand" for instance_id in hand}
+            zone_by_id.update({instance_id: "insight" for instance_id in insight})
+            for actor_id in participant_set:
+                deck = actor_decks.get(actor_id, [])
+                if not isinstance(deck, list) or len(deck) != round_policy.deck_size_per_actor:
+                    errors.append(f"battle {battle_id} actor {actor_id} does not have eight deck cards")
+                    continue
+                for zone, ledger in (
+                    ("draw", draw_piles), ("discard", discard_piles), ("exhaust", exhaust_piles),
+                ):
+                    pile = ledger.get(actor_id, [])
+                    if not isinstance(pile, list):
+                        errors.append(f"battle {battle_id} actor {actor_id} {zone} pile is invalid")
+                        continue
+                    ledger_ids.extend(pile)
+                    zone_by_id.update({instance_id: zone for instance_id in pile})
+                count = reshuffles.get(actor_id)
+                if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+                    errors.append(f"battle {battle_id} actor {actor_id} reshuffle count is invalid")
+                instance_blueprints = [
+                    instance.get("card_id") for instance in instances.values()
+                    if isinstance(instance, dict) and instance.get("owner_actor_id") == actor_id
+                ]
+                if Counter(instance_blueprints) != Counter(deck):
+                    errors.append(f"battle {battle_id} actor {actor_id} deck differs from instances")
+            if len(ledger_ids) != len(set(ledger_ids)) or set(ledger_ids) != set(instances):
+                errors.append(f"battle {battle_id} card zone ledgers are not an exact partition")
+            for instance_id, instance in instances.items():
+                if not isinstance(instance, dict) or instance.get("card_instance_id") != instance_id:
+                    errors.append(f"battle {battle_id} card instance {instance_id} is invalid")
+                    continue
+                if instance.get("owner_actor_id") not in participant_set:
+                    errors.append(f"battle {battle_id} card instance {instance_id} has an invalid owner")
+                if instance.get("zone") != zone_by_id.get(instance_id):
+                    errors.append(f"battle {battle_id} card instance {instance_id} zone is inconsistent")
+            expected_cap = min(
+                round_policy.maximum_command_points,
+                round_policy.initial_command_points
+                + (int(battle.get("round", 1)) - 1) * round_policy.command_point_growth_per_round,
+            )
+            if battle.get("command_point_cap") != expected_cap:
+                errors.append(f"battle {battle_id} command point cap is inconsistent")
+            for team_id in battle.get("team_ids", {}):
+                value = battle.get("command_points", {}).get(team_id)
+                if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= expected_cap:
+                    errors.append(f"battle {battle_id} team {team_id} command points are invalid")
     return errors
 
 
@@ -905,8 +1274,9 @@ __all__ = [
     "CAMPUS_COMBAT_SCHEMA_VERSION", "COMBAT_ACTION_IDS", "active_battle_for_actor",
     "build_character_card", "campus_combat_invariant", "campus_combat_view",
     "advance_campus_combat",
-    "combat_policy_from_state", "combat_preparation_assessment",
+    "combat_policy_from_state", "combat_round_policy_from_state",
+    "combat_preparation_assessment", "configured_actor_deck",
     "combat_readiness_assessment", "incapacitate_character",
-    "install_campus_combat", "load_combat_deployment_policy",
-    "make_campus_combat_handler",
+    "install_campus_combat", "load_combat_deployment_policy", "load_combat_round_policy",
+    "make_campus_combat_handler", "start_card_combat", "end_combat_round",
 ]

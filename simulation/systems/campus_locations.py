@@ -121,6 +121,14 @@ def make_traverse_location_handler(graph: CampusLocationGraph):
         actor = context.state.population.get(command.actor_id)
         if not isinstance(actor, dict):
             return TransactionOutcome(False, False, "unknown_actor", "行动者不存在。")
+        active_battle_id = context.state.metadata.get("campus_combat", {}).get(
+            "active_battle_by_actor", {}
+        ).get(command.actor_id)
+        active_battle = context.state.battles.get(str(active_battle_id or ""), {})
+        if active_battle_id and isinstance(active_battle, dict) and active_battle.get("phase") != "resolved":
+            return TransactionOutcome(
+                False, False, "combat_active", "请先取消战斗准备或完成当前战斗。"
+            )
         if (
             command.issued_day != context.state.clock.day
             or command.issued_phase != context.state.clock.phase
@@ -209,6 +217,14 @@ def make_fast_travel_handler(graph: CampusLocationGraph):
         actor = context.state.population.get(command.actor_id)
         if not isinstance(actor, dict):
             return TransactionOutcome(False, False, "unknown_actor", "行动者不存在。")
+        active_battle_id = context.state.metadata.get("campus_combat", {}).get(
+            "active_battle_by_actor", {}
+        ).get(command.actor_id)
+        active_battle = context.state.battles.get(str(active_battle_id or ""), {})
+        if active_battle_id and isinstance(active_battle, dict) and active_battle.get("phase") != "resolved":
+            return TransactionOutcome(
+                False, False, "combat_active", "请先取消战斗准备或完成当前战斗。"
+            )
         if (
             command.issued_day != context.state.clock.day
             or command.issued_phase != context.state.clock.phase

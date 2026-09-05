@@ -41,6 +41,11 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
         "configuration",
         singleton_id="combat_deployment",
     ),
+    ContentSource(
+        "actions/combat_rounds.json",
+        "configuration",
+        singleton_id="combat_rounds",
+    ),
     ContentSource("actions/action_economy.json", "configuration", singleton_id="action_economy"),
     ContentSource("actions/campus_activities.json", "campus_activity", "activities"),
     ContentSource(
@@ -274,6 +279,14 @@ class ContentRegistry:
                 parse_combat_deployment_policy(combat_policy)
             except (TypeError, ValueError) as exc:
                 errors.append(f"combat deployment policy is invalid: {exc}")
+        combat_round_policy = self.all("configuration").get("combat_rounds", {})
+        if combat_round_policy:
+            try:
+                from simulation.domain.combat import parse_combat_round_policy
+
+                parse_combat_round_policy(combat_round_policy)
+            except (TypeError, ValueError) as exc:
+                errors.append(f"combat round policy is invalid: {exc}")
         referenced_schedules = set(population_config.get("schedules", {}).values())
         unknown_schedules = referenced_schedules - schedule_ids
         if unknown_schedules:

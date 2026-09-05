@@ -11,6 +11,8 @@
   "properties": {
     "card_instance_id": {"type": "string", "minLength": 1},
     "card_id": {"type": "string", "minLength": 1},
+    "display_name": {"type": "string", "minLength": 1},
+    "source_ability_id": {"type": "string"},
     "owner_actor_id": {"type": "string", "minLength": 1},
     "actor_bound": {"const": true},
     "card_type": {"enum": ["attack", "control", "defense", "knowledge", "signature", "support", "technique"]},

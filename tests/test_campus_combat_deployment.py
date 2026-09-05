@@ -270,30 +270,31 @@ class CampusCombatDeploymentTests(unittest.TestCase):
         bridge = CampusKernelBridge(42)
         task = enter_with_owned_night_task(bridge)
         execute(bridge, "START_BATTLE_PREPARATION", {"task_id": task["task_id"]}, marker="start")
+        snapshot_battle = bridge.snapshot()["combat"]["active_battle"]
+        card_id = next(
+            card_id for card_id, card in snapshot_battle["character_cards"].items()
+            if card["actor_id"] == "player"
+        )
+        execute(bridge, "DEPLOY_COMBAT_CHARACTER", {
+            "battle_id": snapshot_battle["battle_id"],
+            "expected_battle_revision": snapshot_battle["revision"],
+            "character_card_instance_id": card_id,
+            "destination_row": "front",
+        }, marker="deploy-incapacitation")
+        snapshot_battle = bridge.snapshot()["combat"]["active_battle"]
+        execute(bridge, "CONFIRM_BATTLE_DEPLOYMENT", {
+            "battle_id": snapshot_battle["battle_id"],
+            "expected_battle_revision": snapshot_battle["revision"],
+        }, marker="confirm-incapacitation")
+        snapshot_battle = bridge.snapshot()["combat"]["active_battle"]
+        execute(bridge, "START_CARD_COMBAT", {
+            "battle_id": snapshot_battle["battle_id"],
+            "expected_battle_revision": snapshot_battle["revision"],
+        }, marker="start-card-incapacitation")
         battle = bridge.kernel._state.battles["battle:000001"]
-        card_id = next(iter(battle["character_cards"]))
         card = battle["character_cards"][card_id]
-        battle["reserve_character_card_ids"].remove(card_id)
-        battle["formations"][card["team_id"]]["front"].append(card_id)
-        card["deployment_state"] = "deployed"
-        card["row"] = "front"
-        battle["phase"] = "player_turn"
-        instance_id = "battle:000001:card:test"
-        battle["card_instances"][instance_id] = {
-            "card_instance_id": instance_id,
-            "card_id": card["command_card_ids"][0],
-            "owner_actor_id": card["actor_id"],
-            "actor_bound": True,
-            "card_type": "knowledge",
-            "command_cost": 1,
-            "target": "enemy",
-            "range_pattern": "any_enemy",
-            "base_power": 1,
-            "effect_ids": ["test"],
-            "zone": "hand",
-            "retained": False,
-        }
-        battle["shared_hand_ids"].append(instance_id)
+        hand_before = list(battle["shared_hand_ids"])
+        self.assertEqual(2, len(hand_before))
         command = SimulationCommand(
             command_id="incapacitate-test", actor_id="player", action_id="TEST",
             expected_world_revision=bridge.kernel._state.revision,
@@ -306,8 +307,12 @@ class CampusCombatDeploymentTests(unittest.TestCase):
         self.assertEqual("incapacitated", card["deployment_state"])
         self.assertIsNone(card["row"])
         self.assertNotIn(card_id, battle["formations"][card["team_id"]]["front"])
-        self.assertNotIn(instance_id, battle["shared_hand_ids"])
-        self.assertEqual("exhaust", battle["card_instances"][instance_id]["zone"])
+        self.assertEqual([], battle["shared_hand_ids"])
+        self.assertEqual(8, len(battle["exhaust_piles"]["player"]))
+        self.assertTrue(all(
+            instance["zone"] == "exhaust"
+            for instance in battle["card_instances"].values()
+        ))
         self.assertFalse(True if battle["reserve_character_card_ids"] else False)
         self.assertEqual("COMBAT_CHARACTER_INCAPACITATED", context.event_drafts[-1].event_type)
         self.assertFalse(context.event_drafts[-1].payload["replacement_allowed"])

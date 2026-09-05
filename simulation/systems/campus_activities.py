@@ -68,6 +68,7 @@ def make_scheduled_npc_phase_executor(
             "rule_choice_count": 0,
             "task_choice_count": 0,
             "task_completed_count": 0,
+            "combat_engaged_actor_count": 0,
             "decision_reason_counts": {},
         }
         decision_reasons: Counter[str] = Counter()
@@ -79,6 +80,15 @@ def make_scheduled_npc_phase_executor(
                 continue
             actor = context.state.population.get(actor_id)
             if not isinstance(actor, dict):
+                continue
+            active_battle_id = context.state.metadata.get("campus_combat", {}).get(
+                "active_battle_by_actor", {}
+            ).get(actor_id)
+            active_battle = context.state.battles.get(str(active_battle_id or ""), {})
+            if active_battle_id and isinstance(active_battle, dict) and active_battle.get("phase") != "resolved":
+                summary["combat_engaged_actor_count"] += 1
+                actor.pop("current_decision", None)
+                actor.pop("current_activity", None)
                 continue
             schedule_plan = current_schedule_slot(context.state, actor_id)
             plan = (
