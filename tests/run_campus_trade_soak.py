@@ -2,6 +2,7 @@
 import argparse
 from collections import Counter, defaultdict
 import json
+from statistics import mean, median
 from pathlib import Path
 import tempfile
 
@@ -16,7 +17,10 @@ from simulation.systems.randomness import DeterministicRngPool
 def run(days=14, seed=42, pause_days=()):
     bridge = CampusKernelBridge(seed)
     counts, gaps, settled_at = Counter(), [], defaultdict(list)
-    started = bridge.kernel.state
+    # Test-only read references: each successful execute replaces its committed
+    # state after cloning/validation. Avoid extra full-history copies in audits;
+    # never mutate these references (outage injection below is explicit).
+    started = bridge.kernel._state
     previous_quantities = Counter()
     for group in ("actors", "shops", "ground"):
         for record in started.inventories[group].values():
@@ -25,7 +29,7 @@ def run(days=14, seed=42, pause_days=()):
         upcoming_day = bridge.kernel._state.clock.day + (bridge.kernel._state.clock.phase == "late_night")
         # Test-only outage injection, not a production player/LLM command.
         bridge.kernel._state.inventories["supply"]["available"] = upcoming_day not in pause_days
-        state = bridge.kernel.state
+        state = bridge.kernel._state
         result = bridge.kernel.execute(SimulationCommand(f"soak:{index}", "player", "ADVANCE_PHASE", state.revision,
             issued_day=state.clock.day, issued_phase=state.clock.phase))
         assert result.success, result
@@ -38,6 +42,7 @@ def run(days=14, seed=42, pause_days=()):
                 if event.payload["action_id"] == "USE_ITEM":
                     consumed[event.payload["item_id"]] += event.payload["quantity"]
                 if event.payload["action_id"] == "BUY_ITEM":
+                    counts["procured_units"] += event.payload["quantity"]
                     shop_sales += event.payload["total_price"]
                     # Receipt location must be the shop, not an intended target.
                     assert event.scene_id == state.inventories["shops"][event.payload["shop_id"]]["location_id"]
@@ -61,7 +66,7 @@ def run(days=14, seed=42, pause_days=()):
                     settled_at[actor_id].append(offer["closed_tick"])
             elif event.event_type == "NPC_DECISION_MADE" and event.payload.get("activity_id") == "BUY_ITEM":
                 counts["procurement_plans"] += 1
-        after = bridge.kernel.state
+        after = bridge.kernel._state
         assert not list(campus_inventory_invariant(after))
         current = Counter()
         for group in ("actors", "shops", "ground"):
@@ -83,7 +88,10 @@ def run(days=14, seed=42, pause_days=()):
                 bridge.kernel._rng = loaded.rng
         if (index + 1) % 4 == 0:
             print(json.dumps({"day": (index + 1) // 4, "counts": dict(counts)}, ensure_ascii=False), flush=True)
-    state = bridge.kernel.state
+    state = bridge.kernel._state
+    ordinary = [a for a in state.population if a != "player" and not professional(state, a)]
+    ordinary_participants = [a for a in ordinary if settled_at.get(a)]
+    ordinary_participations = sum(len(settled_at[a]) for a in ordinary_participants)
     for actor_id, times in settled_at.items():
         if not professional(state, actor_id):
             for a, b in zip(times, times[1:]):
@@ -93,6 +101,14 @@ def run(days=14, seed=42, pause_days=()):
     summary = {"days": days, "seed": seed, "counts": dict(counts), "participants": len(settled_at),
                "supply_pause_days": list(pause_days),
                "ordinary_repeat_intervals_days": gaps, "stock_conserved_with_recorded_imports_and_consumption": True,
+               "ordinary_population": len(ordinary), "ordinary_participants": len(ordinary_participants),
+               "ordinary_repeat_participants": sum(len(settled_at[a]) > 1 for a in ordinary_participants),
+               "ordinary_repeat_mean_days": mean(gaps) if gaps else None,
+               "ordinary_repeat_median_days": median(gaps) if gaps else None,
+               # Includes zero-trade residents; not the conditional repeat mean.
+               # Both are needed to avoid hiding silent NPCs or censoring bias.
+               "ordinary_trades_per_npc_day": ordinary_participations / (len(ordinary) * days),
+               "mean_procurement_units": counts["procured_units"] / counts["BUY_ITEM"],
                "shop_cash_and_external_payments_reconciled": True,
                "supplier_receipts": state.inventories["supply"]["supplier_receipts"],
                "midpoint_checkpoint_restored": True, "paid_llm_calls": 0}

@@ -36,6 +36,7 @@ def install_campus_trade(state):
         "policy": {"necessary_items": {"bread_loaf": 1, "blank_notebook": 1},
                    "trading_occupations": ["campus_service_staff"],
                    "ordinary_interval_days": [2, 4], "item_cooldown_phases": 8,
+                   "food_reorder_nutrition": 25, "food_buffer_nutrition": [100, 150],
                    "professional_item_cooldown_phases": 1,
                    "professional_trades_per_phase": 4, "offer_lifetime_phases": 2},
     }
@@ -75,6 +76,40 @@ def acquired(state, actor_id, item_id):
         state.inventories["trade"]["acquired"].setdefault(actor_id, {})[item_id] = tick(state)
 
 
+def carried_nutrition(state, actor_id):
+    rules = state.inventories["rules"]
+    return sum(quantity * rules.get(key, {}).get("food_reduction", 0)
+               for key, quantity in state.inventories["actors"][actor_id]["quantities"].items())
+
+
+def procurement_demand(state, actor_id, item_id):
+    """Restock a low pantry in batches; nearby private trades cover small gaps.
+
+    Target and reorder threshold differ deliberately. Daily top-ups would keep
+    refreshing the existing same-item resale lock. No generated surplus or
+    guaranteed counterparty: purchased goods still cost cash and carry weight.
+    """
+    nutrition = state.inventories["rules"][item_id].get("food_reduction", 0)
+    if not nutrition:
+        return demand(state, actor_id, item_id)
+    actor = state.population[actor_id]
+    policy = state.inventories["trade"]["policy"]
+    carried = carried_nutrition(state, actor_id)
+    if actor["needs"]["food"] < 25 or carried > policy.get("food_reorder_nutrition", 25):
+        return 0
+    low, high = policy.get("food_buffer_nutrition", [100, 150])
+    diligence = actor["personality"].get("conscientiousness", 50)
+    target = low + (high - low) * diligence // 100
+    # Financial stress reduces the intended reserve, never the hard food floor.
+    if actor["wealth"] < 50:
+        target = min(target, 50)
+    elif actor["needs"]["money"] >= 75:
+        # Money anxiety is not insolvency: modestly reduce the buffer instead
+        # of making well-funded residents return to perpetual daily top-ups.
+        target = max(75, target - 25)
+    return max(0, (target - carried + nutrition - 1) // nutrition)
+
+
 def demand(state, actor_id, item_id):
     """A real shortage, never an instruction to buy arbitrary generated goods."""
     actor = state.population[actor_id]
@@ -82,8 +117,7 @@ def demand(state, actor_id, item_id):
     rules = state.inventories["rules"]
     nutrition = rules[item_id].get("food_reduction", 0)
     if nutrition:
-        carried = sum(quantity * rules.get(key, {}).get("food_reduction", 0)
-                      for key, quantity in state.inventories["actors"][actor_id]["quantities"].items())
+        carried = carried_nutrition(state, actor_id)
         return max(0, (50 - carried + nutrition - 1) // nutrition) if actor["needs"]["food"] >= 25 else 0
     protected = state.inventories["protected_items"].get(actor.get("occupation_id"), {}).get(item_id, 0)
     if protected:
@@ -356,12 +390,15 @@ def make_procurement_selector(base_selector, graph, protected_priority):
             if state.clock.phase not in state.places[shop["location_id"]].get("open_phases", []):
                 continue
             for item_id in shop["accepted_item_ids"]:
-                needed = demand(state, actor_id, item_id)
+                needed = procurement_demand(state, actor_id, item_id)
                 price = state.inventories["catalog"][item_id]["base_price"]
                 quantity = min(needed, shop["quantities"].get(item_id, 0), actor["wealth"] // price)
                 if quantity <= 0:
                     continue
-                if not _inventory(state.inventories["actors"][actor_id]).can_add(catalog[item_id], quantity, catalog):
+                inventory = _inventory(state.inventories["actors"][actor_id])
+                while quantity > 0 and not inventory.can_add(catalog[item_id], quantity, catalog):
+                    quantity -= 1
+                if quantity <= 0:
                     continue
                 route = graph.shortest_route(actor["current_location_id"], shop["location_id"], phase=state.clock.phase, access_tags=actor.get("access_tags", ()))
                 if route is not None:
@@ -395,6 +432,12 @@ def campus_trade_invariant(state):
     try:
         if trade["schema_version"] != 1 or type(trade["sequence"]) is not int or trade["sequence"] < 0:
             yield "invalid campus trade version/sequence"
+        threshold = trade["policy"].get("food_reorder_nutrition", 25)
+        buffer = trade["policy"].get("food_buffer_nutrition", [100, 150])
+        if (type(threshold) is not int or threshold < 0 or not isinstance(buffer, (list, tuple))
+                or len(buffer) != 2 or any(type(value) is not int for value in buffer)
+                or not threshold < buffer[0] <= buffer[1] <= 300):
+            yield "invalid campus food buffer policy"
         for key, offer in trade["offers"].items():
             if key != offer["offer_id"] or offer["status"] not in {"pending", "settled", "rejected", "cancelled", "expired"}:
                 yield "invalid campus offer identity/status"

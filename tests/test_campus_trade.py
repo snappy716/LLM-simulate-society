@@ -11,6 +11,7 @@ from simulation.systems.campus_inventory import CAMPUS_ITEM_ACTIONS, make_campus
 from simulation.systems.campus_trade import (
     TRADE_ACTIONS, make_campus_trade_handler, valuation, advance_campus_trade,
     make_procurement_selector, professional, tick,
+    procurement_demand, demand, acquisition_locked,
 )
 from simulation.systems.transactions import WorldKernel, TransactionContext
 from simulation.systems.randomness import DeterministicRngPool
@@ -286,6 +287,119 @@ class CampusTradeTests(unittest.TestCase):
         plan = selector(context, self.npc, {"priority": 0}, Counter())
         self.assertEqual("BUY_ITEM", plan["activity_id"])
         self.assertIn(plan["parameters"]["item_id"], ("restaurant_meal", "dried_meat"))
+
+    def test_food_restock_uses_low_threshold_and_larger_target(self):
+        state = self.kernel._state
+        actor = state.population[self.npc]
+        actor["needs"].update(food=50, money=20)
+        actor["wealth"] = 200
+        actor["personality"]["conscientiousness"] = 50
+        stock = state.inventories["actors"][self.npc]["quantities"]
+        stock["bread_loaf"] = 1
+        self.assertEqual(4, procurement_demand(state, self.npc, "bread_loaf"))
+        self.assertEqual(1, demand(state, self.npc, "bread_loaf"))
+        stock["bread_loaf"] = 3
+        self.assertEqual(0, procurement_demand(state, self.npc, "bread_loaf"))
+        self.assertEqual(0, demand(state, self.npc, "bread_loaf"))
+
+    def test_small_private_gap_does_not_trigger_another_shopping_trip(self):
+        state = self.kernel._state
+        state.population[self.npc]["needs"]["food"] = 50
+        state.inventories["actors"][self.npc]["quantities"].update(bread_loaf=0, dried_meat=2)
+        self.assertEqual(0, procurement_demand(state, self.npc, "bread_loaf"))
+        self.assertEqual(1, demand(state, self.npc, "bread_loaf"))
+
+    def test_food_reserve_target_respects_personality_and_financial_pressure(self):
+        state = self.kernel._state
+        actor = state.population[self.npc]
+        actor["wealth"] = 200
+        actor["needs"].update(food=50, money=20)
+        state.inventories["actors"][self.npc]["quantities"].pop("bread_loaf")
+        actor["personality"]["conscientiousness"] = 0
+        self.assertEqual(4, procurement_demand(state, self.npc, "bread_loaf"))
+        actor["personality"]["conscientiousness"] = 100
+        self.assertEqual(6, procurement_demand(state, self.npc, "bread_loaf"))
+        actor["needs"]["money"] = 80
+        self.assertEqual(5, procurement_demand(state, self.npc, "bread_loaf"))
+        actor["needs"]["money"] = 20
+        actor["wealth"] = 30
+        self.assertEqual(2, procurement_demand(state, self.npc, "bread_loaf"))
+        actor["needs"]["food"] = 0
+        self.assertEqual(0, procurement_demand(state, self.npc, "bread_loaf"))
+
+    def test_buffer_purchase_can_leave_old_surplus_without_renewing_item_lock(self):
+        from simulation.systems.campus_inventory import _movable
+        state = self.kernel._state
+        state.population[self.npc]["needs"].update(food=50, money=20)
+        result = self.run_action("BUY_ITEM", self.npc, item_id="bread_loaf", shop_id="campus_market", quantity=4)
+        self.assertTrue(result.success)
+        self.assertTrue(acquisition_locked(self.kernel.state, self.npc, "bread_loaf"))
+        self.assertEqual(0, procurement_demand(self.kernel.state, self.npc, "bread_loaf"))
+        self.assertTrue(self.run_action("USE_ITEM", self.npc, item_id="bread_loaf").success)
+        self.kernel._state.clock.day = 3
+        state = self.kernel._state
+        self.assertFalse(acquisition_locked(state, self.npc, "bread_loaf"))
+        self.assertTrue(_movable(state, self.npc, "bread_loaf", 1))
+        self.assertFalse(_movable(state, self.npc, "bread_loaf", 5))
+        self.assertEqual(0, procurement_demand(state, self.npc, "bread_loaf"))
+
+    def test_profession_demand_not_inflated_by_food_buffer(self):
+        state = self.kernel._state
+        doctor = next(a for a, r in state.population.items() if r.get("occupation_id") == "medical_staff")
+        for item_id in ("bandage_roll", "antiseptic_bottle", "blank_notebook"):
+            self.assertEqual(demand(state, doctor, item_id), procurement_demand(state, doctor, item_id))
+        state.inventories["actors"][doctor]["quantities"].pop("bandage_roll")
+        self.assertEqual(2, procurement_demand(state, doctor, "bandage_roll"))
+
+    def test_procurement_shrinks_batch_to_weight_and_cash_instead_of_abandoning_it(self):
+        from simulation.systems.campus_locations import load_campus_location_graph
+        from simulation.systems.content_registry import ContentRegistry
+        from simulation.systems.campus_inventory import _inventory, _catalog
+        graph = load_campus_location_graph(ContentRegistry.load_default(Path(__file__).parents[1] / "content"))
+        state = self.kernel._state
+        actor = state.population[self.npc]
+        actor["needs"].update(food=50, money=20)
+        actor["wealth"] = 200
+        record = state.inventories["actors"][self.npc]
+        record["quantities"].pop("bread_loaf")
+        for shop in state.inventories["shops"].values():
+            shop["quantities"] = {"bread_loaf": 20} if shop["id"] == "campus_market" else {}
+        catalog = _catalog(state)
+        record["max_weight"] = _inventory(record).total_weight(catalog) + catalog["bread_loaf"].weight
+        context = TransactionContext(state, DeterministicRngPool(42), self.command("ADVANCE_PHASE"))
+        selector = make_procurement_selector(lambda *args: {"fallback": True}, graph, 80)
+        before = state.to_dict()
+        self.assertEqual(1, selector(context, self.npc, {}, Counter())["parameters"]["quantity"])
+        self.assertEqual(before, state.to_dict(), "planning does not acquire goods or spend cash")
+        record["max_weight"] = 20
+        actor["wealth"] = 4
+        self.assertEqual(1, selector(context, self.npc, {}, Counter())["parameters"]["quantity"])
+        actor["wealth"] = 0
+        self.assertEqual({"fallback": True}, selector(context, self.npc, {}, Counter()))
+
+    def test_checkpoint_without_new_buffer_policy_uses_safe_defaults(self):
+        state = self.kernel._state
+        policy = state.inventories["trade"]["policy"]
+        del policy["food_reorder_nutrition"]
+        del policy["food_buffer_nutrition"]
+        state.population[self.npc]["needs"].update(food=50, money=20)
+        state.population[self.npc]["wealth"] = 200
+        state.population[self.npc]["personality"]["conscientiousness"] = 50
+        state.inventories["actors"][self.npc]["quantities"].pop("bread_loaf")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "buffer.json"
+            save_kernel_checkpoint(path, state, DeterministicRngPool(42))
+            loaded = load_kernel_checkpoint(path)
+            self.assertEqual(5, procurement_demand(loaded.state, self.npc, "bread_loaf"))
+
+    def test_invalid_buffer_policy_is_rejected(self):
+        for field, value in [("food_reorder_nutrition", True), ("food_reorder_nutrition", -1),
+                             ("food_buffer_nutrition", [20, 150]), ("food_buffer_nutrition", [150, 100]),
+                             ("food_buffer_nutrition", "100,150"), ("food_buffer_nutrition", [100]),
+                             ("food_buffer_nutrition", [100, 301])]:
+            state = self.kernel.state
+            state.inventories["trade"]["policy"][field] = value
+            self.assertIn("invalid campus food buffer policy", list(campus_inventory_invariant(state)))
 
 
 if __name__ == "__main__":

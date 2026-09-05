@@ -30,16 +30,27 @@ func _run() -> void:
 	assert(detail.text.contains("已付款在途") and detail.text.contains("第 2 天"), detail.text)
 	var snapshot: Dictionary = bridge.get("campus_snapshot")
 	var balance := int(snapshot.economy.balance)
+	var morning_result: Dictionary = {}
 	for _step in range(3):
 		bridge.advance_campus_phase()
 		var advanced = await bridge.campus_phase_advanced
 		assert(bool(advanced[0]), "supply phase failed: %s" % advanced[1])
+		morning_result = advanced[1]
 		if _step < 2:
 			assert(submit.disabled, "goods must not arrive on order day")
 	snapshot = bridge.get("campus_snapshot")
 	assert(int(snapshot.clock.day) == 2 and snapshot.clock.phase == "morning")
 	assert((phone.get("_time_label") as Label).text.begins_with("Day 2"), "phone clock must follow live snapshot while open")
 	assert(int(snapshot.economy.balance) == balance, "supplier cannot charge player")
+	if "--competing-customers" in OS.get_cmdline_user_args():
+		assert(submit.disabled, "NPC purchases may exhaust delivery; player has no reserved stock")
+		assert(detail.text.contains("现货不足"), detail.text)
+		assert(int(morning_result.result.payload.phase_execution.supply_deliveries) > 0, "assert real delivery, not merely a persistent empty shelf")
+		print("CAMPUS_SUPPLY_COMPETITION_OK real_delivery npc_purchases no_player_priority")
+		scene.queue_free()
+		await process_frame
+		quit(0)
+		return
 	assert(not submit.disabled, "next-day delivered stock must be purchasable")
 	submit.pressed.emit()
 	var bought = await bridge.campus_inventory_operation_completed
