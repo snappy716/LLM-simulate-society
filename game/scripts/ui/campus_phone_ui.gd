@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const APPS := [
+	{"id": "saves", "name": "存读档", "icon": "档", "color": Color("557e91")},
 	{"id": "messages", "name": "校园通讯", "icon": "讯", "color": Color("35c96f")},
 	{"id": "courses", "name": "课程平台", "icon": "课", "color": Color("3988e8")},
 	{"id": "album", "name": "校园相册", "icon": "册", "color": Color("d65bd1")},
@@ -23,6 +24,7 @@ var _content: RichTextLabel
 var _inventory_root: VBoxContainer
 var _trade_root: VBoxContainer
 var _health_root: VBoxContainer
+var _save_root: VBoxContainer
 var _time_label: Label
 var _opened := false
 var _forum_root: VBoxContainer
@@ -172,7 +174,10 @@ func _build_ui() -> void:
 
 
 func _build_home() -> Control:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var grid := GridContainer.new()
+	scroll.add_child(grid)
 	grid.columns = 4
 	grid.add_theme_constant_override("h_separation", 8)
 	grid.add_theme_constant_override("v_separation", 18)
@@ -192,7 +197,7 @@ func _build_home() -> Control:
 		label.add_theme_font_size_override("font_size", 12)
 		cell.add_child(label)
 		grid.add_child(cell)
-	return grid
+	return scroll
 
 
 func _build_app_page() -> VBoxContainer:
@@ -223,6 +228,9 @@ func _build_app_page() -> VBoxContainer:
 	_health_root = preload("res://scripts/ui/campus_health_panel.gd").new()
 	_health_root.visible = false
 	page.add_child(_health_root)
+	_save_root = preload("res://scripts/ui/campus_save_panel.gd").new()
+	_save_root.visible = false
+	page.add_child(_save_root)
 	_forum_root = _build_forum_page()
 	_forum_root.visible = false
 	_forum_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -579,6 +587,10 @@ func _build_forum_page() -> VBoxContainer:
 
 func _open_app(app_id: String, app_name: String) -> void:
 	_app_title.text = app_name
+	var is_save := app_id == "saves"
+	_save_root.visible = is_save
+	if is_save:
+		_save_root.call("refresh")
 	var is_forum := app_id == "forums"
 	var is_club := app_id == "clubs"
 	var is_party := app_id == "party"
@@ -596,7 +608,7 @@ func _open_app(app_id: String, app_name: String) -> void:
 	_inventory_root.visible = is_inventory
 	if is_inventory:
 		_inventory_root.call("refresh")
-	_content.visible = not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health and not is_trade
+	_content.visible = not is_save and not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health and not is_trade
 	_forum_root.visible = is_forum
 	_club_root.visible = is_club
 	_party_root.visible = is_party

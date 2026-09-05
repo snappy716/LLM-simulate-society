@@ -145,6 +145,8 @@ class CampusKernelBridge:
 
     def __init__(self, master_seed: int) -> None:
         registry = ContentRegistry.load_default(REPOSITORY_DIR / "content")
+        self.registry = registry
+        self.operation_lock = threading.RLock()
         graph = load_campus_location_graph(registry)
         rng_pool = DeterministicRngPool(master_seed)
         state = WorldState(content_version=registry.content_version, master_seed=master_seed)
@@ -426,13 +428,50 @@ class CampusKernelBridge:
         return view
 
     def execute(self, payload: dict) -> dict:
-        command = parse_simulation_command(payload)
-        result = self.kernel.execute(command)
-        return {
-            "ok": result.success,
-            "result": command_result_view(result),
-            "snapshot": self.snapshot(),
-        }
+        with self.operation_lock:
+            command = parse_simulation_command(payload)
+            result = self.kernel.execute(command)
+            return {"ok": result.success, "result": command_result_view(result), "snapshot": self.snapshot()}
+
+    def persistence(self, store, payload):
+        from simulation.persistence.campus_saves import SaveError, PRESENTATION_MAPS
+        with self.operation_lock, store.locked():
+            if not isinstance(payload, dict):
+                raise SaveError("存档请求必须是对象。")
+            if set(payload) - {"operation", "slot_id", "expected_world_revision", "expected_token", "confirmed", "backup", "presentation_map_id"}:
+                raise SaveError("存档请求含未知字段；不接受文件路径。")
+            action = payload.get("operation")
+            if action == "list":
+                return {"ok": True, "slots": store.listing()}
+            if action not in ("save", "load"):
+                raise SaveError("未知存档操作。")
+            if (type(payload.get("confirmed")) is not bool or not isinstance(payload.get("expected_token"), str)
+                    or type(payload.get("backup", False)) is not bool):
+                raise SaveError("存档确认、版本或备份选项无效。")
+            state, rng = self.kernel.capture_checkpoint()
+            revision = payload.get("expected_world_revision")
+            if type(revision) is not int or revision != state.revision:
+                raise SaveError("世界已改变，请刷新后重新确认。")
+            slot = payload.get("slot_id")
+            options = {"expected_token": payload.get("expected_token"), "confirmed": payload.get("confirmed")}
+            changes = []
+            preserved_invalid = False
+            if action == "save":
+                map_id = payload.get("presentation_map_id", "")
+                if map_id not in ("", *PRESENTATION_MAPS):
+                    raise SaveError("展示地图无效；不接受场景路径。")
+                if map_id:
+                    state.metadata["save_presentation_map"] = map_id
+                preserved_invalid = store.save(slot, state, rng, self.registry.manifest, **options)
+            else:
+                backup = payload.get("backup", False)
+                if type(backup) is not bool:
+                    raise SaveError("备份选项无效。")
+                loaded, changes = store.load(slot, backup=backup, content_version=self.registry.content_version, **options)
+                self.kernel.restore_checkpoint(loaded.state, loaded.rng, expected_revision=revision)
+            return {"ok": True, "operation": action, "slots": store.listing(),
+                    "presentation_map_id": state.metadata.get("save_presentation_map", "") if action == "save" else loaded.state.metadata.get("save_presentation_map", ""),
+                    "migrations": changes, "preserved_invalid": preserved_invalid, "snapshot": self.snapshot()}
 
     def chronicle(
         self,
@@ -455,10 +494,12 @@ class CampusKernelBridge:
 
 
 class SimulationBridge:
-    def __init__(self, output_dir: Path | None = None) -> None:
+    def __init__(self, output_dir: Path | None = None, save_dir: Path | None = None) -> None:
         settings = sim.load_runtime_settings()
         output_dir = output_dir or GAME_DIR / "data" / "simulation" / "live"
         output_dir.mkdir(parents=True, exist_ok=True)
+        from simulation.persistence.campus_saves import CampusSaveStore
+        self.campus_saves = CampusSaveStore(save_dir or output_dir / "campus_saves")
         self.world = sim.World(sim.Config(
             seed=int(settings.get("seed", 42)), days=0,
             core_npcs=int(settings.get("core_npcs", 20)),
@@ -870,7 +911,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         if self.path not in {
-            "/step", "/configure", "/trade", "/use-item", "/action", "/kernel/command"
+            "/step", "/configure", "/trade", "/use-item", "/action", "/kernel/command", "/kernel/saves"
         }:
             self._reply(404, {"error": "not found"})
             return
@@ -884,6 +925,13 @@ class Handler(BaseHTTPRequestHandler):
                     self._reply(200, self.bridge.configure_interface(payload))
                 elif self.path == "/kernel/command":
                     self._reply(200, self.bridge.campus_command(payload))
+                elif self.path == "/kernel/saves":
+                    try:
+                        result = self.bridge.campus.persistence(self.bridge.campus_saves, payload)
+                    except (ValueError, OSError) as exc:
+                        self._reply(400, {"ok": False, "error": str(exc), "code": "save_rejected"})
+                        return
+                    self._reply(200, result)
                 elif self.path == "/use-item":
                     result = self.bridge.use_item(payload)
                     self._reply(200 if result["ok"] else 400, result)
@@ -907,8 +955,9 @@ class Handler(BaseHTTPRequestHandler):
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--save-dir", type=Path)
     args = parser.parse_args()
-    Handler.bridge = SimulationBridge()
+    Handler.bridge = SimulationBridge(save_dir=args.save_dir)
     server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
     print(f"GODOT_SIMULATION_READY http://127.0.0.1:{args.port}", flush=True)
     server.serve_forever()

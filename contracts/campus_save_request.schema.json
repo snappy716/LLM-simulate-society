@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Local campus player save slots /kernel/saves",
+  "type": "object",
+  "required": ["operation"],
+  "properties": {
+    "operation": {"enum": ["list", "save", "load"]},
+    "slot_id": {"enum": ["slot_1", "slot_2", "slot_3"]},
+    "expected_world_revision": {"type": "integer", "minimum": 1},
+    "expected_token": {"type": "string"},
+    "confirmed": {"type": "boolean"},
+    "backup": {"type": "boolean"},
+    "presentation_map_id": {"enum": ["", "campus_gate", "living_area", "east_dormitory", "west_dormitory", "psychology_bridge", "library", "sports_field"]}
+  },
+  "if": {"properties": {"operation": {"enum": ["save", "load"]}}},
+  "then": {"required": ["slot_id", "expected_world_revision", "expected_token", "confirmed"]},
+  "additionalProperties": false
+}

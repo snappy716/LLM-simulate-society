@@ -8,10 +8,9 @@ import tempfile
 
 from simulation.actions.commands import SimulationCommand
 from simulation.api.server import CampusKernelBridge
-from simulation.persistence.kernel_checkpoint import save_kernel_checkpoint, load_kernel_checkpoint
+from simulation.persistence.campus_saves import CampusSaveStore
 from simulation.systems.campus_inventory import campus_inventory_invariant
 from simulation.systems.campus_trade import professional
-from simulation.systems.randomness import DeterministicRngPool
 
 
 def run(days=14, seed=42, pause_days=()):
@@ -78,14 +77,18 @@ def run(days=14, seed=42, pause_days=()):
         previous_quantities = current
         if index == days * 2:
             with tempfile.TemporaryDirectory() as directory:
-                path = Path(directory) / "soak.json"
-                save_kernel_checkpoint(path, after, DeterministicRngPool.from_snapshot(bridge.kernel.rng_snapshot))
-                loaded = load_kernel_checkpoint(path)
-                assert loaded.state.to_dict() == json.loads(json.dumps(after.to_dict()))
-                bridge.kernel._state = loaded.state
-                # This phase path did not draw trade RNG; restore the whole pool
-                # as well, so cognition/schedules continue on the saved streams.
-                bridge.kernel._rng = loaded.rng
+                store = CampusSaveStore(Path(directory))
+                request = {"operation": "save", "slot_id": "slot_1", "confirmed": True,
+                           "expected_world_revision": after.revision, "expected_token": ""}
+                saved = bridge.persistence(store, request)
+                request.update(operation="load", expected_token=saved["slots"][0]["current"]["token"])
+                rng_before = bridge.kernel.rng_snapshot
+                bridge.persistence(store, request)
+                restored = bridge.kernel.state.to_dict()
+                assert restored["revision"] > after.revision
+                restored["revision"] = after.revision
+                assert restored == json.loads(json.dumps(after.to_dict()))
+                assert bridge.kernel.rng_snapshot == rng_before
         if (index + 1) % 4 == 0:
             print(json.dumps({"day": (index + 1) // 4, "counts": dict(counts)}, ensure_ascii=False), flush=True)
     state = bridge.kernel._state
@@ -111,7 +114,7 @@ def run(days=14, seed=42, pause_days=()):
                "mean_procurement_units": counts["procured_units"] / counts["BUY_ITEM"],
                "shop_cash_and_external_payments_reconciled": True,
                "supplier_receipts": state.inventories["supply"]["supplier_receipts"],
-               "midpoint_checkpoint_restored": True, "paid_llm_calls": 0}
+               "midpoint_checkpoint_restored": True, "player_slot_restore": True, "paid_llm_calls": 0}
     print("CAMPUS_TRADE_SOAK_OK " + json.dumps(summary, ensure_ascii=False), flush=True)
     return summary
 

@@ -11,6 +11,31 @@ var _pending_transition: Dictionary = {}
 var _arrival_attempts := 0
 
 
+func restore_saved_location(snapshot: Dictionary, saved_map_id: String = "") -> void:
+	_pending_arrival_anchor_id = ""
+	_pending_transition = {}
+	var location_id := String(snapshot.player.current_location_id)
+	var place: Dictionary = snapshot.places.get(location_id, {})
+	var region_id := String(place.get("region_id", location_id))
+	var presentation := get_node("/root/CampusPresentation")
+	var selected_map := saved_map_id if not saved_map_id.is_empty() else "campus_gate"
+	var matches: Array[String] = []
+	for entry in presentation.call("all_maps"):
+		if region_id in entry.get("visible_region_ids", []):
+			matches.append(String(entry.id))
+	if not matches.is_empty():
+		selected_map = saved_map_id if saved_map_id in matches else matches[0]
+	presentation.call("select_map", selected_map)
+	# Restore to existing safe ground/entry anchors, not stale pixel coordinates.
+	# Only the student-center lobby currently has a separate rendered interior.
+	var scene := "res://scenes/debug/campus_lobby_test.tscn" if location_id == "student_center" else "res://scenes/campus/campus_collab_test.tscn"
+	register_presentation_scene("campus_outdoor", "res://scenes/campus/campus_collab_test.tscn")
+	register_presentation_scene("interior_building_lobby", "res://scenes/debug/campus_lobby_test.tscn")
+	var error := get_tree().change_scene_to_file(scene)
+	if error != OK:
+		scene_transition_failed.emit("读档成功，但场景重建失败。", {})
+
+
 func register_presentation_scene(presentation_key: String, scene_path: String) -> void:
 	if presentation_key.is_empty() or scene_path.is_empty():
 		push_error("Campus presentation registration requires a key and scene path")

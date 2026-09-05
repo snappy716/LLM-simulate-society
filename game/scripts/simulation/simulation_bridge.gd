@@ -23,6 +23,7 @@ signal campus_social_proposal_response_completed(success: bool, result: Dictiona
 signal campus_night_world_operation_completed(success: bool, result: Dictionary, action_id: String)
 signal campus_npc_chronicle_loaded(success: bool, result: Dictionary, npc_id: String, filter_name: String)
 signal campus_inventory_operation_completed(success: bool, result: Dictionary)
+signal campus_persistence_completed(success: bool, result: Dictionary)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
 
@@ -113,6 +114,27 @@ func advance_time() -> void:
 
 func is_campus_busy() -> bool:
 	return _campus_busy
+
+
+func campus_persistence(payload: Dictionary) -> void:
+	if _campus_busy or not connected:
+		campus_persistence_completed.emit(false, {"error": "校园正在处理行动，请稍后重试。"})
+		return
+	_campus_busy = true
+	_campus_pending_operation = "persistence"
+	var error := _campus_request.request(_base_url + "/kernel/saves", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, JSON.stringify(payload))
+	if error != OK:
+		_campus_busy = false
+		_campus_pending_operation = ""
+		campus_persistence_completed.emit(false, {"error": "无法发送存档请求。"})
+
+
+func _restore_loaded_scene(map_id: String = "") -> void:
+	# Discard abandoned-future dialogs, selected tasks and movement animations.
+	_chronicle_request.cancel_request()
+	_chronicle_busy = false
+	get_tree().paused = false
+	get_node("/root/CampusNavigation").call("restore_saved_location", campus_snapshot, map_id)
 
 
 func configure_interface(config: Dictionary) -> void:
@@ -765,9 +787,12 @@ func weekday_display_name(index: int) -> String:
 func _start_server() -> void:
 	var script_path := ProjectSettings.globalize_path(SERVER_SCRIPT)
 	var python_command := "python" if OS.has_feature("windows") else "python3"
+	var save_dir := OS.get_environment("GODOT_SIM_SAVE_DIR")
+	if save_dir.is_empty():
+		save_dir = ProjectSettings.globalize_path("user://campus_saves")
 	server_pid = OS.create_process(
 		python_command,
-		PackedStringArray([script_path, "--port", str(_server_port)]),
+		PackedStringArray([script_path, "--port", str(_server_port), "--save-dir", save_dir]),
 		false
 	)
 	if server_pid <= 0:
@@ -914,6 +939,16 @@ func _on_campus_request_completed(
 	_campus_pending_night_action = ""
 	_campus_busy = false
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
+	if operation == "persistence":
+		var response: Dictionary = parsed if parsed is Dictionary else {"error": "存档服务未返回有效响应；请刷新存档槽确认结果。"}
+		var success := response_code == 200 and bool(response.get("ok", false))
+		if success and response.get("snapshot") is Dictionary:
+			campus_snapshot = response.snapshot
+			campus_snapshot_updated.emit(campus_snapshot)
+		campus_persistence_completed.emit(success, response)
+		if success and response.get("operation") == "load":
+			call_deferred("_restore_loaded_scene", String(response.get("presentation_map_id", "")))
+		return
 	if response_code != 200 or not parsed is Dictionary:
 		if operation == "inventory":
 			campus_inventory_operation_completed.emit(false, parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"})

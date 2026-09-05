@@ -199,6 +199,9 @@ func visible_resident_count() -> int:
 
 
 func _refresh_residents() -> void:
+	# A deferred snapshot/map refresh can outlive removal of the old scene on load.
+	if not is_inside_tree() or is_queued_for_deletion():
+		return
 	if _active_routes > 0 or _places.is_empty() or _population.is_empty():
 		return
 	var desired_ids: Array[String] = []

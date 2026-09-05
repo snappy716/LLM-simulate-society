@@ -120,6 +120,25 @@ class WorldKernel:
     def rng_snapshot(self) -> Dict[str, Any]:
         return self._rng.snapshot()
 
+    def capture_checkpoint(self):
+        """Capture world and random streams under the same transaction lock."""
+        with self._lock:
+            return self._state.clone(), self._rng.clone()
+
+    def restore_checkpoint(self, state, rng, *, expected_revision):
+        """Validate everything before swapping; invalidate abandoned-future commands."""
+        with self._lock:
+            if self._state.revision != expected_revision:
+                raise RevisionConflictError("world changed while loading checkpoint")
+            candidate = state.clone()
+            candidate.require_valid([error for invariant in self._invariants for error in invariant(candidate)])
+            if candidate.master_seed != rng.master_seed:
+                raise ValueError("world state and RNG master seeds differ")
+            candidate_rng = rng.clone()
+            candidate.revision = max(self._state.revision, candidate.revision) + 1
+            self._state = candidate
+            self._rng = candidate_rng
+
     def register_handler(self, action_id: str, handler: CommandHandler) -> None:
         if not action_id:
             raise ValueError("action_id is required")

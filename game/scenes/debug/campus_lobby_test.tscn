@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/campus_lobby_graybox.gd" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/characters/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://scenes/world/components/campus_transition_trigger.tscn" id="3_trigger"]
 [ext_resource type="PackedScene" path="res://scenes/world/components/campus_arrival_anchor.tscn" id="4_anchor"]
 [ext_resource type="PackedScene" path="res://scenes/ui/campus_phase_debug_panel.tscn" id="5_phase"]
+[ext_resource type="Script" path="res://scripts/ui/campus_phone_ui.gd" id="6_phone"]
 
 [node name="CampusLobbyGraybox" type="Node2D"]
 script = ExtResource("1_world")
@@ -33,3 +34,7 @@ theme_override_font_sizes/font_size = 18
 text = "学生中心大厅 · 向下走到门口即可返回原楼梯"
 
 [node name="PhasePanel" parent="UI" instance=ExtResource("5_phase")]
+
+[node name="CampusPhoneUI" type="CanvasLayer" parent="."]
+layer = 32
+script = ExtResource("6_phone")
