@@ -88,8 +88,11 @@ def _movable(state, actor_id, item_id, quantity):
     record = state.inventories["actors"][actor_id]
     reserve = sum(1 for equipped in record["equipped"].values() if equipped == item_id)
     if actor_id != "player":
+        from simulation.systems.campus_trade import reserve_quantity, acquisition_locked
+        if acquisition_locked(state, actor_id, item_id):
+            return False
         occupation = state.population[actor_id].get("occupation_id")
-        reserve = max(reserve, state.inventories["protected_items"].get(occupation, {}).get(item_id, 0))
+        reserve = max(reserve, reserve_quantity(state, actor_id, item_id), state.inventories["protected_items"].get(occupation, {}).get(item_id, 0))
     return record["quantities"].get(item_id, 0) - quantity >= reserve
 
 
@@ -162,10 +165,18 @@ def make_campus_inventory_handler():
                 return _failure("inventory_full", "接收方背包负重不足。")
             _inventory(source).remove(item_id, quantity)
             _inventory(destination).add(item, quantity, catalog)
+            from simulation.systems.campus_trade import acquired, remember
+            if destination is record:
+                acquired(state, actor_id, item_id)
+            elif target_id:
+                acquired(state, target_id, item_id)
             if shop is not None:
                 paid = total if action == "BUY_ITEM" else -total
                 actor["wealth"] -= paid
                 shop["cash"] += paid
+                if "trade" in ledger:
+                    remember(state, actor_id, {"item_id": item_id, "unit_price": unit_price,
+                             "quantity": quantity, "status": "settled", "shop_id": shop["id"], "action_id": action})
         elif action == "USE_ITEM":
             if quantity != 1:
                 return _failure("single_item_required", "每次使用一件物品。")
@@ -257,9 +268,12 @@ def campus_inventory_invariant(state):
                     yield "invalid campus equipped item"
     except (KeyError, TypeError, ValueError, AttributeError) as exc:
         yield "invalid campus inventory structure: " + str(exc)
+    from simulation.systems.campus_trade import campus_trade_invariant
+    yield from campus_trade_invariant(state)
 
 
 def campus_inventory_view(state, actor_id="player"):
+    from simulation.systems.campus_trade import trade_view
     ledger = state.inventories
     if not ledger:
         return {"enabled": False}
@@ -283,5 +297,6 @@ def campus_inventory_view(state, actor_id="player"):
         "items":ledger["catalog"], "inventory":record, "weight":_inventory(record).total_weight(_catalog(state)),
         "ground":ledger["ground"].get(_ground_key(state, actor_id), {"quantities":{}}),
         "shops":shops, "battle_locked":_busy(state, actor_id),
+        "private_trade": trade_view(state, actor_id),
         "nearby_actor_ids":[key for key, actor in state.population.items() if key != actor_id and actor["current_location_id"] == location and _layer(state, key) == _layer(state, actor_id) and not _busy(state, key)],
     })

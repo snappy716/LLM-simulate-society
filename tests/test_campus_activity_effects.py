@@ -138,13 +138,15 @@ class CampusActivityEffectTests(unittest.TestCase):
             event for event in result["result"]["events"]
             if event["event_type"] == "CAMPUS_ACTIVITY_EFFECT_APPLIED"
         ]
-        self.assertEqual(200, len(effect_events))
+        purchases = [event for event in result["result"]["events"]
+                     if event["event_type"] == "CAMPUS_ITEM_ACTION_COMPLETED" and event["payload"].get("action_id") == "BUY_ITEM"]
+        self.assertEqual(200, len(effect_events) + len(purchases))
         self.assertEqual(
             201,
             result["result"]["payload"]["phase_execution"]["need_tick_count"],
         )
         state = self.bridge.campus.kernel.state
-        self.assertEqual(200, len(state.knowledge["actors"]))
+        self.assertEqual(len(effect_events), len(state.knowledge["actors"]))
         actor = state.population["campus_student_001"]
         self.assertNotEqual(before, actor["needs"])
         self.assertEqual(1, actor["activity_progress"]["total"])

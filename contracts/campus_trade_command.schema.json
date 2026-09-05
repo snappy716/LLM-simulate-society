@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Campus private quote command; snapshot.economy.private_trade",
+  "type": "object",
+  "allOf": [
+    {"$ref": "simulation_command.schema.json"},
+    {"properties": {
+      "action_id": {"enum": ["OFFER_TRADE", "ACCEPT_TRADE", "REJECT_TRADE", "CANCEL_TRADE", "REQUEST_TRADE_RESPONSE"]},
+      "parameters": {"type": "object", "properties": {
+        "target_id": {"type": "string"}, "item_id": {"type": "string"},
+        "side": {"enum": ["buy", "sell"]}, "unit_price": {"type": "integer", "minimum": 1, "maximum": 100000},
+        "quantity": {"type": "integer", "minimum": 1, "maximum": 99}, "offer_id": {"type": "string"}
+      }}
+    }},
+    {"if": {"properties": {"action_id": {"const": "OFFER_TRADE"}}},
+     "then": {"properties": {"parameters": {"required": ["target_id", "item_id", "unit_price"]}}},
+     "else": {"properties": {"parameters": {"required": ["offer_id"]}}}}
+  ]
+}

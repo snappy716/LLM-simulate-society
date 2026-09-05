@@ -36,8 +36,8 @@ class CampusActivityExecutionTests(unittest.TestCase):
         self.assertTrue(result["ok"])
         execution = result["result"]["payload"]["phase_execution"]
         self.assertEqual(200, execution["planned_actor_count"])
-        self.assertEqual(200, execution["major_activity_count"])
-        self.assertEqual(0, execution["free_activity_count"])
+        # A real, free procurement plan may now replace an unprotected slot.
+        self.assertEqual(200, execution["major_activity_count"] + execution["free_activity_count"])
         self.assertEqual(0, execution["blocked_actor_count"])
         self.assertGreater(execution["moved_actor_count"], 0)
         self.assertGreater(execution["route_step_count"], execution["moved_actor_count"])
@@ -52,7 +52,8 @@ class CampusActivityExecutionTests(unittest.TestCase):
             activity = actor["current_activity"]
             self.assertEqual("completed", activity["status"], actor_id)
             self.assertEqual(actor["current_location_id"], activity["location_id"], actor_id)
-            self.assertEqual(0, state.action_economy["actors"][actor_id]["major_remaining"])
+            self.assertEqual(1 if activity["action_class"] == "free" else 0,
+                             state.action_economy["actors"][actor_id]["major_remaining"])
 
         event_types = [event["event_type"] for event in result["result"]["events"]]
         self.assertEqual(execution["route_step_count"], event_types.count("ACTOR_LOCATION_CHANGED"))

@@ -129,7 +129,20 @@ def advance_campus_phase_upkeep(context) -> Dict[str, int]:
         emotions = actor["emotions"]
         routine_actions: list[str] = []
         wealth_before = int(actor.get("wealth", 0))
-        if int(needs.get("food", 0)) >= 65 and wealth_before >= 4:
+        # Prefer real carried food for NPCs. The pre-existing background meal
+        # service remains a fallback; do not charge it again after using food.
+        if actor_id != "player" and int(needs.get("food", 0)) >= 45 and actor_id in context.state.inventories.get("actors", {}):
+            from simulation.systems.campus_inventory import make_campus_inventory_handler
+            from simulation.systems.campus_trade import rule_command
+            if "trade" in context.state.inventories:
+                stock = context.state.inventories["actors"][actor_id]["quantities"]
+                for item_id in stock.copy():
+                    if context.state.inventories["rules"][item_id].get("food_reduction"):
+                        result = make_campus_inventory_handler()(context, rule_command(context, actor_id, "USE_ITEM", item_id=item_id))
+                        if result.success:
+                            routine_actions.append("EAT_CARRIED_FOOD")
+                            break
+        if "EAT_CARRIED_FOOD" not in routine_actions and int(needs.get("food", 0)) >= 65 and wealth_before >= 4:
             needs["food"] = _clamp_meter(int(needs["food"]) - 45)
             actor["wealth"] = wealth_before - 4
             routine_actions.append("EAT_MEAL")

@@ -6,6 +6,7 @@ const APPS := [
 	{"id": "album", "name": "校园相册", "icon": "册", "color": Color("d65bd1")},
 	{"id": "notes", "name": "备忘录", "icon": "记", "color": Color("edc84b")},
 	{"id": "market", "name": "校园商城", "icon": "商", "color": Color("ed6540")},
+	{"id": "trade", "name": "当面交易", "icon": "换", "color": Color("b38354")},
 	{"id": "wallet", "name": "电子钱包", "icon": "钱", "color": Color("4f73cd")},
 	{"id": "health", "name": "健康档案", "icon": "健", "color": Color("e95d70")},
 	{"id": "clubs", "name": "社团中心", "icon": "社", "color": Color("c47a46")},
@@ -20,6 +21,7 @@ var _app_page: VBoxContainer
 var _app_title: Label
 var _content: RichTextLabel
 var _inventory_root: VBoxContainer
+var _trade_root: VBoxContainer
 var _health_root: VBoxContainer
 var _time_label: Label
 var _opened := false
@@ -215,6 +217,9 @@ func _build_app_page() -> VBoxContainer:
 	_inventory_root = preload("res://scripts/ui/campus_inventory_panel.gd").new()
 	_inventory_root.visible = false
 	page.add_child(_inventory_root)
+	_trade_root = preload("res://scripts/ui/campus_trade_panel.gd").new()
+	_trade_root.visible = false
+	page.add_child(_trade_root)
 	_health_root = preload("res://scripts/ui/campus_health_panel.gd").new()
 	_health_root.visible = false
 	page.add_child(_health_root)
@@ -580,6 +585,10 @@ func _open_app(app_id: String, app_name: String) -> void:
 	var is_combat := app_id == "combat"
 	var is_message := app_id == "messages"
 	var is_inventory := app_id == "market"
+	var is_trade := app_id == "trade"
+	_trade_root.visible = is_trade
+	if is_trade:
+		_trade_root.call("refresh")
 	var is_health := app_id == "health"
 	_health_root.visible = is_health
 	if is_health:
@@ -587,7 +596,7 @@ func _open_app(app_id: String, app_name: String) -> void:
 	_inventory_root.visible = is_inventory
 	if is_inventory:
 		_inventory_root.call("refresh")
-	_content.visible = not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health
+	_content.visible = not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health and not is_trade
 	_forum_root.visible = is_forum
 	_club_root.visible = is_club
 	_party_root.visible = is_party

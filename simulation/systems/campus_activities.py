@@ -209,7 +209,7 @@ def make_scheduled_npc_phase_executor(
                 actor_id=actor_id,
                 action_id=str(plan.get("activity_id", "SCHEDULED_ACTIVITY")),
                 expected_world_revision=context.state.revision,
-                parameters={"location_id": destination_id, "scheduled": True},
+                parameters={**plan.get("parameters", {}), "location_id": destination_id, "scheduled": True},
                 issued_day=context.state.clock.day,
                 issued_phase=context.state.clock.phase,
                 issued_minute=context.state.clock.minute,
@@ -217,6 +217,12 @@ def make_scheduled_npc_phase_executor(
             )
             activity_outcome = activity_handler(context, activity_command)
             if not activity_outcome.success:
+                if activity_command.action_id == "BUY_ITEM":
+                    actor["current_activity"] = _activity_record(context.state, plan, status="blocked", route_step_count=route_step_count, block_code=activity_outcome.code)
+                    summary["blocked_actor_count"] += 1
+                    context.emit("NPC_ACTIVITY_BLOCKED", activity_outcome.message, actor_ids=[actor_id], scene_id=destination_id,
+                                 payload={"activity_id": "BUY_ITEM", "code": activity_outcome.code}, visibility="private", knowledge_tags=["trade"])
+                    continue
                 raise RuntimeError(
                     f"scheduled activity could not execute for {actor_id}: "
                     f"{activity_outcome.code}"

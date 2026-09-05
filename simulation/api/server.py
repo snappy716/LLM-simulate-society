@@ -32,6 +32,10 @@ from simulation.systems.campus_inventory import (  # noqa: E402
     CAMPUS_ITEM_ACTIONS, install_campus_inventory,
     campus_inventory_invariant, make_campus_inventory_handler,
 )
+from simulation.systems.campus_trade import (
+    TRADE_ACTIONS, install_campus_trade, make_campus_trade_handler,
+    advance_campus_trade, make_procurement_selector,
+)
 from simulation.persistence import atomic_write_json  # noqa: E402
 from simulation.systems import (  # noqa: E402
     CampusPopulationGenerator,
@@ -148,6 +152,7 @@ class CampusKernelBridge:
         install_campus_population(state, records)
         install_campus_vitals(state)
         install_campus_inventory(state, registry)
+        install_campus_trade(state)
         ability_definitions = load_campus_ability_definitions(registry)
         install_campus_abilities(state, ability_definitions, registry.all("college"))
         install_campus_social_state(state, registry.all("club"))
@@ -233,6 +238,7 @@ class CampusKernelBridge:
             graph,
             forum_policy,
         )
+        decision_selector = make_procurement_selector(decision_selector, graph, decision_policy.protected_schedule_priority)
         def campus_phase_upkeep(context):
             summary = advance_campus_phase_upkeep(context)
             summary.update(advance_campus_combat(context))
@@ -263,6 +269,12 @@ class CampusKernelBridge:
         inventory_handler = make_campus_inventory_handler()
         for action_id in CAMPUS_ITEM_ACTIONS:
             self.kernel.register_handler(action_id, inventory_handler)
+        for action_id in TRADE_ACTIONS:
+            self.kernel.register_handler(action_id, make_campus_trade_handler())
+        def scheduled_activity_handler(context, command):
+            if command.action_id == "BUY_ITEM":
+                return inventory_handler(context, command)
+            return activity_handler(context, command)
         self.kernel.add_event_projector(project_chronicle_events)
         self.kernel.add_event_projector(project_cognition_events)
         self.kernel.add_invariant(chronicle_invariant)
@@ -301,11 +313,12 @@ class CampusKernelBridge:
                     graph,
                     action_policy,
                     traverse_handler,
-                    activity_handler,
+                    scheduled_activity_handler,
                     phase_upkeep,
                     decision_selector,
                     complete_assigned_task,
                     lambda context: {
+                        **advance_campus_trade(context),
                         **advance_campus_interactions(
                             context, interaction_policy, intelligence_policy,
                             self.cognition_runtime,

@@ -103,7 +103,7 @@ class CampusKernelBridgeTests(unittest.TestCase):
         execution = advanced["result"]["payload"]["phase_execution"]
         self.assertEqual(200, execution["planned_actor_count"])
         self.assertGreater(execution["moved_actor_count"], 0)
-        self.assertEqual(200, execution["major_activity_count"])
+        self.assertEqual(200, execution["major_activity_count"] + execution["free_activity_count"])
         self.assertEqual(0, execution["blocked_actor_count"])
 
     def test_campus_map_fast_travel_preserves_time_and_action_budget(self):
