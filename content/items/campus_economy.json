@@ -2,6 +2,7 @@
   "schema_version": 1,
   "currency": "元",
   "max_weight": 20,
+  "supply_policy": {"supplier_name":"校外综合供应商","wholesale_percent":60,"reorder_percent":60,"cash_reserve":200},
   "items": [
     {"id":"bread_loaf","name":"全麦面包","description":"校园超市出售的便携食品。","food_reduction":25},
     {"id":"dried_meat","name":"袋装肉干","description":"可以随身携带的零食。","food_reduction":18},

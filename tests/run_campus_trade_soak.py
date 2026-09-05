@@ -13,7 +13,7 @@ from simulation.systems.campus_trade import professional
 from simulation.systems.randomness import DeterministicRngPool
 
 
-def run(days=14, seed=42):
+def run(days=14, seed=42, pause_days=()):
     bridge = CampusKernelBridge(seed)
     counts, gaps, settled_at = Counter(), [], defaultdict(list)
     started = bridge.kernel.state
@@ -22,19 +22,37 @@ def run(days=14, seed=42):
         for record in started.inventories[group].values():
             previous_quantities.update(record["quantities"])
     for index in range(days * 4):
+        upcoming_day = bridge.kernel._state.clock.day + (bridge.kernel._state.clock.phase == "late_night")
+        # Test-only outage injection, not a production player/LLM command.
+        bridge.kernel._state.inventories["supply"]["available"] = upcoming_day not in pause_days
         state = bridge.kernel.state
         result = bridge.kernel.execute(SimulationCommand(f"soak:{index}", "player", "ADVANCE_PHASE", state.revision,
             issued_day=state.clock.day, issued_phase=state.clock.phase))
         assert result.success, result
         consumed = Counter()
+        imported = Counter()
+        shop_sales, supply_paid = 0, 0
         for event in result.events:
             if event.event_type == "CAMPUS_ITEM_ACTION_COMPLETED":
                 counts[event.payload["action_id"]] += 1
                 if event.payload["action_id"] == "USE_ITEM":
                     consumed[event.payload["item_id"]] += event.payload["quantity"]
                 if event.payload["action_id"] == "BUY_ITEM":
+                    shop_sales += event.payload["total_price"]
                     # Receipt location must be the shop, not an intended target.
                     assert event.scene_id == state.inventories["shops"][event.payload["shop_id"]]["location_id"]
+                elif event.payload["action_id"] == "SELL_ITEM":
+                    shop_sales -= event.payload["total_price"]
+            elif event.event_type == "CAMPUS_SUPPLY_ORDERED":
+                counts["supply_orders"] += 1
+                supply_paid += event.payload["total_price"]
+            elif event.event_type == "CAMPUS_SUPPLY_DELIVERED":
+                counts["supply_deliveries"] += 1
+                imported[event.payload["item_id"]] += event.payload["quantity"]
+                assert event.day >= event.payload["ordered_day"] + 1
+                assert event.day not in pause_days
+            elif event.event_type == "CAMPUS_SUPPLY_DELAYED":
+                counts["supply_delays"] += 1
             elif event.event_type == "CAMPUS_TRADE_SETTLED":
                 counts["private_settled"] += 1
                 offer = event.payload
@@ -49,7 +67,9 @@ def run(days=14, seed=42):
         for group in ("actors", "shops", "ground"):
             for record in after.inventories[group].values():
                 current.update(record["quantities"])
-        assert previous_quantities - consumed == current, (index, previous_quantities - consumed - current)
+        assert previous_quantities + imported - consumed == current, (index, previous_quantities + imported - consumed - current)
+        assert sum(s["cash"] for s in after.inventories["shops"].values()) == sum(s["cash"] for s in state.inventories["shops"].values()) + shop_sales - supply_paid
+        assert after.inventories["supply"]["supplier_receipts"] - state.inventories["supply"]["supplier_receipts"] == supply_paid
         previous_quantities = current
         if index == days * 2:
             with tempfile.TemporaryDirectory() as directory:
@@ -71,7 +91,10 @@ def run(days=14, seed=42):
                 gaps.append((b - a) / 4)
     assert counts["BUY_ITEM"] > 0 and counts["private_settled"] > 0, counts
     summary = {"days": days, "seed": seed, "counts": dict(counts), "participants": len(settled_at),
-               "ordinary_repeat_intervals_days": gaps, "stock_conserved_minus_real_consumption": True,
+               "supply_pause_days": list(pause_days),
+               "ordinary_repeat_intervals_days": gaps, "stock_conserved_with_recorded_imports_and_consumption": True,
+               "shop_cash_and_external_payments_reconciled": True,
+               "supplier_receipts": state.inventories["supply"]["supplier_receipts"],
                "midpoint_checkpoint_restored": True, "paid_llm_calls": 0}
     print("CAMPUS_TRADE_SOAK_OK " + json.dumps(summary, ensure_ascii=False), flush=True)
     return summary
@@ -81,5 +104,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--days", type=int, default=14)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--pause-days", type=int, nargs="*", default=[])
     args = parser.parse_args()
-    run(args.days, args.seed)
+    run(args.days, args.seed, args.pause_days)

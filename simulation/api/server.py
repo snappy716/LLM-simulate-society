@@ -36,6 +36,7 @@ from simulation.systems.campus_trade import (
     TRADE_ACTIONS, install_campus_trade, make_campus_trade_handler,
     advance_campus_trade, make_procurement_selector,
 )
+from simulation.systems.campus_supply import install_campus_supply, receive_campus_supply, review_campus_supply
 from simulation.persistence import atomic_write_json  # noqa: E402
 from simulation.systems import (  # noqa: E402
     CampusPopulationGenerator,
@@ -152,6 +153,7 @@ class CampusKernelBridge:
         install_campus_population(state, records)
         install_campus_vitals(state)
         install_campus_inventory(state, registry)
+        install_campus_supply(state, registry)
         install_campus_trade(state)
         ability_definitions = load_campus_ability_definitions(registry)
         install_campus_abilities(state, ability_definitions, registry.all("college"))
@@ -240,7 +242,8 @@ class CampusKernelBridge:
         )
         decision_selector = make_procurement_selector(decision_selector, graph, decision_policy.protected_schedule_priority)
         def campus_phase_upkeep(context):
-            summary = advance_campus_phase_upkeep(context)
+            summary = receive_campus_supply(context)
+            summary.update(advance_campus_phase_upkeep(context))
             summary.update(advance_campus_combat(context))
             summary.update(advance_campus_night_world(context, night_world_policy))
             summary.update(advance_campus_night_forum(
@@ -319,6 +322,7 @@ class CampusKernelBridge:
                     complete_assigned_task,
                     lambda context: {
                         **advance_campus_trade(context),
+                        **review_campus_supply(context),
                         **advance_campus_interactions(
                             context, interaction_policy, intelligence_policy,
                             self.cognition_runtime,

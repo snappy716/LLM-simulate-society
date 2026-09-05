@@ -153,6 +153,18 @@ func _refresh_detail() -> void:
 				if good.item_id == item_id:
 					var price := int(good.buy_price if _action() == "BUY_ITEM" else good.sell_price)
 					lines.insert(1, "库存：%d  单价：%d  合计：%d" % [int(good.stock), price, price * int(quantity.value)])
+					var supply: Dictionary = shop.get("supply", {}).get("goods", {}).get(item_id, {})
+					var status := String(supply.get("status", ""))
+					if status in ["in_transit", "delayed"]:
+						lines.insert(2, "%s：%d 件 · 预计第 %d 天营业时到货" % ["运输延迟" if status == "delayed" else "已付款在途", int(supply.get("in_transit", 0)), int(supply.get("due_day", 0))])
+					elif status == "insufficient_shop_funds":
+						lines.insert(2, "商店进货资金不足，补货暂缓（不扣玩家的钱）。")
+					elif status == "supply_paused":
+						lines.insert(2, "校外供货暂停，暂不能补货。")
+					elif status == "awaiting_review":
+						lines.insert(2, "库存偏低，等待商店下一轮补货检查。")
+					if _action() == "BUY_ITEM" and int(good.stock) < int(quantity.value):
+						unavailable = "现货不足；在途商品到货后才能购买。"
 					if _action() == "SELL_ITEM" and price <= 0:
 						unavailable = "本窗口不回收物品。"
 	if bool(economy.get("battle_locked", false)):

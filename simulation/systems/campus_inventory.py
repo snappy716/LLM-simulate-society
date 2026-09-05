@@ -270,10 +270,13 @@ def campus_inventory_invariant(state):
         yield "invalid campus inventory structure: " + str(exc)
     from simulation.systems.campus_trade import campus_trade_invariant
     yield from campus_trade_invariant(state)
+    from simulation.systems.campus_supply import campus_supply_invariant
+    yield from campus_supply_invariant(state)
 
 
 def campus_inventory_view(state, actor_id="player"):
     from simulation.systems.campus_trade import trade_view
+    from simulation.systems.campus_supply import supply_view
     ledger = state.inventories
     if not ledger:
         return {"enabled": False}
@@ -287,6 +290,7 @@ def campus_inventory_view(state, actor_id="player"):
             "id": shop["id"], "name": shop["name"], "location_id": shop["location_id"],
             "location_name": state.places[shop["location_id"]]["name"],
             "nearby": nearby, "open": open_now, "cash": shop["cash"],
+            "supply": supply_view(state, shop["id"]),
             "goods": [{"item_id": item_id, "stock": shop["quantities"].get(item_id, 0),
                        "buy_price": ledger["catalog"][item_id]["base_price"],
                        "sell_price": max(1, ledger["catalog"][item_id]["base_price"] * shop["sell_percent"] // 100) if shop["sell_percent"] else 0}

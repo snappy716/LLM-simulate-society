@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Additive campus shop supply projection (campus view v23)",
+  "description": "At economy.shops[].supply. Read-only; players cannot place wholesale orders or change the supplier account.",
+  "type": "object",
+  "required": ["enabled", "goods"],
+  "properties": {
+    "enabled": {"type": "boolean"},
+    "supplier_name": {"type": "string"},
+    "goods": {"type": "object", "additionalProperties": {
+      "type": "object", "required": ["status", "in_transit", "due_day", "target_stock"],
+      "properties": {
+        "status": {"enum": ["stocked", "in_transit", "delayed", "supply_paused", "insufficient_shop_funds", "awaiting_review"]},
+        "in_transit": {"type": "integer", "minimum": 0},
+        "due_day": {"type": ["integer", "null"], "minimum": 1},
+        "target_stock": {"type": "integer", "minimum": 1}
+      }
+    }}
+  }
+}

@@ -175,6 +175,12 @@ class ContentRegistry:
         campus_node_ids = campus_region_ids | campus_location_ids
         campus_economy = self.all("configuration").get("campus_economy")
         if campus_economy:
+            if "supply_policy" in campus_economy:
+                from simulation.systems.campus_supply import validate_supply_policy
+                try:
+                    validate_supply_policy(campus_economy["supply_policy"])
+                except ValueError as exc:
+                    errors.append(str(exc))
             campus_items = [entry.get("id") for entry in campus_economy.get("items", [])]
             if len(set(campus_items)) != len(campus_items) or not set(campus_items).issubset(item_ids):
                 errors.append("campus economy references duplicate or unknown items")

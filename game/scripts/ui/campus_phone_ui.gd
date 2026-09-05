@@ -1103,6 +1103,7 @@ func _on_task_operation_completed(success: bool, result: Dictionary, _action_id:
 func _on_campus_snapshot_updated(_snapshot: Dictionary) -> void:
 	if not _opened:
 		return
+	_refresh_clock()
 	if _forum_root.visible:
 		if _selected_task_id.is_empty():
 			_refresh_forum_list()
@@ -1829,9 +1830,13 @@ func _set_open(value: bool) -> void:
 	_overlay.visible = value
 	if value:
 		_show_home()
-		var clock: Dictionary = SimulationBridge.campus_snapshot.get("clock", {})
-		_time_label.text = "Day %d · %s" % [int(clock.get("day", 1)), SimulationBridge.phase_display_name(String(clock.get("phase", "morning")))]
+		_refresh_clock()
 	get_tree().paused = value
+
+
+func _refresh_clock() -> void:
+	var clock: Dictionary = SimulationBridge.campus_snapshot.get("clock", {})
+	_time_label.text = "Day %d · %s" % [int(clock.get("day", 1)), SimulationBridge.phase_display_name(String(clock.get("phase", "morning")))]
 
 
 func _panel_style(color: Color, radius: int, border: int) -> StyleBoxFlat:
