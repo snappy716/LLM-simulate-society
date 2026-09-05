@@ -934,6 +934,15 @@ def make_forum_task_handler(activity_handler):
         if action == "ABANDON_FORUM_TASK":
             if task.get("assignee_id") != command.actor_id or task.get("state") not in ACTIVE_STATES:
                 return TransactionOutcome(False, False, "task_not_owned", "你没有持有这个任务。")
+            active_battle_id = context.state.metadata.get("campus_combat", {}).get(
+                "active_battle_by_actor", {}
+            ).get(command.actor_id)
+            active_battle = context.state.battles.get(str(active_battle_id or ""), {})
+            if isinstance(active_battle, dict) and active_battle.get("situation_id") == task_id:
+                return TransactionOutcome(
+                    False, False, "battle_preparation_active",
+                    "请先取消该任务对应的战斗准备。",
+                )
             task["assignee_id"] = None
             task["state"] = "open" if context.state.clock.day <= int(task["expires_day"]) else "expired"
             task["lock_revision"] = int(task.get("lock_revision", 0)) + 1
@@ -967,6 +976,15 @@ def make_forum_task_handler(activity_handler):
         if action == "COMPLETE_FORUM_TASK":
             if task.get("assignee_id") != command.actor_id or task.get("state") != "locked":
                 return TransactionOutcome(False, False, "task_not_owned", "你没有持有这个任务。")
+            active_battle_id = context.state.metadata.get("campus_combat", {}).get(
+                "active_battle_by_actor", {}
+            ).get(command.actor_id)
+            active_battle = context.state.battles.get(str(active_battle_id or ""), {})
+            if isinstance(active_battle, dict) and active_battle.get("situation_id") == task_id:
+                return TransactionOutcome(
+                    False, False, "battle_resolution_required",
+                    "该任务已进入战斗准备，必须等待卡牌战斗结果结算。",
+                )
             current_location = actor.get("current_location_id")
             if current_location not in {
                 task.get("scene_id"), task.get("execution_region_id")

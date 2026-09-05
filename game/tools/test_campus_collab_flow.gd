@@ -271,8 +271,59 @@ func _run_flow() -> void:
 	var night_access_note := current_phone.get("_forum_access_note") as Label
 	assert(night_cards.get_child_count() > 0)
 	assert(night_access_note.text.contains("当前可竞争接取"))
+	var night_task_card := night_cards.get_child(0) as Button
+	night_task_card.pressed.emit()
+	var night_view_resolution = await bridge.campus_task_operation_completed
+	assert(bool(night_view_resolution[0]), "night task view failed: %s" % night_view_resolution[1])
+	var night_task_id := String(current_phone.get("_selected_task_id"))
+	assert(not night_task_id.is_empty())
+	var night_primary := current_phone.get("_forum_primary_action") as Button
+	night_primary.pressed.emit()
+	var night_claim_resolution = await bridge.campus_task_operation_completed
+	assert(bool(night_claim_resolution[0]), "night task claim failed: %s" % night_claim_resolution[1])
+	var night_task: Dictionary = (bridge.get("campus_snapshot") as Dictionary).get("tasks", {}).get(night_task_id, {})
 	current_phone.call("_set_open", false)
 	assert(not paused)
+	bridge.call("fast_travel_campus", String(night_task.get("execution_region_id", "")))
+	var night_task_travel = await bridge.campus_fast_travel_completed
+	assert(bool(night_task_travel[0]), "night task travel failed: %s" % night_task_travel[1])
+	current_phone.call("_set_open", true)
+	current_phone.call("_open_app", "combat", "夜战部署")
+	var prepare_button := current_phone.get("_combat_prepare_action") as Button
+	assert(not prepare_button.disabled)
+	prepare_button.pressed.emit()
+	var prepare_resolution = await bridge.campus_combat_operation_completed
+	assert(bool(prepare_resolution[0]), "combat preparation failed: %s" % prepare_resolution[1])
+	var combat_snapshot: Dictionary = (bridge.get("campus_snapshot") as Dictionary).get("combat", {})
+	var active_battle: Dictionary = combat_snapshot.get("active_battle", {})
+	assert(String(active_battle.get("phase", "")) == "setup")
+	assert((current_phone.get("_combat_character_picker") as OptionButton).item_count >= 1)
+	var row_picker := current_phone.get("_combat_row_picker") as OptionButton
+	row_picker.select(2)
+	var deploy_button := current_phone.get("_combat_deploy_action") as Button
+	deploy_button.pressed.emit()
+	var deploy_resolution = await bridge.campus_combat_operation_completed
+	assert(bool(deploy_resolution[0]), "character deployment failed: %s" % deploy_resolution[1])
+	active_battle = ((bridge.get("campus_snapshot") as Dictionary).get("combat", {}) as Dictionary).get("active_battle", {})
+	assert(((active_battle.get("formations", {}) as Dictionary).get("party:player", {}) as Dictionary).get("back", []).size() == 1)
+	var confirm_button := current_phone.get("_combat_confirm_action") as Button
+	assert(not confirm_button.disabled)
+	confirm_button.pressed.emit()
+	var confirm_resolution = await bridge.campus_combat_operation_completed
+	assert(bool(confirm_resolution[0]), "deployment confirmation failed: %s" % confirm_resolution[1])
+	active_battle = ((bridge.get("campus_snapshot") as Dictionary).get("combat", {}) as Dictionary).get("active_battle", {})
+	assert(String(active_battle.get("phase", "")) == "ready")
+	assert((active_battle.get("reserve_character_card_ids", []) as Array).is_empty())
+	var cancel_button := current_phone.get("_combat_cancel_action") as Button
+	cancel_button.pressed.emit()
+	var cancel_resolution = await bridge.campus_combat_operation_completed
+	assert(bool(cancel_resolution[0]), "combat preparation cancel failed: %s" % cancel_resolution[1])
+	assert(((bridge.get("campus_snapshot") as Dictionary).get("combat", {}) as Dictionary).get("active_battle") == null)
+	current_phone.call("_set_open", false)
+	assert(not paused)
+	bridge.call("operate_campus_task", "ABANDON_FORUM_TASK", night_task_id)
+	var night_abandon_resolution = await bridge.campus_task_operation_completed
+	assert(bool(night_abandon_resolution[0]), "night task abandon failed: %s" % night_abandon_resolution[1])
 	night_world_button.pressed.emit()
 	var night_exit_resolution = await bridge.campus_night_world_operation_completed
 	assert(bool(night_exit_resolution[0]), "night-world exit failed: %s" % night_exit_resolution[1])

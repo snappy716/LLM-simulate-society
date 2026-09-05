@@ -14,7 +14,7 @@
   "properties": {
     "battle_id": {"type": "string", "minLength": 1},
     "revision": {"type": "integer", "minimum": 1},
-    "phase": {"enum": ["setup", "player_turn", "enemy_turn", "round_end", "resolved"]},
+    "phase": {"enum": ["setup", "ready", "player_turn", "enemy_turn", "round_end", "resolved"]},
     "round": {"type": "integer", "minimum": 1},
     "scene_id": {"type": "string", "minLength": 1},
     "situation_id": {"type": ["string", "null"]},

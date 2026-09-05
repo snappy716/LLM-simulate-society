@@ -14,10 +14,14 @@ from simulation.systems.campus_night_world import (
     night_world_public_view,
     night_world_policy_from_state,
 )
+from simulation.systems.campus_combat import (
+    campus_combat_view,
+    combat_policy_from_state,
+)
 
 
 KERNEL_STATUS_VIEW_VERSION = 1
-CAMPUS_WORLD_VIEW_VERSION = 20
+CAMPUS_WORLD_VIEW_VERSION = 21
 NPC_CHRONICLE_VIEW_VERSION = 1
 
 
@@ -502,6 +506,9 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         },
         "clubs": club_catalog_view(state, "player"),
         "party": player_party,
+        "combat": campus_combat_view(
+            state, "player", combat_policy_from_state(state)
+        ) if state.metadata.get("campus_combat") else {"enabled": False},
         "cognition": cognition_status,
         "messaging": {
             "contacts": message_contacts,

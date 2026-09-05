@@ -79,6 +79,12 @@ from simulation.domain.chronicles import (
     chronicle_dicts,
 )
 from simulation.domain.world_state import AGGREGATE_NAMES, ClockState, WorldState
+from simulation.domain.combat import (
+    COMBAT_ROWS,
+    DEPLOYMENT_STATES,
+    CombatDeploymentPolicy,
+    parse_combat_deployment_policy,
+)
 from simulation.domain.action_economy import (
     ActionEconomyPolicy,
     PhaseActionRule,
@@ -220,6 +226,10 @@ __all__ = [
     "NpcChronicleEntry",
     "chronicle_dicts",
     "WorldState",
+    "COMBAT_ROWS",
+    "DEPLOYMENT_STATES",
+    "CombatDeploymentPolicy",
+    "parse_combat_deployment_policy",
     "CampusLocation",
     "CampusLocationGraph",
     "CampusPassage",

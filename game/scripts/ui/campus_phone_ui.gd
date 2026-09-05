@@ -10,6 +10,7 @@ const APPS := [
 	{"id": "health", "name": "健康档案", "icon": "健", "color": Color("e95d70")},
 	{"id": "clubs", "name": "社团中心", "icon": "社", "color": Color("c47a46")},
 	{"id": "party", "name": "行动小队", "icon": "队", "color": Color("477f8f")},
+	{"id": "combat", "name": "夜战部署", "icon": "战", "color": Color("9a4f62")},
 	{"id": "forums", "name": "双层论坛", "icon": "坛", "color": Color("785bc7")},
 ]
 
@@ -51,6 +52,19 @@ var _party_feedback: Label
 var _selected_party_candidate_id := ""
 var _selected_party_candidate_is_contact := false
 var _selected_party_member_id := ""
+var _combat_root: VBoxContainer
+var _combat_task_picker: OptionButton
+var _combat_prepare_action: Button
+var _combat_formation_detail: RichTextLabel
+var _combat_character_picker: OptionButton
+var _combat_row_picker: OptionButton
+var _combat_deploy_action: Button
+var _combat_withdraw_action: Button
+var _combat_confirm_action: Button
+var _combat_cancel_action: Button
+var _combat_feedback: Label
+var _selected_combat_task_id := ""
+var _selected_character_card_id := ""
 var _message_root: VBoxContainer
 var _message_contact_picker: OptionButton
 var _message_log: RichTextLabel
@@ -73,6 +87,7 @@ func _ready() -> void:
 	SimulationBridge.campus_task_operation_completed.connect(_on_task_operation_completed)
 	SimulationBridge.campus_club_operation_completed.connect(_on_club_operation_completed)
 	SimulationBridge.campus_party_operation_completed.connect(_on_party_operation_completed)
+	SimulationBridge.campus_combat_operation_completed.connect(_on_combat_operation_completed)
 	SimulationBridge.campus_phone_message_completed.connect(_on_phone_message_completed)
 	SimulationBridge.campus_social_proposal_completed.connect(_on_social_proposal_completed)
 	SimulationBridge.campus_social_proposal_response_completed.connect(_on_social_proposal_response_completed)
@@ -196,6 +211,10 @@ func _build_app_page() -> VBoxContainer:
 	_party_root.visible = false
 	_party_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page.add_child(_party_root)
+	_combat_root = _build_combat_page()
+	_combat_root.visible = false
+	_combat_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_child(_combat_root)
 	_message_root = _build_message_page()
 	_message_root.visible = false
 	_message_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -338,6 +357,75 @@ func _build_party_page() -> VBoxContainer:
 	return root
 
 
+func _build_combat_page() -> VBoxContainer:
+	var root := VBoxContainer.new()
+	root.add_theme_constant_override("separation", 7)
+	var context_label := Label.new()
+	context_label.text = "夜相任务与出战阵容"
+	context_label.add_theme_color_override("font_color", Color("d7b27a"))
+	root.add_child(context_label)
+	var task_row := HBoxContainer.new()
+	_combat_task_picker = OptionButton.new()
+	_combat_task_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_combat_task_picker.item_selected.connect(_select_combat_task)
+	task_row.add_child(_combat_task_picker)
+	_combat_prepare_action = Button.new()
+	_combat_prepare_action.text = "建立准备"
+	_combat_prepare_action.pressed.connect(_start_combat_preparation)
+	task_row.add_child(_combat_prepare_action)
+	root.add_child(task_row)
+	_combat_formation_detail = RichTextLabel.new()
+	_combat_formation_detail.bbcode_enabled = true
+	_combat_formation_detail.fit_content = false
+	_combat_formation_detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_combat_formation_detail.add_theme_font_size_override("normal_font_size", 14)
+	root.add_child(_combat_formation_detail)
+	var selection_row := HBoxContainer.new()
+	_combat_character_picker = OptionButton.new()
+	_combat_character_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_combat_character_picker.item_selected.connect(_select_combat_character)
+	selection_row.add_child(_combat_character_picker)
+	_combat_row_picker = OptionButton.new()
+	for row_entry in [
+		{"id": "front", "name": "前排"},
+		{"id": "middle", "name": "中排"},
+		{"id": "back", "name": "后排"},
+	]:
+		_combat_row_picker.add_item(String(row_entry.name))
+		_combat_row_picker.set_item_metadata(
+			_combat_row_picker.item_count - 1, String(row_entry.id)
+		)
+	selection_row.add_child(_combat_row_picker)
+	root.add_child(selection_row)
+	var formation_actions := HBoxContainer.new()
+	_combat_deploy_action = Button.new()
+	_combat_deploy_action.text = "部署 / 换位"
+	_combat_deploy_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_combat_deploy_action.pressed.connect(_deploy_or_reposition_character)
+	formation_actions.add_child(_combat_deploy_action)
+	_combat_withdraw_action = Button.new()
+	_combat_withdraw_action.text = "撤回候选"
+	_combat_withdraw_action.pressed.connect(_withdraw_combat_character)
+	formation_actions.add_child(_combat_withdraw_action)
+	root.add_child(formation_actions)
+	var confirmation_actions := HBoxContainer.new()
+	_combat_confirm_action = Button.new()
+	_combat_confirm_action.text = "锁定阵型"
+	_combat_confirm_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_combat_confirm_action.pressed.connect(_confirm_combat_deployment)
+	confirmation_actions.add_child(_combat_confirm_action)
+	_combat_cancel_action = Button.new()
+	_combat_cancel_action.text = "取消准备"
+	_combat_cancel_action.pressed.connect(_cancel_combat_preparation)
+	confirmation_actions.add_child(_combat_cancel_action)
+	root.add_child(confirmation_actions)
+	_combat_feedback = Label.new()
+	_combat_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_combat_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	root.add_child(_combat_feedback)
+	return root
+
+
 func _build_forum_page() -> VBoxContainer:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 8)
@@ -427,11 +515,13 @@ func _open_app(app_id: String, app_name: String) -> void:
 	var is_forum := app_id == "forums"
 	var is_club := app_id == "clubs"
 	var is_party := app_id == "party"
+	var is_combat := app_id == "combat"
 	var is_message := app_id == "messages"
-	_content.visible = not is_forum and not is_club and not is_party and not is_message
+	_content.visible = not is_forum and not is_club and not is_party and not is_combat and not is_message
 	_forum_root.visible = is_forum
 	_club_root.visible = is_club
 	_party_root.visible = is_party
+	_combat_root.visible = is_combat
 	_message_root.visible = is_message
 	if is_forum:
 		_forum_feedback.text = ""
@@ -443,6 +533,9 @@ func _open_app(app_id: String, app_name: String) -> void:
 	elif is_party:
 		_party_feedback.text = ""
 		_refresh_party_page()
+	elif is_combat:
+		_combat_feedback.text = ""
+		_refresh_combat_page()
 	elif is_message:
 		_message_feedback.text = ""
 		_refresh_message_page()
@@ -940,6 +1033,8 @@ func _on_campus_snapshot_updated(_snapshot: Dictionary) -> void:
 		_refresh_club_page()
 	elif _party_root.visible:
 		_refresh_party_page()
+	elif _combat_root.visible:
+		_refresh_combat_page()
 	elif _message_root.visible:
 		_refresh_message_page()
 
@@ -1146,6 +1241,216 @@ func _on_party_operation_completed(success: bool, result: Dictionary, _action_id
 	_refresh_party_page()
 
 
+func _refresh_combat_page() -> void:
+	var combat: Dictionary = SimulationBridge.campus_snapshot.get("combat", {})
+	var reason_names := {
+		"invalid_phase": "只有晚间或深夜可建立夜战阵型。",
+		"night_layer_required": "先从时段面板进入夜相。",
+		"owned_night_task_required": "先在里世界论坛锁定一个任务。",
+		"task_location_required": "先前往任务所在校园区域。",
+		"battle_already_active": "已有进行中的阵型准备。",
+		"available": "可建立战斗准备。",
+	}
+	var previous_task := _selected_combat_task_id
+	_combat_task_picker.clear()
+	var selected_task_index := 0
+	var first_at_scene_index := -1
+	for task_value in combat.get("owned_night_tasks", []):
+		if not task_value is Dictionary:
+			continue
+		var task: Dictionary = task_value
+		var index := _combat_task_picker.item_count
+		var location_note := "已到达" if bool(task.get("at_scene", false)) else "需前往 %s" % task.get("execution_region_id", "目标区域")
+		_combat_task_picker.add_item("%s · %s" % [task.get("title", "夜相任务"), location_note])
+		_combat_task_picker.set_item_metadata(index, task.get("task_id", ""))
+		_combat_task_picker.set_item_tooltip(index, "at_scene" if bool(task.get("at_scene", false)) else "away")
+		if bool(task.get("at_scene", false)) and first_at_scene_index < 0:
+			first_at_scene_index = index
+		if String(task.get("task_id", "")) == previous_task:
+			selected_task_index = index
+	if _combat_task_picker.item_count > 0:
+		if previous_task.is_empty() and first_at_scene_index >= 0:
+			selected_task_index = first_at_scene_index
+		_combat_task_picker.select(selected_task_index)
+		_selected_combat_task_id = String(_combat_task_picker.get_item_metadata(selected_task_index))
+	else:
+		_selected_combat_task_id = ""
+	var active_value: Variant = combat.get("active_battle")
+	var active: Dictionary = active_value if active_value is Dictionary else {}
+	var selected_task_at_scene := (
+		_combat_task_picker.selected >= 0
+		and _combat_task_picker.get_item_tooltip(_combat_task_picker.selected) == "at_scene"
+	)
+	_combat_task_picker.disabled = not active.is_empty()
+	_combat_prepare_action.disabled = (
+		not active.is_empty()
+		or not bool(combat.get("can_prepare", false))
+		or _selected_combat_task_id.is_empty()
+		or not selected_task_at_scene
+	)
+
+	if active.is_empty():
+		_combat_formation_detail.text = "[font_size=21][b]人物牌部署[/b][/font_size]\n\n%s\n\n[color=#91a4bc]先接取夜相任务并抵达目标区域。部署不消耗生活主要行动；队友会按真实校园路线前来集合，不会凭空出现。[/color]" % reason_names.get(String(combat.get("preparation_reason", "")), "当前不能建立战斗准备。")
+		_combat_character_picker.clear()
+		_selected_character_card_id = ""
+		_combat_character_picker.disabled = true
+		_combat_row_picker.disabled = true
+		_combat_deploy_action.disabled = true
+		_combat_withdraw_action.disabled = true
+		_combat_confirm_action.disabled = true
+		_combat_cancel_action.disabled = true
+		return
+
+	var row_names := {"front": "前排", "middle": "中排", "back": "后排"}
+	var cards: Dictionary = active.get("character_cards", {})
+	var formation: Dictionary = (active.get("formations", {}) as Dictionary).get("party:player", {})
+	var lines: Array[String] = []
+	for row_id in ["front", "middle", "back"]:
+		var names: Array[String] = []
+		for card_id_value in formation.get(row_id, []):
+			var deployed_card: Dictionary = cards.get(String(card_id_value), {})
+			names.append(String(deployed_card.get("display_name", "未知人物")))
+		lines.append("[b]%s[/b]  %s" % [row_names[row_id], " / ".join(names) if not names.is_empty() else "—"])
+	var phase_name := "准备中" if String(active.get("phase", "")) == "setup" else "阵型已锁定"
+	_combat_formation_detail.text = "[font_size=21][b]%s[/b][/font_size]  ·  %s\n%s\n\n[color=#91a4bc]每排最多两人；玩家必须上场。锁定后本场不能替补，倒下角色离场且其未使用指令牌失效。[/color]" % [
+		phase_name, active.get("battle_id", ""), "\n".join(lines)
+	]
+	var previous_card := _selected_character_card_id
+	_combat_character_picker.clear()
+	var card_ids: Array = cards.keys()
+	card_ids.sort()
+	var selected_card_index := 0
+	for card_id_value in card_ids:
+		var card_id := String(card_id_value)
+		var card: Dictionary = cards[card_id]
+		var deployment_state := String(card.get("deployment_state", ""))
+		var state_name := "未知"
+		if deployment_state == "reserve":
+			state_name = "候选"
+		elif deployment_state == "deployed":
+			state_name = String(row_names.get(card.get("row"), "已部署"))
+		elif deployment_state == "withdrawn":
+			state_name = "未出战"
+		elif deployment_state == "incapacitated":
+			state_name = "倒下"
+		var index := _combat_character_picker.item_count
+		_combat_character_picker.add_item("%s · %s" % [card.get("display_name", "人物牌"), state_name])
+		_combat_character_picker.set_item_metadata(index, card_id)
+		if card_id == previous_card:
+			selected_card_index = index
+	if _combat_character_picker.item_count > 0:
+		_combat_character_picker.select(selected_card_index)
+		_selected_character_card_id = String(_combat_character_picker.get_item_metadata(selected_card_index))
+	else:
+		_selected_character_card_id = ""
+	_refresh_combat_character_controls(active)
+
+
+func _refresh_combat_character_controls(active: Dictionary) -> void:
+	var cards: Dictionary = active.get("character_cards", {})
+	var card: Dictionary = cards.get(_selected_character_card_id, {})
+	var setup := String(active.get("phase", "")) == "setup"
+	var deployment_state := String(card.get("deployment_state", ""))
+	_combat_character_picker.disabled = not setup
+	_combat_row_picker.disabled = not setup or deployment_state not in ["reserve", "deployed"]
+	_combat_deploy_action.text = "部署" if deployment_state == "reserve" else "换位"
+	_combat_deploy_action.disabled = not setup or deployment_state not in ["reserve", "deployed"]
+	_combat_withdraw_action.disabled = not setup or deployment_state != "deployed"
+	var player_deployed := false
+	for card_value in cards.values():
+		if card_value is Dictionary and card_value.get("actor_id") == "player" and card_value.get("deployment_state") == "deployed":
+			player_deployed = true
+			break
+	_combat_confirm_action.disabled = not setup or not player_deployed
+	_combat_cancel_action.disabled = String(active.get("phase", "")) not in ["setup", "ready"]
+
+
+func _select_combat_task(index: int) -> void:
+	_selected_combat_task_id = String(_combat_task_picker.get_item_metadata(index))
+	_refresh_combat_page()
+
+
+func _select_combat_character(index: int) -> void:
+	_selected_character_card_id = String(_combat_character_picker.get_item_metadata(index))
+	var combat: Dictionary = SimulationBridge.campus_snapshot.get("combat", {})
+	var active_value: Variant = combat.get("active_battle")
+	if active_value is Dictionary:
+		var active: Dictionary = active_value
+		var card: Dictionary = (active.get("character_cards", {}) as Dictionary).get(_selected_character_card_id, {})
+		var preferred := String(card.get("preferred_row", "middle"))
+		for index_value in range(_combat_row_picker.item_count):
+			if String(_combat_row_picker.get_item_metadata(index_value)) == preferred:
+				_combat_row_picker.select(index_value)
+				break
+		_refresh_combat_character_controls(active)
+
+
+func _start_combat_preparation() -> void:
+	_combat_feedback.text = "正在建立战斗准备……"
+	SimulationBridge.operate_campus_combat(
+		"START_BATTLE_PREPARATION", {"task_id": _selected_combat_task_id}
+	)
+
+
+func _active_combat_parameters() -> Dictionary:
+	var combat: Dictionary = SimulationBridge.campus_snapshot.get("combat", {})
+	var active_value: Variant = combat.get("active_battle")
+	if not active_value is Dictionary:
+		return {}
+	var active: Dictionary = active_value
+	return {
+		"battle_id": String(active.get("battle_id", "")),
+		"expected_battle_revision": int(active.get("revision", 0)),
+	}
+
+
+func _deploy_or_reposition_character() -> void:
+	var parameters := _active_combat_parameters()
+	if parameters.is_empty() or _combat_row_picker.selected < 0:
+		return
+	var active: Dictionary = (SimulationBridge.campus_snapshot.get("combat", {}) as Dictionary).get("active_battle", {})
+	var card: Dictionary = (active.get("character_cards", {}) as Dictionary).get(_selected_character_card_id, {})
+	parameters["character_card_instance_id"] = _selected_character_card_id
+	parameters["destination_row"] = String(_combat_row_picker.get_item_metadata(_combat_row_picker.selected))
+	var action_id := "DEPLOY_COMBAT_CHARACTER" if card.get("deployment_state") == "reserve" else "REPOSITION_COMBAT_CHARACTER"
+	_combat_feedback.text = "正在更新三排阵型……"
+	SimulationBridge.operate_campus_combat(action_id, parameters)
+
+
+func _withdraw_combat_character() -> void:
+	var parameters := _active_combat_parameters()
+	if parameters.is_empty():
+		return
+	parameters["character_card_instance_id"] = _selected_character_card_id
+	_combat_feedback.text = "正在撤回人物牌……"
+	SimulationBridge.operate_campus_combat("WITHDRAW_COMBAT_CHARACTER", parameters)
+
+
+func _confirm_combat_deployment() -> void:
+	var parameters := _active_combat_parameters()
+	if parameters.is_empty():
+		return
+	_combat_feedback.text = "正在锁定阵型……"
+	SimulationBridge.operate_campus_combat("CONFIRM_BATTLE_DEPLOYMENT", parameters)
+
+
+func _cancel_combat_preparation() -> void:
+	var parameters := _active_combat_parameters()
+	if parameters.is_empty():
+		return
+	_combat_feedback.text = "正在取消战斗准备……"
+	SimulationBridge.operate_campus_combat("CANCEL_BATTLE_PREPARATION", parameters)
+
+
+func _on_combat_operation_completed(
+	success: bool, result: Dictionary, _action_id: String, _battle_id: String
+) -> void:
+	var command_result: Dictionary = result.get("result", {})
+	_combat_feedback.text = String(command_result.get("message", result.get("error", "战斗准备操作失败")))
+	_combat_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
+	_refresh_combat_page()
+
+
 func _dictionary_lines(value: Variant) -> String:
 	if not value is Dictionary or value.is_empty():
 		return "暂无数据"
@@ -1190,6 +1495,7 @@ func _show_home() -> void:
 	_forum_root.visible = false
 	_club_root.visible = false
 	_party_root.visible = false
+	_combat_root.visible = false
 	_content.visible = true
 
 

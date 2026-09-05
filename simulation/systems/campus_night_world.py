@@ -249,6 +249,14 @@ def make_campus_night_world_handler(policy: CampusNightWorldPolicy):
                 payload={"actor_state": deepcopy(actor_state), "moon": moon, "action_class": "free"},
             )
         if command.action_id == "EXIT_NIGHT_WORLD":
+            active_battle_id = state.metadata.get("campus_combat", {}).get(
+                "active_battle_by_actor", {}
+            ).get(command.actor_id)
+            if active_battle_id in state.battles:
+                return TransactionOutcome(
+                    False, False, "battle_preparation_active",
+                    "请先结束或取消当前战斗准备，再返回表世界。",
+                )
             if actor_state.get("layer") != "night":
                 return TransactionOutcome(False, False, "not_in_night_world", "当前并不在夜相中。")
             actor_state["layer"] = "surface"

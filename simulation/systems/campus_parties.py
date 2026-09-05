@@ -308,6 +308,14 @@ def make_campus_party_handler(policy: CampusPartyPolicy):
         party = party_for_actor(context.state, command.actor_id)
         if party is None:
             return TransactionOutcome(False, False, "not_in_party", "当前不属于任何队伍。")
+        active_mapping = context.state.metadata.get("campus_combat", {}).get(
+            "active_battle_by_actor", {}
+        )
+        if any(actor_id in active_mapping for actor_id in party.get("member_ids", ())):
+            return TransactionOutcome(
+                False, False, "battle_preparation_active",
+                "战斗准备期间不能改变行动小队成员。",
+            )
         if command.action_id == "INVITE_PARTY_MEMBER":
             if party["leader_id"] != command.actor_id:
                 return TransactionOutcome(False, False, "not_party_leader", "只有队长可以邀请成员。")

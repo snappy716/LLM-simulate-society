@@ -36,6 +36,11 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ContentSource("locations/campus_passages.json", "campus_passage", "passages"),
     ContentSource("actions/college_skills.json", "college", "colleges"),
     ContentSource("actions/college_skills.json", "campus_ability", "abilities"),
+    ContentSource(
+        "actions/combat_deployment.json",
+        "configuration",
+        singleton_id="combat_deployment",
+    ),
     ContentSource("actions/action_economy.json", "configuration", singleton_id="action_economy"),
     ContentSource("actions/campus_activities.json", "campus_activity", "activities"),
     ContentSource(
@@ -261,6 +266,14 @@ class ContentRegistry:
                 for definition in relationship_skills.values()
             ):
                 errors.append("party relationship skill definitions are invalid")
+        combat_policy = self.all("configuration").get("combat_deployment", {})
+        if combat_policy:
+            try:
+                from simulation.domain.combat import parse_combat_deployment_policy
+
+                parse_combat_deployment_policy(combat_policy)
+            except (TypeError, ValueError) as exc:
+                errors.append(f"combat deployment policy is invalid: {exc}")
         referenced_schedules = set(population_config.get("schedules", {}).values())
         unknown_schedules = referenced_schedules - schedule_ids
         if unknown_schedules:

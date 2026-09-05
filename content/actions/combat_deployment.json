@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "max_friendly_characters": 3,
+  "row_capacity": 2,
+  "allowed_rows": ["front", "middle", "back"],
+  "setup_phases": ["evening", "late_night"],
+  "required_world_layer": "night",
+  "reposition_command_cost": 1,
+  "readiness_limits": {
+    "fear": 80,
+    "injury": 75,
+    "pollution": 85
+  },
+  "base_commands": {
+    "front": "basic_guard",
+    "middle": "basic_coordinate",
+    "back": "basic_observe"
+  },
+  "fallback_command_card_id": "general:steady_action",
+  "preferred_row_weights": {
+    "front": {"physique": 3, "dexterity": 1},
+    "middle": {"dexterity": 2, "empathy": 1, "expression": 1},
+    "back": {"focus": 2, "insight": 2}
+  }
+}

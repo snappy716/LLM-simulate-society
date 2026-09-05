@@ -36,6 +36,12 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
         self.assertIn('"ENTER_NIGHT_WORLD"', bridge)
         self.assertIn('"EXIT_NIGHT_WORLD"', bridge)
         self.assertIn("campus_night_world_operation_completed", bridge)
+        self.assertIn("func operate_campus_combat", bridge)
+        self.assertIn("campus_combat_operation_completed", bridge)
+        self.assertIn('"START_BATTLE_PREPARATION"', phone)
+        self.assertIn('"DEPLOY_COMBAT_CHARACTER"', phone)
+        self.assertIn('"CONFIRM_BATTLE_DEPLOYMENT"', phone)
+        self.assertIn("锁定后本场不能替补", phone)
         self.assertIn("约定稍后见面", phone)
         self.assertIn("正式提出", phone)
 

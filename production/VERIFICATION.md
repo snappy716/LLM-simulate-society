@@ -247,3 +247,17 @@ Godot 4.7.2 编辑器导入、校园导航端到端，以及实际推进到 NPC 
 v20。当前工程 344 项、旧版工程 46 项测试通过；Python 编译、补丁格式、Godot 4.7.2 编辑器导入、
 组件实例、校园导航和包含双层论坛实际切换的协作场景端到端全部通过，依次输出
 `CAMPUS_COMPONENTS_OK`、`CAMPUS_NAVIGATION_FLOW_OK` 和 `CAMPUS_COLLAB_FLOW_OK`。
+
+人物牌部署运行时阶段验收：新增权威战斗准备聚合与 `START_BATTLE_PREPARATION`、
+`DEPLOY_COMBAT_CHARACTER`、`WITHDRAW_COMBAT_CHARACTER`、`REPOSITION_COMBAT_CHARACTER`、
+`CONFIRM_BATTLE_DEPLOYMENT`、`CANCEL_BATTLE_PREPARATION` 六类统一行动。玩家只能针对自己已锁定、
+已抵达且位于夜相中的任务开始准备；队员会按真实校园道路抵达集结点，并依据关系承诺、恐惧、伤势、
+污染、道德边界及并行任务判断是否可部署。人物牌实时读取基础属性、学院指令、个人特质、社团能力和
+关系协作能力；三排每排最多两人，初始换位免费，确认时玩家必须上场，未上场队员转为撤离且锁定后
+不可替补。倒下的人物牌会立即离场，其绑定手牌失效。准备期间退出夜相、放弃或文字完成任务以及更改
+队伍都会被原子阻止；天亮或任务失效会安全中断准备。手机新增“夜战部署”页，采用经典 RPG 的任务、
+人物牌、排位、确认四层交互结构，最终美术留待后续细化。公共校园快照升级为 v21。当前工程 351 项、
+旧版工程 46 项测试通过；Python 编译、规则模式启动与补丁格式通过；Godot 4.7.2 编辑器导入、组件
+实例、校园导航以及从夜相论坛接任务、抵达、部署、锁定阵型、取消并安全退出的完整协作流程全部通过，
+依次输出 `CAMPUS_COMPONENTS_OK`、`CAMPUS_NAVIGATION_FLOW_OK` 和 `CAMPUS_COLLAB_FLOW_OK`。
+完整卡牌抽取、指令点、敌方意图和效果结算仍属于下一阶段，不将当前 `ready` 状态误称为可游玩的战斗。
