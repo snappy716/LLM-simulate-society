@@ -117,7 +117,7 @@ class CampusSaveStore:
             raise CheckpointError("此旧档缺少校园资源系统，需要专用迁移；当前世界和原档未修改。")
         # Known additive runtime policy migration only; no refilling inventories,
         # creating people, healing old characters, or changing unknown content.
-        changes = []
+        changes = list(loaded.migrations)
         for key, value in {"food_reorder_nutrition": 25, "food_buffer_nutrition": [100, 150]}.items():
             if key not in state.inventories["trade"]["policy"]:
                 state.inventories["trade"]["policy"][key] = value

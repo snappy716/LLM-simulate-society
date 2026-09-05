@@ -26,6 +26,7 @@ class LoadedCheckpoint:
     state: WorldState
     rng: DeterministicRngPool
     content_manifest: Dict[str, Dict[str, Any]]
+    migrations: tuple[str, ...] = ()
 
 
 def _canonical_bytes(payload: Dict[str, Any]) -> bytes:
@@ -119,13 +120,13 @@ def load_kernel_checkpoint(
         chronicle_errors = list(validate_all_chronicles(state))
         if chronicle_errors:
             raise CheckpointError("invalid checkpoint chronicles: " + "; ".join(chronicle_errors))
-    if expected_content_version is not None and content_version != expected_content_version:
-        raise CheckpointError(
-            f"content version mismatch: save={content_version}, current={expected_content_version}"
-        )
     if not isinstance(manifest, dict):
         raise CheckpointError("content manifest must be an object")
-    return LoadedCheckpoint(state=state, rng=rng, content_manifest=manifest)
+    loaded = LoadedCheckpoint(state=state, rng=rng, content_manifest=manifest)
+    if expected_content_version is not None and content_version != expected_content_version:
+        from simulation.persistence.content_migrations import migrate_campus_content
+        return migrate_campus_content(loaded, expected_content_version)
+    return loaded
 
 
 def _validate_campus_inventory(state: WorldState) -> None:

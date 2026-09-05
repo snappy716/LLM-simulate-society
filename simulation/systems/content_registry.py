@@ -25,12 +25,7 @@ class ContentSource:
 
 DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ContentSource("items/campus_economy.json", "configuration", singleton_id="campus_economy"),
-    ContentSource("items/catalog.json", "item", "items"),
-    ContentSource("items/uses.json", "item_use", "uses", id_field="item_id"),
-    ContentSource("items/shops.json", "shop", "shops"),
-    ContentSource("items/placements.json", "item_placement", "placements", id_field="inventory_id:item_id"),
-    ContentSource("locations/passages.json", "passage", "passages"),
-    ContentSource("locations/scene_regions.json", "location", mapping_entries=True),
+    ContentSource("items/campus_catalog.json", "item", "items"),
     ContentSource("locations/campus_regions.json", "campus_region", "regions"),
     ContentSource("locations/interior_templates.json", "interior_template", "templates"),
     ContentSource("locations/campus_locations.json", "campus_location", "locations"),
@@ -83,7 +78,6 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
         "configuration",
         singleton_id="night_world",
     ),
-    ContentSource("npcs/generation_rules.json", "configuration", singleton_id="npc_generation"),
     ContentSource("npcs/campus_population.json", "configuration", singleton_id="campus_population"),
     ContentSource("npcs/cognition_policy.json", "configuration", singleton_id="cognition_policy"),
     ContentSource("main_story/demo_calendar.json", "configuration", singleton_id="demo_calendar"),

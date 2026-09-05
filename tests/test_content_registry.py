@@ -14,8 +14,8 @@ REPOSITORY_DIR = Path(__file__).resolve().parents[1]
 class ContentRegistryTests(unittest.TestCase):
     def test_default_registry_loads_one_canonical_view(self):
         registry = ContentRegistry.load_default(REPOSITORY_DIR / "content")
-        self.assertEqual(36, len(registry.ids("item")))
-        self.assertEqual(36, len(registry.ids("item_use")))
+        self.assertEqual(9, len(registry.ids("item")))
+        self.assertEqual([], registry.ids("item_use"))
         self.assertEqual(8, len(registry.ids("college")))
         self.assertEqual(56, len(registry.ids("campus_ability")))
         self.assertEqual(12, len(registry.ids("club")))
@@ -23,8 +23,9 @@ class ContentRegistryTests(unittest.TestCase):
         self.assertEqual(37, len(registry.ids("campus_activity")))
         self.assertEqual(10, len(registry.ids("night_task_template")))
         self.assertEqual(8, len(registry.ids("enemy_archetype")))
-        self.assertEqual(5, len(registry.ids("shop")))
-        self.assertEqual(21, len(registry.ids("location")))
+        self.assertEqual([], registry.ids("shop"))
+        self.assertEqual([], registry.ids("location"))
+        self.assertEqual(3, len(registry.get("configuration", "campus_economy")["shops"]))
         self.assertEqual(10, len(registry.ids("campus_region")))
         self.assertEqual(53, len(registry.ids("campus_location")))
         self.assertEqual(16, len(registry.ids("interior_template")))
@@ -47,7 +48,7 @@ class ContentRegistryTests(unittest.TestCase):
         registry = ContentRegistry.load_default(REPOSITORY_DIR / "content")
         item = registry.get("item", "bread_loaf")
         item["name"] = "mutated"
-        self.assertEqual("黑麦面包", registry.get("item", "bread_loaf")["name"])
+        self.assertEqual("全麦面包", registry.get("item", "bread_loaf")["name"])
 
     def test_duplicate_identifier_is_rejected(self):
         temporary = tempfile.TemporaryDirectory()

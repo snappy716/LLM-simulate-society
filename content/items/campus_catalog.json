@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "currency": "元",
+  "items": [
+    {
+      "id": "bread_loaf",
+      "name": "全麦面包",
+      "category": "food",
+      "description": "校园超市出售的便携食品。",
+      "base_price": 4,
+      "weight": 0.4,
+      "stack_limit": 12,
+      "consumable": true,
+      "tags": [
+        "food",
+        "daily"
+      ]
+    },
+    {
+      "id": "dried_meat",
+      "name": "袋装肉干",
+      "category": "food",
+      "description": "可以随身携带的零食。",
+      "base_price": 9,
+      "weight": 0.3,
+      "stack_limit": 10,
+      "consumable": true,
+      "tags": [
+        "food",
+        "travel"
+      ]
+    },
+    {
+      "id": "restaurant_meal",
+      "name": "食堂套餐",
+      "category": "food",
+      "description": "一份普通的校园食堂饭菜。",
+      "base_price": 12,
+      "weight": 0.6,
+      "stack_limit": 3,
+      "consumable": true,
+      "tags": [
+        "food",
+        "meal"
+      ]
+    },
+    {
+      "id": "bandage_roll",
+      "name": "医用绷带",
+      "category": "medicine",
+      "description": "战斗外使用，恢复目标 25% 最大生命值；不能超出上限。表世界在住处充分休息即可回满。",
+      "base_price": 10,
+      "weight": 0.2,
+      "stack_limit": 10,
+      "consumable": true,
+      "tags": [
+        "medicine",
+        "first_aid"
+      ]
+    },
+    {
+      "id": "antiseptic_bottle",
+      "name": "消毒液",
+      "category": "medicine",
+      "description": "清洁用品，当前不提供生命值恢复。Demo 不因此引入必须吃药才能恢复的长期伤病。",
+      "base_price": 20,
+      "weight": 0.3,
+      "stack_limit": 5,
+      "consumable": true,
+      "tags": [
+        "medicine",
+        "first_aid"
+      ]
+    },
+    {
+      "id": "blank_notebook",
+      "name": "随身笔记本",
+      "category": "document",
+      "description": "调查用品；调查笔记联动尚未接通。",
+      "base_price": 5,
+      "weight": 0.3,
+      "stack_limit": 4,
+      "tags": [
+        "document",
+        "writing"
+      ]
+    },
+    {
+      "id": "makeup_kit",
+      "name": "舞台化妆盒",
+      "category": "tool",
+      "description": "社团演出用品；身份伪装检定尚未接通。",
+      "base_price": 36,
+      "weight": 0.8,
+      "stack_limit": 1,
+      "tags": [
+        "tool",
+        "disguise"
+      ]
+    },
+    {
+      "id": "leather_gloves",
+      "name": "工作手套",
+      "category": "equipment",
+      "description": "可装备到手部；劳动与战斗加成后续接入。",
+      "base_price": 15,
+      "weight": 0.2,
+      "stack_limit": 1,
+      "tags": [
+        "equipment",
+        "hands"
+      ]
+    },
+    {
+      "id": "padded_coat",
+      "name": "加厚外套",
+      "category": "equipment",
+      "description": "可装备到身体；防护结算后续接入。",
+      "base_price": 48,
+      "weight": 2.2,
+      "stack_limit": 1,
+      "tags": [
+        "equipment",
+        "body"
+      ]
+    }
+  ]
+}
