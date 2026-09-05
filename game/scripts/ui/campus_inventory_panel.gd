@@ -86,7 +86,7 @@ func refresh() -> void:
 	var trading := _action() in ["BUY_ITEM", "SELL_ITEM"]
 	shop_picker.visible = trading
 	travel.visible = trading
-	target_picker.visible = _action() == "GIVE_ITEM"
+	target_picker.visible = _action() in ["GIVE_ITEM", "USE_ITEM"]
 	var old_item := _selected(item_picker)
 	item_picker.clear()
 	var ids: Array = []
@@ -107,6 +107,9 @@ func refresh() -> void:
 			item_picker.select(index)
 	var old_target := _selected(target_picker)
 	target_picker.clear()
+	if _action() == "USE_ITEM":
+		target_picker.add_item("对自己使用（食物仅供自己食用）")
+		target_picker.set_item_metadata(0, "player")
 	for actor_id in economy.get("nearby_actor_ids", []):
 		var actor: Dictionary = (SimulationBridge.campus_snapshot.get("population", {}) as Dictionary).get(actor_id, {})
 		var index := target_picker.item_count
@@ -127,6 +130,9 @@ func _refresh_detail() -> void:
 	lines.append("\n%s\n%s" % [item.get("name", "没有物品"), item.get("description", "")])
 	var owned := int((inventory.get("quantities", {}) as Dictionary).get(item_id, 0))
 	lines.append("持有：%d" % owned)
+	if item_id == "bandage_roll":
+		var vitals: Dictionary = (SimulationBridge.campus_snapshot.get("player", {}) as Dictionary).get("vitals", {})
+		lines.insert(1, "自身生命：%d / %d" % [int(vitals.get("health", 0)), int(vitals.get("max_health", 0))])
 	var equipped: Dictionary = inventory.get("equipped", {})
 	lines.append("装备状态：%s" % ("已装备" if item_id in equipped.values() else "未装备"))
 	var unavailable := ""
@@ -161,7 +167,7 @@ func _refresh_detail() -> void:
 	submit.text = "处理中…" if _pending else "确认%s" % ACTIONS[action_picker.selected][1]
 
 
-func _route_first_passage(destination: String) -> String:
+static func _route_first_passage(destination: String) -> String:
 	# UI suggests one edge; the server independently checks doors, access and clock.
 	var campus: Dictionary = SimulationBridge.campus_snapshot
 	var player: Dictionary = campus.get("player", {})

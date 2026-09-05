@@ -25,6 +25,9 @@ from simulation.api.commands import (  # noqa: E402
 )
 from simulation.api.views import campus_world_view, npc_chronicle_view  # noqa: E402
 from simulation.domain import WorldState  # noqa: E402
+from simulation.systems.campus_vitals import (  # noqa: E402
+    install_campus_vitals, campus_vitals_invariant, make_field_recovery_handler,
+)
 from simulation.systems.campus_inventory import (  # noqa: E402
     CAMPUS_ITEM_ACTIONS, install_campus_inventory,
     campus_inventory_invariant, make_campus_inventory_handler,
@@ -143,6 +146,7 @@ class CampusKernelBridge:
         install_campus_places(state, graph)
         records = CampusPopulationGenerator(registry, graph, rng_pool).generate()
         install_campus_population(state, records)
+        install_campus_vitals(state)
         install_campus_inventory(state, registry)
         ability_definitions = load_campus_ability_definitions(registry)
         install_campus_abilities(state, ability_definitions, registry.all("college"))
@@ -253,6 +257,8 @@ class CampusKernelBridge:
             campus_phase_upkeep,
         )
         self.kernel = WorldKernel(state, rng=rng_pool)
+        self.kernel.add_invariant(campus_vitals_invariant)
+        self.kernel.register_handler("USE_RECOVERY_SKILL", make_field_recovery_handler())
         self.kernel.add_invariant(campus_inventory_invariant)
         inventory_handler = make_campus_inventory_handler()
         for action_id in CAMPUS_ITEM_ACTIONS:

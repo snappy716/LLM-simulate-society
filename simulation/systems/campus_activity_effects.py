@@ -13,6 +13,7 @@ from simulation.domain.world_state import WorldState
 from simulation.systems.content_registry import ContentRegistry
 from simulation.systems.time import consume_major_action
 from simulation.systems.transactions import TransactionOutcome
+from simulation.systems.campus_vitals import needs_recovery, rest_recovery_allowed, recover_by_rest, battle_locked
 
 
 PHASE_NEED_DRIFT = {
@@ -167,6 +168,8 @@ def make_campus_activity_handler(
         definition = definitions.get(command.action_id)
         if definition is None:
             return TransactionOutcome(False, False, "unknown_activity", "校园活动不存在。")
+        if definition.activity_id == "REST" and battle_locked(context.state, command.actor_id):
+            return TransactionOutcome(False, False, "battle_locked", "战斗中不能通过休息恢复。")
         if context.state.clock.phase not in definition.allowed_phases:
             return TransactionOutcome(False, False, "activity_wrong_phase", "当前时段不能进行这项活动。")
         if activity_validator is not None:
@@ -186,7 +189,9 @@ def make_campus_activity_handler(
             return TransactionOutcome(False, False, "activity_location_closed", "活动地点当前未开放。")
 
         budget_payload: Dict[str, Any] = {"action_class": definition.action_class}
-        if definition.action_class == "major":
+        healing_rest = (definition.activity_id == "REST" and needs_recovery(actor)
+                        and rest_recovery_allowed(context.state, command.actor_id))
+        if definition.action_class == "major" or healing_rest:
             spent = consume_major_action(context.state, policy, command)
             if not spent.success:
                 return TransactionOutcome(
@@ -197,6 +202,7 @@ def make_campus_activity_handler(
                     payload=spent.payload,
                 )
             budget_payload.update(spent.payload)
+            budget_payload["action_class"] = "major"
 
         needs = _apply_meter_deltas(actor, "needs", NEED_NAMES, definition.need_deltas)
         emotions = _apply_meter_deltas(
@@ -231,6 +237,8 @@ def make_campus_activity_handler(
             club_effects = activity_settled(context, command, definition)
             if club_effects:
                 effects["club"] = club_effects
+        if healing_rest:
+            effects["recovery"] = recover_by_rest(context, command.actor_id)
         actor["last_activity_effects"] = effects
         context.emit(
             "CAMPUS_ACTIVITY_EFFECT_APPLIED",

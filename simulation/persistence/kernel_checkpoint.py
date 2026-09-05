@@ -129,6 +129,10 @@ def load_kernel_checkpoint(
 
 
 def _validate_campus_inventory(state: WorldState) -> None:
+    from simulation.systems.campus_vitals import campus_vitals_invariant
+    vital_errors = list(campus_vitals_invariant(state))
+    if vital_errors:
+        raise CheckpointError("invalid campus vitals: " + "; ".join(vital_errors))
     # Generic kernel fixtures and pre-campus checkpoints keep their own shapes.
     if "schema_version" not in state.inventories:
         return

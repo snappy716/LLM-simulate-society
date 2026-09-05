@@ -89,7 +89,8 @@ func _ready() -> void:
 	_retry_timer.wait_time = 1.0
 	_retry_timer.timeout.connect(_request_snapshot)
 	add_child(_retry_timer)
-	_start_server()
+	if OS.get_environment("GODOT_SIM_EXTERNAL_SERVER") != "1":
+		_start_server()
 	_retry_timer.start()
 	_request_snapshot()
 

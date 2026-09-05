@@ -1,0 +1,15 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://llm-simulate-society.local/contracts/campus_vitals.schema.json",
+  "title":"Persistent campus actor resources",
+  "type":"object",
+  "required":["health","max_health","focus","max_focus"],
+  "additionalProperties":false,
+  "properties":{
+    "health":{"type":"integer","minimum":0},
+    "max_health":{"type":"integer","minimum":1},
+    "focus":{"type":"integer","minimum":0},
+    "max_focus":{"type":"integer","minimum":1}
+  },
+  "description":"population[actor_id].vitals is authoritative; active battle health/focus are validated projections, resolved battles remain history. Values may not exceed maxima (kernel invariant). New battles and world transitions do not refill resources. Surface home REST with missing resources costs one major action and refills health/focus; pollution is unchanged."
+}

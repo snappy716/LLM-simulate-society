@@ -8,6 +8,7 @@ from typing import Any, Dict
 
 from simulation.domain.world_state import WorldState
 from simulation.systems.campus_inventory import campus_inventory_view
+from simulation.systems.campus_vitals import recovery_skills, rest_recovery_allowed, recovery_options
 from simulation.systems.campus_schedules import current_schedule_slot
 from simulation.systems.campus_clubs import club_catalog_view
 from simulation.systems.campus_parties import party_policy_from_state, party_view
@@ -177,6 +178,10 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     """Project only the campus data Godot needs for movement and population UI."""
     state.require_valid()
     player = deepcopy(state.population.get("player", {}))
+    if "player" in state.population:
+        player["can_rest_recover"] = rest_recovery_allowed(state, "player")
+        player["recovery_skills"] = recovery_skills(state, "player")
+        player["field_recovery_options"] = recovery_options(state)
     actor_budgets = state.action_economy.get("actors", {})
     player["action_budget"] = deepcopy(actor_budgets.get("player", {}))
     player["current_plan"] = current_schedule_slot(state, "player")
@@ -224,7 +229,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
                 "simulation_tier", "night_access", "appearance_seed",
                 "awakened_by_player",
                 "current_activity", "needs", "emotions", "activity_progress",
-                "last_activity_effects",
+                "last_activity_effects", "vitals",
             )
         }
         for npc_id, record in state.population.items()

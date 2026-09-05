@@ -1,0 +1,21 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://llm-simulate-society.local/contracts/campus_recovery_command.schema.json",
+  "title":"Field recovery command",
+  "type":"object",
+  "allOf":[
+    {"$ref":"simulation_command.schema.json"},
+    {"properties":{
+      "action_id":{"const":"USE_RECOVERY_SKILL"},
+      "parameters":{
+        "type":"object", "required":["skill_id"],
+        "properties":{
+          "skill_id":{"type":"string","minLength":1},
+          "caster_id":{"type":"string","minLength":1},
+          "target_id":{"type":"string","minLength":1}
+        }
+      }
+    }}
+  ],
+  "description":"Field use of an actually learned restore_health card, outside active battle and at the same location/layer. Caster must be self or a member of the command actor's led party. Costs 10 focus per card command_cost (minimum 10); command_cost applies normally inside battle. No-effect/failed requests spend nothing."
+}

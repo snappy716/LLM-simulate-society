@@ -20,6 +20,7 @@ from simulation.systems.campus_parties import invitation_assessment, party_for_a
 from simulation.systems.campus_tasks import complete_assigned_task
 from simulation.systems.content_registry import ContentRegistry
 from simulation.systems.transactions import TransactionOutcome
+from simulation.systems.campus_vitals import change_vital
 
 
 CAMPUS_COMBAT_SCHEMA_VERSION = 3
@@ -165,6 +166,8 @@ def combat_readiness_assessment(
         return {"eligible": False, "reason": "unknown_actor_or_party"}
     if actor_id not in party.get("member_ids", ()):
         return {"eligible": False, "reason": "not_party_member"}
+    if actor.get("vitals", {}).get("health", 1) <= 0:
+        return {"eligible": False, "reason": "incapacitated"}
     if actor_id != leader_id:
         party_policy = party_policy_from_state(state)
         willingness = invitation_assessment(state, leader_id, actor_id, party_policy)
@@ -231,6 +234,8 @@ def combat_preparation_assessment(
         return {"allowed": False, "reason": "unknown_actor"}
     if active_battle_for_actor(state, actor_id) is not None:
         return {"allowed": False, "reason": "battle_already_active"}
+    if state.population[actor_id].get("vitals", {}).get("health", 1) <= 0:
+        return {"allowed": False, "reason": "incapacitated"}
     if state.clock.phase not in policy.setup_phases:
         return {"allowed": False, "reason": "invalid_phase"}
     night_state = state.situations.get("night_world", {}).get("actor_states", {}).get(actor_id, {})
@@ -300,8 +305,8 @@ def build_character_card(
         "allowed_rows": list(policy.allowed_rows),
         "preferred_row": preferred_row,
         "deployment_cost": 0,
-        "max_health": derived.max_health,
-        "max_focus": derived.max_focus,
+        "max_health": actor.get("vitals", {}).get("max_health", derived.max_health),
+        "max_focus": actor.get("vitals", {}).get("max_focus", derived.max_focus),
         "defense": round(derived.defense),
         "resistance": max(0, round(derived.stability_threshold / 4)),
         "speed": derived.speed,
@@ -403,11 +408,11 @@ def _new_battle(
         "command_points": {team_id: 3},
         "command_point_cap": 3,
         "focus": {
-            card["actor_id"]: int(card["max_focus"])
+            card["actor_id"]: int(state.population[card["actor_id"]].get("vitals", {}).get("focus", card["max_focus"]))
             for card in character_cards.values()
         },
         "health": {
-            card["actor_id"]: int(card["max_health"])
+            card["actor_id"]: int(state.population[card["actor_id"]].get("vitals", {}).get("health", card["max_health"]))
             for card in character_cards.values()
         },
         "pollution": {
@@ -732,6 +737,13 @@ def _finish_victory(context, battle: Dict[str, Any]) -> bool:
     return True
 
 
+def _persist_recovery_effects(context, effects):
+    for effect in effects:
+        if effect["effect_id"] in {"restore_health", "restore_focus"}:
+            meter = "health" if effect["effect_id"] == "restore_health" else "focus"
+            change_vital(context.state, effect["target_id"], meter, int(effect["amount"]))
+
+
 def play_combat_card(
     context,
     battle: Dict[str, Any],
@@ -761,6 +773,7 @@ def play_combat_card(
     battle["discard_piles"][owner_id].append(card_instance_id)
     instance["zone"] = "discard"
     effects = resolve_combat_effects(battle, owner_id, instance, target_list[0])
+    _persist_recovery_effects(context, effects)
     battle["revision"] = int(battle["revision"]) + 1
     resolved = not any(int(value) > 0 for value in battle.get("enemy_health", {}).values())
     context.emit(
@@ -808,6 +821,7 @@ def use_combat_base_command(
     battle["command_points"][team_id] = available - cost
     battle["base_command_used_actor_ids"].append(source_actor_id)
     effects = resolve_combat_effects(battle, source_actor_id, blueprint, target_list[0])
+    _persist_recovery_effects(context, effects)
     battle["revision"] = int(battle["revision"]) + 1
     resolved = not any(int(value) > 0 for value in battle.get("enemy_health", {}).values())
     context.emit(
@@ -1047,6 +1061,8 @@ def incapacitate_character(context, battle: Dict[str, Any], card_id: str) -> Dic
     _remove_from_formation(battle, card_id)
     card["deployment_state"] = "incapacitated"
     card["row"] = None
+    if "vitals" in context.state.population[actor_id]:
+        change_vital(context.state, actor_id, "health", -context.state.population[actor_id]["vitals"]["health"])
     battle["health"][actor_id] = 0
     statuses = battle["statuses"].setdefault(actor_id, [])
     if "incapacitated" not in statuses:

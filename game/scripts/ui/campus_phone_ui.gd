@@ -20,6 +20,7 @@ var _app_page: VBoxContainer
 var _app_title: Label
 var _content: RichTextLabel
 var _inventory_root: VBoxContainer
+var _health_root: VBoxContainer
 var _time_label: Label
 var _opened := false
 var _forum_root: VBoxContainer
@@ -214,6 +215,9 @@ func _build_app_page() -> VBoxContainer:
 	_inventory_root = preload("res://scripts/ui/campus_inventory_panel.gd").new()
 	_inventory_root.visible = false
 	page.add_child(_inventory_root)
+	_health_root = preload("res://scripts/ui/campus_health_panel.gd").new()
+	_health_root.visible = false
+	page.add_child(_health_root)
 	_forum_root = _build_forum_page()
 	_forum_root.visible = false
 	_forum_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -576,10 +580,14 @@ func _open_app(app_id: String, app_name: String) -> void:
 	var is_combat := app_id == "combat"
 	var is_message := app_id == "messages"
 	var is_inventory := app_id == "market"
+	var is_health := app_id == "health"
+	_health_root.visible = is_health
+	if is_health:
+		_health_root.call("refresh")
 	_inventory_root.visible = is_inventory
 	if is_inventory:
 		_inventory_root.call("refresh")
-	_content.visible = not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory
+	_content.visible = not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health
 	_forum_root.visible = is_forum
 	_club_root.visible = is_club
 	_party_root.visible = is_party

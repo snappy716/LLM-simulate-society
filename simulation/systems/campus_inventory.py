@@ -11,6 +11,7 @@ from dataclasses import asdict
 
 from simulation.domain.inventory import Inventory, ItemDefinition
 from simulation.systems.transactions import TransactionOutcome
+from simulation.systems.campus_vitals import change_vital
 
 
 CAMPUS_ITEM_ACTIONS = (
@@ -169,13 +170,33 @@ def make_campus_inventory_handler():
             if quantity != 1:
                 return _failure("single_item_required", "每次使用一件物品。")
             reduction = rule.get("food_reduction", 0)
-            if not reduction:
+            healing = rule.get("heal_percent", 0)
+            if healing:
+                target_id = params.get("target_id") or actor_id
+                if not isinstance(target_id, str) or target_id not in state.population:
+                    return _failure("invalid_target", "请选择有效的治疗目标。")
+                target = state.population[target_id]
+                if target["current_location_id"] != actor["current_location_id"] or _layer(state, target_id) != _layer(state, actor_id):
+                    return _failure("location_mismatch", "治疗双方必须同地同层。")
+                if _busy(state, target_id):
+                    return _failure("battle_locked", "战斗中请使用战斗技能牌；生活物品不能绕过费用。")
+                vitals = target.get("vitals")
+                if not vitals:
+                    return _failure("requires_other_system", "目标没有生命值状态。")
+                if vitals["health"] >= vitals["max_health"]:
+                    return _failure("no_effect", "目标生命值已满，不消耗药品。")
+                restored = change_vital(state, target_id, "health", max(1, (vitals["max_health"] * healing + 99) // 100))
+                _inventory(record).remove(item_id, 1)
+            elif not reduction:
                 return _failure("requires_other_system", item.description)
-            before = actor["needs"]["food"]
-            if before <= 0:
-                return _failure("no_effect", "目前不饿，无需消耗食物。")
-            actor["needs"]["food"] = max(0, before - reduction)
-            _inventory(record).remove(item_id, 1)
+            else:
+                if params.get("target_id") not in (None, "", actor_id):
+                    return _failure("invalid_target", "食物只能由持有者食用，请先转交给对方。")
+                before = actor["needs"]["food"]
+                if before <= 0:
+                    return _failure("no_effect", "目前不饿，无需消耗食物。")
+                actor["needs"]["food"] = max(0, before - reduction)
+                _inventory(record).remove(item_id, 1)
         else:
             if quantity != 1:
                 return _failure("single_item_required", "每次装备或卸下一件物品。")
@@ -196,8 +217,12 @@ def make_campus_inventory_handler():
         if shop:
             payload.update(shop_id=shop["id"], unit_price=unit_price)
         if action == "USE_ITEM":
-            payload["food_change"] = actor["needs"]["food"] - before
-        context.emit("CAMPUS_ITEM_ACTION_COMPLETED", message, actor_ids=[actor_id] + ([target_id] if target_id else []), scene_id=actor["current_location_id"], payload=payload, knowledge_tags=["trade"] if shop else ["item"])
+            if rule.get("heal_percent"):
+                payload["health"] = restored
+                message += f"恢复 {restored['delta']} 点生命值。"
+            else:
+                payload["food_change"] = actor["needs"]["food"] - before
+        context.emit("CAMPUS_ITEM_ACTION_COMPLETED", message, actor_ids=list(dict.fromkeys([actor_id] + ([target_id] if target_id else []))), scene_id=actor["current_location_id"], payload=payload, knowledge_tags=["trade"] if shop else ["item"])
         return TransactionOutcome(True, True, "success", message, commit=True, payload=payload)
     return handle
 
