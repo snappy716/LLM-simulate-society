@@ -10,8 +10,10 @@
 > 校园地点粒度、200 名常驻人口和 Godot 道路/入口约定见
 > [`CAMPUS_MAP_AND_POPULATION.md`](CAMPUS_MAP_AND_POPULATION.md)。
 
-本次迁移采用并行目录，不删除或覆盖 `project-a-0.2/` 与
-`emergent_town_demo/`。新目录是后续开发入口，旧目录用于行为对照和回退。
+2026-09-05 用户已允许删除旧城镇，原先“保留旧目录”的约束撤销。
+独立的 `project-a-0.2/`、`emergent_town_demo/` 和原 ZIP 已退出仓库，历史版本可从 Git 恢复。
+当前 `simulation/runtime.py`、旧快照握手和部分 Godot 共用组件仍有校园依赖，
+不是已经完成全仓库旧城镇下线；需按 `LEGACY_RETIREMENT.md` 先解耦再删除。
 
 ```text
 game/                         Godot 项目
@@ -25,7 +27,7 @@ simulation/
   api/                        Godot 本地 HTTP 桥接
 content/                      仅存放数据内容，不放运行逻辑
 contracts/                    跨进程请求、事件与快照 JSON Schema
-tests/                        新架构回归、契约与新旧等价性测试
+tests/                        校园回归、契约与仍在使用的兼容功能测试
 design/                       系统与架构设计
 production/                   发布和迁移检查
 ```

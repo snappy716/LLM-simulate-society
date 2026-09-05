@@ -1,5 +1,7 @@
 # Project A
 
+> 2026-09-05：用户已允许清理旧城镇。两个独立旧工程与原压缩包已退出仓库，可从 Git 历史恢复；校园当前使用 `game/` 和 `simulation/`。仍被校园借用的旧握手/运行时需先解耦，详见 [旧城镇下线清单](design/LEGACY_RETIREMENT.md)。以下早期原型介绍保留为历史说明，不代表已完成全量下线。
+
 > 后续开发入口：[当前实施路线与进度审计](design/IMPLEMENTATION_ROADMAP.md)。先补齐新旧状态与功能 UI，再继续卡牌战斗；场景基于新版七张校园地图。下方早期原型介绍不代表当前功能完成度。
 
 Project A 是一个正在开发中的 2D 等距视角城镇 RPG 原型，目标是把可探索的 Godot 游戏世界与持续运行的 LLM/规则驱动社会模拟结合起来。
@@ -54,14 +56,12 @@ ProjectA-GitHub/
 ├── simulation/               # 领域、行动、系统、认知、叙事、存档与 API
 ├── content/                  # 地点、NPC、组织、物品、行动与故事数据
 ├── contracts/                # Godot/Python JSON Schema
-├── tests/                    # 新架构回归和新旧等价性测试
+├── tests/                    # 校园回归、契约及仍使用的兼容功能测试
 ├── design/                   # 架构设计
-├── production/               # 发布验证清单
-├── emergent_town_demo/       # 保留的原 Python 实现，用于对照与回退
-└── project-a-0.2/            # 保留的原 Godot 工程，用于对照与回退
+└── production/               # 发布验证清单
 ```
 
-新开发入口为 `game/` 与 `simulation/`。原版目录暂不删除；重构期间持续用自动化测试验证二者行为一致。详细依赖规则见 [`design/ARCHITECTURE.md`](design/ARCHITECTURE.md)。
+新开发入口为 `game/` 与 `simulation/`。原版目录已移除，恢复请使用 Git 历史；校园及仍在使用的兼容功能继续自动化测试。详细依赖规则见 [`design/ARCHITECTURE.md`](design/ARCHITECTURE.md)。
 
 ## 环境要求
 
@@ -234,4 +234,4 @@ game/assets/characters/gandalf_hardcore/READ ME.txt
 
 ## 版本
 
-当前重构分支入口：`game/` + `simulation/`；原 `project-a-0.2/` 与 `emergent_town_demo/` 保留。
+当前开发入口：`game/` + `simulation/`；原独立工程已退出仓库，历史版本仍可从 Git 恢复。当前运行时遗留依赖按 `design/LEGACY_RETIREMENT.md` 分批解耦。

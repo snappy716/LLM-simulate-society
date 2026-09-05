@@ -1,5 +1,14 @@
 # 重构验证清单
 
+## 2026-09-05 / 旧城镇下线第一批：移除独立副本
+
+- 用户明确允许删除旧城镇，覆盖历史记录中的旧目录保护约束。起点 `3f570ca`，移除 `emergent_town_demo/`、`project-a-0.2/` 和 `ProjectA-0.21.zip`，共 148 个已跟踪文件。仓库外本机备份包含原目录中的未跟踪/被忽略文件，不上传私人配置；Git 历史保留恢复点。`design/WORLD_SETTING_LOST_CITY.md` 未修改、未提交。
+- 删除前旧版 46 项测试通过（0.331 秒）。旧副本源代码不再存在，因此退役三个源码逐项等价测试；原快照形状、JSON Schema 与迁移三个有效测试原样保留在 `test_architecture_contracts.py`，增加旧目录不存在/校园入口仍在的测试。预期全局数量 476−3+1=474，不以静默跳过测试掩盖依赖错误。
+- 最终全局 **474 项全部通过（361.961 秒）**；契约、校园桥接和目标架构专项 27 项通过（2.720 秒）。Python 编译与补丁格式通过。本批没有改动 `game/`、`simulation/`、`content/` 和 `contracts/` 的运行代码或素材。
+- 七日规则自然模拟（种子 7）通过：448 次采购、1,729 件购入、1,681 件真实使用、156 笔私人成交、179 名参与者、10 单补货/9 单实到，校外收款 7,215 元；中途通过玩家槽保存/读取后继续，钱货与随机状态核对通过。没有付费 LLM 调用。
+- Godot 4.7.2 导入、组件、导航、七图协作/日志、商城、卡牌回合、私人交易、恢复和付费补货流程通过；真实图形窗口的存读档端到端输出 `CAMPUS_SAVE_FLOW_OK`。computer-use 实际关闭手机后确认校园图与人物正常显示。独立端口和临时存档，不覆盖玩家存档；Windows 实机未测。
+- 尚未完成全量旧城镇下线：当前服务仍创建旧 World，Godot 握手/设置及部分共用数据仍依赖旧接口。完整前置和下一入口已写入 `design/LEGACY_RETIREMENT.md`；必须先解耦再删除，不宣称当前全项目只剩校园系统。
+
 ## 2026-09-05 / 路线第 2 步 2A 第六批：玩家存读档
 
 - 起点 `79cf6f5`，仍在 `codex/campus-demo-architecture`。新增三个手动槽、确认、覆盖备份、异常原文件保留、固定槽位 API、文件锁与版本冲突检查。读档恢复全部校园聚合和 RNG，再重建已有场景；不存 API 密钥，不改旧工程，不纳入用户未跟踪的 `design/WORLD_SETTING_LOST_CITY.md`。
@@ -101,7 +110,7 @@
 
 ## 通用验收与历史记录
 
-- 旧版测试：`cd emergent_town_demo && python3 -m unittest discover -s tests -v`
+- 旧版测试（历史命令，旧副本删除后不再属于当前工作树验收）：`cd emergent_town_demo && python3 -m unittest discover -s tests -v`
 - 新版测试：`python3 -m unittest discover -s tests -v`
 - 校园架构专项：`python3 -m unittest tests.test_campus_demo_architecture -v`
 - 程序底座专项：`python3 -m unittest tests.test_world_kernel tests.test_content_registry tests.test_kernel_persistence tests.test_kernel_api_contracts -v`
