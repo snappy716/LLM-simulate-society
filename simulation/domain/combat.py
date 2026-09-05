@@ -97,6 +97,7 @@ class CombatRoundPolicy:
     required_generic_card_ids: Tuple[str, ...]
     fallback_card_id: str
     generic_card_blueprints: Mapping[str, Mapping[str, Any]]
+    base_command_blueprints: Mapping[str, Mapping[str, Any]]
 
     def __post_init__(self) -> None:
         if self.deck_size_per_actor != 8:
@@ -140,6 +141,27 @@ class CombatRoundPolicy:
             )
             if payload.get("actor_bound") is not True:
                 raise ValueError("generic combat cards must remain actor-bound")
+        if set(self.base_command_blueprints) != {
+            "basic_guard", "basic_coordinate", "basic_observe",
+        }:
+            raise ValueError("combat requires guard, coordinate, and observe base commands")
+        for card_id, payload in self.base_command_blueprints.items():
+            if card_id != payload.get("card_id"):
+                raise ValueError(f"base combat command id mismatch: {card_id}")
+            CardBlueprint(
+                card_id=str(payload.get("card_id", "")),
+                name=str(payload.get("name", "")),
+                source_ability_id=str(payload.get("source_ability_id", "")),
+                actor_bound=bool(payload.get("actor_bound", False)),
+                card_type=str(payload.get("card_type", "")),
+                command_cost=int(payload.get("command_cost", -1)),
+                target=str(payload.get("target", "")),
+                range_pattern=str(payload.get("range_pattern", "")),
+                base_power=int(payload.get("base_power", -1)),
+                effect_ids=tuple(map(str, payload.get("effect_ids", ()))),
+            )
+            if payload.get("actor_bound") is not True:
+                raise ValueError("base combat commands must remain actor-bound")
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -153,6 +175,10 @@ class CombatRoundPolicy:
             "generic_card_blueprints": [
                 deepcopy(dict(self.generic_card_blueprints[card_id]))
                 for card_id in sorted(self.generic_card_blueprints)
+            ],
+            "base_command_blueprints": [
+                deepcopy(dict(self.base_command_blueprints[card_id]))
+                for card_id in sorted(self.base_command_blueprints)
             ],
         }
 
@@ -184,6 +210,14 @@ def parse_combat_round_policy(payload: Mapping[str, Any]) -> CombatRoundPolicy:
         if not card_id or card_id in blueprints:
             raise ValueError("generic combat card ids must be present and unique")
         blueprints[card_id] = deepcopy(dict(value))
+    base_commands: Dict[str, Dict[str, Any]] = {}
+    for value in payload.get("base_command_blueprints", ()):
+        if not isinstance(value, Mapping):
+            raise ValueError("base combat command blueprint must be a mapping")
+        card_id = str(value.get("card_id", ""))
+        if not card_id or card_id in base_commands:
+            raise ValueError("base combat command ids must be present and unique")
+        base_commands[card_id] = deepcopy(dict(value))
     return CombatRoundPolicy(
         deck_size_per_actor=int(payload.get("deck_size_per_actor", 0)),
         cards_drawn_per_actor=int(payload.get("cards_drawn_per_actor", 0)),
@@ -193,6 +227,7 @@ def parse_combat_round_policy(payload: Mapping[str, Any]) -> CombatRoundPolicy:
         required_generic_card_ids=tuple(map(str, payload.get("required_generic_card_ids", ()))),
         fallback_card_id=str(payload.get("fallback_card_id", "")),
         generic_card_blueprints=blueprints,
+        base_command_blueprints=base_commands,
     )
 
 

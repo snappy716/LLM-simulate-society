@@ -77,8 +77,32 @@ func _run_flow() -> void:
 	assert(int(battle.get("command_point_cap", 0)) == 3)
 	assert((battle.get("actor_decks", {}) as Dictionary).get("player", []).size() == 8)
 	assert((battle.get("shared_hand_ids", []) as Array).size() == 2)
+	assert((battle.get("enemy_units", {}) as Dictionary).size() == 1)
 	var hand_detail := phone.get("_combat_hand_detail") as RichTextLabel
 	assert(hand_detail.text.contains("共享指令点 3/3"))
+	var card_picker := phone.get("_combat_card_picker") as OptionButton
+	var target_picker := phone.get("_combat_card_target_picker") as OptionButton
+	var play_card := phone.get("_combat_play_card_action") as Button
+	assert(not card_picker.disabled)
+	assert(not target_picker.disabled)
+	assert(not play_card.disabled)
+	play_card.pressed.emit()
+	var played = await bridge.campus_combat_operation_completed
+	assert(bool(played[0]), "combat card play failed: %s" % played[1])
+	battle = ((bridge.get("campus_snapshot") as Dictionary).get("combat", {}) as Dictionary).get("active_battle", {})
+	assert((battle.get("shared_hand_ids", []) as Array).size() == 1)
+	assert(int((battle.get("command_points", {}) as Dictionary).get("party:player", 0)) < 3)
+	var base_picker := phone.get("_combat_base_picker") as OptionButton
+	var base_target_picker := phone.get("_combat_base_target_picker") as OptionButton
+	var use_base := phone.get("_combat_use_base_action") as Button
+	assert(not base_picker.disabled)
+	assert(not base_target_picker.disabled)
+	assert(not use_base.disabled)
+	use_base.pressed.emit()
+	var based = await bridge.campus_combat_operation_completed
+	assert(bool(based[0]), "combat base command failed: %s" % based[1])
+	battle = ((bridge.get("campus_snapshot") as Dictionary).get("combat", {}) as Dictionary).get("active_battle", {})
+	assert((battle.get("base_command_used_actor_ids", []) as Array).has("player"))
 
 	var end_round := phone.get("_combat_end_round_action") as Button
 	assert(not end_round.disabled)

@@ -7,6 +7,44 @@
   "maximum_command_points": 6,
   "required_generic_card_ids": ["general:brace", "general:center"],
   "fallback_card_id": "general:steady_action",
+  "base_command_blueprints": [
+    {
+      "card_id": "basic_guard",
+      "name": "掩护",
+      "source_ability_id": "basic_combat_training",
+      "actor_bound": true,
+      "card_type": "defense",
+      "command_cost": 1,
+      "target": "self_or_ally",
+      "range_pattern": "same_or_adjacent_ally",
+      "base_power": 6,
+      "effect_ids": ["grant_guard"]
+    },
+    {
+      "card_id": "basic_coordinate",
+      "name": "协同",
+      "source_ability_id": "basic_combat_training",
+      "actor_bound": true,
+      "card_type": "support",
+      "command_cost": 1,
+      "target": "self_or_ally",
+      "range_pattern": "same_or_adjacent_ally",
+      "base_power": 4,
+      "effect_ids": ["restore_focus"]
+    },
+    {
+      "card_id": "basic_observe",
+      "name": "观察",
+      "source_ability_id": "basic_combat_training",
+      "actor_bound": true,
+      "card_type": "knowledge",
+      "command_cost": 1,
+      "target": "enemy",
+      "range_pattern": "any_enemy",
+      "base_power": 4,
+      "effect_ids": ["reveal_pattern"]
+    }
+  ],
   "generic_card_blueprints": [
     {
       "card_id": "general:brace",

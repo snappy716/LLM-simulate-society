@@ -21,7 +21,10 @@ def load_night_task_templates(registry) -> Dict[str, Dict[str, Any]]:
     templates = registry.all("night_task_template")
     if not templates:
         raise ValueError("at least one night task template is required")
-    required = {"id", "title", "description", "objective", "activity_id", "scene_id"}
+    required = {
+        "id", "title", "description", "objective", "activity_id", "scene_id",
+        "enemy_archetype_id",
+    }
     for template_id, template in templates.items():
         missing = required - set(template)
         if missing:
@@ -30,6 +33,8 @@ def load_night_task_templates(registry) -> Dict[str, Dict[str, Any]]:
             "scene_id"
         ) not in registry.ids("campus_region"):
             raise ValueError(f"night task {template_id} references an unknown campus place")
+        if template.get("enemy_archetype_id") not in registry.ids("enemy_archetype"):
+            raise ValueError(f"night task {template_id} references an unknown enemy archetype")
     return templates
 
 
@@ -163,6 +168,7 @@ def _publish_night_tasks(
             "objective": str(template["objective"]),
             "action_id": str(template["activity_id"]),
             "activity_id": str(template["activity_id"]),
+            "enemy_archetype_id": str(template["enemy_archetype_id"]),
             "allowed_phases": list(template.get("allowed_phases", ("evening", "late_night"))),
             "scene_id": str(template["scene_id"]),
             "execution_region_id": str(

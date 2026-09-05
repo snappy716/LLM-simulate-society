@@ -94,7 +94,7 @@ class CampusAbilityTests(unittest.TestCase):
             first.metadata["campus_abilities"], second.metadata["campus_abilities"]
         )
         view = campus_world_view(first)
-        self.assertEqual(22, view["view_version"])
+        self.assertEqual(23, view["view_version"])
         self.assertEqual(5, len(view["player"]["abilities"]))
         self.assertEqual(5, len(view["player"]["card_pool"]))
         npc = next(iter(view["population"].values()))
@@ -120,7 +120,7 @@ class CampusAbilityTests(unittest.TestCase):
         commands = set(command_schema["properties"]["command"]["enum"])
         self.assertEqual({
             "deploy_character", "reposition_character", "start_combat", "play_card",
-            "discard_card", "end_round", "escape",
+            "use_base_command", "discard_card", "end_round", "escape",
         }, commands)
         self.assertNotIn("skill_id", command_schema["properties"])
         self.assertEqual(CARD_TYPES, set(card_schema["properties"]["card_type"]["enum"]))

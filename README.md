@@ -23,6 +23,7 @@ Project A 是一个正在开发中的 2D 等距视角城镇 RPG 原型，目标�
 - [人物牌与三排卡牌战斗框架](design/CARD_COMBAT_FRAMEWORK.md)
 - [人物牌与三排部署运行时](design/CAMPUS_COMBAT_DEPLOYMENT_RUNTIME.md)
 - [卡牌战斗回合底座](design/CAMPUS_COMBAT_ROUND_RUNTIME.md)
+- [卡牌出牌与效果运行时](design/CAMPUS_COMBAT_ACTION_RUNTIME.md)
 
 本分支先建立可测试的校园领域边界、数据内容和契约，现有 Godot 地图、人物动画、物品交易与旧模拟仍可运行。后续按系统逐项接入，不进行一次性破坏性重写。
 

@@ -17,11 +17,12 @@ from simulation.domain.locations import CampusLocationGraph
 from simulation.domain.world_state import WorldState
 from simulation.systems.campus_night_world import moon_phase_for_day, night_world_policy_from_state
 from simulation.systems.campus_parties import invitation_assessment, party_for_actor, party_policy_from_state
+from simulation.systems.campus_tasks import complete_assigned_task
 from simulation.systems.content_registry import ContentRegistry
 from simulation.systems.transactions import TransactionOutcome
 
 
-CAMPUS_COMBAT_SCHEMA_VERSION = 2
+CAMPUS_COMBAT_SCHEMA_VERSION = 3
 COMBAT_ACTION_IDS = {
     "START_BATTLE_PREPARATION",
     "DEPLOY_COMBAT_CHARACTER",
@@ -30,6 +31,8 @@ COMBAT_ACTION_IDS = {
     "CONFIRM_BATTLE_DEPLOYMENT",
     "CANCEL_BATTLE_PREPARATION",
     "START_CARD_COMBAT",
+    "PLAY_COMBAT_CARD",
+    "USE_COMBAT_BASE_COMMAND",
     "END_COMBAT_ROUND",
 }
 
@@ -60,6 +63,7 @@ def install_campus_combat(
     state: WorldState,
     policy: CombatDeploymentPolicy,
     round_policy: CombatRoundPolicy,
+    enemy_archetypes: Mapping[str, Mapping[str, Any]],
 ) -> None:
     if state.battles:
         raise ValueError("campus battles are already initialized")
@@ -67,10 +71,24 @@ def install_campus_combat(
         raise ValueError("campus combat runtime is already initialized")
     if not state.parties or "night_world" not in state.situations:
         raise ValueError("party and night-world runtimes must exist before combat")
+    if not enemy_archetypes:
+        raise ValueError("at least one combat enemy archetype is required")
+    required_enemy_fields = {
+        "id", "name", "max_health", "defense", "resistance", "speed",
+        "preferred_row", "weaknesses", "knowledge_tags",
+    }
+    for archetype_id, archetype in enemy_archetypes.items():
+        if str(archetype.get("id", "")) != archetype_id:
+            raise ValueError(f"combat enemy archetype id mismatch: {archetype_id}")
+        if required_enemy_fields - set(archetype):
+            raise ValueError(f"combat enemy archetype {archetype_id} is incomplete")
+        if archetype.get("preferred_row") not in COMBAT_ROWS:
+            raise ValueError(f"combat enemy archetype {archetype_id} has an invalid row")
     state.metadata["campus_combat"] = {
         "schema_version": CAMPUS_COMBAT_SCHEMA_VERSION,
         "policy": policy.to_dict(),
         "round_policy": round_policy.to_dict(),
+        "enemy_archetypes": deepcopy(dict(enemy_archetypes)),
         "battle_sequence": 0,
         "active_battle_by_actor": {},
     }
@@ -287,9 +305,35 @@ def build_character_card(
         "defense": round(derived.defense),
         "resistance": max(0, round(derived.stability_threshold / 4)),
         "speed": derived.speed,
+        "physical_power": derived.physical_power,
+        "technique_power": derived.technique_power,
+        "cognitive_power": derived.cognitive_power,
+        "support_power": derived.support_power,
         "base_command_id": str(policy.base_commands[preferred_row]),
         "passive_ids": list(dict.fromkeys(passive_ids)),
         "command_card_ids": list(dict.fromkeys(command_card_ids)),
+    }
+
+
+def _build_enemy_unit(
+    battle_id: str,
+    archetype: Mapping[str, Any],
+    sequence: int = 1,
+) -> Dict[str, Any]:
+    archetype_id = str(archetype["id"])
+    enemy_id = f"{battle_id}:enemy:{archetype_id}:{sequence:02d}"
+    return {
+        "enemy_instance_id": enemy_id,
+        "archetype_id": archetype_id,
+        "display_name": str(archetype["name"]),
+        "row": str(archetype["preferred_row"]),
+        "max_health": int(archetype["max_health"]),
+        "defense": int(archetype["defense"]),
+        "resistance": int(archetype["resistance"]),
+        "speed": int(archetype["speed"]),
+        "weaknesses": list(map(str, archetype.get("weaknesses", ()))),
+        "knowledge_tags": list(map(str, archetype.get("knowledge_tags", ()))),
+        "statuses": [],
     }
 
 
@@ -321,6 +365,12 @@ def _new_battle(
         )
         for actor_id in candidate_ids
     }
+    archetype_id = str(task.get("enemy_archetype_id", ""))
+    archetype = state.metadata["campus_combat"]["enemy_archetypes"].get(archetype_id)
+    if not isinstance(archetype, dict):
+        raise ValueError(f"night task references unknown combat enemy: {archetype_id}")
+    enemy = _build_enemy_unit(battle_id, archetype)
+    enemy_id = str(enemy["enemy_instance_id"])
     card_ids_by_actor = {
         card["actor_id"]: list(card["command_card_ids"])
         for card in character_cards.values()
@@ -337,6 +387,10 @@ def _new_battle(
         "team_ids": {team_id: list(candidate_ids)},
         "character_cards": character_cards,
         "formations": {team_id: {row: [] for row in COMBAT_ROWS}},
+        "enemy_units": {enemy_id: enemy},
+        "enemy_formations": {
+            row: ([enemy_id] if row == enemy["row"] else []) for row in COMBAT_ROWS
+        },
         "reserve_character_card_ids": list(character_cards),
         "actor_decks": card_ids_by_actor,
         "draw_piles": {actor_id: [] for actor_id in candidate_ids},
@@ -361,6 +415,8 @@ def _new_battle(
             for actor_id in candidate_ids
         },
         "statuses": {actor_id: [] for actor_id in candidate_ids},
+        "barriers": {actor_id: 0 for actor_id in candidate_ids},
+        "enemy_health": {enemy_id: int(enemy["max_health"])},
         "known_weaknesses": [],
         "enemy_intents": {},
         "card_instances": {},
@@ -477,7 +533,298 @@ def _combat_card_blueprints(
         str(card_id): deepcopy(dict(payload))
         for card_id, payload in round_policy.generic_card_blueprints.items()
     })
+    blueprints.update({
+        str(card_id): deepcopy(dict(payload))
+        for card_id, payload in round_policy.base_command_blueprints.items()
+    })
     return blueprints
+
+
+def _character_for_actor(battle: Mapping[str, Any], actor_id: str) -> Dict[str, Any] | None:
+    return next(
+        (
+            card for card in battle.get("character_cards", {}).values()
+            if isinstance(card, dict) and card.get("actor_id") == actor_id
+        ),
+        None,
+    )
+
+
+def legal_combat_targets(
+    battle: Mapping[str, Any],
+    source_actor_id: str,
+    blueprint: Mapping[str, Any],
+) -> list[str]:
+    """Return authoritative one-target options for a card or base command."""
+    living_allies = [
+        str(actor_id) for actor_id in battle.get("participant_ids", ())
+        if int(battle.get("health", {}).get(actor_id, 0)) > 0
+        and isinstance(_character_for_actor(battle, str(actor_id)), dict)
+        and _character_for_actor(battle, str(actor_id)).get("deployment_state") == "deployed"
+    ]
+    living_enemies = {
+        str(enemy_id) for enemy_id in battle.get("enemy_units", {})
+        if int(battle.get("enemy_health", {}).get(enemy_id, 0)) > 0
+    }
+    target_kind = str(blueprint.get("target", ""))
+    pattern = str(blueprint.get("range_pattern", ""))
+    if target_kind in {"ally", "self_or_ally"}:
+        if pattern == "same_or_adjacent_ally":
+            source = _character_for_actor(battle, source_actor_id)
+            if not isinstance(source, dict) or source.get("row") not in COMBAT_ROWS:
+                return []
+            source_index = COMBAT_ROWS.index(str(source["row"]))
+            return [
+                actor_id for actor_id in living_allies
+                if isinstance(_character_for_actor(battle, actor_id), dict)
+                and abs(
+                    COMBAT_ROWS.index(str(_character_for_actor(battle, actor_id)["row"]))
+                    - source_index
+                ) <= 1
+            ]
+        return living_allies
+    if target_kind not in {"enemy", "contextual"}:
+        return []
+    enemy_formations = battle.get("enemy_formations", {})
+    if pattern == "frontmost_enemy":
+        for row in COMBAT_ROWS:
+            row_targets = [
+                str(enemy_id) for enemy_id in enemy_formations.get(row, ())
+                if str(enemy_id) in living_enemies
+            ]
+            if row_targets:
+                return row_targets
+        return []
+    if pattern == "front_two_enemy_rows":
+        return [
+            str(enemy_id) for row in COMBAT_ROWS[:2]
+            for enemy_id in enemy_formations.get(row, ())
+            if str(enemy_id) in living_enemies
+        ]
+    return [
+        str(enemy_id) for row in COMBAT_ROWS
+        for enemy_id in enemy_formations.get(row, ())
+        if str(enemy_id) in living_enemies
+    ]
+
+
+def _effect_power(character: Mapping[str, Any], effect_id: str) -> tuple[int, str]:
+    if effect_id == "deal_physical":
+        return int(character.get("physical_power", 0)), "physical"
+    if effect_id == "deal_technique":
+        return int(character.get("technique_power", 0)), "technique"
+    if effect_id in {"reveal_pattern", "apply_disruption"}:
+        return int(character.get("cognitive_power", 0)), "cognitive"
+    if effect_id == "specialization_effect":
+        options = {
+            "physical": int(character.get("physical_power", 0)),
+            "technique": int(character.get("technique_power", 0)),
+            "cognitive": int(character.get("cognitive_power", 0)),
+        }
+        damage_kind = max(options, key=lambda key: (options[key], key))
+        return options[damage_kind], damage_kind
+    return int(character.get("support_power", 0)), "support"
+
+
+def resolve_combat_effects(
+    battle: Dict[str, Any],
+    source_actor_id: str,
+    blueprint: Mapping[str, Any],
+    target_id: str,
+) -> list[Dict[str, Any]]:
+    """First deterministic effect pipeline shared by cards and base commands."""
+    source = _character_for_actor(battle, source_actor_id)
+    if not isinstance(source, dict):
+        raise ValueError("combat effect source is not deployed")
+    results: list[Dict[str, Any]] = []
+    base_power = int(blueprint.get("base_power", 0))
+    for effect_id in map(str, blueprint.get("effect_ids", ())):
+        scaling_power, power_kind = _effect_power(source, effect_id)
+        amount = max(1, base_power + round(scaling_power * 0.6))
+        if effect_id in {
+            "deal_physical", "deal_technique", "reveal_pattern",
+            "apply_disruption", "specialization_effect",
+        }:
+            enemy = battle["enemy_units"][target_id]
+            mitigation = int(
+                enemy["defense"] if power_kind in {"physical", "technique"}
+                else enemy["resistance"]
+            )
+            amount = max(1, amount - mitigation)
+            weakness = power_kind in enemy.get("weaknesses", ())
+            if weakness:
+                amount = max(1, round(amount * 1.5))
+            before = int(battle["enemy_health"][target_id])
+            after = max(0, before - amount)
+            battle["enemy_health"][target_id] = after
+            if effect_id == "reveal_pattern":
+                for weakness_id in enemy.get("weaknesses", ()):
+                    known_id = f"{target_id}:{weakness_id}"
+                    if known_id not in battle["known_weaknesses"]:
+                        battle["known_weaknesses"].append(known_id)
+            if effect_id == "apply_disruption" and "disrupted" not in enemy["statuses"]:
+                enemy["statuses"].append("disrupted")
+            results.append({
+                "effect_id": effect_id, "target_id": target_id,
+                "amount": amount, "before": before, "after": after,
+                "power_kind": power_kind, "weakness": weakness,
+            })
+            continue
+        if effect_id == "grant_guard":
+            amount += round(int(source.get("support_power", 0)) * 0.2)
+            before = int(battle["barriers"].get(target_id, 0))
+            battle["barriers"][target_id] = before + amount
+            results.append({
+                "effect_id": effect_id, "target_id": target_id,
+                "amount": amount, "before": before, "after": before + amount,
+            })
+            continue
+        if effect_id in {"restore_focus", "restore_health"}:
+            amount += round(int(source.get("support_power", 0)) * 0.2)
+            ledger_name = "focus" if effect_id == "restore_focus" else "health"
+            maximum_name = "max_focus" if effect_id == "restore_focus" else "max_health"
+            target = _character_for_actor(battle, target_id)
+            if not isinstance(target, dict):
+                raise ValueError("combat recovery target is invalid")
+            before = int(battle[ledger_name].get(target_id, 0))
+            after = min(int(target[maximum_name]), before + amount)
+            battle[ledger_name][target_id] = after
+            results.append({
+                "effect_id": effect_id, "target_id": target_id,
+                "amount": after - before, "before": before, "after": after,
+            })
+            continue
+        raise ValueError(f"unsupported combat effect: {effect_id}")
+    return results
+
+
+def _finish_victory(context, battle: Dict[str, Any]) -> bool:
+    if any(int(value) > 0 for value in battle.get("enemy_health", {}).values()):
+        return False
+    battle["phase"] = "resolved"
+    battle["result"] = "victory"
+    battle["revision"] = int(battle["revision"]) + 1
+    mapping = context.state.metadata["campus_combat"]["active_battle_by_actor"]
+    for actor_id in battle["participant_ids"]:
+        if mapping.get(actor_id) == battle["battle_id"]:
+            del mapping[actor_id]
+    leader_id = next(
+        (
+            str(actor_id) for actor_id in battle["participant_ids"]
+            if context.state.population.get(str(actor_id), {}).get("is_player")
+        ),
+        str(battle["participant_ids"][0]),
+    )
+    task_completed = complete_assigned_task(
+        context, leader_id, {"task_id": battle["situation_id"]}
+    )
+    context.emit(
+        "COMBAT_VICTORY",
+        "夜相异常失去行动能力，行动小队完成了现场处置。",
+        actor_ids=battle["participant_ids"], scene_id=battle["scene_id"],
+        payload={
+            "battle_id": battle["battle_id"], "task_id": battle["situation_id"],
+            "task_completed": task_completed,
+        },
+        visibility="private", severity=4,
+        knowledge_tags=["combat", "victory", "night", "task"],
+    )
+    return True
+
+
+def play_combat_card(
+    context,
+    battle: Dict[str, Any],
+    card_instance_id: str,
+    target_ids: Iterable[str],
+) -> Dict[str, Any]:
+    if battle.get("phase") != "player_turn":
+        raise ValueError("wrong_battle_phase")
+    instance = battle.get("card_instances", {}).get(card_instance_id)
+    if not isinstance(instance, dict) or card_instance_id not in battle.get("shared_hand_ids", ()):
+        raise ValueError("card_not_in_hand")
+    owner_id = str(instance["owner_actor_id"])
+    owner = _character_for_actor(battle, owner_id)
+    if not isinstance(owner, dict) or owner.get("deployment_state") != "deployed":
+        raise ValueError("card_owner_unavailable")
+    target_list = list(dict.fromkeys(map(str, target_ids)))
+    legal = legal_combat_targets(battle, owner_id, instance)
+    if len(target_list) != 1 or target_list[0] not in legal:
+        raise ValueError("invalid_combat_target")
+    team_id = str(owner["team_id"])
+    cost = int(instance["command_cost"])
+    available = int(battle["command_points"].get(team_id, 0))
+    if available < cost:
+        raise ValueError("insufficient_command_points")
+    battle["command_points"][team_id] = available - cost
+    battle["shared_hand_ids"].remove(card_instance_id)
+    battle["discard_piles"][owner_id].append(card_instance_id)
+    instance["zone"] = "discard"
+    effects = resolve_combat_effects(battle, owner_id, instance, target_list[0])
+    battle["revision"] = int(battle["revision"]) + 1
+    resolved = not any(int(value) > 0 for value in battle.get("enemy_health", {}).values())
+    context.emit(
+        "COMBAT_CARD_PLAYED",
+        f"{owner.get('display_name', owner_id)}使用了{instance.get('display_name', '指令牌')}。",
+        actor_ids=[owner_id], scene_id=battle["scene_id"],
+        payload={
+            "battle_id": battle["battle_id"], "card_instance_id": card_instance_id,
+            "target_ids": target_list, "command_cost": cost,
+            "effects": deepcopy(effects), "battle_resolved": resolved,
+        },
+        visibility="private", severity=3,
+        knowledge_tags=["combat", "cards", "effect"],
+    )
+    if resolved:
+        _finish_victory(context, battle)
+    return {"effects": effects, "battle_resolved": resolved}
+
+
+def use_combat_base_command(
+    context,
+    battle: Dict[str, Any],
+    source_actor_id: str,
+    target_ids: Iterable[str],
+    round_policy: CombatRoundPolicy,
+) -> Dict[str, Any]:
+    if battle.get("phase") != "player_turn":
+        raise ValueError("wrong_battle_phase")
+    source = _character_for_actor(battle, source_actor_id)
+    if not isinstance(source, dict) or source.get("deployment_state") != "deployed":
+        raise ValueError("base_command_actor_unavailable")
+    if source_actor_id in battle["base_command_used_actor_ids"]:
+        raise ValueError("base_command_already_used")
+    command_id = str(source["base_command_id"])
+    blueprint = round_policy.base_command_blueprints[command_id]
+    target_list = list(dict.fromkeys(map(str, target_ids)))
+    legal = legal_combat_targets(battle, source_actor_id, blueprint)
+    if len(target_list) != 1 or target_list[0] not in legal:
+        raise ValueError("invalid_combat_target")
+    team_id = str(source["team_id"])
+    cost = int(blueprint["command_cost"])
+    available = int(battle["command_points"].get(team_id, 0))
+    if available < cost:
+        raise ValueError("insufficient_command_points")
+    battle["command_points"][team_id] = available - cost
+    battle["base_command_used_actor_ids"].append(source_actor_id)
+    effects = resolve_combat_effects(battle, source_actor_id, blueprint, target_list[0])
+    battle["revision"] = int(battle["revision"]) + 1
+    resolved = not any(int(value) > 0 for value in battle.get("enemy_health", {}).values())
+    context.emit(
+        "COMBAT_BASE_COMMAND_USED",
+        f"{source.get('display_name', source_actor_id)}执行了{blueprint.get('name', command_id)}。",
+        actor_ids=[source_actor_id], scene_id=battle["scene_id"],
+        payload={
+            "battle_id": battle["battle_id"], "base_command_id": command_id,
+            "target_ids": target_list, "command_cost": cost,
+            "effects": deepcopy(effects), "battle_resolved": resolved,
+        },
+        visibility="private", severity=3,
+        knowledge_tags=["combat", "base_command", "effect"],
+    )
+    if resolved:
+        _finish_victory(context, battle)
+    return {"effects": effects, "battle_resolved": resolved}
 
 
 def configured_actor_deck(
@@ -904,6 +1251,55 @@ def make_campus_combat_handler(
                 },
             )
 
+        if command.action_id in {"PLAY_COMBAT_CARD", "USE_COMBAT_BASE_COMMAND"}:
+            try:
+                if command.action_id == "PLAY_COMBAT_CARD":
+                    runtime = play_combat_card(
+                        context,
+                        battle,
+                        str(command.parameters.get("card_instance_id", "")),
+                        command.parameters.get("target_ids", ()),
+                    )
+                    success_message = (
+                        "指令牌已结算，战斗胜利。" if runtime["battle_resolved"]
+                        else "指令牌已结算。"
+                    )
+                else:
+                    runtime = use_combat_base_command(
+                        context,
+                        battle,
+                        str(command.parameters.get("source_actor_id", command.actor_id)),
+                        command.parameters.get("target_ids", ()),
+                        round_policy,
+                    )
+                    success_message = (
+                        "基础指令已结算，战斗胜利。" if runtime["battle_resolved"]
+                        else "基础指令已结算。"
+                    )
+            except ValueError as exc:
+                error_code = str(exc)
+                messages = {
+                    "wrong_battle_phase": "当前不是玩家行动阶段。",
+                    "card_not_in_hand": "这张牌不在当前共享手牌中。",
+                    "card_owner_unavailable": "出牌角色已经无法行动。",
+                    "base_command_actor_unavailable": "该角色当前无法执行基础指令。",
+                    "base_command_already_used": "该角色本轮已经执行过基础指令。",
+                    "invalid_combat_target": "目标不符合这项行动的排位或阵营限制。",
+                    "insufficient_command_points": "共享指令点不足。",
+                }
+                return TransactionOutcome(
+                    False, False, error_code,
+                    messages.get(error_code, "战斗效果无法结算。"),
+                )
+            return TransactionOutcome(
+                True, True, "success", success_message, commit=True,
+                payload={
+                    "battle_id": battle["battle_id"],
+                    "battle_revision": battle["revision"],
+                    **runtime,
+                },
+            )
+
         card, card_id = _card_from_command(battle, command.parameters)
         if command.action_id in {
             "DEPLOY_COMBAT_CHARACTER", "WITHDRAW_COMBAT_CHARACTER", "REPOSITION_COMBAT_CHARACTER",
@@ -1100,6 +1496,48 @@ def campus_combat_view(
                 "display_name": state.population.get(actor_id, {}).get("display_name", actor_id),
                 **deepcopy(assessment),
             })
+    active_view = deepcopy(active) if isinstance(active, dict) else None
+    if isinstance(active_view, dict) and active_view.get("phase") == "player_turn":
+        card_options: Dict[str, Dict[str, Any]] = {}
+        for instance_id in active_view.get("shared_hand_ids", ()):
+            instance = active_view.get("card_instances", {}).get(instance_id, {})
+            if not isinstance(instance, dict):
+                continue
+            owner_id = str(instance.get("owner_actor_id", ""))
+            owner = _character_for_actor(active_view, owner_id)
+            team_id = str(owner.get("team_id", "")) if isinstance(owner, dict) else ""
+            target_ids = legal_combat_targets(active_view, owner_id, instance)
+            card_options[str(instance_id)] = {
+                "target_ids": target_ids,
+                "playable": bool(target_ids) and int(
+                    active_view.get("command_points", {}).get(team_id, 0)
+                ) >= int(instance.get("command_cost", 0)),
+            }
+        base_options: Dict[str, Dict[str, Any]] = {}
+        for actor_id in active_view.get("participant_ids", ()):
+            actor_id = str(actor_id)
+            character = _character_for_actor(active_view, actor_id)
+            if not isinstance(character, dict) or character.get("deployment_state") != "deployed":
+                continue
+            command_id = str(character.get("base_command_id", ""))
+            blueprint = round_policy.base_command_blueprints.get(command_id, {})
+            target_ids = legal_combat_targets(active_view, actor_id, blueprint)
+            used = actor_id in active_view.get("base_command_used_actor_ids", ())
+            team_id = str(character.get("team_id", ""))
+            base_options[actor_id] = {
+                "base_command_id": command_id,
+                "display_name": str(blueprint.get("name", command_id)),
+                "command_cost": int(blueprint.get("command_cost", 0)),
+                "target_ids": target_ids,
+                "used": used,
+                "playable": not used and bool(target_ids) and int(
+                    active_view.get("command_points", {}).get(team_id, 0)
+                ) >= int(blueprint.get("command_cost", 0)),
+            }
+        active_view["action_options"] = {
+            "cards": card_options,
+            "base_commands": base_options,
+        }
     return {
         "enabled": True,
         "can_prepare": bool(general.get("allowed", False)),
@@ -1118,7 +1556,7 @@ def campus_combat_view(
             "initial_command_points": round_policy.initial_command_points,
             "maximum_command_points": round_policy.maximum_command_points,
         },
-        "active_battle": deepcopy(active) if isinstance(active, dict) else None,
+        "active_battle": active_view,
     }
 
 
@@ -1135,6 +1573,9 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
     except (TypeError, ValueError) as exc:
         return (f"campus combat policy is invalid: {exc}",)
     sequence = metadata.get("battle_sequence")
+    enemy_archetypes = metadata.get("enemy_archetypes")
+    if not isinstance(enemy_archetypes, dict) or not enemy_archetypes:
+        errors.append("campus combat enemy archetypes are invalid")
     if isinstance(sequence, bool) or not isinstance(sequence, int) or sequence < 0:
         errors.append("campus combat battle sequence is invalid")
     mapping = metadata.get("active_battle_by_actor")
@@ -1189,6 +1630,14 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
                 errors.append(f"battle {battle_id} character card {card_id} kept a stale row")
             if not card.get("command_card_ids"):
                 errors.append(f"battle {battle_id} character card {card_id} lacks commands")
+            for power_name in (
+                "physical_power", "technique_power", "cognitive_power", "support_power",
+            ):
+                value = card.get(power_name)
+                if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                    errors.append(
+                        f"battle {battle_id} character card {card_id} has invalid {power_name}"
+                    )
         if battle.get("phase") != "setup" and reserves:
             errors.append(f"battle {battle_id} kept reserves after deployment lock")
         if battle.get("phase") == "ready" and not any(
@@ -1199,9 +1648,54 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
         if not isinstance(participants, list) or not participants or len(participants) > policy.max_friendly_characters:
             errors.append(f"battle {battle_id} participant list is invalid")
         for actor_id in participants if isinstance(participants, list) else ():
-            if mapping.get(actor_id) != battle_id:
+            if battle.get("phase") != "resolved" and mapping.get(actor_id) != battle_id:
                 errors.append(f"battle {battle_id} active participant {actor_id} is not mapped")
-        if battle.get("phase") in {"player_turn", "enemy_turn", "round_end"}:
+        enemy_units = battle.get("enemy_units")
+        enemy_formations = battle.get("enemy_formations")
+        enemy_health = battle.get("enemy_health")
+        if not isinstance(enemy_units, dict) or not enemy_units:
+            errors.append(f"battle {battle_id} enemy units are invalid")
+        elif not isinstance(enemy_formations, dict) or set(enemy_formations) != set(COMBAT_ROWS):
+            errors.append(f"battle {battle_id} enemy formation is invalid")
+        elif not isinstance(enemy_health, dict) or set(enemy_health) != set(enemy_units):
+            errors.append(f"battle {battle_id} enemy health ledger is invalid")
+        else:
+            deployed_enemies = [
+                str(enemy_id) for row in COMBAT_ROWS
+                for enemy_id in enemy_formations.get(row, ())
+            ]
+            if len(deployed_enemies) != len(set(deployed_enemies)) or set(deployed_enemies) != set(enemy_units):
+                errors.append(f"battle {battle_id} enemy formation is not an exact partition")
+            for enemy_id, enemy in enemy_units.items():
+                if (
+                    not isinstance(enemy, dict)
+                    or enemy.get("enemy_instance_id") != enemy_id
+                    or enemy.get("row") not in COMBAT_ROWS
+                    or enemy_id not in enemy_formations.get(enemy.get("row"), ())
+                ):
+                    errors.append(f"battle {battle_id} enemy {enemy_id} is invalid")
+                    continue
+                health = enemy_health.get(enemy_id)
+                if (
+                    isinstance(health, bool) or not isinstance(health, int)
+                    or not 0 <= health <= int(enemy.get("max_health", -1))
+                ):
+                    errors.append(f"battle {battle_id} enemy {enemy_id} health is invalid")
+        barriers = battle.get("barriers")
+        if not isinstance(barriers, dict) or set(barriers) != set(participants or ()):
+            errors.append(f"battle {battle_id} barrier ledger is invalid")
+        elif any(
+            isinstance(value, bool) or not isinstance(value, int) or value < 0
+            for value in barriers.values()
+        ):
+            errors.append(f"battle {battle_id} barrier values are invalid")
+        if battle.get("phase") == "resolved" and battle.get("result") == "victory" and any(
+            int(value) > 0 for value in (enemy_health or {}).values()
+        ):
+            errors.append(f"battle {battle_id} victory kept a living enemy")
+        if battle.get("phase") in {"player_turn", "enemy_turn", "round_end"} or (
+            battle.get("phase") == "resolved" and battle.get("card_instances")
+        ):
             participant_set = set(participants) if isinstance(participants, list) else set()
             actor_decks = battle.get("actor_decks")
             draw_piles = battle.get("draw_piles")
@@ -1276,7 +1770,8 @@ __all__ = [
     "advance_campus_combat",
     "combat_policy_from_state", "combat_round_policy_from_state",
     "combat_preparation_assessment", "configured_actor_deck",
-    "combat_readiness_assessment", "incapacitate_character",
+    "combat_readiness_assessment", "incapacitate_character", "legal_combat_targets",
     "install_campus_combat", "load_combat_deployment_policy", "load_combat_round_policy",
-    "make_campus_combat_handler", "start_card_combat", "end_combat_round",
+    "make_campus_combat_handler", "play_combat_card", "resolve_combat_effects",
+    "start_card_combat", "end_combat_round", "use_combat_base_command",
 ]

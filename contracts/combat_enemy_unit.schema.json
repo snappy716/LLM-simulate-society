@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/combat_enemy_unit.schema.json",
+  "title": "Night-world enemy combat unit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "enemy_instance_id", "archetype_id", "display_name", "row", "max_health",
+    "defense", "resistance", "speed", "weaknesses", "knowledge_tags", "statuses"
+  ],
+  "properties": {
+    "enemy_instance_id": {"type": "string", "minLength": 1},
+    "archetype_id": {"type": "string", "minLength": 1},
+    "display_name": {"type": "string", "minLength": 1},
+    "row": {"enum": ["front", "middle", "back"]},
+    "max_health": {"type": "integer", "minimum": 1},
+    "defense": {"type": "integer", "minimum": 0},
+    "resistance": {"type": "integer", "minimum": 0},
+    "speed": {"type": "integer", "minimum": 0},
+    "weaknesses": {"type": "array", "items": {"enum": ["physical", "technique", "cognitive"]}, "uniqueItems": true},
+    "knowledge_tags": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "statuses": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+  }
+}

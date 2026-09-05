@@ -65,9 +65,17 @@ var _combat_cancel_action: Button
 var _combat_start_action: Button
 var _combat_hand_detail: RichTextLabel
 var _combat_end_round_action: Button
+var _combat_card_picker: OptionButton
+var _combat_card_target_picker: OptionButton
+var _combat_play_card_action: Button
+var _combat_base_picker: OptionButton
+var _combat_base_target_picker: OptionButton
+var _combat_use_base_action: Button
 var _combat_feedback: Label
 var _selected_combat_task_id := ""
 var _selected_character_card_id := ""
+var _selected_combat_card_id := ""
+var _selected_combat_base_actor_id := ""
 var _message_root: VBoxContainer
 var _message_contact_picker: OptionButton
 var _message_log: RichTextLabel
@@ -439,6 +447,32 @@ func _build_combat_page() -> VBoxContainer:
 	_combat_hand_detail.custom_minimum_size = Vector2(0, 92)
 	_combat_hand_detail.add_theme_font_size_override("normal_font_size", 13)
 	root.add_child(_combat_hand_detail)
+	var card_action_row := HBoxContainer.new()
+	_combat_card_picker = OptionButton.new()
+	_combat_card_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_combat_card_picker.item_selected.connect(_select_combat_card)
+	card_action_row.add_child(_combat_card_picker)
+	_combat_card_target_picker = OptionButton.new()
+	_combat_card_target_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card_action_row.add_child(_combat_card_target_picker)
+	_combat_play_card_action = Button.new()
+	_combat_play_card_action.text = "出牌"
+	_combat_play_card_action.pressed.connect(_play_combat_card)
+	card_action_row.add_child(_combat_play_card_action)
+	root.add_child(card_action_row)
+	var base_action_row := HBoxContainer.new()
+	_combat_base_picker = OptionButton.new()
+	_combat_base_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_combat_base_picker.item_selected.connect(_select_combat_base_command)
+	base_action_row.add_child(_combat_base_picker)
+	_combat_base_target_picker = OptionButton.new()
+	_combat_base_target_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	base_action_row.add_child(_combat_base_target_picker)
+	_combat_use_base_action = Button.new()
+	_combat_use_base_action.text = "基础指令"
+	_combat_use_base_action.pressed.connect(_use_combat_base_command)
+	base_action_row.add_child(_combat_use_base_action)
+	root.add_child(base_action_row)
 	_combat_feedback = Label.new()
 	_combat_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_combat_feedback.add_theme_color_override("font_color", Color("e0b86a"))
@@ -1321,6 +1355,7 @@ func _refresh_combat_page() -> void:
 		_combat_cancel_action.disabled = true
 		_combat_start_action.disabled = true
 		_combat_end_round_action.disabled = true
+		_reset_combat_action_controls()
 		_combat_hand_detail.text = "[color=#91a4bc]锁定阵型后可生成个人八张牌组与共享战术手牌。[/color]"
 		return
 
@@ -1334,13 +1369,28 @@ func _refresh_combat_page() -> void:
 			var deployed_card: Dictionary = cards.get(String(card_id_value), {})
 			names.append(String(deployed_card.get("display_name", "未知人物")))
 		lines.append("[b]%s[/b]  %s" % [row_names[row_id], " / ".join(names) if not names.is_empty() else "—"])
+	var enemy_lines: Array[String] = []
+	var enemy_units: Dictionary = active.get("enemy_units", {})
+	var enemy_health: Dictionary = active.get("enemy_health", {})
+	var enemy_formation: Dictionary = active.get("enemy_formations", {})
+	for row_id in ["front", "middle", "back"]:
+		var enemy_names: Array[String] = []
+		for enemy_id_value in enemy_formation.get(row_id, []):
+			var enemy_id := String(enemy_id_value)
+			var enemy: Dictionary = enemy_units.get(enemy_id, {})
+			enemy_names.append("%s %d/%d" % [
+				enemy.get("display_name", "未知异常"),
+				int(enemy_health.get(enemy_id, 0)),
+				int(enemy.get("max_health", 0)),
+			])
+		enemy_lines.append("[b]%s[/b]  %s" % [row_names[row_id], " / ".join(enemy_names) if not enemy_names.is_empty() else "—"])
 	var phase_names := {
 		"setup": "准备中", "ready": "阵型已锁定", "player_turn": "玩家行动",
 		"enemy_turn": "敌方行动", "round_end": "轮次结算", "resolved": "战斗结束",
 	}
 	var phase_name := String(phase_names.get(String(active.get("phase", "")), "战斗中"))
-	_combat_formation_detail.text = "[font_size=21][b]%s[/b][/font_size]  ·  %s\n%s\n\n[color=#91a4bc]每排最多两人；玩家必须上场。锁定后本场不能替补，倒下角色离场且其未使用指令牌失效。[/color]" % [
-		phase_name, active.get("battle_id", ""), "\n".join(lines)
+	_combat_formation_detail.text = "[font_size=21][b]%s[/b][/font_size]  ·  %s\n[b]我方阵型[/b]\n%s\n\n[b]敌方阵型[/b]\n%s\n\n[color=#91a4bc]每排最多两人；玩家必须上场；锁定后本场不能替补。目标与排位限制由模拟内核判定。[/color]" % [
+		phase_name, active.get("battle_id", ""), "\n".join(lines), "\n".join(enemy_lines)
 	]
 	_refresh_combat_hand(active, cards)
 	var previous_card := _selected_character_card_id
@@ -1377,9 +1427,11 @@ func _refresh_combat_page() -> void:
 func _refresh_combat_hand(active: Dictionary, characters: Dictionary) -> void:
 	var phase := String(active.get("phase", ""))
 	if phase == "setup":
+		_reset_combat_action_controls()
 		_combat_hand_detail.text = "[color=#91a4bc]先完成人物牌部署。[/color]"
 		return
 	if phase == "ready":
+		_reset_combat_action_controls()
 		_combat_hand_detail.text = "[b]阵型已确认[/b]\n开始后，每名上场角色从个人八张牌组抽取两张，加入共享战术手牌。"
 		return
 	var team_id := "party:player"
@@ -1405,17 +1457,143 @@ func _refresh_combat_hand(active: Dictionary, characters: Dictionary) -> void:
 		int(active.get("round", 1)), points, cap,
 		"\n".join(hand_lines) if not hand_lines.is_empty() else "暂无可用手牌",
 	]
+	_refresh_combat_action_controls(active, characters)
+
+
+func _reset_combat_action_controls() -> void:
+	_selected_combat_card_id = ""
+	_selected_combat_base_actor_id = ""
+	_combat_card_picker.clear()
+	_combat_card_target_picker.clear()
+	_combat_base_picker.clear()
+	_combat_base_target_picker.clear()
+	_combat_card_picker.disabled = true
+	_combat_card_target_picker.disabled = true
+	_combat_play_card_action.disabled = true
+	_combat_base_picker.disabled = true
+	_combat_base_target_picker.disabled = true
+	_combat_use_base_action.disabled = true
+
+
+func _combat_target_name(active: Dictionary, characters: Dictionary, target_id: String) -> String:
+	for value in characters.values():
+		if value is Dictionary and String(value.get("actor_id", "")) == target_id:
+			return String(value.get("display_name", target_id))
+	var enemy: Dictionary = (active.get("enemy_units", {}) as Dictionary).get(target_id, {})
+	if not enemy.is_empty():
+		return "%s · %s排" % [
+			enemy.get("display_name", target_id),
+			{"front": "前", "middle": "中", "back": "后"}.get(enemy.get("row", ""), "未知"),
+		]
+	return target_id
+
+
+func _refresh_combat_action_controls(active: Dictionary, characters: Dictionary) -> void:
+	var action_options: Dictionary = active.get("action_options", {})
+	var card_options: Dictionary = action_options.get("cards", {})
+	var previous_card := _selected_combat_card_id
+	_combat_card_picker.clear()
+	var selected_card_index := 0
+	for instance_id_value in active.get("shared_hand_ids", []):
+		var instance_id := String(instance_id_value)
+		var instance: Dictionary = (active.get("card_instances", {}) as Dictionary).get(instance_id, {})
+		var owner: Dictionary = {}
+		for character_value in characters.values():
+			if character_value is Dictionary and String(character_value.get("actor_id", "")) == String(instance.get("owner_actor_id", "")):
+				owner = character_value
+				break
+		var option: Dictionary = card_options.get(instance_id, {})
+		var state_note := "可用" if bool(option.get("playable", false)) else "不可用"
+		var index := _combat_card_picker.item_count
+		_combat_card_picker.add_item("%s · %s · 耗%d · %s" % [
+			owner.get("display_name", "人物"), instance.get("display_name", "指令牌"),
+			int(instance.get("command_cost", 0)), state_note,
+		])
+		_combat_card_picker.set_item_metadata(index, instance_id)
+		if instance_id == previous_card:
+			selected_card_index = index
+	_combat_card_picker.disabled = _combat_card_picker.item_count == 0
+	if _combat_card_picker.item_count > 0:
+		_combat_card_picker.select(selected_card_index)
+		_selected_combat_card_id = String(_combat_card_picker.get_item_metadata(selected_card_index))
+		_refresh_combat_card_targets(active, characters)
+	else:
+		_selected_combat_card_id = ""
+		_combat_card_target_picker.clear()
+		_combat_card_target_picker.disabled = true
+		_combat_play_card_action.disabled = true
+
+	var base_options: Dictionary = action_options.get("base_commands", {})
+	var previous_actor := _selected_combat_base_actor_id
+	_combat_base_picker.clear()
+	var selected_base_index := 0
+	var actor_ids: Array = base_options.keys()
+	actor_ids.sort()
+	for actor_id_value in actor_ids:
+		var actor_id := String(actor_id_value)
+		var option: Dictionary = base_options[actor_id]
+		var actor_name := actor_id
+		for character_value in characters.values():
+			if character_value is Dictionary and String(character_value.get("actor_id", "")) == actor_id:
+				actor_name = String(character_value.get("display_name", actor_id))
+				break
+		var state_note := "本轮已用" if bool(option.get("used", false)) else "耗%d" % int(option.get("command_cost", 0))
+		var index := _combat_base_picker.item_count
+		_combat_base_picker.add_item("%s · %s · %s" % [actor_name, option.get("display_name", "基础指令"), state_note])
+		_combat_base_picker.set_item_metadata(index, actor_id)
+		if actor_id == previous_actor:
+			selected_base_index = index
+	_combat_base_picker.disabled = _combat_base_picker.item_count == 0
+	if _combat_base_picker.item_count > 0:
+		_combat_base_picker.select(selected_base_index)
+		_selected_combat_base_actor_id = String(_combat_base_picker.get_item_metadata(selected_base_index))
+		_refresh_combat_base_targets(active, characters)
+	else:
+		_selected_combat_base_actor_id = ""
+		_combat_base_target_picker.clear()
+		_combat_base_target_picker.disabled = true
+		_combat_use_base_action.disabled = true
+
+
+func _refresh_combat_card_targets(active: Dictionary, characters: Dictionary) -> void:
+	_combat_card_target_picker.clear()
+	var option: Dictionary = (((active.get("action_options", {}) as Dictionary).get("cards", {}) as Dictionary).get(_selected_combat_card_id, {}))
+	for target_id_value in option.get("target_ids", []):
+		var target_id := String(target_id_value)
+		var index := _combat_card_target_picker.item_count
+		_combat_card_target_picker.add_item(_combat_target_name(active, characters, target_id))
+		_combat_card_target_picker.set_item_metadata(index, target_id)
+	_combat_card_target_picker.disabled = _combat_card_target_picker.item_count == 0
+	_combat_play_card_action.disabled = not bool(option.get("playable", false)) or _combat_card_target_picker.item_count == 0
+
+
+func _refresh_combat_base_targets(active: Dictionary, characters: Dictionary) -> void:
+	_combat_base_target_picker.clear()
+	var option: Dictionary = (((active.get("action_options", {}) as Dictionary).get("base_commands", {}) as Dictionary).get(_selected_combat_base_actor_id, {}))
+	for target_id_value in option.get("target_ids", []):
+		var target_id := String(target_id_value)
+		var index := _combat_base_target_picker.item_count
+		_combat_base_target_picker.add_item(_combat_target_name(active, characters, target_id))
+		_combat_base_target_picker.set_item_metadata(index, target_id)
+	_combat_base_target_picker.disabled = _combat_base_target_picker.item_count == 0
+	_combat_use_base_action.disabled = not bool(option.get("playable", false)) or _combat_base_target_picker.item_count == 0
 
 
 func _refresh_combat_character_controls(active: Dictionary) -> void:
 	var cards: Dictionary = active.get("character_cards", {})
 	var card: Dictionary = cards.get(_selected_character_card_id, {})
-	var setup := String(active.get("phase", "")) == "setup"
+	var phase := String(active.get("phase", ""))
+	var setup := phase == "setup"
+	var player_turn := phase == "player_turn"
 	var deployment_state := String(card.get("deployment_state", ""))
-	_combat_character_picker.disabled = not setup
-	_combat_row_picker.disabled = not setup or deployment_state not in ["reserve", "deployed"]
+	_combat_character_picker.disabled = not setup and not player_turn
+	_combat_row_picker.disabled = (not setup and not player_turn) or deployment_state not in ["reserve", "deployed"]
 	_combat_deploy_action.text = "部署" if deployment_state == "reserve" else "换位"
-	_combat_deploy_action.disabled = not setup or deployment_state not in ["reserve", "deployed"]
+	_combat_deploy_action.disabled = (
+		(not setup and not player_turn)
+		or deployment_state not in ["reserve", "deployed"]
+		or (player_turn and deployment_state != "deployed")
+	)
 	_combat_withdraw_action.disabled = not setup or deployment_state != "deployed"
 	var player_deployed := false
 	for card_value in cards.values():
@@ -1446,6 +1624,20 @@ func _select_combat_character(index: int) -> void:
 				_combat_row_picker.select(index_value)
 				break
 		_refresh_combat_character_controls(active)
+
+
+func _select_combat_card(index: int) -> void:
+	_selected_combat_card_id = String(_combat_card_picker.get_item_metadata(index))
+	var active: Dictionary = (SimulationBridge.campus_snapshot.get("combat", {}) as Dictionary).get("active_battle", {})
+	if not active.is_empty():
+		_refresh_combat_card_targets(active, active.get("character_cards", {}))
+
+
+func _select_combat_base_command(index: int) -> void:
+	_selected_combat_base_actor_id = String(_combat_base_picker.get_item_metadata(index))
+	var active: Dictionary = (SimulationBridge.campus_snapshot.get("combat", {}) as Dictionary).get("active_battle", {})
+	if not active.is_empty():
+		_refresh_combat_base_targets(active, active.get("character_cards", {}))
 
 
 func _start_combat_preparation() -> void:
@@ -1511,6 +1703,30 @@ func _end_combat_round() -> void:
 		return
 	_combat_feedback.text = "正在弃置未保留手牌并进入下一轮……"
 	SimulationBridge.operate_campus_combat("END_COMBAT_ROUND", parameters)
+
+
+func _play_combat_card() -> void:
+	var parameters := _active_combat_parameters()
+	if parameters.is_empty() or _combat_card_target_picker.selected < 0:
+		return
+	parameters["card_instance_id"] = _selected_combat_card_id
+	parameters["target_ids"] = [String(
+		_combat_card_target_picker.get_item_metadata(_combat_card_target_picker.selected)
+	)]
+	_combat_feedback.text = "正在结算指令牌……"
+	SimulationBridge.operate_campus_combat("PLAY_COMBAT_CARD", parameters)
+
+
+func _use_combat_base_command() -> void:
+	var parameters := _active_combat_parameters()
+	if parameters.is_empty() or _combat_base_target_picker.selected < 0:
+		return
+	parameters["source_actor_id"] = _selected_combat_base_actor_id
+	parameters["target_ids"] = [String(
+		_combat_base_target_picker.get_item_metadata(_combat_base_target_picker.selected)
+	)]
+	_combat_feedback.text = "正在执行基础指令……"
+	SimulationBridge.operate_campus_combat("USE_COMBAT_BASE_COMMAND", parameters)
 
 
 func _cancel_combat_preparation() -> void:

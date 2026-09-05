@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "archetypes": [
-    {"id": "moon_fragment", "name": "月屑", "knowledge_tags": ["observation", "purification"]},
-    {"id": "shadow_collector", "name": "拾影兽", "knowledge_tags": ["omission", "habit"]},
-    {"id": "missing_glyph", "name": "漏字虫", "knowledge_tags": ["name", "identity_anchor"]},
-    {"id": "rewritten_form", "name": "复写体", "knowledge_tags": ["contradiction", "imitation"]},
-    {"id": "silence_moth", "name": "噤声蛾", "knowledge_tags": ["testimony", "free_narrative"]},
-    {"id": "sleepwalking_shell", "name": "梦游壳", "knowledge_tags": ["dream", "repetition"]},
-    {"id": "empty_face", "name": "空面者", "knowledge_tags": ["self_confirmation", "identity"]},
-    {"id": "light_chaser", "name": "逐光者", "knowledge_tags": ["attention", "observation_break"]}
+    {"id": "moon_fragment", "name": "月屑", "max_health": 62, "defense": 5, "resistance": 8, "speed": 14, "preferred_row": "back", "weaknesses": ["physical"], "knowledge_tags": ["observation", "purification"]},
+    {"id": "shadow_collector", "name": "拾影兽", "max_health": 72, "defense": 8, "resistance": 5, "speed": 12, "preferred_row": "front", "weaknesses": ["cognitive"], "knowledge_tags": ["omission", "habit"]},
+    {"id": "missing_glyph", "name": "漏字虫", "max_health": 58, "defense": 5, "resistance": 7, "speed": 16, "preferred_row": "middle", "weaknesses": ["technique"], "knowledge_tags": ["name", "identity_anchor"]},
+    {"id": "rewritten_form", "name": "复写体", "max_health": 78, "defense": 8, "resistance": 8, "speed": 10, "preferred_row": "front", "weaknesses": ["cognitive"], "knowledge_tags": ["contradiction", "imitation"]},
+    {"id": "silence_moth", "name": "噤声蛾", "max_health": 60, "defense": 5, "resistance": 9, "speed": 15, "preferred_row": "back", "weaknesses": ["physical"], "knowledge_tags": ["testimony", "free_narrative"]},
+    {"id": "sleepwalking_shell", "name": "梦游壳", "max_health": 82, "defense": 9, "resistance": 6, "speed": 8, "preferred_row": "front", "weaknesses": ["technique"], "knowledge_tags": ["dream", "repetition"]},
+    {"id": "empty_face", "name": "空面者", "max_health": 70, "defense": 7, "resistance": 9, "speed": 11, "preferred_row": "middle", "weaknesses": ["cognitive"], "knowledge_tags": ["self_confirmation", "identity"]},
+    {"id": "light_chaser", "name": "逐光者", "max_health": 64, "defense": 6, "resistance": 6, "speed": 18, "preferred_row": "middle", "weaknesses": ["technique"], "knowledge_tags": ["attention", "observation_break"]}
   ]
 }

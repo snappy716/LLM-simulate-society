@@ -8,6 +8,7 @@
     "character_card_instance_id", "actor_id", "display_name", "team_id",
     "deployment_state", "row", "allowed_rows", "preferred_row", "deployment_cost",
     "max_health", "max_focus", "defense", "resistance", "speed",
+    "physical_power", "technique_power", "cognitive_power", "support_power",
     "base_command_id", "passive_ids", "command_card_ids"
   ],
   "properties": {
@@ -30,6 +31,10 @@
     "defense": {"type": "integer", "minimum": 0},
     "resistance": {"type": "integer", "minimum": 0},
     "speed": {"type": "integer", "minimum": 0},
+    "physical_power": {"type": "integer", "minimum": 0},
+    "technique_power": {"type": "integer", "minimum": 0},
+    "cognitive_power": {"type": "integer", "minimum": 0},
+    "support_power": {"type": "integer", "minimum": 0},
     "base_command_id": {"type": "string", "minLength": 1},
     "passive_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "command_card_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true}

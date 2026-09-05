@@ -166,7 +166,12 @@ class CampusKernelBridge:
         install_campus_night_world(state, night_world_policy)
         combat_policy = load_combat_deployment_policy(registry)
         combat_round_policy = load_combat_round_policy(registry)
-        install_campus_combat(state, combat_policy, combat_round_policy)
+        install_campus_combat(
+            state,
+            combat_policy,
+            combat_round_policy,
+            registry.all("enemy_archetype"),
+        )
         self.cognition_runtime = CognitionRuntime(cognition_policy)
         activity_definitions = load_campus_activity_definitions(registry)
         activity_handler = make_campus_activity_handler(

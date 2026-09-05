@@ -6,9 +6,9 @@
   "additionalProperties": false,
   "required": [
     "battle_id", "revision", "phase", "round", "scene_id", "participant_ids", "team_ids",
-    "character_cards", "formations", "reserve_character_card_ids",
+    "character_cards", "formations", "reserve_character_card_ids", "enemy_units", "enemy_formations",
     "actor_decks", "draw_piles", "discard_piles", "exhaust_piles", "reshuffle_counts", "shared_hand_ids",
-    "insight_row_ids", "base_command_used_actor_ids", "command_points", "command_point_cap", "focus", "health", "pollution", "statuses",
+    "insight_row_ids", "base_command_used_actor_ids", "command_points", "command_point_cap", "focus", "health", "pollution", "statuses", "barriers", "enemy_health",
     "known_weaknesses", "enemy_intents", "card_instances", "result", "consequences"
   ],
   "properties": {
@@ -35,6 +35,17 @@
       }
     },
     "reserve_character_card_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "enemy_units": {"type": "object"},
+    "enemy_formations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["front", "middle", "back"],
+      "properties": {
+        "front": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "middle": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "back": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
     "actor_decks": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
     "shared_hand_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "insight_row_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
@@ -44,6 +55,8 @@
     "health": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
     "pollution": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0, "maximum": 100}},
     "statuses": {"type": "object"},
+    "barriers": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "enemy_health": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
     "known_weaknesses": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "enemy_intents": {"type": "object"},
     "card_instances": {"type": "object"},
