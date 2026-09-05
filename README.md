@@ -67,14 +67,14 @@ Godot 启动验收脚本：`game/tools/test_campus_startup_flow.gd`。测试时�
 ```text
 game/             Godot 场景、输入、UI 与表现
 simulation/       权威领域、行动、系统、认知、叙事、存档、API
-content/          校园内容与待裁剪的共用数据
+content/          校园内容数据
 contracts/        请求、事件与投影 Schema
-tests/            校园测试及剩余显式兼容测试
+tests/            校园回归、契约和已知校园档迁移测试
 design/           世界观、架构和执行路线
 production/       验证与发布记录
 ```
 
-旧独立目录 `emergent_town_demo/`、`project-a-0.2/` 和原 ZIP 已删除，可从 Git 历史恢复。旧运行时和旧 Godot 工具尚未全部物理删除；`simulation/api/legacy_bridge.py` 仅供尚未退休的历史功能测试显式导入，不挂载生产 HTTP。七图及校园使用的人物素材继续保留。
+旧独立目录 `emergent_town_demo/`、`project-a-0.2/`、原 ZIP、旧运行时、旧桥接及旧城镇内容已删除，可从 Git 历史和仓库外备份恢复。七图、校园复用的共用模型及人物素材继续保留；私人配置与历史运行数据不在清理范围。已知校园档仍支持严格迁移，原城镇档不强行转换。
 
 - [世界与玩法大纲](design/CAMPUS_WORLD_AND_GAMEPLAY_DESIGN.md)
 - [目标架构](design/CAMPUS_DEMO_ARCHITECTURE.md)

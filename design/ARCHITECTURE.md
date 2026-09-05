@@ -12,9 +12,9 @@
 
 2026-09-05 用户已允许删除旧城镇，原先“保留旧目录”的约束撤销。
 独立的 `project-a-0.2/`、`emergent_town_demo/` 和原 ZIP 已退出仓库，历史版本可从 Git 恢复。
-当前正式入口只启动校园；旧桥接已隔离为仅供显式历史测试的 `simulation/api/legacy_bridge.py`，
-不再以旧快照握手或初始化旧世界。旧客户端、素材及部分共用内容仍待按
-`LEGACY_RETIREMENT.md` 裁剪，不宣称已完成全仓库旧城镇下线。
+当前正式入口只启动校园；旧 runtime、旧桥接、旧客户端与纯城镇内容已物理移除，
+不再以旧快照握手或初始化旧世界。校园复用模型与素材保留，恢复基线和验收见
+`LEGACY_RETIREMENT.md`。历史设计文档和私人运行数据不属于本次删除范围。
 
 ```text
 game/                         Godot 项目
@@ -28,22 +28,25 @@ simulation/
   api/                        Godot 本地 HTTP 桥接
 content/                      仅存放数据内容，不放运行逻辑
 contracts/                    跨进程请求、事件与快照 JSON Schema
-tests/                        校园回归、契约与仍在使用的兼容功能测试
+tests/                        校园回归、契约与已知校园档迁移测试
 design/                       系统与架构设计
 production/                   发布和迁移检查
 ```
 
-依赖方向为 `game -> simulation/api -> simulation`。模拟内部由运行时协调
+上述目录职责包含目标边界，不代表每项功能均已完成。认知当前包括提供器和焦点槽，
+校园记忆与计划等逻辑仍有实现位于 `systems/campus_*`；完整长线计划与叙事待路线后续步骤贯通。
+
+依赖方向为 `game -> simulation/api -> simulation`。模拟内部由校园内核协调
 `domain/actions/systems/cognition/narrative/persistence`，这些模块不能反向依赖
 Godot。`content` 与 `contracts` 是数据边界，供两端共同读取。
 
 领域实体、人口生成、关系网络、经济补给、事件日志和快照写入已经由对应
 模块实际负责。校园由 `CampusKernelBridge` 注册统一事务处理器并协调时段，
-`WorldState` 是状态权威。`simulation/runtime.py` 只属于待退休的旧原型，
-不是校园的回合调度器；生产包启动不会导入它。
+`WorldKernel` 负责事务，`WorldState` 是状态权威。旧 `simulation/runtime.py` 已删除。
 
 物品与交易已经使用数据驱动内容和独立领域模型实现：`domain/inventory.py` 负责
-物品、背包、商店和回执，`systems/economy.py` 负责报价、不变量与原子结算，
+物品、背包、商店和回执；`systems/campus_inventory.py`、`campus_trade.py` 和
+`campus_supply.py` 负责校园库存、私人报价/结算与供货，
 Godot 只能通过本地 API 请求交易，不能直接修改资金或库存。
 
 目标发行平台是 Windows，开发验证可在 macOS 进行。Godot 启动桥在 Windows

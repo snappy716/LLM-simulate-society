@@ -185,12 +185,15 @@ class CampusContentTests(unittest.TestCase):
         self.assertTrue(all("college_overlap_ids" in club for club in clubs))
 
     def test_population_and_story_content_match_demo_scope(self):
-        rules = self._read("content/npcs/generation_rules.json")
+        rules = self._read("content/npcs/campus_population.json")["population"]
+        cognition = self._read("content/npcs/cognition_policy.json")
         calendar = self._read("content/main_story/demo_calendar.json")
-        self.assertEqual(6000, rules["student_population"] + rules["staff_population"])
-        self.assertEqual(200, rules["persistent_population"])
-        self.assertEqual(20, rules["focused_slots"])
-        self.assertEqual(6, rules["player_awakened_slots"])
+        # The 6000-person setting is background, not a second simulated population.
+        self.assertEqual(200, rules["students"] + rules["staff"])
+        self.assertEqual(200, rules["persistent"])
+        self.assertEqual(20, rules["focused"])
+        self.assertEqual(rules["focused"], cognition["total_focus_slots"])
+        self.assertEqual(6, cognition["player_awakened_slots"])
         self.assertEqual(28, calendar["total_days"])
         self.assertEqual(4, len(calendar["stages"]))
 

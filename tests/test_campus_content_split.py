@@ -58,7 +58,8 @@ class CampusContentSplitTests(unittest.TestCase):
         content = self.directory / "content"
         shutil.copytree(ROOT / "content", content)
         for name in RETIRED:
-            (content / name).unlink()
+            (content / name).unlink(missing_ok=True)
+            self.assertFalse((content / name).exists())
         registry = ContentRegistry.load_default(content)
         self.assertEqual(SPEC["target_version"], registry.content_version)
         self.assertEqual(SPEC["item_ids"], registry.ids("item"))
