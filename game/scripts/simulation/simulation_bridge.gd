@@ -1,12 +1,7 @@
 extends Node
 
-signal snapshot_updated(snapshot: Dictionary)
 signal connection_state_changed(connected: bool, message: String)
-signal advance_state_changed(busy: bool)
 signal interface_configured(success: bool, result: Dictionary)
-signal trade_completed(success: bool, result: Dictionary)
-signal item_use_completed(success: bool, result: Dictionary)
-signal action_completed(success: bool, result: Dictionary)
 signal campus_snapshot_updated(snapshot: Dictionary)
 signal campus_traversal_completed(success: bool, result: Dictionary, passage_id: String)
 signal campus_phase_advanced(success: bool, result: Dictionary)
@@ -27,7 +22,6 @@ signal campus_persistence_completed(success: bool, result: Dictionary)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
 
-var snapshot: Dictionary = {}
 var server_pid := -1
 var connected := false
 var busy := false
@@ -101,15 +95,6 @@ func _exit_tree() -> void:
 		OS.kill(server_pid)
 
 
-func advance_time() -> void:
-	if busy or not connected:
-		return
-	busy = true
-	advance_state_changed.emit(true)
-	_pending_operation = "step"
-	var error := _request.request(_base_url + "/step", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, "{}")
-	if error != OK:
-		_finish_with_error("无法发送时间推进请求：%s" % error)
 
 
 func is_campus_busy() -> bool:
@@ -150,53 +135,6 @@ func configure_interface(config: Dictionary) -> void:
 		interface_configured.emit(false, {"error": "无法发送接口配置：%s" % error})
 
 
-func trade(shop_id: String, item_id: String, direction: String, quantity: int = 1) -> void:
-	if busy or not connected:
-		trade_completed.emit(false, {"trade": {"message": "模拟服务尚未连接或正在处理其他行动"}})
-		return
-	busy = true
-	_pending_operation = "trade"
-	var body := JSON.stringify({
-		"actor_id": "player",
-		"shop_id": shop_id,
-		"item_id": item_id,
-		"direction": direction,
-		"quantity": quantity,
-	})
-	var error := _request.request(_base_url + "/trade", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, body)
-	if error != OK:
-		busy = false
-		trade_completed.emit(false, {"trade": {"message": "无法发送交易请求：%s" % error}})
-
-
-func use_item(item_id: String) -> void:
-	if busy or not connected:
-		item_use_completed.emit(false, {"item_use": {"message": "模拟服务尚未连接或正在处理其他行动"}})
-		return
-	busy = true
-	_pending_operation = "use_item"
-	var body := JSON.stringify({"actor_id": "player", "item_id": item_id})
-	var error := _request.request(_base_url + "/use-item", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, body)
-	if error != OK:
-		busy = false
-		item_use_completed.emit(false, {"item_use": {"message": "无法发送物品使用请求：%s" % error}})
-
-
-func perform_action(action_id: String, parameters: Dictionary = {}) -> void:
-	if busy or not connected:
-		action_completed.emit(false, {"action": {"message": "模拟服务尚未连接或正在处理其他行动"}})
-		return
-	busy = true
-	_pending_operation = "action"
-	var payload := parameters.duplicate(true)
-	payload["actor_id"] = String(payload.get("actor_id", "player"))
-	payload["action_id"] = action_id
-	var error := _request.request(
-		_base_url + "/action", PackedStringArray(["Content-Type: application/json"]),
-		HTTPClient.METHOD_POST, JSON.stringify(payload))
-	if error != OK:
-		busy = false
-		action_completed.emit(false, {"action": {"message": "无法发送行动请求：%s" % error}})
 
 
 func refresh_campus_snapshot() -> void:
@@ -811,65 +749,24 @@ func _request_snapshot() -> void:
 func _on_request_completed(_result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	var operation := _pending_operation
 	_pending_operation = ""
-	if response_code != 200:
-		if operation == "configure":
-			busy = false
-			var error_payload = JSON.parse_string(body.get_string_from_utf8())
-			interface_configured.emit(false, error_payload if error_payload is Dictionary else {"error": "HTTP %d" % response_code})
-		elif operation == "step":
-			_finish_with_error("模拟推进失败，HTTP %d" % response_code)
-		elif operation == "trade":
-			busy = false
-			var trade_error = JSON.parse_string(body.get_string_from_utf8())
-			trade_completed.emit(false, trade_error if trade_error is Dictionary else {"trade": {"message": "交易失败，HTTP %d" % response_code}})
-		elif operation == "use_item":
-			busy = false
-			var use_error = JSON.parse_string(body.get_string_from_utf8())
-			item_use_completed.emit(false, use_error if use_error is Dictionary else {"item_use": {"message": "使用失败，HTTP %d" % response_code}})
-		elif operation == "action":
-			busy = false
-			var action_error = JSON.parse_string(body.get_string_from_utf8())
-			if action_error is Dictionary:
-				var failed_action_snapshot = action_error.get("snapshot", {})
-				if failed_action_snapshot is Dictionary:
-					snapshot = failed_action_snapshot
-					snapshot_updated.emit(snapshot)
-			action_completed.emit(false, action_error if action_error is Dictionary else {"action": {"message": "行动失败，HTTP %d" % response_code}})
-		else:
-			connected = false
-			return
-		return
-	var parsed = JSON.parse_string(body.get_string_from_utf8())
-	if not parsed is Dictionary:
-		_finish_with_error("模拟服务返回了无效 JSON")
-		return
+	# Initial connection retries can have no HTTP body; parse without engine error spam.
+	var parsed = null
+	if not body.is_empty():
+		var decoder := JSON.new()
+		if decoder.parse(body.get_string_from_utf8()) == OK:
+			parsed = decoder.data
 	if operation == "configure":
 		busy = false
-		interface_configured.emit(true, parsed)
+		if response_code != 200 or not parsed is Dictionary:
+			interface_configured.emit(false, parsed if parsed is Dictionary else {"error": "接口配置失败，HTTP %d" % response_code})
+			return
+		interface_configured.emit(bool(parsed.get("ok", false)), parsed)
 		return
-	if operation == "trade":
-		busy = false
-		var trade_snapshot = parsed.get("snapshot", {})
-		if trade_snapshot is Dictionary:
-			snapshot = trade_snapshot
-			snapshot_updated.emit(snapshot)
-		trade_completed.emit(bool(parsed.get("ok", false)), parsed)
+	if response_code != 200:
+		connected = false
 		return
-	if operation == "use_item":
-		busy = false
-		var use_snapshot = parsed.get("snapshot", {})
-		if use_snapshot is Dictionary:
-			snapshot = use_snapshot
-			snapshot_updated.emit(snapshot)
-		item_use_completed.emit(bool(parsed.get("ok", false)), parsed)
-		return
-	if operation == "action":
-		busy = false
-		var action_snapshot = parsed.get("snapshot", {})
-		if action_snapshot is Dictionary:
-			snapshot = action_snapshot
-			snapshot_updated.emit(snapshot)
-		action_completed.emit(bool(parsed.get("ok", false)), parsed)
+	if not parsed is Dictionary:
+		_finish_with_error("校园服务返回了无效 JSON")
 		return
 	if not parsed.has("view_version") or not parsed.has("population") or not parsed.has("player"):
 		_finish_with_error("连接目标不是校园服务，请关闭旧服务后重试。")
@@ -879,15 +776,11 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
 	_retry_timer.stop()
 	connection_state_changed.emit(true, "校园服务已连接")
 	campus_snapshot_updated.emit(campus_snapshot)
-	if operation == "step":
-		busy = false
-		advance_state_changed.emit(false)
 
 
 func _finish_with_error(message: String) -> void:
 	busy = false
 	connected = false
-	advance_state_changed.emit(false)
 	connection_state_changed.emit(false, message)
 	_retry_timer.start()
 

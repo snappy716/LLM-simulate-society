@@ -18,7 +18,10 @@ func _run() -> void:
 			break
 		await create_timer(0.05).timeout
 	assert(not (bridge.get("campus_snapshot") as Dictionary).is_empty())
-	assert((bridge.get("snapshot") as Dictionary).is_empty(), "no legacy handshake snapshot")
+	for retired_method in ["advance_time", "trade", "use_item", "perform_action"]:
+		assert(not bridge.has_method(retired_method), "retired town request must not return")
+	for retired_signal in ["snapshot_updated", "advance_state_changed", "trade_completed", "item_use_completed", "action_completed"]:
+		assert(not bridge.has_signal(retired_signal), "retired town signal must not return")
 	var main_path := String(ProjectSettings.get_setting("application/run/main_scene"))
 	assert(main_path == "res://scenes/campus/campus_collab_test.tscn")
 	change_scene_to_file(main_path)

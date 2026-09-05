@@ -143,11 +143,9 @@ class GodotCampusNavigationSourceTests(unittest.TestCase):
             pending.extend(adjacency[current] - visited)
         self.assertEqual(set(maps), visited)
 
-    def test_existing_blueprint_tool_has_explicit_boundary_position_type(self):
-        generator = (
-            GAME_DIR / "tools/generate_full_city_orthographic_blueprint.gd"
-        ).read_text(encoding="utf-8")
-        self.assertIn("var position: int = MARGIN + int(boundary) * CELL", generator)
+    def test_retired_city_blueprint_tool_is_not_a_campus_dependency(self):
+        self.assertFalse((GAME_DIR / "tools/generate_full_city_orthographic_blueprint.gd").exists())
+        self.assertTrue((GAME_DIR / "data/campus_art_catalog.json").is_file())
 
     def test_project_starts_campus_and_keeps_stable_user_storage_name(self):
         project = (GAME_DIR / "project.godot").read_text(encoding="utf-8")
