@@ -27,6 +27,7 @@ var _trade_root: VBoxContainer
 var _health_root: VBoxContainer
 var _save_root: VBoxContainer
 var _time_label: Label
+var _connection_label: Label
 var _opened := false
 var _forum_root: VBoxContainer
 var _forum_list_view: VBoxContainer
@@ -101,6 +102,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("campus_phone_ui")
 	_build_ui()
+	SimulationBridge.connection_state_changed.connect(_refresh_connection)
+	_refresh_connection(SimulationBridge.connected, "")
 	SimulationBridge.campus_snapshot_updated.connect(_on_campus_snapshot_updated)
 	SimulationBridge.campus_task_operation_completed.connect(_on_task_operation_completed)
 	SimulationBridge.campus_club_operation_completed.connect(_on_club_operation_completed)
@@ -142,7 +145,7 @@ func _build_ui() -> void:
 	phone.offset_top = -250
 	phone.offset_right = 195
 	phone.offset_bottom = 250
-	phone.add_theme_stylebox_override("panel", _panel_style(Color("101522"), 32, 3))
+	phone.theme_type_variation = &"CampusPhone"
 	_overlay.add_child(phone)
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
@@ -157,7 +160,7 @@ func _build_ui() -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	status_bar.add_child(spacer)
 	var status := Label.new()
-	status.text = "校园网  86%"
+	_connection_label = status
 	status_bar.add_child(status)
 	column.add_child(status_bar)
 	var pages := Control.new()
@@ -1858,13 +1861,9 @@ func _refresh_clock() -> void:
 	_time_label.text = "Day %d · %s" % [int(clock.get("day", 1)), SimulationBridge.phase_display_name(String(clock.get("phase", "morning")))]
 
 
-func _panel_style(color: Color, radius: int, border: int) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = color
-	style.border_color = Color("454d5e")
-	style.set_border_width_all(border)
-	style.set_corner_radius_all(radius)
-	return style
+func _refresh_connection(connected: bool, _message: String) -> void:
+	_connection_label.text = "模拟已连接" if connected else "模拟未连接"
+	_connection_label.tooltip_text = "本地模拟服务连接状态；不表示 LLM 接口已配置或可用。"
 
 
 func _icon_style(color: Color) -> StyleBoxFlat:
