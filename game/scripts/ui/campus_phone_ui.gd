@@ -21,6 +21,10 @@ const APPS := [
 
 var _overlay: ColorRect
 var _home: Control
+var _combat_pending := false
+var _message_pending := ""
+var _message_pending_target := ""
+var _message_sent_text := ""
 var _social_pending := {"forum": "", "club": "", "party": ""}
 var _home_search: LineEdit
 var _home_scroll: ScrollContainer
@@ -354,6 +358,7 @@ func _build_message_page() -> VBoxContainer:
 	_message_input.max_length = 240
 	_message_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_message_input.text_submitted.connect(_send_phone_message_from_input)
+	_message_input.text_changed.connect(func(_text): _refresh_message_controls())
 	composer.add_child(_message_input)
 	_message_send_action = Button.new()
 	_message_send_action.text = "发送"
@@ -763,10 +768,11 @@ func _refresh_message_page() -> void:
 			selected_index = index
 	if _message_contact_picker.item_count == 0:
 		_selected_message_contact_id = ""
-		_message_log.text = "联系人数据尚未同步。"
+		_message_log.text = "暂无联系人。请先在校园结识他人并交换联系方式。" if SimulationBridge.campus_snapshot.has("messaging") else "联系人数据尚未同步。"
 		_message_send_action.disabled = true
 		_message_proposal_action.disabled = true
 		_refresh_incoming_proposals()
+		_refresh_message_controls()
 		return
 	_message_contact_picker.select(selected_index)
 	_selected_message_contact_id = String(_message_contact_picker.get_item_metadata(selected_index))
@@ -774,6 +780,7 @@ func _refresh_message_page() -> void:
 	_message_proposal_action.disabled = false
 	_refresh_message_thread()
 	_refresh_incoming_proposals()
+	_refresh_message_controls()
 
 
 func _refresh_incoming_proposals() -> void:
@@ -805,14 +812,21 @@ func _refresh_incoming_proposals() -> void:
 	_incoming_proposal_decline.disabled = not has_pending
 	if has_pending:
 		_incoming_proposal_picker.select(selected_index)
+	_incoming_proposal_accept.tooltip_text = "回应所选请求。" if has_pending else "目前没有待处理请求。"
+	_incoming_proposal_decline.tooltip_text = _incoming_proposal_accept.tooltip_text
+	if not _message_pending.is_empty():
+		_lock_waiting_controls(_message_root)
 
 
 func _respond_incoming_proposal(accepted: bool) -> void:
-	if _incoming_proposal_picker.selected < 0:
+	if _incoming_proposal_picker.selected < 0 or not _message_pending.is_empty():
 		return
 	var proposal_id := String(_incoming_proposal_picker.get_item_metadata(_incoming_proposal_picker.selected))
 	if proposal_id.is_empty():
 		return
+	_message_pending = "response"
+	_message_pending_target = proposal_id
+	_refresh_message_controls()
 	_incoming_proposal_accept.disabled = true
 	_incoming_proposal_decline.disabled = true
 	_message_feedback.text = "正在记录你的决定……"
@@ -822,8 +836,9 @@ func _respond_incoming_proposal(accepted: bool) -> void:
 func _on_social_proposal_response_completed(
 	success: bool, result: Dictionary, _proposal_id: String
 ) -> void:
-	var command_result: Dictionary = result.get("result", {})
-	_message_feedback.text = String(command_result.get("message", result.get("error", "请求处理失败")))
+	if _message_pending == "response" and _message_pending_target == _proposal_id:
+		_message_pending = ""
+	_message_feedback.text = UI_TEXT.operation_feedback(success, result)
 	_message_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
 	_refresh_message_page()
 
@@ -864,10 +879,16 @@ func _send_phone_message() -> void:
 
 
 func _send_phone_message_from_input(text: String) -> void:
+	if not _message_pending.is_empty():
+		return
 	var cleaned := text.strip_edges()
 	if cleaned.is_empty() or _selected_message_contact_id.is_empty():
 		_message_feedback.text = "请输入要发送的内容。"
 		return
+	_message_pending = "send"
+	_message_pending_target = _selected_message_contact_id
+	_message_sent_text = cleaned
+	_refresh_message_controls()
 	_message_feedback.text = "正在发送……"
 	_message_send_action.disabled = true
 	SimulationBridge.operate_campus_message(
@@ -878,22 +899,28 @@ func _send_phone_message_from_input(text: String) -> void:
 func _on_phone_message_completed(
 	success: bool, result: Dictionary, action_id: String, target_id: String
 ) -> void:
+	var own_send := action_id == "SEND_PHONE_MESSAGE" and _message_pending == "send" and _message_pending_target == target_id
+	if own_send:
+		_message_pending = ""
 	if target_id != _selected_message_contact_id:
+		_refresh_message_page()
 		return
-	var command_result: Dictionary = result.get("result", {})
 	if action_id == "SEND_PHONE_MESSAGE":
-		_message_feedback.text = String(command_result.get("message", result.get("error", "消息发送失败")))
+		_message_feedback.text = UI_TEXT.operation_feedback(success, result)
 		_message_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
-		if success:
+		if success and own_send and _message_input.text.strip_edges() == _message_sent_text:
 			_message_input.clear()
 	_message_send_action.disabled = false
 	_refresh_message_page()
 
 
 func _send_phone_proposal() -> void:
-	if _selected_message_contact_id.is_empty() or _message_proposal_picker.selected < 0:
+	if _selected_message_contact_id.is_empty() or _message_proposal_picker.selected < 0 or not _message_pending.is_empty():
 		return
 	var proposal_type := String(_message_proposal_picker.get_item_metadata(_message_proposal_picker.selected))
+	_message_pending = "proposal"
+	_message_pending_target = _selected_message_contact_id
+	_refresh_message_controls()
 	_message_feedback.text = "正在等待对方明确决定……"
 	_message_proposal_action.disabled = true
 	SimulationBridge.operate_campus_social_proposal(
@@ -904,6 +931,8 @@ func _send_phone_proposal() -> void:
 func _on_social_proposal_completed(
 	success: bool, result: Dictionary, target_id: String, proposal_type: String
 ) -> void:
+	if _message_pending == "proposal" and _message_pending_target == target_id:
+		_message_pending = ""
 	var is_party_response := proposal_type == "party_invite" and (String(_social_pending.party) == target_id or target_id == _selected_party_candidate_id)
 	if proposal_type == "party_invite" and String(_social_pending.party) == target_id:
 		_social_pending.party = ""
@@ -1479,6 +1508,28 @@ func _lock_social_controls(page: String, controls: Array) -> void:
 		control.tooltip_text = UI_TEXT.PENDING_MESSAGE
 
 
+func _lock_waiting_controls(node: Node) -> void:
+	for child in node.get_children():
+		if child is BaseButton:
+			child.disabled = true
+			child.tooltip_text = UI_TEXT.PENDING_MESSAGE
+		_lock_waiting_controls(child)
+
+
+func _refresh_message_controls() -> void:
+	if _message_send_action == null:
+		return
+	var no_contact := _selected_message_contact_id.is_empty()
+	_message_contact_picker.disabled = no_contact
+	_message_proposal_picker.disabled = no_contact
+	_message_send_action.disabled = no_contact or _message_input.text.strip_edges().is_empty()
+	_message_proposal_action.disabled = no_contact
+	_message_send_action.tooltip_text = "请先添加联系人。" if no_contact else ("请输入消息内容。" if _message_input.text.strip_edges().is_empty() else "发送消息不消耗主要行动，不设每日聊天次数上限。")
+	_message_proposal_action.tooltip_text = "请先添加联系人。" if no_contact else "对方会自主决定是否接受。"
+	if not _message_pending.is_empty():
+		_lock_waiting_controls(_message_root)
+
+
 func _refresh_combat_page() -> void:
 	var combat: Dictionary = SimulationBridge.campus_snapshot.get("combat", {})
 	var reason_names := {
@@ -1541,6 +1592,7 @@ func _refresh_combat_page() -> void:
 		_combat_end_round_action.disabled = true
 		_reset_combat_action_controls()
 		_combat_hand_detail.text = "[color=#91a4bc]锁定阵型后可生成个人八张牌组与共享战术手牌。[/color]"
+		_refresh_combat_hints()
 		return
 
 	var row_names := {"front": "前排", "middle": "中排", "back": "后排"}
@@ -1606,6 +1658,7 @@ func _refresh_combat_page() -> void:
 	else:
 		_selected_character_card_id = ""
 	_refresh_combat_character_controls(active)
+	_refresh_combat_hints()
 
 
 func _refresh_combat_hand(active: Dictionary, characters: Dictionary) -> void:
@@ -1749,6 +1802,7 @@ func _refresh_combat_card_targets(active: Dictionary, characters: Dictionary) ->
 		_combat_card_target_picker.set_item_metadata(index, target_id)
 	_combat_card_target_picker.disabled = _combat_card_target_picker.item_count == 0
 	_combat_play_card_action.disabled = not bool(option.get("playable", false)) or _combat_card_target_picker.item_count == 0
+	_refresh_combat_hints()
 
 
 func _refresh_combat_base_targets(active: Dictionary, characters: Dictionary) -> void:
@@ -1761,6 +1815,7 @@ func _refresh_combat_base_targets(active: Dictionary, characters: Dictionary) ->
 		_combat_base_target_picker.set_item_metadata(index, target_id)
 	_combat_base_target_picker.disabled = _combat_base_target_picker.item_count == 0
 	_combat_use_base_action.disabled = not bool(option.get("playable", false)) or _combat_base_target_picker.item_count == 0
+	_refresh_combat_hints()
 
 
 func _refresh_combat_character_controls(active: Dictionary) -> void:
@@ -1788,6 +1843,7 @@ func _refresh_combat_character_controls(active: Dictionary) -> void:
 	_combat_cancel_action.disabled = String(active.get("phase", "")) not in ["setup", "ready"]
 	_combat_start_action.disabled = String(active.get("phase", "")) != "ready"
 	_combat_end_round_action.disabled = String(active.get("phase", "")) != "player_turn"
+	_refresh_combat_hints()
 
 
 func _select_combat_task(index: int) -> void:
@@ -1825,13 +1881,17 @@ func _select_combat_base_command(index: int) -> void:
 
 
 func _start_combat_preparation() -> void:
+	if _combat_prepare_action.disabled or _combat_pending:
+		return
 	_combat_feedback.text = "正在建立战斗准备……"
-	SimulationBridge.operate_campus_combat(
+	_send_combat_operation(
 		"START_BATTLE_PREPARATION", {"task_id": _selected_combat_task_id}
 	)
 
 
 func _active_combat_parameters() -> Dictionary:
+	if _combat_pending:
+		return {}
 	var combat: Dictionary = SimulationBridge.campus_snapshot.get("combat", {})
 	var active_value: Variant = combat.get("active_battle")
 	if not active_value is Dictionary:
@@ -1853,7 +1913,7 @@ func _deploy_or_reposition_character() -> void:
 	parameters["destination_row"] = String(_combat_row_picker.get_item_metadata(_combat_row_picker.selected))
 	var action_id := "DEPLOY_COMBAT_CHARACTER" if card.get("deployment_state") == "reserve" else "REPOSITION_COMBAT_CHARACTER"
 	_combat_feedback.text = "正在更新三排阵型……"
-	SimulationBridge.operate_campus_combat(action_id, parameters)
+	_send_combat_operation(action_id, parameters)
 
 
 func _withdraw_combat_character() -> void:
@@ -1862,7 +1922,7 @@ func _withdraw_combat_character() -> void:
 		return
 	parameters["character_card_instance_id"] = _selected_character_card_id
 	_combat_feedback.text = "正在撤回人物牌……"
-	SimulationBridge.operate_campus_combat("WITHDRAW_COMBAT_CHARACTER", parameters)
+	_send_combat_operation("WITHDRAW_COMBAT_CHARACTER", parameters)
 
 
 func _confirm_combat_deployment() -> void:
@@ -1870,7 +1930,7 @@ func _confirm_combat_deployment() -> void:
 	if parameters.is_empty():
 		return
 	_combat_feedback.text = "正在锁定阵型……"
-	SimulationBridge.operate_campus_combat("CONFIRM_BATTLE_DEPLOYMENT", parameters)
+	_send_combat_operation("CONFIRM_BATTLE_DEPLOYMENT", parameters)
 
 
 func _start_card_combat() -> void:
@@ -1878,7 +1938,7 @@ func _start_card_combat() -> void:
 	if parameters.is_empty():
 		return
 	_combat_feedback.text = "正在洗入个人牌组并抽取首轮手牌……"
-	SimulationBridge.operate_campus_combat("START_CARD_COMBAT", parameters)
+	_send_combat_operation("START_CARD_COMBAT", parameters)
 
 
 func _end_combat_round() -> void:
@@ -1886,7 +1946,7 @@ func _end_combat_round() -> void:
 	if parameters.is_empty():
 		return
 	_combat_feedback.text = "正在弃置未保留手牌并进入下一轮……"
-	SimulationBridge.operate_campus_combat("END_COMBAT_ROUND", parameters)
+	_send_combat_operation("END_COMBAT_ROUND", parameters)
 
 
 func _play_combat_card() -> void:
@@ -1898,7 +1958,7 @@ func _play_combat_card() -> void:
 		_combat_card_target_picker.get_item_metadata(_combat_card_target_picker.selected)
 	)]
 	_combat_feedback.text = "正在结算指令牌……"
-	SimulationBridge.operate_campus_combat("PLAY_COMBAT_CARD", parameters)
+	_send_combat_operation("PLAY_COMBAT_CARD", parameters)
 
 
 func _use_combat_base_command() -> void:
@@ -1910,7 +1970,7 @@ func _use_combat_base_command() -> void:
 		_combat_base_target_picker.get_item_metadata(_combat_base_target_picker.selected)
 	)]
 	_combat_feedback.text = "正在执行基础指令……"
-	SimulationBridge.operate_campus_combat("USE_COMBAT_BASE_COMMAND", parameters)
+	_send_combat_operation("USE_COMBAT_BASE_COMMAND", parameters)
 
 
 func _cancel_combat_preparation() -> void:
@@ -1918,16 +1978,43 @@ func _cancel_combat_preparation() -> void:
 	if parameters.is_empty():
 		return
 	_combat_feedback.text = "正在取消战斗准备……"
-	SimulationBridge.operate_campus_combat("CANCEL_BATTLE_PREPARATION", parameters)
+	_send_combat_operation("CANCEL_BATTLE_PREPARATION", parameters)
 
 
 func _on_combat_operation_completed(
 	success: bool, result: Dictionary, _action_id: String, _battle_id: String
 ) -> void:
-	var command_result: Dictionary = result.get("result", {})
-	_combat_feedback.text = String(command_result.get("message", result.get("error", "战斗准备操作失败")))
+	_combat_pending = false
+	_combat_feedback.text = UI_TEXT.operation_feedback(success, result)
 	_combat_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
 	_refresh_combat_page()
+
+
+func _send_combat_operation(action: String, parameters: Dictionary) -> void:
+	if _combat_pending:
+		return
+	_combat_pending = true
+	_refresh_combat_hints()
+	SimulationBridge.operate_campus_combat(action, parameters)
+
+
+func _refresh_combat_hints() -> void:
+	if _combat_prepare_action == null:
+		return
+	for pair in [
+		[_combat_prepare_action, "需处于夜相、持有自己的夜相任务并到达任务区域，且没有其他战斗。"],
+		[_combat_deploy_action, "仅准备阶段可部署；已部署角色可在己方回合花费指令点换位。"],
+		[_combat_withdraw_action, "只能在准备阶段撤回已经部署的人物。"],
+		[_combat_confirm_action, "准备阶段需先部署玩家人物牌。"],
+		[_combat_cancel_action, "只可取消尚未开战的准备，不等于战中撤退。"],
+		[_combat_start_action, "请先确认阵型，再开始战斗。"],
+		[_combat_end_round_action, "只有己方行动阶段可以结束本轮。"],
+		[_combat_play_card_action, "需有可用手牌、合法目标和足够共享指令点。"],
+		[_combat_use_base_action, "需有合法目标、足够共享指令点，且该人物本轮尚未使用基础指令。"],
+	]:
+		pair[0].tooltip_text = pair[1]
+	if _combat_pending:
+		_lock_waiting_controls(_combat_root)
 
 
 func _dictionary_lines(value: Variant) -> String:

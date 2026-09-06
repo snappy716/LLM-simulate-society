@@ -6,6 +6,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CampusThemeTests(unittest.TestCase):
+    def test_request_lifecycle_preserves_drafts_and_guards_pending(self):
+        phone = (ROOT / "game/scripts/ui/campus_phone_ui.gd").read_text()
+        inspector = (ROOT / "game/scripts/ui/campus_npc_inspector_ui.gd").read_text()
+        self.assertIn("func _send_combat_operation", phone)
+        self.assertIn("_message_input.text.strip_edges() == _message_sent_text", phone)
+        self.assertIn("_dialogue_input.text.strip_edges() == _dialogue_sent_text", inspector)
+        self.assertIn("_lock_waiting_controls(_message_root)", phone)
+
     def test_club_display_terms_cover_current_content(self):
         import json
         import re

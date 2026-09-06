@@ -1,6 +1,9 @@
 extends CanvasLayer
 
 const INTERACTION_DISTANCE := 82.0
+const UI_TEXT = preload("res://scripts/ui/campus_ui_text.gd")
+var _dialogue_pending_target := ""
+var _dialogue_sent_text := ""
 
 const COLLEGE_NAMES := {
 	"math_physics": "数理学院",
@@ -476,6 +479,7 @@ func _refresh_awaken_button() -> void:
 	var cognition: Dictionary = SimulationBridge.campus_snapshot.get("cognition", {})
 	var awakened := bool(_selected_profile.get("awakened_by_player", false))
 	_awaken_button.disabled = awakened or int(cognition.get("awakened_count", 0)) >= int(cognition.get("awakened_slot_limit", 6))
+	_awaken_button.tooltip_text = "该人物已记名觉醒。" if awakened else ("永久觉醒名额已用完。" if _awaken_button.disabled else "占用一个永久觉醒名额；接口不可用时仍按规则降级。")
 	_awaken_button.text = "已记名觉醒" if awakened else "记名觉醒（%d / %d）" % [
 		int(cognition.get("awakened_count", 0)), int(cognition.get("awakened_slot_limit", 6)),
 	]
@@ -488,6 +492,7 @@ func _refresh_contact_button() -> void:
 	_contact_button.visible = true
 	var is_contact := bool(_selected_profile.get("is_phone_contact", false))
 	_contact_button.disabled = is_contact
+	_contact_button.tooltip_text = "已经可以通过手机联系。" if is_contact else "与面前的人交换联系方式，不会自动拥有全校联系人。"
 	_contact_button.text = "已在手机联系人中" if is_contact else "交换联系方式（免费操作）"
 
 
@@ -501,14 +506,20 @@ func _add_selected_contact() -> void:
 
 
 func _on_dialogue_text_changed(text: String) -> void:
-	_dialogue_button.disabled = text.strip_edges().is_empty()
+	_dialogue_button.disabled = not _dialogue_pending_target.is_empty() or text.strip_edges().is_empty()
+	_dialogue_button.tooltip_text = UI_TEXT.PENDING_MESSAGE if not _dialogue_pending_target.is_empty() else ("请输入交谈内容。" if text.strip_edges().is_empty() else "不消耗主要行动，不设每日交谈次数上限。")
 
 
 func _submit_dialogue(_submitted_text: String = "") -> void:
+	if not _dialogue_pending_target.is_empty():
+		return
 	var npc_id := _safe_text(_selected_profile.get("npc_id"))
 	var text := _dialogue_input.text.strip_edges()
 	if npc_id.is_empty() or text.is_empty():
 		return
+	_dialogue_pending_target = npc_id
+	_dialogue_sent_text = text
+	_on_dialogue_text_changed(text)
 	var intent_id := "small_talk"
 	if _dialogue_intent.selected >= 0:
 		intent_id = String(_dialogue_intent.get_item_metadata(_dialogue_intent.selected))
@@ -518,7 +529,11 @@ func _submit_dialogue(_submitted_text: String = "") -> void:
 
 
 func _on_dialogue_completed(success: bool, result: Dictionary, target_id: String) -> void:
+	var own_dialogue := _dialogue_pending_target == target_id
+	if own_dialogue:
+		_dialogue_pending_target = ""
 	if _selected_profile.is_empty() or target_id != _safe_text(_selected_profile.get("npc_id")):
+		_on_dialogue_text_changed(_dialogue_input.text)
 		return
 	var command_result: Dictionary = result.get("result", {})
 	if success:
@@ -528,12 +543,13 @@ func _on_dialogue_completed(success: bool, result: Dictionary, target_id: String
 			_safe_text(payload.get("reply_text"), "对方没有继续回答。"),
 		]
 		_dialogue_feedback.add_theme_color_override("font_color", Color("9bcf9b"))
-		_dialogue_input.text = ""
+		if own_dialogue and _dialogue_input.text.strip_edges() == _dialogue_sent_text:
+			_dialogue_input.text = ""
 		_selected_profile = (SimulationBridge.campus_snapshot.get("population", {}) as Dictionary).get(target_id, _selected_profile)
 	else:
-		_dialogue_feedback.text = String(command_result.get("message", result.get("error", "交谈失败")))
+		_dialogue_feedback.text = UI_TEXT.operation_feedback(success, result)
 		_dialogue_feedback.add_theme_color_override("font_color", Color("ee8174"))
-	_dialogue_button.disabled = _dialogue_input.text.strip_edges().is_empty()
+	_on_dialogue_text_changed(_dialogue_input.text)
 
 
 func _submit_social_proposal() -> void:
