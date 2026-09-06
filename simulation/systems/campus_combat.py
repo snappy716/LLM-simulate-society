@@ -9,6 +9,7 @@ from typing import Any, Dict, Iterable, Mapping
 from simulation.domain.campus import BaseAttributes, derive_stats
 from simulation.domain.action_economy import build_action_economy_policy
 from simulation.systems.time import consume_major_action
+from simulation.systems.campus_enemy_turns import plan_enemy_intents, publish_enemy_intents, resolve_enemy_turn, recover_defeated_parties
 from simulation.domain.combat import (
     COMBAT_ROWS,
     CombatDeploymentPolicy,
@@ -1016,6 +1017,7 @@ def start_card_combat(
         visibility="private", severity=4,
         knowledge_tags=["combat", "cards", "round", "formation"],
     )
+    publish_enemy_intents(context, battle)
     return {"drawn_card_instance_ids": drawn}
 
 
@@ -1026,6 +1028,9 @@ def end_combat_round(
 ) -> Dict[str, Any]:
     if battle.get("phase") != "player_turn":
         raise ValueError("only the player turn can end the combat round")
+    enemy_results = resolve_enemy_turn(context, battle)
+    if battle.get("result") == "defeat":
+        return {"enemy_results": enemy_results, "battle_resolved": True, "result": "defeat"}
     retained_ids: list[str] = []
     discarded_ids: list[str] = []
     for instance_id in list(battle["shared_hand_ids"]):
@@ -1059,12 +1064,14 @@ def end_combat_round(
             "discarded_card_instance_ids": discarded_ids,
             "retained_card_instance_ids": retained_ids,
             "drawn_card_instance_ids": drawn,
-            "enemy_resolution_status": "pending_effect_pipeline",
+            "enemy_resolution_status": "resolved",
         },
         visibility="private", severity=3,
         knowledge_tags=["combat", "cards", "round"],
     )
+    publish_enemy_intents(context, battle)
     return {
+        "enemy_results": enemy_results,
         "discarded_card_instance_ids": discarded_ids,
         "retained_card_instance_ids": retained_ids,
         "drawn_card_instance_ids": drawn,
@@ -1125,6 +1132,7 @@ def incapacitate_character(context, battle: Dict[str, Any], card_id: str) -> Dic
 def advance_campus_combat(context) -> Dict[str, int]:
     """Remove unresolved combat safely when daylight or task state invalidates it."""
     state = context.state
+    recover_defeated_parties(context)
     summary = {
         "battle_preparation_interrupted_count": 0,
         "battle_interrupted_count": 0,
@@ -1183,6 +1191,7 @@ def make_campus_combat_handler(
     policy: CombatDeploymentPolicy,
     round_policy: CombatRoundPolicy,
     graph: CampusLocationGraph,
+    advance_phase_handler=None,
 ):
     def handle(context, command) -> TransactionOutcome:
         state = context.state
@@ -1300,8 +1309,15 @@ def make_campus_combat_handler(
                     False, False, "wrong_battle_phase", "当前不能结束玩家回合。"
                 )
             runtime = end_combat_round(context, battle, round_policy)
+            if battle.get("result") == "defeat" and "player" in battle["participant_ids"] and advance_phase_handler:
+                recovery_day = battle["consequences"]["rescue"]["recover_day"]
+                while state.clock.day < recovery_day:
+                    advanced = advance_phase_handler(context, replace(command, action_id="ADVANCE_PHASE",
+                        issued_day=state.clock.day, issued_phase=state.clock.phase, issued_minute=state.clock.minute))
+                    if not advanced.success:
+                        raise ValueError("defeat overnight phase progression failed")
             return TransactionOutcome(
-                True, True, "success", f"已进入第 {battle['round']} 轮。",
+                True, True, "success", "小队败北，次日已在宿舍休息恢复；本次任务失败，已用物资不返还。" if battle.get("result") == "defeat" else f"敌方行动已结算，已进入第 {battle['round']} 轮。",
                 commit=True,
                 payload={
                     "battle_id": battle["battle_id"],
@@ -1558,6 +1574,8 @@ def campus_combat_view(
             })
     active_view = deepcopy(active) if isinstance(active, dict) else None
     if isinstance(active_view, dict) and active_view.get("phase") == "player_turn":
+        if not active_view.get("enemy_intents"):
+            active_view["enemy_intents"] = plan_enemy_intents(active_view)
         card_options: Dict[str, Dict[str, Any]] = {}
         for instance_id in active_view.get("shared_hand_ids", ()):
             instance = active_view.get("card_instances", {}).get(instance_id, {})
@@ -1655,6 +1673,24 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
             continue
         if battle.get("phase") not in {"setup", "ready", "player_turn", "enemy_turn", "round_end", "resolved"}:
             errors.append(f"battle {battle_id} has an invalid phase")
+        intents = battle.get("enemy_intents", {})
+        if not isinstance(intents, dict):
+            errors.append(f"battle {battle_id} has invalid enemy intents")
+        else:
+            for enemy_id, intent in intents.items():
+                if (enemy_id not in battle.get("enemy_units", {}) or not isinstance(intent, dict)
+                    or intent.get("target_row") not in COMBAT_ROWS
+                    or intent.get("action_type") != "physical_attack"
+                    or any(type(intent.get(key)) is not int or intent.get(key, -1) < (0 if key == "speed" else 1) for key in ("round", "power", "speed"))):
+                    errors.append(f"battle {battle_id} has invalid intent for {enemy_id}")
+        rescue = battle.get("consequences", {}).get("rescue")
+        if rescue is not None:
+            if (not isinstance(rescue, dict) or battle.get("result") != "defeat"
+                or type(rescue.get("recover_day")) is not int or rescue.get("recover_day", 0) < 1
+                or type(rescue.get("recovered")) is not bool
+                or not isinstance(rescue.get("actor_ids"), list)
+                or rescue.get("actor_ids") != battle.get("participant_ids")):
+                errors.append(f"battle {battle_id} has invalid rescue record")
         cards = battle.get("character_cards")
         formations = battle.get("formations")
         reserves = battle.get("reserve_character_card_ids")

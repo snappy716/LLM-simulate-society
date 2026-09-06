@@ -1630,6 +1630,8 @@ func _refresh_combat_page() -> void:
 
 	if active.is_empty():
 		_combat_formation_detail.text = "[font_size=21][b]人物牌部署[/b][/font_size]\n\n%s\n\n[color=#91a4bc]先接取夜相任务并抵达目标区域。部署不消耗生活主要行动；队友会按真实校园路线前来集合，不会凭空出现。[/color]" % reason_names.get(String(combat.get("preparation_reason", "")), "当前不能建立战斗准备。")
+		if _combat_feedback.text.contains("小队败北"):
+			_combat_formation_detail.text = "[b]上次战斗结果[/b]\n%s\n\n%s" % [_combat_feedback.text, _combat_formation_detail.text]
 		_combat_character_picker.clear()
 		_selected_character_card_id = ""
 		_combat_character_picker.disabled = true
@@ -1653,7 +1655,8 @@ func _refresh_combat_page() -> void:
 		var names: Array[String] = []
 		for card_id_value in formation.get(row_id, []):
 			var deployed_card: Dictionary = cards.get(String(card_id_value), {})
-			names.append(String(deployed_card.get("display_name", "未知人物")))
+			var actor_id := String(deployed_card.get("actor_id", ""))
+			names.append("%s · 生命 %d/%d · 护盾 %d" % [deployed_card.get("display_name", "未知人物"), int(active.get("health", {}).get(actor_id, 0)), int(deployed_card.get("max_health", 0)), int(active.get("barriers", {}).get(actor_id, 0))])
 		lines.append("[b]%s[/b]  %s" % [row_names[row_id], " / ".join(names) if not names.is_empty() else "—"])
 	var enemy_lines: Array[String] = []
 	var enemy_units: Dictionary = active.get("enemy_units", {})
@@ -1669,6 +1672,11 @@ func _refresh_combat_page() -> void:
 				int(enemy_health.get(enemy_id, 0)),
 				int(enemy.get("max_health", 0)),
 			])
+			var intent: Dictionary = active.get("enemy_intents", {}).get(enemy_id, {})
+			if not intent.is_empty() and int(enemy_health.get(enemy_id, 0)) > 0:
+				enemy_names.append("意图：攻击%s · 威力 %d（防御/护盾前）" % [row_names.get(String(intent.get("target_row", "")), "未知排位"), int(intent.get("power", 0))])
+				if "disrupted" in enemy.get("statuses", []):
+					enemy_names.append("受到干扰：下次攻击威力减半")
 		enemy_lines.append("[b]%s[/b]  %s" % [row_names[row_id], " / ".join(enemy_names) if not enemy_names.is_empty() else "—"])
 	var phase_names := {
 		"setup": "准备中", "ready": "阵型已锁定", "player_turn": "玩家行动",
@@ -1997,7 +2005,7 @@ func _end_combat_round() -> void:
 	var parameters := _active_combat_parameters()
 	if parameters.is_empty():
 		return
-	_combat_feedback.text = "正在弃置未保留手牌并进入下一轮……"
+	_combat_feedback.text = "正在结算敌方攻击、护盾与倒下状态……"
 	_send_combat_operation("END_COMBAT_ROUND", parameters)
 
 

@@ -176,6 +176,9 @@ def night_entry_assessment(
 ) -> Dict[str, Any]:
     if actor_id not in state.population:
         return {"allowed": False, "reason": "unknown_actor"}
+    from simulation.systems.campus_enemy_turns import recovering_from_defeat
+    if recovering_from_defeat(state, actor_id):
+        return {"allowed": False, "reason": "defeat_recovery"}
     aggregate = state.situations.get("night_world", {})
     actor_state = aggregate.get("actor_states", {}).get(actor_id, {})
     if actor_state.get("layer") == "night":

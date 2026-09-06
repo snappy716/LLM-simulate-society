@@ -11,7 +11,7 @@ var _pending_transition: Dictionary = {}
 var _arrival_attempts := 0
 
 
-func restore_saved_location(snapshot: Dictionary, saved_map_id: String = "") -> void:
+func restore_saved_location(snapshot: Dictionary, saved_map_id: String = "", rebuild_scene: bool = true) -> void:
 	_pending_arrival_anchor_id = ""
 	_pending_transition = {}
 	var location_id := String(snapshot.player.current_location_id)
@@ -29,6 +29,9 @@ func restore_saved_location(snapshot: Dictionary, saved_map_id: String = "") -> 
 	# Restore to existing safe ground/entry anchors, not stale pixel coordinates.
 	# Only the student-center lobby currently has a separate rendered interior.
 	var scene := "res://scenes/debug/campus_lobby_test.tscn" if location_id == "student_center" else "res://scenes/campus/campus_collab_test.tscn"
+	if not rebuild_scene and get_tree().current_scene != null and get_tree().current_scene.scene_file_path == scene:
+		semantic_location_changed.emit(location_id, {"reason": "defeat_rescue"})
+		return
 	register_presentation_scene("campus_outdoor", "res://scenes/campus/campus_collab_test.tscn")
 	register_presentation_scene("interior_building_lobby", "res://scenes/debug/campus_lobby_test.tscn")
 	var error := get_tree().change_scene_to_file(scene)

@@ -81,6 +81,11 @@ def make_scheduled_npc_phase_executor(
             actor = context.state.population.get(actor_id)
             if not isinstance(actor, dict):
                 continue
+            from simulation.systems.campus_enemy_turns import recovering_from_defeat
+            if recovering_from_defeat(context.state, actor_id):
+                actor.pop("current_decision", None)
+                actor.pop("current_activity", None)
+                continue
             active_battle_id = context.state.metadata.get("campus_combat", {}).get(
                 "active_battle_by_actor", {}
             ).get(actor_id)

@@ -58,7 +58,20 @@
     "barriers": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
     "enemy_health": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
     "known_weaknesses": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "enemy_intents": {"type": "object"},
+    "enemy_intents": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object", "additionalProperties": false,
+        "required": ["round", "action_type", "target_row", "power", "speed"],
+        "properties": {
+          "round": {"type": "integer", "minimum": 1},
+          "action_type": {"const": "physical_attack"},
+          "target_row": {"enum": ["front", "middle", "back"]},
+          "power": {"type": "integer", "minimum": 1},
+          "speed": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
     "card_instances": {"type": "object"},
     "draw_piles": {"type": "object"},
     "discard_piles": {"type": "object"},

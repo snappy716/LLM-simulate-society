@@ -916,6 +916,8 @@ func _on_campus_request_completed(
 	elif operation == "party":
 		campus_party_operation_completed.emit(bool(parsed.get("ok", false)), parsed, party_action, party_target_id)
 	elif operation == "combat":
+		if bool(parsed.get("ok", false)) and parsed.get("result", {}).get("payload", {}).get("result", "") == "defeat":
+			get_node("/root/CampusNavigation").call_deferred("restore_saved_location", campus_snapshot, "", false)
 		campus_combat_operation_completed.emit(bool(parsed.get("ok", false)), parsed, combat_action, combat_battle_id)
 	elif operation == "cognition":
 		campus_cognition_operation_completed.emit(bool(parsed.get("ok", false)), parsed, cognition_action, cognition_target_id)

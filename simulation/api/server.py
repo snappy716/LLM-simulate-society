@@ -305,9 +305,7 @@ class CampusKernelBridge:
             "FAST_TRAVEL_CAMPUS",
             make_fast_travel_handler(graph),
         )
-        self.kernel.register_handler(
-            "ADVANCE_PHASE",
-            make_advance_phase_handler(
+        advance_phase_handler = make_advance_phase_handler(
                 action_policy,
                 make_scheduled_npc_phase_executor(
                     graph,
@@ -333,8 +331,8 @@ class CampusKernelBridge:
                         ),
                     },
                 ),
-            ),
         )
+        self.kernel.register_handler("ADVANCE_PHASE", advance_phase_handler)
         for activity_id in sorted(activity_definitions):
             self.kernel.register_handler(activity_id, activity_handler)
         task_handler = make_forum_task_handler(activity_handler)
@@ -395,7 +393,7 @@ class CampusKernelBridge:
         night_world_handler = make_campus_night_world_handler(night_world_policy)
         for action_id in NIGHT_WORLD_ACTION_IDS:
             self.kernel.register_handler(action_id, night_world_handler)
-        combat_handler = make_campus_combat_handler(combat_policy, combat_round_policy, graph)
+        combat_handler = make_campus_combat_handler(combat_policy, combat_round_policy, graph, advance_phase_handler)
         for action_id in COMBAT_ACTION_IDS:
             self.kernel.register_handler(action_id, combat_handler)
 
