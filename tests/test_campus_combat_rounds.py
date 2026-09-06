@@ -14,7 +14,6 @@ REPOSITORY_DIR = Path(__file__).resolve().parents[1]
 
 
 def deploy_and_start(bridge: CampusKernelBridge, *, teammate_count: int = 0) -> dict:
-    task = enter_with_owned_night_task(bridge)
     for _ in range(teammate_count):
         engaged = {
             str(candidate.get("assignee_id"))
@@ -33,6 +32,11 @@ def deploy_and_start(bridge: CampusKernelBridge, *, teammate_count: int = 0) -> 
             marker=f"round-invite-{candidate['actor_id']}",
         )
         assert invited["ok"], invited
+    if teammate_count:
+        # Reserve before the evening scheduler runs; never refund NPC activities.
+        reserved = execute(bridge, "RESERVE_PARTY_DEPARTURE", {"day": 1, "phase": "evening"})
+        assert reserved["ok"], reserved["result"]["code"]
+    task = enter_with_owned_night_task(bridge)
     started = execute(
         bridge, "START_BATTLE_PREPARATION", {"task_id": task["task_id"]},
         marker="round-prepare",

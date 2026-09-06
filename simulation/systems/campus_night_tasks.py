@@ -15,6 +15,7 @@ from simulation.systems.campus_night_world import (
 from simulation.systems.campus_schedules import current_schedule_slot
 from simulation.systems.campus_social import apply_task_social_consequence
 from simulation.systems.campus_tasks import ACTIVE_STATES, AVAILABLE_STATES, TERMINAL_STATES, phase_index
+from simulation.systems.campus_departures import has_upcoming_departure
 
 
 def load_night_task_templates(registry) -> Dict[str, Dict[str, Any]]:
@@ -259,7 +260,7 @@ def _assign_night_tasks(
     viewed = 0
     claimed = 0
     for actor_id in aggregate.get("active_actor_ids", ()):
-        if _actor_has_active_task(state, actor_id):
+        if _actor_has_active_task(state, actor_id) or has_upcoming_departure(state, actor_id):
             continue
         schedule = current_schedule_slot(state, actor_id)
         if schedule and int(schedule.get("priority", 0)) >= 90:

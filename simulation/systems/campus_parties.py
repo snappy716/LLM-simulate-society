@@ -14,6 +14,7 @@ from simulation.systems.transactions import TransactionOutcome
 
 PARTY_ACTION_IDS = {
     "INVITE_PARTY_MEMBER", "DISMISS_PARTY_MEMBER", "LEAVE_PARTY", "DISBAND_PARTY",
+    "RESERVE_PARTY_DEPARTURE", "CANCEL_PARTY_DEPARTURE",
 }
 
 
@@ -316,6 +317,9 @@ def make_campus_party_handler(policy: CampusPartyPolicy):
                 False, False, "battle_preparation_active",
                 "战斗准备期间不能改变行动小队成员。",
             )
+        if command.action_id in {"RESERVE_PARTY_DEPARTURE", "CANCEL_PARTY_DEPARTURE"}:
+            from simulation.systems.campus_departures import handle_departure
+            return handle_departure(context, command, party, policy)
         if command.action_id == "INVITE_PARTY_MEMBER":
             if party["leader_id"] != command.actor_id:
                 return TransactionOutcome(False, False, "not_party_leader", "只有队长可以邀请成员。")
@@ -433,6 +437,7 @@ def make_campus_party_handler(policy: CampusPartyPolicy):
                 return TransactionOutcome(False, False, "not_party_leader", "只有队长可以解散队伍。")
             former_ids = list(party["member_ids"])
             if command.actor_id == "player":
+                party["members"]["player"].pop("departure", None)
                 party["member_ids"] = ["player"]
                 party["members"] = {"player": party["members"]["player"]}
                 party["revision"] = int(party["revision"]) + 1
@@ -514,6 +519,14 @@ def campus_party_invariant(state: WorldState) -> Iterable[str]:
                 errors.append(f"actor {actor_id} belongs to multiple parties")
             seen.add(actor_id)
             record = members.get(actor_id, {})
+            departure = record.get("departure")
+            if departure is not None and (
+                not isinstance(departure, dict)
+                or type(departure.get("day")) is not int
+                or departure.get("day", 0) < 1
+                or departure.get("phase") not in ("evening", "late_night")
+            ):
+                errors.append(f"party {party_id} member {actor_id} has invalid departure")
             if record.get("actor_id") != actor_id or record.get("status") not in {"leader", "committed"}:
                 errors.append(f"party {party_id} has an invalid membership for {actor_id}")
             for field_name in ("joined_day", "commitment_until_day", "invitation_score", "last_review_day"):

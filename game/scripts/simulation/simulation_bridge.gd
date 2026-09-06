@@ -339,7 +339,7 @@ func operate_campus_club(action_id: String, club_id: String) -> void:
 		campus_club_operation_completed.emit(false, {"error": "无法发送社团请求：%s" % error}, action_id, club_id)
 
 
-func operate_campus_party(action_id: String, target_id: String = "") -> void:
+func operate_campus_party(action_id: String, target_id: String = "", extra_parameters: Dictionary = {}) -> void:
 	if _campus_busy or not connected or campus_snapshot.is_empty():
 		campus_party_operation_completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他行动"}, action_id, target_id)
 		return
@@ -349,7 +349,7 @@ func operate_campus_party(action_id: String, target_id: String = "") -> void:
 	_campus_pending_party_action = action_id
 	_campus_command_counter += 1
 	var clock: Dictionary = campus_snapshot.get("clock", {})
-	var parameters := {}
+	var parameters := extra_parameters.duplicate(true)
 	if not target_id.is_empty():
 		parameters["target_id"] = target_id
 	var command := {

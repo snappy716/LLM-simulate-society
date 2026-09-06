@@ -14,6 +14,7 @@ from simulation.domain.world_state import WorldState
 from simulation.systems.content_registry import ContentRegistry
 from simulation.systems.campus_social import apply_task_social_consequence
 from simulation.systems.transactions import TransactionOutcome
+from simulation.systems.campus_departures import has_upcoming_departure
 
 
 AVAILABLE_STATES = {"open", "viewed", "considering"}
@@ -641,6 +642,7 @@ def advance_surface_forum(
                 actor_id for _, actor_id in ranked
                 if actor_id in task["considering_ids"]
                 and not _actor_has_active_task(context.state, actor_id)
+                and not has_upcoming_departure(context.state, actor_id)
             ),
             None,
         )

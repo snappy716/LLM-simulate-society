@@ -359,6 +359,8 @@ class CampusKernelBridge:
             "DISMISS_PARTY_MEMBER",
             "LEAVE_PARTY",
             "DISBAND_PARTY",
+            "RESERVE_PARTY_DEPARTURE",
+            "CANCEL_PARTY_DEPARTURE",
         ):
             self.kernel.register_handler(action_id, party_handler)
         self.kernel.register_handler("AWAKEN_NPC", make_awaken_npc_handler(cognition_policy))

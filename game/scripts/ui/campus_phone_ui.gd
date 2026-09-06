@@ -72,6 +72,9 @@ var _party_invite_action: Button
 var _party_member_picker: OptionButton
 var _party_dismiss_action: Button
 var _party_feedback: Label
+var _departure_picker: OptionButton
+var _departure_reserve: Button
+var _departure_cancel: Button
 var _selected_party_candidate_id := ""
 var _selected_party_candidate_is_contact := false
 var _selected_party_member_id := ""
@@ -465,6 +468,19 @@ func _build_party_page() -> VBoxContainer:
 	_party_dismiss_action.pressed.connect(_dismiss_party_member)
 	dismiss_row.add_child(_party_dismiss_action)
 	root.add_child(dismiss_row)
+	var departure_row := HBoxContainer.new()
+	_departure_picker = OptionButton.new()
+	_departure_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	departure_row.add_child(_departure_picker)
+	_departure_reserve = Button.new()
+	_departure_reserve.text = "预约出击"
+	_departure_reserve.pressed.connect(_operate_departure.bind(false))
+	departure_row.add_child(_departure_reserve)
+	_departure_cancel = Button.new()
+	_departure_cancel.text = "取消预约"
+	_departure_cancel.pressed.connect(_operate_departure.bind(true))
+	departure_row.add_child(_departure_cancel)
+	root.add_child(departure_row)
 	_party_feedback = Label.new()
 	_party_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_party_feedback.add_theme_color_override("font_color", Color("e0b86a"))
@@ -1386,6 +1402,9 @@ func _on_club_operation_completed(success: bool, result: Dictionary, _action_id:
 func _refresh_party_page() -> void:
 	var party: Dictionary = SimulationBridge.campus_snapshot.get("party", {})
 	if party.is_empty():
+		_departure_picker.clear()
+		_departure_reserve.disabled = true
+		_departure_cancel.disabled = true
 		_party_candidate_picker.clear()
 		_party_member_picker.clear()
 		_selected_party_candidate_id = ""
@@ -1403,6 +1422,9 @@ func _refresh_party_page() -> void:
 		if member is Dictionary:
 			var status := "队长" if String(member.get("status", "")) == "leader" else "已承诺至第%d天" % int(member.get("commitment_until_day", 1))
 			member_lines.append("• %s · %s" % [member.get("display_name", member.get("actor_id", "")), status])
+			var departure: Dictionary = member.get("departure", {})
+			if not departure.is_empty():
+				member_lines.append("  出击预约：第 %d 天 · %s" % [int(departure.day), SimulationBridge.phase_display_name(String(departure.phase))])
 	var skill_lines: Array[String] = []
 	var stability: Dictionary = party.get("stability", {})
 	for skill in stability.get("active_collaboration_skills", []):
@@ -1460,7 +1482,35 @@ func _refresh_party_page() -> void:
 	_party_dismiss_action.tooltip_text = "没有可解除同行的队友。" if _selected_party_member_id.is_empty() else "解除所选队友的同行承诺。"
 	if _party_candidate_picker.item_count == 0:
 		_party_detail.text += "\n\n暂无可邀请人物，可先在校园探索并结识他人。"
-	_lock_social_controls("party", [_party_invite_action, _party_dismiss_action, _party_candidate_picker, _party_member_picker])
+	var clock: Dictionary = SimulationBridge.campus_snapshot.get("clock", {})
+	var previous_slot: Dictionary = {}
+	if _departure_picker.selected >= 0:
+		previous_slot = _departure_picker.get_item_metadata(_departure_picker.selected)
+	_departure_picker.clear()
+	for offset in range(3):
+		for phase in ["evening", "late_night"]:
+			if offset == 0 and String(clock.get("phase", "")) == "late_night" and phase == "evening":
+				continue
+			var slot := {"day": int(clock.get("day", 1)) + offset, "phase": phase}
+			var index := _departure_picker.item_count
+			_departure_picker.add_item("第 %d 天 · %s" % [slot.day, SimulationBridge.phase_display_name(phase)])
+			_departure_picker.set_item_metadata(index, slot)
+			if slot == previous_slot:
+				_departure_picker.select(index)
+	_departure_reserve.disabled = String(party.get("leader_id", "")) != "player"
+	_departure_cancel.disabled = _departure_reserve.disabled
+	_departure_reserve.tooltip_text = "全队同意后才预约；课程、工作和已接任务可能冲突。首次开战扣行动，取消不返还已用行动。"
+	_lock_social_controls("party", [_party_invite_action, _party_dismiss_action, _party_candidate_picker, _party_member_picker, _departure_picker, _departure_reserve, _departure_cancel])
+
+
+func _operate_departure(cancel: bool) -> void:
+	if not String(_social_pending.party).is_empty() or _departure_reserve.disabled:
+		return
+	var slot: Dictionary = _departure_picker.get_item_metadata(_departure_picker.selected)
+	_social_pending.party = "departure"
+	_refresh_party_page()
+	_party_feedback.text = "正在协调出击日程……"
+	SimulationBridge.operate_campus_party("CANCEL_PARTY_DEPARTURE" if cancel else "RESERVE_PARTY_DEPARTURE", "departure", slot)
 
 
 func _select_party_candidate(index: int) -> void:
@@ -1842,6 +1892,8 @@ func _refresh_combat_character_controls(active: Dictionary) -> void:
 	_combat_confirm_action.disabled = not setup or not player_deployed
 	_combat_cancel_action.disabled = String(active.get("phase", "")) not in ["setup", "ready"]
 	_combat_start_action.disabled = String(active.get("phase", "")) != "ready"
+	var entry: Dictionary = SimulationBridge.campus_snapshot.get("combat", {}).get("entry_action", {})
+	_combat_start_action.disabled = _combat_start_action.disabled or not bool(entry.get("allowed", false))
 	_combat_end_round_action.disabled = String(active.get("phase", "")) != "player_turn"
 	_refresh_combat_hints()
 
@@ -2013,6 +2065,13 @@ func _refresh_combat_hints() -> void:
 		[_combat_use_base_action, "需有合法目标、足够共享指令点，且该人物本轮尚未使用基础指令。"],
 	]:
 		pair[0].tooltip_text = pair[1]
+	var entry: Dictionary = SimulationBridge.campus_snapshot.get("combat", {}).get("entry_action", {})
+	var blocked: Array = entry.get("blocked_actor_ids", [])
+	var names := PackedStringArray()
+	for actor_id in blocked:
+		names.append(String(SimulationBridge.campus_snapshot.get("population", {}).get(actor_id, {}).get("display_name", "角色")))
+	_combat_start_action.text = "开始战斗（本时段已付费）" if entry.get("due_actor_ids", []).is_empty() else "开始战斗（首次各扣 1 行动）"
+	_combat_start_action.tooltip_text = "这些参战角色的主要行动已用完：%s" % "、".join(names) if not names.is_empty() else "阵型确认后开战；每名上场者本时段首次扣 1 次主要行动，连续多场不重复扣。"
 	if _combat_pending:
 		_lock_waiting_controls(_combat_root)
 

@@ -90,6 +90,9 @@ def consume_major_action(
     if command.actor_id not in state.population:
         return MajorActionResult(False, "unknown_actor", "行动者不存在。")
     budget = ensure_actor_budget(state, policy, command.actor_id)
+    from simulation.systems.campus_departures import active_departure
+    if active_departure(state, command.actor_id) and command.action_id != "START_CARD_COMBAT":
+        return MajorActionResult(False, "major_action_reserved", "本时段行动已为出击预留，请先取消预约。")
     if int(budget["major_remaining"]) <= 0:
         return MajorActionResult(
             False,
@@ -141,6 +144,11 @@ def action_economy_invariant(state: WorldState) -> Iterable[str]:
         if budget.get("day") != state.clock.day or budget.get("phase") != state.clock.phase:
             errors.append(f"action budget clock mismatch for {actor_id}")
         remaining = budget.get("major_remaining")
+        if "night_combat_paid" in budget and (
+            not isinstance(budget["night_combat_paid"], bool)
+            or (budget["night_combat_paid"] and state.clock.phase not in {"evening", "late_night"})
+        ):
+            errors.append(f"action budget {actor_id}.night_combat_paid is invalid")
         if isinstance(remaining, bool) or not isinstance(remaining, int) or remaining < 0:
             errors.append(f"action budget {actor_id}.major_remaining must be non-negative")
         elif isinstance(phase_rules, dict):

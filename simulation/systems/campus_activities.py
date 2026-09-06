@@ -91,6 +91,18 @@ def make_scheduled_npc_phase_executor(
                 actor.pop("current_activity", None)
                 continue
             schedule_plan = current_schedule_slot(context.state, actor_id)
+            from simulation.systems.campus_departures import active_departure
+            if active_departure(context.state, actor_id):
+                actor.pop("current_decision", None)
+                actor["current_activity"] = _activity_record(
+                    context.state, schedule_plan, status="blocked", route_step_count=0,
+                    block_code="departure_reserved",
+                )
+                summary["blocked_actor_count"] += 1
+                context.emit("NPC_DEPARTURE_WAITING", "按约定预留行动，等待小队出击。",
+                             actor_ids=[actor_id], visibility="private", severity=2,
+                             knowledge_tags=["party", "schedule", "commitment"])
+                continue
             plan = (
                 decision_selector(
                     context,

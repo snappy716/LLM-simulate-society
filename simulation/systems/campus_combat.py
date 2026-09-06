@@ -3,9 +3,12 @@ from __future__ import annotations
 
 from collections import Counter
 from copy import deepcopy
+from dataclasses import replace
 from typing import Any, Dict, Iterable, Mapping
 
 from simulation.domain.campus import BaseAttributes, derive_stats
+from simulation.domain.action_economy import build_action_economy_policy
+from simulation.systems.time import consume_major_action
 from simulation.domain.combat import (
     COMBAT_ROWS,
     CombatDeploymentPolicy,
@@ -929,6 +932,24 @@ def _draw_round_hand(
     return drawn
 
 
+def night_combat_entry_cost(state: WorldState, actor_ids) -> Dict[str, Any]:
+    """Read-only per-actor assessment. The phase budget owns the paid marker."""
+    due, blocked = [], []
+    for actor_id in sorted(set(actor_ids)):
+        budget = state.action_economy.get("actors", {}).get(actor_id, {})
+        if (budget.get("day") != state.clock.day or budget.get("phase") != state.clock.phase):
+            blocked.append(actor_id)
+        elif not budget.get("night_combat_paid", False):
+            due.append(actor_id)
+            if int(budget.get("major_remaining", 0)) < 1:
+                blocked.append(actor_id)
+    return {
+        "day": state.clock.day, "phase": str(state.clock.phase),
+        "due_actor_ids": due, "blocked_actor_ids": blocked,
+        "allowed": state.clock.phase in {"evening", "late_night"} and not blocked,
+    }
+
+
 def start_card_combat(
     context,
     battle: Dict[str, Any],
@@ -1238,6 +1259,28 @@ def make_campus_combat_handler(
                 return TransactionOutcome(
                     False, False, "formation_not_ready", "需要先部署人物牌并锁定阵型。"
                 )
+            deployed = [str(card["actor_id"]) for card in battle["character_cards"].values()
+                        if card.get("deployment_state") == "deployed"]
+            entry = night_combat_entry_cost(state, deployed)
+            if not entry["allowed"]:
+                return TransactionOutcome(
+                    False, False, "night_combat_action_exhausted",
+                    "有参战角色本时段尚未支付探索行动，且主要行动已用完。", payload=entry,
+                )
+            economy_policy = build_action_economy_policy([
+                {"id": phase, **rule}
+                for phase, rule in state.action_economy["policy"]["phases"].items()
+            ])
+            for actor_id in entry["due_actor_ids"]:
+                consumed = consume_major_action(state, economy_policy, replace(command, actor_id=actor_id))
+                if not consumed.success:
+                    raise ValueError("night combat preflight and budget consumption disagree")
+                state.action_economy["actors"][actor_id]["night_combat_paid"] = True
+            context.emit(
+                "NIGHT_COMBAT_ENTRY_ACCOUNTED", "本时段夜间探索行动已核算，同一时段后续战斗不重复扣费。",
+                actor_ids=deployed, scene_id=battle["scene_id"], payload=entry,
+                visibility="private", severity=2, knowledge_tags=["combat", "action_budget"],
+            )
             runtime = start_card_combat(context, battle, round_policy)
             return TransactionOutcome(
                 True, True, "success", "卡牌战斗已开始，第一轮共享手牌已抽取。",
@@ -1246,6 +1289,7 @@ def make_campus_combat_handler(
                     "battle_id": battle["battle_id"],
                     "battle_revision": battle["revision"],
                     "round": battle["round"],
+                    "entry_action": entry,
                     **runtime,
                 },
             )
@@ -1572,6 +1616,10 @@ def campus_combat_view(
             "initial_command_points": round_policy.initial_command_points,
             "maximum_command_points": round_policy.maximum_command_points,
         },
+        "entry_action": night_combat_entry_cost(state, [
+            str(card["actor_id"]) for card in active.get("character_cards", {}).values()
+            if card.get("deployment_state") == "deployed"
+        ] if isinstance(active, dict) else [viewer_id]),
         "active_battle": active_view,
     }
 
