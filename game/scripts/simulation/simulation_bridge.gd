@@ -763,7 +763,7 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
 		interface_configured.emit(bool(parsed.get("ok", false)), parsed)
 		return
 	if response_code != 200:
-		connected = false
+		_finish_with_error("尚未连接校园服务，正在重试连接。")
 		return
 	if not parsed is Dictionary:
 		_finish_with_error("校园服务返回了无效 JSON")
@@ -832,7 +832,16 @@ func _on_campus_request_completed(
 	_campus_pending_proposal_id = ""
 	_campus_pending_night_action = ""
 	_campus_busy = false
-	var parsed = JSON.parse_string(body.get_string_from_utf8())
+	var parsed = null
+	if not body.is_empty():
+		var decoder := JSON.new()
+		if decoder.parse(body.get_string_from_utf8()) == OK:
+			parsed = decoder.data
+	if _result != HTTPRequest.RESULT_SUCCESS or not parsed is Dictionary:
+		var connection_error := "模拟连接中断或响应无效；操作结果尚未确认，请重连后检查状态，不要连续重试。"
+		_finish_with_error(connection_error)
+		parsed = {"error": connection_error}
+		response_code = 0
 	if operation == "persistence":
 		var response: Dictionary = parsed if parsed is Dictionary else {"error": "存档服务未返回有效响应；请刷新存档槽确认结果。"}
 		var success := response_code == 200 and bool(response.get("ok", false))

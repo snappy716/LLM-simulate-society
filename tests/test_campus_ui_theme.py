@@ -6,6 +6,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CampusThemeTests(unittest.TestCase):
+    def test_hud_is_readable_and_actions_have_unavailability_reasons(self):
+        hud = (ROOT / "game/scripts/ui/campus_phase_debug_panel.gd").read_text()
+        self.assertIn("advance_button.tooltip_text", hud)
+        self.assertIn("night_world_button.tooltip_text", hud)
+        self.assertIn('player.get("vitals", {})', hud)
+        self.assertNotIn('plan.get("activity_id"', hud)
+
     def test_inspector_has_viewport_sizing_and_focus_following_body(self):
         inspector = (ROOT / "game/scripts/ui/campus_npc_inspector_ui.gd").read_text()
         self.assertIn("_overlay.resized.connect(_fit_panel)", inspector)

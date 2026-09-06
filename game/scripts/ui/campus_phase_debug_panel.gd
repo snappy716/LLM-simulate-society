@@ -13,12 +13,44 @@ func _ready() -> void:
 	_bridge = get_node("/root/SimulationBridge")
 	_bridge.campus_snapshot_updated.connect(_render_snapshot)
 	_bridge.campus_phase_advanced.connect(_on_phase_advanced)
+	_bridge.connection_state_changed.connect(_on_connection_changed)
 	advance_button.pressed.connect(_on_advance_pressed)
 	night_world_button.pressed.connect(_on_night_world_pressed)
 	_bridge.campus_night_world_operation_completed.connect(_on_night_world_completed)
 	var current: Dictionary = _bridge.get("campus_snapshot")
 	if not current.is_empty():
 		_render_snapshot(current)
+	_refresh_availability()
+
+
+func _process(_delta: float) -> void:
+	_refresh_availability()
+
+
+func _refresh_availability() -> void:
+	if _bridge == null:
+		return
+	var snapshot: Dictionary = _bridge.get("campus_snapshot")
+	var blocked := ""
+	if not bool(_bridge.get("connected")):
+		blocked = "本地模拟未连接，正在重新连接；尚不能执行行动。"
+	elif snapshot.is_empty():
+		blocked = "正在同步校园状态。"
+	elif bool(_bridge.call("is_campus_busy")):
+		blocked = "正在处理行动，请等待结果，勿重复提交。"
+	advance_button.disabled = not blocked.is_empty()
+	advance_button.tooltip_text = blocked if not blocked.is_empty() else "结束当前时段，NPC 与世界同步推进；不能撤销。"
+	var night: Dictionary = snapshot.get("night_world", {})
+	night_world_button.disabled = not blocked.is_empty() or not (bool(night.get("can_enter", false)) or bool(night.get("can_exit", false)))
+	night_world_button.tooltip_text = blocked if not blocked.is_empty() else ("当前时段、资格或战斗状态不允许切换。" if night_world_button.disabled else "切换表里世界不恢复生命，也不消耗主要行动。")
+
+
+func _on_connection_changed(connected: bool, _message: String) -> void:
+	if connected:
+		_render_snapshot(_bridge.get("campus_snapshot"))
+	else:
+		status_label.text = "模拟连接中断，正在重连。\n操作结果尚未确认，请重连后检查；不会自动重复执行。"
+	_refresh_availability()
 
 
 func _render_snapshot(snapshot: Dictionary) -> void:
@@ -27,14 +59,16 @@ func _render_snapshot(snapshot: Dictionary) -> void:
 	var day := int(clock.get("day", 1))
 	var player: Dictionary = snapshot.get("player", {})
 	var budget: Dictionary = player.get("action_budget", {})
-	var plan: Dictionary = player.get("current_plan", {})
+	var place: Dictionary = (snapshot.get("places", {}) as Dictionary).get(String(player.get("current_location_id", "")), {})
+	var vitals: Dictionary = player.get("vitals", {})
 	var night_world: Dictionary = snapshot.get("night_world", {})
 	var moon: Dictionary = night_world.get("moon", {})
 	phase_label.text = "第 %d 天 · %s" % [day, _bridge.call("phase_display_name", phase)]
 	budget_label.text = "主要行动剩余：%d" % int(budget.get("major_remaining", 0))
-	status_label.text = "计划：%s @ %s\n%s · 污染 %d%%\n聊天 / 购物 / 吃饭 / 普通移动：免费" % [
-		String(plan.get("activity_id", "自由安排")),
-		String(plan.get("location_id", "未指定")),
+	status_label.text = "地点：%s\n生命 %d/%d · 专注 %d/%d\n%s · 污染 %d%%\n聊天 / 购物 / 吃饭 / 普通移动：免费" % [
+		String(place.get("name", "地点待同步")),
+		int(vitals.get("health", 0)), int(vitals.get("max_health", 0)),
+		int(vitals.get("focus", 0)), int(vitals.get("max_focus", 0)),
 		String(moon.get("name", "月相未知")),
 		int(night_world.get("pollution", 0)),
 	]
@@ -44,6 +78,7 @@ func _render_snapshot(snapshot: Dictionary) -> void:
 	else:
 		night_world_button.text = "进入夜相（免费）" if bool(night_world.get("can_enter", false)) else "夜相当前不可进入"
 		night_world_button.disabled = not bool(night_world.get("can_enter", false))
+	_refresh_availability()
 
 
 func _on_advance_pressed() -> void:
