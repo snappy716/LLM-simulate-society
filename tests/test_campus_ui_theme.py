@@ -6,6 +6,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CampusThemeTests(unittest.TestCase):
+    def test_inspector_has_viewport_sizing_and_focus_following_body(self):
+        inspector = (ROOT / "game/scripts/ui/campus_npc_inspector_ui.gd").read_text()
+        self.assertIn("_overlay.resized.connect(_fit_panel)", inspector)
+        self.assertIn("_body_scroll.follow_focus = true", inspector)
+        self.assertIn("shell.add_child(close)", inspector)
+        self.assertNotIn("panel.size = Vector2(680, 700)", inspector)
+
     def test_project_has_a_replaceable_theme_resource(self):
         project = (ROOT / "game/project.godot").read_text()
         self.assertIn('theme/custom="res://ui/themes/campus_theme.tres"', project)

@@ -90,6 +90,9 @@ const SOCIAL_PROPOSALS := [
 ]
 
 var _overlay: ColorRect
+var _panel: PanelContainer
+var _body_scroll: ScrollContainer
+var _close_button: Button
 var _title: Label
 var _details: RichTextLabel
 var _nearby_hint: Label
@@ -190,21 +193,31 @@ func _build_ui() -> void:
 	add_child(_overlay)
 
 	var panel := PanelContainer.new()
+	_panel = panel
 	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.position = Vector2(-340, -350)
-	panel.size = Vector2(680, 700)
 	_overlay.add_child(panel)
+	_overlay.resized.connect(_fit_panel)
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
 		margin.add_theme_constant_override("margin_%s" % side, 22)
 	panel.add_child(margin)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 12)
-	margin.add_child(column)
+	var shell := VBoxContainer.new()
+	shell.add_theme_constant_override("separation", 12)
+	margin.add_child(shell)
 	_title = Label.new()
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.add_theme_font_size_override("font_size", 27)
-	column.add_child(_title)
+	_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	shell.add_child(_title)
+	_body_scroll = ScrollContainer.new()
+	_body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_body_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_body_scroll.follow_focus = true
+	shell.add_child(_body_scroll)
+	var column := VBoxContainer.new()
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.add_theme_constant_override("separation", 12)
+	_body_scroll.add_child(column)
 	var tabs := HBoxContainer.new()
 	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
 	tabs.add_theme_constant_override("separation", 8)
@@ -224,6 +237,7 @@ func _build_ui() -> void:
 	_details = RichTextLabel.new()
 	_details.bbcode_enabled = true
 	_details.fit_content = false
+	_details.custom_minimum_size.y = 200
 	_details.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_details.add_theme_font_size_override("normal_font_size", 17)
 	column.add_child(_details)
@@ -315,13 +329,27 @@ func _build_ui() -> void:
 	_awaken_feedback.add_theme_color_override("font_color", Color("e0b86a"))
 	column.add_child(_awaken_feedback)
 	var close := Button.new()
+	_close_button = close
 	close.text = "关闭（E / Esc）"
 	close.pressed.connect(_set_open.bind(false))
-	column.add_child(close)
+	shell.add_child(close)
+	_fit_panel()
+
+
+func _fit_panel() -> void:
+	if _panel == null:
+		return
+	var available := _overlay.size - Vector2(32, 32)
+	var fitted := Vector2(minf(680, available.x), minf(700, available.y))
+	_panel.offset_left = -fitted.x / 2
+	_panel.offset_right = fitted.x / 2
+	_panel.offset_top = -fitted.y / 2
+	_panel.offset_bottom = fitted.y / 2
 
 
 func _show_npc(npc: Node) -> void:
 	_selected_npc = npc
+	_body_scroll.scroll_vertical = 0
 	_selected_profile = npc.call("get_campus_profile")
 	_chronicle_pages.clear()
 	_chronicle_loading = false
