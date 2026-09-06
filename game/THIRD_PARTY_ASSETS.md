@@ -9,3 +9,11 @@
 ## 校园美术协作候选
 
 `assets/maps/campus_collab/` 当前基于美术协作者新版 `Project-c-0.1(1).rar`（2026-09-05 核对），共 7 张：原五张内容相同，新增图书馆 V3 和运动场 V2。废稿与缓存不进入游戏资源。压缩包没有包含这些地图的来源与许可文件，且图中仍有真实校名和现实品牌近似元素；公开演示或发布前必须补齐授权记录并完成虚构化替换。详细评审见 `design/ART_COLLABORATION_INTEGRATION.md`。
+
+## 手机 UI 临时图标（2026-09-06）
+
+- 来源：[Kenney Game Icons](https://kenney.nl/assets/game-icons)，作者 Kenney Vleugels。
+- 许可：CC0；原包 `license.txt` 随素材保留在 `assets/ui/kenney_game_icons/`。允许个人与商业项目使用。
+- 从官方 `kenney_game-icons.zip` 选取 15 张 White/2x PNG，未导入完整素材包。入口图标映射集中在 `scripts/ui/campus_phone_catalog.gd`；返回/关闭使用同包图标，其他图标留作后续同风格入口使用。后续定制可替换映射或纹理。
+- 《女神异闻录5 皇家版》《极乐迪斯科》仅作功能分类、文字信息层级的设计参照，未导入其截图、角色、字体、图标或音乐。
+- 这份 CC0 许可只覆盖上述图标，不覆盖已有校园场景或现实校名/标识。

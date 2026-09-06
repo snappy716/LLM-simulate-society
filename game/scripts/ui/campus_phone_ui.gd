@@ -3,24 +3,29 @@ extends CanvasLayer
 const UI_TEXT = preload("res://scripts/ui/campus_ui_text.gd")
 
 const APPS := [
-	{"id": "settings", "name": "接口设置", "icon": "设", "color": Color("61748c")},
-	{"id": "saves", "name": "存读档", "icon": "档", "color": Color("557e91")},
-	{"id": "messages", "name": "校园通讯", "icon": "讯", "color": Color("35c96f")},
-	{"id": "courses", "name": "课程平台", "icon": "课", "color": Color("3988e8")},
-	{"id": "album", "name": "校园相册", "icon": "册", "color": Color("d65bd1")},
-	{"id": "notes", "name": "备忘录", "icon": "记", "color": Color("edc84b")},
-	{"id": "market", "name": "校园商城", "icon": "商", "color": Color("ed6540")},
-	{"id": "trade", "name": "当面交易", "icon": "换", "color": Color("b38354")},
-	{"id": "wallet", "name": "电子钱包", "icon": "钱", "color": Color("4f73cd")},
-	{"id": "health", "name": "健康档案", "icon": "健", "color": Color("e95d70")},
-	{"id": "clubs", "name": "社团中心", "icon": "社", "color": Color("c47a46")},
-	{"id": "party", "name": "行动小队", "icon": "队", "color": Color("477f8f")},
-	{"id": "combat", "name": "夜战部署", "icon": "战", "color": Color("9a4f62")},
-	{"id": "forums", "name": "双层论坛", "icon": "坛", "color": Color("785bc7")},
+	{"id": "settings", "name": "接口设置"},
+	{"id": "saves", "name": "存读档"},
+	{"id": "messages", "name": "校园通讯"},
+	{"id": "courses", "name": "课程平台"},
+	{"id": "album", "name": "校园相册"},
+	{"id": "notes", "name": "备忘录"},
+	{"id": "market", "name": "校园商城"},
+	{"id": "trade", "name": "当面交易"},
+	{"id": "wallet", "name": "电子钱包"},
+	{"id": "health", "name": "健康档案"},
+	{"id": "clubs", "name": "社团中心"},
+	{"id": "party", "name": "行动小队"},
+	{"id": "combat", "name": "夜战部署"},
+	{"id": "forums", "name": "双层论坛"},
 ]
 
 var _overlay: ColorRect
 var _home: Control
+var _home_search: LineEdit
+var _home_scroll: ScrollContainer
+var _home_sections: Array[Control] = []
+var _home_buttons: Array[Button] = []
+var _home_empty: Label
 var _app_page: VBoxContainer
 var _app_scroll: ScrollContainer
 var _back_button: Button
@@ -182,35 +187,82 @@ func _build_ui() -> void:
 	var hint := Button.new()
 	_close_button = hint
 	hint.text = "T 关闭手机"
+	hint.icon = preload("res://assets/ui/kenney_game_icons/cross.png")
+	hint.expand_icon = true
+	hint.add_theme_constant_override("icon_max_width", 16)
 	hint.pressed.connect(_set_open.bind(false))
 	column.add_child(hint)
 
 
 func _build_home() -> Control:
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	var grid := GridContainer.new()
-	scroll.add_child(grid)
-	grid.columns = 4
-	grid.add_theme_constant_override("h_separation", 8)
-	grid.add_theme_constant_override("v_separation", 18)
-	for app in APPS:
-		var cell := VBoxContainer.new()
-		cell.custom_minimum_size = Vector2(78, 104)
-		var button := Button.new()
-		button.text = String(app.icon)
-		button.custom_minimum_size = Vector2(66, 66)
-		button.add_theme_font_size_override("font_size", 28)
-		button.add_theme_stylebox_override("normal", _icon_style(app.color))
-		button.pressed.connect(_open_app.bind(String(app.id), String(app.name)))
-		cell.add_child(button)
+	var home := VBoxContainer.new()
+	var heading := Label.new()
+	heading.text = "校园终端"
+	heading.add_theme_font_size_override("font_size", 22)
+	home.add_child(heading)
+	_home_search = LineEdit.new()
+	_home_search.placeholder_text = "查找功能：聊天、背包、任务…"
+	_home_search.text_changed.connect(_filter_home)
+	home.add_child(_home_search)
+	_home_scroll = ScrollContainer.new()
+	_home_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_home_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_home_scroll.follow_focus = true
+	home.add_child(_home_scroll)
+	var body := VBoxContainer.new()
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 12)
+	_home_scroll.add_child(body)
+	for group in preload("res://scripts/ui/campus_phone_catalog.gd").GROUPS:
+		var section := VBoxContainer.new()
+		body.add_child(section)
+		_home_sections.append(section)
 		var label := Label.new()
-		label.text = String(app.name)
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.add_theme_font_size_override("font_size", 12)
-		cell.add_child(label)
-		grid.add_child(cell)
-	return scroll
+		label.text = group.title
+		label.add_theme_color_override("font_color", Color("edca88"))
+		section.add_child(label)
+		var grid := GridContainer.new()
+		grid.columns = 2
+		grid.add_theme_constant_override("h_separation", 8)
+		grid.add_theme_constant_override("v_separation", 8)
+		section.add_child(grid)
+		for entry in group.entries:
+			for app in APPS:
+				if app.id != entry.id:
+					continue
+				var button := Button.new()
+				button.text = "%s\n%s" % [app.name, entry.caption]
+				button.icon = load("res://assets/ui/kenney_game_icons/%s.png" % entry.icon)
+				button.expand_icon = true
+				button.add_theme_constant_override("icon_max_width", 26)
+				button.add_theme_font_size_override("font_size", 13)
+				button.custom_minimum_size = Vector2(152, 64)
+				button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				button.tooltip_text = "%s · %s" % [app.name, entry.caption]
+				button.set_meta("search", app.name + entry.caption + entry.keywords)
+				button.set_meta("app_id", app.id)
+				button.pressed.connect(_open_app.bind(String(app.id), String(app.name)))
+				grid.add_child(button)
+				_home_buttons.append(button)
+	_home_empty = Label.new()
+	_home_empty.text = "没有匹配的功能，请换个关键词。"
+	_home_empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_home_empty.visible = false
+	body.add_child(_home_empty)
+	return home
+
+
+func _filter_home(query: String) -> void:
+	var found := false
+	for button in _home_buttons:
+		button.visible = query.strip_edges().is_empty() or String(button.get_meta("search")).containsn(query.strip_edges())
+		found = found or button.visible
+	for section in _home_sections:
+		section.visible = false
+		for button in section.get_child(1).get_children():
+			section.visible = section.visible or button.visible
+	_home_empty.visible = not found
+	_home_scroll.scroll_vertical = 0
 
 
 func _build_app_page() -> VBoxContainer:
@@ -219,6 +271,9 @@ func _build_app_page() -> VBoxContainer:
 	var back := Button.new()
 	_back_button = back
 	back.text = "‹ 返回"
+	back.icon = preload("res://assets/ui/kenney_game_icons/arrowLeft.png")
+	back.expand_icon = true
+	back.add_theme_constant_override("icon_max_width", 16)
 	back.pressed.connect(_show_home)
 	nav.add_child(back)
 	_app_title = Label.new()
@@ -1886,16 +1941,9 @@ func _set_open(value: bool) -> void:
 
 func _refresh_clock() -> void:
 	var clock: Dictionary = SimulationBridge.campus_snapshot.get("clock", {})
-	_time_label.text = "Day %d · %s" % [int(clock.get("day", 1)), SimulationBridge.phase_display_name(String(clock.get("phase", "morning")))]
+	_time_label.text = "第 %d 天 · %s" % [int(clock.get("day", 1)), SimulationBridge.phase_display_name(String(clock.get("phase", "morning")))]
 
 
 func _refresh_connection(connected: bool, _message: String) -> void:
 	_connection_label.text = "模拟已连接" if connected else "模拟未连接"
 	_connection_label.tooltip_text = "本地模拟服务连接状态；不表示 LLM 接口已配置或可用。"
-
-
-func _icon_style(color: Color) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = color
-	style.set_corner_radius_all(15)
-	return style

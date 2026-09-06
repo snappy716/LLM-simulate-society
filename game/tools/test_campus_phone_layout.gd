@@ -28,6 +28,35 @@ func _run() -> void:
 	for window_size in [Vector2i(960, 540), Vector2i(1280, 720), Vector2i(1920, 1080)]:
 		root.size = window_size
 		phone.call("_set_open", true)
+		var search := phone.get("_home_search") as LineEdit
+		var home_scroll := phone.get("_home_scroll") as ScrollContainer
+		var buttons: Array = phone.get("_home_buttons")
+		assert(buttons.size() == 14)
+		search.text = "聊天"
+		search.text_changed.emit(search.text)
+		var found := 0
+		for button in buttons:
+			assert(button.icon != null)
+			if button.visible:
+				found += 1
+				assert(button.get_meta("app_id") == "messages")
+		assert(found == 1)
+		search.text = "无此功能xyz"
+		search.text_changed.emit(search.text)
+		assert((phone.get("_home_empty") as Label).visible)
+		search.text = ""
+		search.text_changed.emit(search.text)
+		for _frame in range(8):
+			await process_frame
+		assert(not (phone.get("_home_empty") as Label).visible)
+		assert(home_scroll.get_h_scroll_bar().max_value <= home_scroll.size.x + 1)
+		assert(close.get_viewport_rect().encloses(search.get_global_rect()))
+		for button in buttons:
+			assert(button.visible and button.is_visible_in_tree())
+			button.grab_focus()
+			for _frame in range(4):
+				await process_frame
+			assert(home_scroll.get_global_rect().grow(2).encloses(button.get_global_rect()))
 		for app in ["saves", "messages", "courses", "album", "notes", "market", "trade", "wallet", "health", "clubs", "party", "combat", "forums"]:
 			phone.call("_open_app", app, app)
 			if app == "saves":
@@ -60,7 +89,7 @@ func _run() -> void:
 	assert(bridge.get("campus_snapshot").player.action_budget == budget)
 	root.size = Vector2i(1280, 720)
 	phone.call("_set_open", true)
-	phone.call("_open_app", "combat", "夜战部署")
-	print("CAMPUS_PHONE_LAYOUT_OK fourteen_apps three_sizes fixed_navigation readable_forms no_action_cost")
+	phone.get("_home_scroll").scroll_vertical = 0
+	print("CAMPUS_PHONE_LAYOUT_OK fourteen_apps three_sizes fixed_navigation readable_forms searchable_catalog keyboard_reachability no_action_cost")
 	if not "--keep-open" in OS.get_cmdline_user_args():
 		quit(0)

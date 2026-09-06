@@ -6,6 +6,21 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CampusThemeTests(unittest.TestCase):
+    def test_phone_catalog_has_unique_entries_and_licensed_icons(self):
+        import re
+        catalog = (ROOT / "game/scripts/ui/campus_phone_catalog.gd").read_text()
+        phone = (ROOT / "game/scripts/ui/campus_phone_ui.gd").read_text()
+        ids = re.findall(r'"id": "([^"]+)"', catalog)
+        self.assertEqual(len(ids), 14)
+        self.assertEqual(len(set(ids)), 14)
+        apps = phone.split("const APPS := [", 1)[1].split("\n]", 1)[0]
+        self.assertEqual(set(ids), set(re.findall(r'"id": "([^"]+)"', apps)))
+        directory = ROOT / "game/assets/ui/kenney_game_icons"
+        for icon in re.findall(r'"icon": "([^"]+)"', catalog):
+            self.assertTrue((directory / (icon + ".png")).is_file())
+        self.assertIn("License (CC0)", (directory / "license.txt").read_text())
+        self.assertNotIn("func _icon_style", phone)
+
     def test_phone_long_forms_have_fixed_navigation_and_shared_activity_labels(self):
         phone = (ROOT / "game/scripts/ui/campus_phone_ui.gd").read_text()
         self.assertIn("_app_scroll.follow_focus = true", phone)
