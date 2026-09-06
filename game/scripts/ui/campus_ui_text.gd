@@ -1,5 +1,21 @@
 extends RefCounted
 
+const PENDING_MESSAGE := "正在处理，请等待结果。"
+const NEED_NAMES := {
+	"rest": "休息需求", "food": "饮食需求", "safety": "安全需求", "social": "社交需求",
+	"money": "经济需求", "achievement": "成就需求", "curiosity": "求知需求", "commitment_pressure": "承诺压力",
+}
+
+
+static func operation_feedback(success: bool, response: Dictionary) -> String:
+	# Preserve authoritative refusal/uncertain transport messages; never invent a result.
+	if not success and not String(response.get("error", "")).is_empty():
+		return String(response.error)
+	var result: Variant = response.get("result", {})
+	if result is Dictionary and not String(result.get("message", "")).is_empty():
+		return String(result.message)
+	return "操作已完成。" if success else "操作结果未确认，请刷新状态后再决定是否重试。"
+
 const ACTIVITY_NAMES := {
 	"ORIENTATION_OR_CLASS": "报到或上课",
 	"RESEARCH": "研究",

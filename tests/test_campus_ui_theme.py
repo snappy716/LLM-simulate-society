@@ -6,6 +6,15 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CampusThemeTests(unittest.TestCase):
+    def test_inventory_panels_share_operation_feedback(self):
+        for name in ("health", "inventory", "trade"):
+            panel = (ROOT / f"game/scripts/ui/campus_{name}_panel.gd").read_text()
+            self.assertIn("operation_feedback(success, result)", panel)
+            self.assertIn("PENDING_MESSAGE", panel)
+        health = (ROOT / "game/scripts/ui/campus_health_panel.gd").read_text()
+        for name in ("rest_button", "home_button", "heal_button"):
+            self.assertIn(f"{name}.tooltip_text", health)
+
     def test_phone_catalog_has_unique_entries_and_licensed_icons(self):
         import re
         catalog = (ROOT / "game/scripts/ui/campus_phone_catalog.gd").read_text()

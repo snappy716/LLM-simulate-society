@@ -1,5 +1,6 @@
 extends VBoxContainer
 ## Persistent expedition resources, not a second Godot-side HP ledger.
+const UI_TEXT = preload("res://scripts/ui/campus_ui_text.gd")
 
 var detail: RichTextLabel
 var rest_button: Button
@@ -51,6 +52,9 @@ func refresh() -> void:
 	home_button.disabled = _pending or _home_passage.is_empty() or bool((snapshot.get("economy", {}) as Dictionary).get("battle_locked", false))
 	var full: bool = vitals.get("health", 0) == vitals.get("max_health", 0) and vitals.get("focus", 0) == vitals.get("max_focus", 0)
 	rest_button.disabled = _pending or full or not bool(player.get("can_rest_recover", false)) or budget <= 0
+	rest_button.text = "正在处理…" if _pending else "在住处充分休息（1 次主要行动）"
+	rest_button.tooltip_text = UI_TEXT.PENDING_MESSAGE if _pending else ("生命和专注已全部恢复。" if full else ("请先结束战斗并回到表世界住处。" if not bool(player.get("can_rest_recover", false)) else ("本时段主要行动已用完。" if budget <= 0 else "消耗 1 次主要行动，生命和专注全部恢复；不消耗药品。")))
+	home_button.tooltip_text = UI_TEXT.PENDING_MESSAGE if _pending else ("战斗中不能返回住处。" if bool(snapshot.get("economy", {}).get("battle_locked", false)) else ("已到住处，或当前没有可通行路线。" if _home_passage.is_empty() else "沿现有道路前往下一段，不会直接传送到房间。"))
 	var lines := PackedStringArray([
 		"生命：%d / %d" % [int(vitals.get("health", 0)), int(vitals.get("max_health", 0))],
 		"专注：%d / %d" % [int(vitals.get("focus", 0)), int(vitals.get("max_focus", 0))],
@@ -81,11 +85,15 @@ func refresh() -> void:
 		if actor_id == previous_target:
 			target_picker.select(target_picker.item_count - 1)
 	heal_button.disabled = _pending or options.is_empty() or bool((snapshot.get("economy", {}) as Dictionary).get("battle_locked", false))
+	heal_button.text = "正在处理…" if _pending else "使用战斗间恢复技能"
+	heal_button.tooltip_text = UI_TEXT.PENDING_MESSAGE if _pending else ("战斗中请使用战斗指令。" if bool(snapshot.get("economy", {}).get("battle_locked", false)) else ("现场没有已掌握的恢复技能。" if options.is_empty() else "对所选目标使用技能，消耗与资格由系统检验。"))
+	skill_picker.disabled = _pending or options.is_empty()
+	target_picker.disabled = _pending or options.is_empty()
 	if options.is_empty():
 		lines.append("现场没有自己或队友已掌握的恢复技能。绷带可在商城背包中使用。")
 	lines.append("\n生活需求")
 	for key in (player.get("needs", {}) as Dictionary):
-		lines.append("%s：%s" % [key, player.needs[key]])
+		lines.append("%s：%s" % [UI_TEXT.NEED_NAMES.get(key, "其他需求"), player.needs[key]])
 	detail.text = "\n".join(lines)
 
 
@@ -97,14 +105,17 @@ func _heal() -> void:
 
 
 func _send(action: String, parameters: Dictionary) -> void:
+	if _pending:
+		return
 	_pending = true
+	feedback.text = UI_TEXT.PENDING_MESSAGE
 	refresh()
 	SimulationBridge.operate_campus_inventory(action, parameters)
 
 
-func _completed(_success: bool, result: Dictionary) -> void:
+func _completed(success: bool, result: Dictionary) -> void:
 	if not _pending:
 		return
 	_pending = false
-	feedback.text = String((result.get("result", {}) as Dictionary).get("message", result.get("error", "操作失败")))
+	feedback.text = UI_TEXT.operation_feedback(success, result)
 	refresh()

@@ -217,7 +217,10 @@ static func _route_first_passage(destination: String) -> String:
 
 
 func _execute() -> void:
+	if _pending:
+		return
 	_pending = true
+	feedback.text = preload("res://scripts/ui/campus_ui_text.gd").PENDING_MESSAGE
 	_refresh_detail()
 	SimulationBridge.operate_campus_inventory(_action(), {
 		"shop_id": _selected(shop_picker), "item_id": _selected(item_picker),
@@ -225,7 +228,9 @@ func _execute() -> void:
 	})
 
 
-func _completed(_success: bool, result: Dictionary) -> void:
+func _completed(success: bool, result: Dictionary) -> void:
+	if not _pending:
+		return
 	_pending = false
-	feedback.text = String((result.get("result", {}) as Dictionary).get("message", result.get("error", "操作失败")))
+	feedback.text = preload("res://scripts/ui/campus_ui_text.gd").operation_feedback(success, result)
 	refresh()

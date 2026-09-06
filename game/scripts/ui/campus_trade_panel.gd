@@ -77,10 +77,10 @@ func _ready() -> void:
 	feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(feedback)
 	SimulationBridge.campus_snapshot_updated.connect(func(_snapshot): refresh())
-	SimulationBridge.campus_inventory_operation_completed.connect(func(_success, result):
+	SimulationBridge.campus_inventory_operation_completed.connect(func(success, result):
 		if _pending:
 			_pending = false
-			feedback.text = String(result.get("result", {}).get("message", result.get("error", "操作失败")))
+			feedback.text = preload("res://scripts/ui/campus_ui_text.gd").operation_feedback(success, result)
 			refresh()
 			var changed_id := String(result.get("result", {}).get("payload", {}).get("offer", {}).get("offer_id", ""))
 			for index in range(offer_picker.item_count):
@@ -157,6 +157,9 @@ func _refresh_offer() -> void:
 
 
 func _send(action: String, parameters: Dictionary) -> void:
+	if _pending:
+		return
 	_pending = true
+	feedback.text = preload("res://scripts/ui/campus_ui_text.gd").PENDING_MESSAGE
 	refresh()
 	SimulationBridge.operate_campus_inventory(action, parameters)

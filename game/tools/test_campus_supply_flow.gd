@@ -40,7 +40,7 @@ func _run() -> void:
 			assert(submit.disabled, "goods must not arrive on order day")
 	snapshot = bridge.get("campus_snapshot")
 	assert(int(snapshot.clock.day) == 2 and snapshot.clock.phase == "morning")
-	assert((phone.get("_time_label") as Label).text.begins_with("Day 2"), "phone clock must follow live snapshot while open")
+	assert((phone.get("_time_label") as Label).text == "第 2 天 · 上午", "phone clock must follow live snapshot while open")
 	assert(int(snapshot.economy.balance) == balance, "supplier cannot charge player")
 	if "--competing-customers" in OS.get_cmdline_user_args():
 		assert(submit.disabled, "NPC purchases may exhaust delivery; player has no reserved stock")
