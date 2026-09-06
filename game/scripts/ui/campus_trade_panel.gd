@@ -129,6 +129,7 @@ func refresh() -> void:
 		if offer.offer_id == old_offer:
 			offer_picker.select(index)
 	propose.disabled = _pending or target_picker.item_count == 0 or bool(economy.get("battle_locked", false))
+	propose.tooltip_text = "正在处理，请等待结果。" if _pending else ("战斗中不能进行生活交易。" if bool(economy.get("battle_locked", false)) else ("同一地点暂无交易对象。" if target_picker.item_count == 0 else "提出报价不立即扣款；对方可以拒绝。"))
 	_refresh_offer()
 
 
@@ -139,6 +140,9 @@ func _refresh_offer() -> void:
 	decline.text = "拒绝" if incoming else "撤销"
 	respond.disabled = _pending or offer.get("status") != "pending" or (incoming and not bool(offer.get("can_accept", false)))
 	decline.disabled = _pending or offer.get("status") != "pending"
+	var blocked := "正在处理，请等待结果。" if _pending else ("没有待回应报价。" if offer.get("status") != "pending" else "")
+	respond.tooltip_text = blocked if not blocked.is_empty() else String(offer.get("unavailable_reason", ""))
+	decline.tooltip_text = blocked
 	var economy: Dictionary = SimulationBridge.campus_snapshot.get("economy", {})
 	var lines := PackedStringArray(["余额：%d 元" % int(economy.get("balance", 0))])
 	if not offer.is_empty():

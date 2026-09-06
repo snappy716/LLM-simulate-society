@@ -175,7 +175,9 @@ func _refresh_detail() -> void:
 	lines.append(unavailable)
 	detail.text = "\n".join(lines)
 	submit.disabled = _pending or item_id.is_empty() or not unavailable.is_empty()
+	submit.tooltip_text = "正在处理，请等待结果。" if _pending else ("请先选择物品。" if item_id.is_empty() else unavailable)
 	travel.disabled = _next_passage.is_empty() or bool(economy.get("battle_locked", false))
+	travel.tooltip_text = "战斗中不能前往柜台。" if bool(economy.get("battle_locked", false)) else ("已到柜台，或当前没有可通行路线。" if _next_passage.is_empty() else "沿合法道路前往下一段；不远程收货。")
 	submit.text = "处理中…" if _pending else "确认%s" % ACTIONS[action_picker.selected][1]
 
 

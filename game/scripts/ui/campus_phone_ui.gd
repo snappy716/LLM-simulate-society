@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const UI_TEXT = preload("res://scripts/ui/campus_ui_text.gd")
+
 const APPS := [
 	{"id": "settings", "name": "接口设置", "icon": "设", "color": Color("61748c")},
 	{"id": "saves", "name": "存读档", "icon": "档", "color": Color("557e91")},
@@ -20,6 +22,9 @@ const APPS := [
 var _overlay: ColorRect
 var _home: Control
 var _app_page: VBoxContainer
+var _app_scroll: ScrollContainer
+var _back_button: Button
+var _close_button: Button
 var _app_title: Label
 var _content: RichTextLabel
 var _inventory_root: VBoxContainer
@@ -102,6 +107,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("campus_phone_ui")
 	_build_ui()
+	call_deferred("_prepare_readable_forms", _app_page)
 	SimulationBridge.connection_state_changed.connect(_refresh_connection)
 	_refresh_connection(SimulationBridge.connected, "")
 	SimulationBridge.campus_snapshot_updated.connect(_on_campus_snapshot_updated)
@@ -173,9 +179,10 @@ func _build_ui() -> void:
 	_app_page.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_app_page.visible = false
 	pages.add_child(_app_page)
-	var hint := Label.new()
+	var hint := Button.new()
+	_close_button = hint
 	hint.text = "T 关闭手机"
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.pressed.connect(_set_open.bind(false))
 	column.add_child(hint)
 
 
@@ -210,6 +217,7 @@ func _build_app_page() -> VBoxContainer:
 	var page := VBoxContainer.new()
 	var nav := HBoxContainer.new()
 	var back := Button.new()
+	_back_button = back
 	back.text = "‹ 返回"
 	back.pressed.connect(_show_home)
 	nav.add_child(back)
@@ -219,44 +227,52 @@ func _build_app_page() -> VBoxContainer:
 	_app_title.add_theme_font_size_override("font_size", 22)
 	nav.add_child(_app_title)
 	page.add_child(nav)
+	_app_scroll = ScrollContainer.new()
+	_app_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_app_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_app_scroll.follow_focus = true
+	page.add_child(_app_scroll)
+	var body := VBoxContainer.new()
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_app_scroll.add_child(body)
 	_content = RichTextLabel.new()
 	_content.bbcode_enabled = true
 	_content.fit_content = false
 	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_content.add_theme_font_size_override("normal_font_size", 15)
-	page.add_child(_content)
+	body.add_child(_content)
 	_inventory_root = preload("res://scripts/ui/campus_inventory_panel.gd").new()
 	_inventory_root.visible = false
-	page.add_child(_inventory_root)
+	body.add_child(_inventory_root)
 	_trade_root = preload("res://scripts/ui/campus_trade_panel.gd").new()
 	_trade_root.visible = false
-	page.add_child(_trade_root)
+	body.add_child(_trade_root)
 	_health_root = preload("res://scripts/ui/campus_health_panel.gd").new()
 	_health_root.visible = false
-	page.add_child(_health_root)
+	body.add_child(_health_root)
 	_save_root = preload("res://scripts/ui/campus_save_panel.gd").new()
 	_save_root.visible = false
-	page.add_child(_save_root)
+	body.add_child(_save_root)
 	_forum_root = _build_forum_page()
 	_forum_root.visible = false
 	_forum_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(_forum_root)
+	body.add_child(_forum_root)
 	_club_root = _build_club_page()
 	_club_root.visible = false
 	_club_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(_club_root)
+	body.add_child(_club_root)
 	_party_root = _build_party_page()
 	_party_root.visible = false
 	_party_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(_party_root)
+	body.add_child(_party_root)
 	_combat_root = _build_combat_page()
 	_combat_root.visible = false
 	_combat_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(_combat_root)
+	body.add_child(_combat_root)
 	_message_root = _build_message_page()
 	_message_root.visible = false
 	_message_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(_message_root)
+	body.add_child(_message_root)
 	return page
 
 
@@ -592,6 +608,7 @@ func _build_forum_page() -> VBoxContainer:
 
 
 func _open_app(app_id: String, app_name: String) -> void:
+	_app_scroll.scroll_vertical = 0
 	if app_id == "settings":
 		_set_open(false)
 		InterfaceSettings.open_settings()
@@ -654,14 +671,14 @@ func _app_text(app_id: String) -> String:
 	var place: Dictionary = (campus.get("places", {}) as Dictionary).get(place_id, {})
 	if app_id == "courses":
 		var plan: Dictionary = player.get("current_plan", {})
-		return "[b]第 %d 天 · %s[/b]\n当前计划：%s\n地点：%s\n主要行动剩余：%d\n\n[b]学院能力 · 心理学院[/b]\n%s\n\n[color=#9aa8bd]能力同时用于表世界检定，并生成角色绑定的战斗卡牌。[/color]" % [int(clock.get("day", 1)), SimulationBridge.phase_display_name(String(clock.get("phase", "morning"))), plan.get("activity_id", "自由安排"), plan.get("location_id", "未安排"), int((player.get("action_budget", {}) as Dictionary).get("major_remaining", 0)), _ability_lines(player.get("abilities", []))]
+		return "[b]第 %d 天 · %s[/b]\n当前计划：%s\n地点：%s\n主要行动剩余：%d\n\n[b]学院能力 · 心理学院[/b]\n%s\n\n[color=#9aa8bd]能力同时用于表世界检定，并生成角色绑定的战斗卡牌。[/color]" % [int(clock.get("day", 1)), SimulationBridge.phase_display_name(String(clock.get("phase", "morning"))), UI_TEXT.activity_name(String(plan.get("activity_id", ""))), (campus.get("places", {}) as Dictionary).get(String(plan.get("location_id", "")), {}).get("name", "未安排"), int((player.get("action_budget", {}) as Dictionary).get("major_remaining", 0)), _ability_lines(player.get("abilities", []))]
 	if app_id == "album":
 		var presentation := get_node("/root/CampusPresentation")
 		var current_map: Dictionary = presentation.call("get_map")
 		return "[b]当前场景[/b]\n%s\n\n已接入校园正式候选场景：%d 张。\n按 M 可查看和切换校园区域。" % [current_map.get("name", "未知"), (presentation.call("all_maps") as Array).size()]
 	if app_id == "notes":
 		var activity: Dictionary = player.get("current_activity", {})
-		return "[b]当前位置[/b]\n%s\n\n[b]最近活动[/b]\n%s\n%s" % [place.get("name", place_id), activity.get("activity_id", "暂无"), activity.get("result", "")]
+		return "[b]当前位置[/b]\n%s\n\n[b]最近活动[/b]\n%s\n%s" % [place.get("name", place_id), UI_TEXT.activity_name(String(activity.get("activity_id", ""))), UI_TEXT.activity_status(String(activity.get("status", "")))]
 	if app_id == "wallet":
 		return "[b]账户概览[/b]\n\n校园生活资金：%d 元\n\n余额与活动、购物使用同一账户。\n打开校园商城可查看背包、到店交易或操作物品。" % int(player.get("wealth", 0))
 	if app_id == "health":
@@ -1840,6 +1857,17 @@ func _show_home() -> void:
 	_party_root.visible = false
 	_combat_root.visible = false
 	_content.visible = true
+
+
+func _prepare_readable_forms(node: Node) -> void:
+	# Keep narrative/formation information readable instead of shrinking it to zero.
+	if node is RichTextLabel and not node.fit_content and node.custom_minimum_size.y == 0:
+		node.custom_minimum_size.y = 160
+	if node is OptionButton:
+		node.fit_to_longest_item = false
+		node.clip_text = true
+	for child in node.get_children():
+		_prepare_readable_forms(child)
 
 
 func _set_open(value: bool) -> void:

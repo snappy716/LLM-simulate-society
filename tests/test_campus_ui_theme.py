@@ -6,6 +6,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CampusThemeTests(unittest.TestCase):
+    def test_phone_long_forms_have_fixed_navigation_and_shared_activity_labels(self):
+        phone = (ROOT / "game/scripts/ui/campus_phone_ui.gd").read_text()
+        self.assertIn("_app_scroll.follow_focus = true", phone)
+        self.assertIn("_close_button = hint", phone)
+        self.assertIn("UI_TEXT.activity_name", phone)
+        self.assertIn("node.custom_minimum_size.y = 160", phone)
+
     def test_hud_is_readable_and_actions_have_unavailability_reasons(self):
         hud = (ROOT / "game/scripts/ui/campus_phase_debug_panel.gd").read_text()
         self.assertIn("advance_button.tooltip_text", hud)

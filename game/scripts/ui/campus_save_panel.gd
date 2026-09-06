@@ -73,6 +73,10 @@ func _render() -> void:
 	load_button.disabled = _pending or not bool(current.get("exists", false))
 	backup_button.disabled = _pending or not bool(backup.get("exists", false))
 	refresh_button.disabled = _pending
+	save_button.tooltip_text = "正在处理，请等待结果。" if _pending else ("请先刷新存档槽。" if selected.is_empty() else "保存整个校园状态；不保存 API 密钥。")
+	load_button.tooltip_text = "正在处理，请等待结果。" if _pending else ("此槽没有存档。" if not bool(current.get("exists", false)) else "读取前会再次确认，当前未保存进度将被替换。")
+	backup_button.tooltip_text = "正在处理，请等待结果。" if _pending else ("此槽没有上一份备份。" if not bool(backup.get("exists", false)) else "读取前会再次确认。")
+	refresh_button.tooltip_text = "正在处理，请等待结果。" if _pending else "重新查询存档槽，不改变当前世界。"
 
 
 func _prepare(operation: String, backup: bool) -> void:
