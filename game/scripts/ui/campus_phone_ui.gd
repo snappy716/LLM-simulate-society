@@ -21,6 +21,7 @@ const APPS := [
 
 var _overlay: ColorRect
 var _home: Control
+var _social_pending := {"forum": "", "club": "", "party": ""}
 var _home_search: LineEdit
 var _home_scroll: ScrollContainer
 var _home_sections: Array[Control] = []
@@ -903,7 +904,10 @@ func _send_phone_proposal() -> void:
 func _on_social_proposal_completed(
 	success: bool, result: Dictionary, target_id: String, proposal_type: String
 ) -> void:
-	if proposal_type == "party_invite" and target_id == _selected_party_candidate_id:
+	var is_party_response := proposal_type == "party_invite" and (String(_social_pending.party) == target_id or target_id == _selected_party_candidate_id)
+	if proposal_type == "party_invite" and String(_social_pending.party) == target_id:
+		_social_pending.party = ""
+	if is_party_response:
 		var party_result: Dictionary = result.get("result", {})
 		var party_payload: Dictionary = party_result.get("payload", {})
 		_party_feedback.text = String(party_payload.get("reply_text", party_result.get("message", result.get("error", "邀请未能送达"))))
@@ -1138,6 +1142,7 @@ func _refresh_forum_detail() -> void:
 	var requires_night: bool = String(task.get("forum", "surface")) == "night"
 	var night_accessible := bool((SimulationBridge.campus_snapshot.get("night_world", {}) as Dictionary).get("night_forum_accessible", false))
 	_forum_abandon_action.visible = owned and state in ["locked", "in_progress"]
+	_forum_abandon_action.disabled = false
 	_forum_primary_action.visible = true
 	_forum_primary_action.disabled = false
 	if state in ["open", "viewed", "considering"]:
@@ -1161,13 +1166,20 @@ func _refresh_forum_detail() -> void:
 	else:
 		_forum_primary_action.text = _task_state_label(task)
 		_forum_primary_action.disabled = true
+	_forum_primary_action.tooltip_text = _forum_primary_action.text if _forum_primary_action.disabled else "提交后由系统检查任务锁、行动条件与资源。"
+	_forum_abandon_action.tooltip_text = "释放自己的任务锁定，不保证之后仍可接回。"
+	_lock_social_controls("forum", [_forum_primary_action, _forum_abandon_action])
 
 
 func _perform_primary_task_action() -> void:
+	if _forum_primary_action.disabled or not String(_social_pending.forum).is_empty():
+		return
 	var task: Dictionary = (SimulationBridge.campus_snapshot.get("tasks", {}) as Dictionary).get(_selected_task_id, {})
 	if task.is_empty():
 		return
 	var state := String(task.get("state", ""))
+	_social_pending.forum = _selected_task_id
+	_refresh_forum_detail()
 	_forum_feedback.text = "正在同步论坛状态……"
 	if state in ["open", "viewed", "considering"]:
 		SimulationBridge.operate_campus_task(
@@ -1178,15 +1190,21 @@ func _perform_primary_task_action() -> void:
 
 
 func _abandon_selected_task() -> void:
+	if _forum_abandon_action.disabled or not String(_social_pending.forum).is_empty():
+		return
+	_social_pending.forum = _selected_task_id
+	_refresh_forum_detail()
 	_forum_feedback.text = "正在释放任务锁定……"
 	SimulationBridge.operate_campus_task("ABANDON_FORUM_TASK", _selected_task_id)
 
 
 func _on_task_operation_completed(success: bool, result: Dictionary, _action_id: String, task_id: String) -> void:
+	if String(_social_pending.forum) == task_id:
+		_social_pending.forum = ""
 	if task_id != _selected_task_id:
+		_refresh_forum_detail()
 		return
-	var command_result: Dictionary = result.get("result", {})
-	_forum_feedback.text = String(command_result.get("message", result.get("error", "操作失败")))
+	_forum_feedback.text = UI_TEXT.operation_feedback(success, result)
 	if not success:
 		_forum_feedback.add_theme_color_override("font_color", Color("ee8174"))
 	else:
@@ -1216,11 +1234,16 @@ func _on_campus_snapshot_updated(_snapshot: Dictionary) -> void:
 func _refresh_club_page() -> void:
 	var clubs: Dictionary = SimulationBridge.campus_snapshot.get("clubs", {})
 	if clubs.is_empty():
+		_club_picker.clear()
+		_selected_club_id = ""
 		_club_detail.text = "社团数据尚未同步。"
 		_club_membership_action.disabled = true
 		_club_activity_action.disabled = true
+		_club_membership_action.tooltip_text = "暂无可用社团数据。"
+		_club_activity_action.tooltip_text = "暂无可用社团数据。"
 		return
 	var previous := _selected_club_id
+	_club_picker.disabled = false
 	_club_picker.clear()
 	var ids: Array = clubs.keys()
 	ids.sort()
@@ -1275,11 +1298,11 @@ func _refresh_club_detail() -> void:
 				days.append(weekday_names[clampi(int(day), 0, 6)])
 			schedule_lines.append("%s %s" % ["、".join(days), SimulationBridge.phase_display_name(String(slot.get("phase", "")))])
 	_club_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]负责人[/b]  %s\n[b]成员[/b]  %d（无硬性人数上限）\n[b]公共资源[/b]  %d / %d（%s）\n[b]活动时间[/b]  %s\n\n[b]你的身份[/b]\n%s\n[b]入社评估[/b]\n%s\n\n[b]表世界实践[/b]  %s\n[b]团队战术[/b]  %s · 消耗 %d 公共资源\n[color=#91a4bc]可加入多个社团；能否实际参加由活动时间冲突和主要行动次数决定。团队战术需要至少两名同社团成员，并由骨干或负责人组织。[/color]" % [
-		club.get("name", _selected_club_id), club.get("category", ""),
+		club.get("name", _selected_club_id), UI_TEXT.CLUB_TERMS.get(club.get("category", ""), "校园社团"),
 		club.get("leader_name", "未知"), int(club.get("member_count", 0)),
 		int(resources.get("current", 0)),
-		int(resources.get("capacity", 0)), resources.get("resource_id", ""),
-		"；".join(schedule_lines), identity_text, admission_text, club.get("surface_skill", ""),
+		int(resources.get("capacity", 0)), UI_TEXT.CLUB_TERMS.get(resources.get("resource_id", ""), "社团资源"),
+		"；".join(schedule_lines), identity_text, admission_text, UI_TEXT.CLUB_TERMS.get(club.get("surface_skill", ""), "社团实践"),
 		tactic.get("name", tactic.get("tactic_id", "")), int(tactic.get("resource_cost", 0)),
 	]
 	var player: Dictionary = campus.get("player", {})
@@ -1295,9 +1318,16 @@ func _refresh_club_detail() -> void:
 		_club_membership_action.disabled = String(membership.get("rank", "")) == "leader"
 	var major_remaining := int((player.get("action_budget", {}) as Dictionary).get("major_remaining", 0))
 	_club_activity_action.disabled = membership.is_empty() or not at_club or not bool(club.get("activity_open_now", false)) or major_remaining <= 0
+	_club_membership_action.tooltip_text = "负责人不能直接退出社团。" if not membership.is_empty() and _club_membership_action.disabled else (admission_text if not bool(admission.get("eligible", false)) and membership.is_empty() else ("请先前往社团活动室。" if not at_club and membership.is_empty() else ("深夜不办理入社。" if not reception_open and membership.is_empty() else "提交申请后由系统检验资格。")))
+	_club_activity_action.tooltip_text = "请先加入社团。" if membership.is_empty() else ("请先前往社团活动室。" if not at_club else ("当前不在该社团的活动时间。" if not bool(club.get("activity_open_now", false)) else ("本时段主要行动已用完。" if major_remaining <= 0 else "参加活动消耗 1 次主要行动。")))
+	_lock_social_controls("club", [_club_membership_action, _club_activity_action, _club_picker])
 
 
 func _perform_club_membership_action() -> void:
+	if _club_membership_action.disabled or not String(_social_pending.club).is_empty():
+		return
+	_social_pending.club = _selected_club_id
+	_refresh_club_detail()
 	var club: Dictionary = (SimulationBridge.campus_snapshot.get("clubs", {}) as Dictionary).get(_selected_club_id, {})
 	var action_id := "LEAVE_CAMPUS_CLUB" if club.get("viewer_membership") is Dictionary else "JOIN_CAMPUS_CLUB"
 	_club_feedback.text = "正在提交社团申请……"
@@ -1305,15 +1335,21 @@ func _perform_club_membership_action() -> void:
 
 
 func _perform_club_activity() -> void:
+	if _club_activity_action.disabled or not String(_social_pending.club).is_empty():
+		return
+	_social_pending.club = _selected_club_id
+	_refresh_club_detail()
 	_club_feedback.text = "正在结算社团活动……"
 	SimulationBridge.operate_campus_club("CLUB_ACTIVITY", _selected_club_id)
 
 
 func _on_club_operation_completed(success: bool, result: Dictionary, _action_id: String, club_id: String) -> void:
+	if String(_social_pending.club) == club_id:
+		_social_pending.club = ""
 	if club_id != _selected_club_id:
+		_refresh_club_page()
 		return
-	var command_result: Dictionary = result.get("result", {})
-	_club_feedback.text = String(command_result.get("message", result.get("error", "社团操作失败")))
+	_club_feedback.text = UI_TEXT.operation_feedback(success, result)
 	_club_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
 	_refresh_club_page()
 
@@ -1321,9 +1357,15 @@ func _on_club_operation_completed(success: bool, result: Dictionary, _action_id:
 func _refresh_party_page() -> void:
 	var party: Dictionary = SimulationBridge.campus_snapshot.get("party", {})
 	if party.is_empty():
+		_party_candidate_picker.clear()
+		_party_member_picker.clear()
+		_selected_party_candidate_id = ""
+		_selected_party_member_id = ""
 		_party_detail.text = "队伍数据尚未同步。"
 		_party_invite_action.disabled = true
 		_party_dismiss_action.disabled = true
+		_party_invite_action.tooltip_text = "暂无可用队伍数据。"
+		_party_dismiss_action.tooltip_text = "暂无可用队伍数据。"
 		return
 	var band_names := {"fragile": "脆弱", "uncertain": "磨合中", "steady": "稳定", "cohesive": "默契"}
 	var response_names := {"likely_accept": "较愿意", "uncertain": "态度不明", "likely_decline": "较可能拒绝"}
@@ -1345,6 +1387,8 @@ func _refresh_party_page() -> void:
 		"\n".join(member_lines), "\n".join(skill_lines),
 	]
 	var previous_candidate := _selected_party_candidate_id
+	_party_candidate_picker.disabled = false
+	_party_member_picker.disabled = false
 	_party_candidate_picker.clear()
 	var candidate_index := 0
 	for candidate in party.get("candidates", []):
@@ -1383,13 +1427,17 @@ func _refresh_party_page() -> void:
 	else:
 		_selected_party_member_id = ""
 	_party_dismiss_action.disabled = _selected_party_member_id.is_empty()
+	_party_invite_action.tooltip_text = "队伍已满。" if bool(party.get("is_full", false)) else ("暂无可邀请的人物。" if _selected_party_candidate_id.is_empty() else ("请先当面交换联系方式。" if not _selected_party_candidate_is_contact else "对方自主决定是否接受，不保证加入。"))
+	_party_dismiss_action.tooltip_text = "没有可解除同行的队友。" if _selected_party_member_id.is_empty() else "解除所选队友的同行承诺。"
+	if _party_candidate_picker.item_count == 0:
+		_party_detail.text += "\n\n暂无可邀请人物，可先在校园探索并结识他人。"
+	_lock_social_controls("party", [_party_invite_action, _party_dismiss_action, _party_candidate_picker, _party_member_picker])
 
 
 func _select_party_candidate(index: int) -> void:
 	_selected_party_candidate_id = String(_party_candidate_picker.get_item_metadata(index))
 	_selected_party_candidate_is_contact = _party_candidate_picker.get_item_tooltip(index) == "phone_contact"
-	_party_invite_action.disabled = _selected_party_candidate_id.is_empty() or not _selected_party_candidate_is_contact
-	_party_invite_action.text = "发出邀请" if _selected_party_candidate_is_contact else "先交换联系方式"
+	_refresh_party_page()
 
 
 func _select_party_member(index: int) -> void:
@@ -1397,6 +1445,10 @@ func _select_party_member(index: int) -> void:
 
 
 func _invite_party_candidate() -> void:
+	if _party_invite_action.disabled or not String(_social_pending.party).is_empty():
+		return
+	_social_pending.party = _selected_party_candidate_id
+	_refresh_party_page()
 	_party_feedback.text = "正在等待对方决定……"
 	SimulationBridge.operate_campus_social_proposal(
 		_selected_party_candidate_id, "party_invite", "phone"
@@ -1404,15 +1456,27 @@ func _invite_party_candidate() -> void:
 
 
 func _dismiss_party_member() -> void:
+	if _party_dismiss_action.disabled or not String(_social_pending.party).is_empty():
+		return
+	_social_pending.party = _selected_party_member_id
+	_refresh_party_page()
 	_party_feedback.text = "正在解除同行承诺……"
 	SimulationBridge.operate_campus_party("DISMISS_PARTY_MEMBER", _selected_party_member_id)
 
 
 func _on_party_operation_completed(success: bool, result: Dictionary, _action_id: String, _target_id: String) -> void:
-	var command_result: Dictionary = result.get("result", {})
-	_party_feedback.text = String(command_result.get("message", result.get("error", "组队操作失败")))
+	_social_pending.party = ""
+	_party_feedback.text = UI_TEXT.operation_feedback(success, result)
 	_party_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
 	_refresh_party_page()
+
+
+func _lock_social_controls(page: String, controls: Array) -> void:
+	if String(_social_pending.get(page, "")).is_empty():
+		return
+	for control in controls:
+		control.disabled = true
+		control.tooltip_text = UI_TEXT.PENDING_MESSAGE
 
 
 func _refresh_combat_page() -> void:

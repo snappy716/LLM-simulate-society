@@ -6,6 +6,23 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CampusThemeTests(unittest.TestCase):
+    def test_club_display_terms_cover_current_content(self):
+        import json
+        import re
+        catalog = json.loads((ROOT / "content/organizations/clubs.json").read_text())
+        text = (ROOT / "game/scripts/ui/campus_ui_text.gd").read_text()
+        terms = set(re.findall(r'"([a-z_]+)": "', text))
+        for club in catalog["clubs"]:
+            for key in ("category", "surface_skill", "signature_resource"):
+                self.assertIn(club[key], terms)
+
+    def test_social_pages_have_pending_locks_and_availability_hints(self):
+        phone = (ROOT / "game/scripts/ui/campus_phone_ui.gd").read_text()
+        for page in ("forum", "club", "party"):
+            self.assertIn(f'_lock_social_controls("{page}"', phone)
+        for control in ("_forum_primary_action", "_club_membership_action", "_club_activity_action", "_party_invite_action", "_party_dismiss_action"):
+            self.assertIn(control + ".tooltip_text", phone)
+
     def test_inventory_panels_share_operation_feedback(self):
         for name in ("health", "inventory", "trade"):
             panel = (ROOT / f"game/scripts/ui/campus_{name}_panel.gd").read_text()
