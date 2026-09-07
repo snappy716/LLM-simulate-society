@@ -72,7 +72,7 @@
     {"id": "sample_collection", "name": "样本采集", "college_id": "bio_chemistry", "source_kind": "common", "profile_id": "technical", "check_tags": ["sample", "investigation", "fieldwork"]},
     {"id": "condition_detection", "name": "状态识别", "college_id": "bio_chemistry", "source_kind": "common", "profile_id": "analysis", "check_tags": ["condition", "diagnosis", "anomaly"]},
     {"id": "reagent_handling", "name": "药剂处理", "college_id": "bio_chemistry", "source_kind": "common", "profile_id": "technical", "check_tags": ["reagent", "crafting", "laboratory"]},
-    {"id": "pollution_purification", "name": "污染净化", "college_id": "bio_chemistry", "source_kind": "common", "profile_id": "support", "check_tags": ["purification", "pollution", "treatment"]},
+    {"id": "pollution_purification", "name": "污染净化", "college_id": "bio_chemistry", "source_kind": "common", "profile_id": "support", "additional_effect_ids": ["reduce_pollution"], "check_tags": ["purification", "pollution", "treatment"]},
     {"id": "biological_observation", "name": "生物观察", "college_id": "bio_chemistry", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["biology", "observation", "adaptation"]},
     {"id": "chemical_preparation", "name": "化学制备", "college_id": "bio_chemistry", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["chemistry", "crafting", "reaction"]},
     {"id": "ecology_toxicology", "name": "生态与毒理", "college_id": "bio_chemistry", "source_kind": "specialization", "profile_id": "specialist", "check_tags": ["ecology", "toxicology", "hazard"]},

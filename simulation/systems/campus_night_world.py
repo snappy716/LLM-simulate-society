@@ -312,6 +312,14 @@ def advance_campus_night_world(context, policy: CampusNightWorldPolicy) -> Dict[
                 100, int(actor_state["pollution"]) + int(moon["exposure_pollution"])
             )
             summary["night_exposure_count"] += 1
+        battle_id = state.metadata.get("campus_combat", {}).get(
+            "active_battle_by_actor", {}
+        ).get(actor_id)
+        battle = state.battles.get(str(battle_id or ""))
+        if isinstance(battle, dict) and actor_id in battle.get("pollution", {}):
+            from simulation.systems.campus_combat import sync_combat_pollution_status
+            battle["pollution"][actor_id] = int(actor_state["pollution"])
+            sync_combat_pollution_status(battle, actor_id)
     return summary
 
 

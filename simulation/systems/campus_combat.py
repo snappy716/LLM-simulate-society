@@ -19,7 +19,9 @@ from simulation.domain.combat import (
 )
 from simulation.domain.locations import CampusLocationGraph
 from simulation.domain.world_state import WorldState
-from simulation.systems.campus_night_world import moon_phase_for_day, night_world_policy_from_state
+from simulation.systems.campus_night_world import (
+    moon_phase_for_day, night_world_policy_from_state, pollution_stage,
+)
 from simulation.systems.campus_parties import invitation_assessment, party_for_actor, party_policy_from_state
 from simulation.systems.campus_tasks import complete_assigned_task
 from simulation.systems.content_registry import ContentRegistry
@@ -27,7 +29,7 @@ from simulation.systems.transactions import TransactionOutcome
 from simulation.systems.campus_vitals import change_vital
 
 
-CAMPUS_COMBAT_SCHEMA_VERSION = 3
+CAMPUS_COMBAT_SCHEMA_VERSION = 4
 COMBAT_ACTION_IDS = {
     "START_BATTLE_PREPARATION",
     "DEPLOY_COMBAT_CHARACTER",
@@ -81,13 +83,22 @@ def install_campus_combat(
         raise ValueError("at least one combat enemy archetype is required")
     required_enemy_fields = {
         "id", "name", "max_health", "defense", "resistance", "speed",
-        "preferred_row", "weaknesses", "knowledge_tags",
+        "preferred_row", "weaknesses", "knowledge_tags", "pollution_power",
     }
     for archetype_id, archetype in enemy_archetypes.items():
         if str(archetype.get("id", "")) != archetype_id:
             raise ValueError(f"combat enemy archetype id mismatch: {archetype_id}")
         if required_enemy_fields - set(archetype):
             raise ValueError(f"combat enemy archetype {archetype_id} is incomplete")
+        pollution_power = archetype.get("pollution_power")
+        if (
+            isinstance(pollution_power, bool)
+            or not isinstance(pollution_power, int)
+            or not 0 <= pollution_power <= 10
+        ):
+            raise ValueError(
+                f"combat enemy archetype {archetype_id} has invalid pollution power"
+            )
         if archetype.get("preferred_row") not in COMBAT_ROWS:
             raise ValueError(f"combat enemy archetype {archetype_id} has an invalid row")
     state.metadata["campus_combat"] = {
@@ -341,6 +352,7 @@ def _build_enemy_unit(
         "defense": int(archetype["defense"]),
         "resistance": int(archetype["resistance"]),
         "speed": int(archetype["speed"]),
+        "pollution_power": int(archetype["pollution_power"]),
         "weaknesses": list(map(str, archetype.get("weaknesses", ()))),
         "knowledge_tags": list(map(str, archetype.get("knowledge_tags", ()))),
         "statuses": [],
@@ -424,7 +436,10 @@ def _new_battle(
             actor_id: int(night_states[actor_id].get("pollution", 0))
             for actor_id in candidate_ids
         },
-        "statuses": {actor_id: [] for actor_id in candidate_ids},
+        "statuses": {
+            actor_id: pollution_statuses(int(night_states[actor_id].get("pollution", 0)))
+            for actor_id in candidate_ids
+        },
         "barriers": {actor_id: 0 for actor_id in candidate_ids},
         "enemy_health": {enemy_id: int(enemy["max_health"])},
         "known_weaknesses": [],
@@ -548,6 +563,20 @@ def _combat_card_blueprints(
         for card_id, payload in round_policy.base_command_blueprints.items()
     })
     return blueprints
+
+
+def pollution_statuses(value: int) -> list[str]:
+    stage = pollution_stage(value)
+    return [] if stage == "stable" else [f"pollution_{stage}"]
+
+
+def sync_combat_pollution_status(battle: Dict[str, Any], actor_id: str) -> str:
+    statuses = battle["statuses"].setdefault(actor_id, [])
+    statuses[:] = [value for value in statuses if not str(value).startswith("pollution_")]
+    stage = pollution_stage(int(battle["pollution"].get(actor_id, 0)))
+    if stage != "stable":
+        statuses.append(f"pollution_{stage}")
+    return stage
 
 
 def _character_for_actor(battle: Mapping[str, Any], actor_id: str) -> Dict[str, Any] | None:
@@ -704,6 +733,17 @@ def resolve_combat_effects(
                 "amount": after - before, "before": before, "after": after,
             })
             continue
+        if effect_id == "reduce_pollution":
+            before = int(battle["pollution"].get(target_id, 0))
+            after = max(0, before - amount)
+            battle["pollution"][target_id] = after
+            stage = sync_combat_pollution_status(battle, target_id)
+            results.append({
+                "effect_id": effect_id, "target_id": target_id,
+                "amount": before - after, "before": before, "after": after,
+                "pollution_stage": stage,
+            })
+            continue
         raise ValueError(f"unsupported combat effect: {effect_id}")
     return results
 
@@ -747,6 +787,11 @@ def _persist_recovery_effects(context, effects):
         if effect["effect_id"] in {"restore_health", "restore_focus"}:
             meter = "health" if effect["effect_id"] == "restore_health" else "focus"
             change_vital(context.state, effect["target_id"], meter, int(effect["amount"]))
+        elif effect["effect_id"] == "reduce_pollution":
+            actor_state = context.state.situations["night_world"]["actor_states"][
+                effect["target_id"]
+            ]
+            actor_state["pollution"] = int(effect["after"])
 
 
 def play_combat_card(
@@ -1717,7 +1762,8 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
                 if (enemy_id not in battle.get("enemy_units", {}) or not isinstance(intent, dict)
                     or intent.get("target_row") not in COMBAT_ROWS
                     or intent.get("action_type") != "physical_attack"
-                    or any(type(intent.get(key)) is not int or intent.get(key, -1) < (0 if key == "speed" else 1) for key in ("round", "power", "speed"))):
+                    or any(type(intent.get(key)) is not int or intent.get(key, -1) < (0 if key in {"speed", "pollution_power"} else 1) for key in ("round", "power", "pollution_power", "speed"))
+                    or int(intent.get("pollution_power", 11)) > 10):
                     errors.append(f"battle {battle_id} has invalid intent for {enemy_id}")
         rescue = battle.get("consequences", {}).get("rescue")
         if rescue is not None:
@@ -1811,6 +1857,13 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
                 ):
                     errors.append(f"battle {battle_id} enemy {enemy_id} is invalid")
                     continue
+                pollution_power = enemy.get("pollution_power")
+                if (
+                    isinstance(pollution_power, bool)
+                    or not isinstance(pollution_power, int)
+                    or not 0 <= pollution_power <= 10
+                ):
+                    errors.append(f"battle {battle_id} enemy {enemy_id} pollution power is invalid")
                 health = enemy_health.get(enemy_id)
                 if (
                     isinstance(health, bool) or not isinstance(health, int)
@@ -1825,6 +1878,29 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
             for value in barriers.values()
         ):
             errors.append(f"battle {battle_id} barrier values are invalid")
+        pollution = battle.get("pollution")
+        statuses = battle.get("statuses")
+        participant_set = set(participants) if isinstance(participants, list) else set()
+        if not isinstance(pollution, dict) or set(pollution) != participant_set:
+            errors.append(f"battle {battle_id} pollution ledger is invalid")
+        elif any(type(value) is not int or not 0 <= value <= 100 for value in pollution.values()):
+            errors.append(f"battle {battle_id} pollution values are invalid")
+        if not isinstance(statuses, dict) or set(statuses) != participant_set:
+            errors.append(f"battle {battle_id} status ledger is invalid")
+        elif any(
+            not isinstance(values, list) or len(values) != len(set(values))
+            for values in statuses.values()
+        ):
+            errors.append(f"battle {battle_id} status values are invalid")
+        elif battle.get("phase") != "resolved" and isinstance(pollution, dict):
+            actor_states = state.situations.get("night_world", {}).get("actor_states", {})
+            for actor_id in participant_set:
+                if pollution.get(actor_id) != actor_states.get(actor_id, {}).get("pollution"):
+                    errors.append(f"battle {battle_id} pollution projection differs for {actor_id}")
+                expected = set(pollution_statuses(int(pollution.get(actor_id, 0))))
+                actual = {value for value in statuses.get(actor_id, ()) if str(value).startswith("pollution_")}
+                if expected != actual:
+                    errors.append(f"battle {battle_id} pollution status differs for {actor_id}")
         if battle.get("phase") == "resolved" and battle.get("result") == "victory" and any(
             int(value) > 0 for value in (enemy_health or {}).values()
         ):

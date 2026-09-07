@@ -16,6 +16,7 @@ def plan_enemy_intents(battle):
         intents[enemy_id] = {
             "round": battle["round"], "action_type": "physical_attack", "target_row": target_row,
             "power": 12 + int(enemy["speed"]) // 2 + int(enemy["defense"]) // 2,
+            "pollution_power": int(enemy.get("pollution_power", 0)),
             "speed": int(enemy["speed"]),
         }
     return intents
@@ -98,7 +99,9 @@ def recover_defeated_parties(context):
 
 
 def resolve_enemy_turn(context, battle):
-    from simulation.systems.campus_combat import incapacitate_character
+    from simulation.systems.campus_combat import (
+        incapacitate_character, sync_combat_pollution_status,
+    )
 
     intents = battle.get("enemy_intents")
     if not intents:
@@ -120,11 +123,33 @@ def resolve_enemy_turn(context, battle):
             target = targets[0]
             actor_id = target["actor_id"]
             power = int(intent["power"]) // 2 if disrupted else int(intent["power"])
-            damage = max(1, power - int(target["defense"]))
+            pollution_before = int(battle["pollution"].get(actor_id, 0))
+            pollution_damage_bonus = 6 if pollution_before >= 85 else 3 if pollution_before >= 60 else 1 if pollution_before >= 30 else 0
+            damage = max(1, power - int(target["defense"]) + pollution_damage_bonus)
             absorbed = min(damage, int(battle["barriers"].get(actor_id, 0)))
             battle["barriers"][actor_id] = int(battle["barriers"].get(actor_id, 0)) - absorbed
-            change = change_vital(context.state, actor_id, "health", -(damage - absorbed))
-            result.update(target_id=actor_id, damage=-change["delta"], absorbed=absorbed, health=change["after"])
+            unabsorbed = damage - absorbed
+            change = change_vital(context.state, actor_id, "health", -unabsorbed)
+            pollution_gain = 0
+            if unabsorbed > 0:
+                pollution_gain = int(intent.get("pollution_power", 0))
+                if disrupted:
+                    pollution_gain //= 2
+                pollution_gain = max(
+                    0, pollution_gain - int(target.get("resistance", 0)) // 10
+                )
+            pollution_after = min(100, pollution_before + pollution_gain)
+            battle["pollution"][actor_id] = pollution_after
+            context.state.situations["night_world"]["actor_states"][actor_id][
+                "pollution"
+            ] = pollution_after
+            stage = sync_combat_pollution_status(battle, actor_id)
+            result.update(
+                target_id=actor_id, damage=-change["delta"], absorbed=absorbed,
+                health=change["after"], pollution_before=pollution_before,
+                pollution_after=pollution_after, pollution_gain=pollution_after - pollution_before,
+                pollution_stage=stage, pollution_damage_bonus=pollution_damage_bonus,
+            )
             if change["after"] <= 0:
                 incapacitate_character(context, battle, target["character_card_instance_id"])
         results.append(result)

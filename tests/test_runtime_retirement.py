@@ -99,7 +99,7 @@ class RuntimeRetirementTests(unittest.TestCase):
         self.assertEqual(["morning", "afternoon", "evening", "late_night"],
                          [phase.value for phase in PHASES])
         self.assertIs(Phase.MORNING, PHASES[0])
-        self.assertEqual("382ffb9aa84a36d0", ContentRegistry.load_default(ROOT / "content").content_version)
+        self.assertEqual("637fd86b7862d5ac", ContentRegistry.load_default(ROOT / "content").content_version)
 
 
 if __name__ == "__main__":

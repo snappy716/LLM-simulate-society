@@ -1663,7 +1663,14 @@ func _refresh_combat_page() -> void:
 		for card_id_value in formation.get(row_id, []):
 			var deployed_card: Dictionary = cards.get(String(card_id_value), {})
 			var actor_id := String(deployed_card.get("actor_id", ""))
-			names.append("%s · 生命 %d/%d · 护盾 %d" % [deployed_card.get("display_name", "未知人物"), int(active.get("health", {}).get(actor_id, 0)), int(deployed_card.get("max_health", 0)), int(active.get("barriers", {}).get(actor_id, 0))])
+			var pollution := int(active.get("pollution", {}).get(actor_id, 0))
+			var status_names := {"pollution_noticeable": "月蚀显现", "pollution_severe": "认知动摇", "pollution_critical": "自我濒危"}
+			var visible_statuses: Array[String] = []
+			for status_id_value in active.get("statuses", {}).get(actor_id, []):
+				var status_id := String(status_id_value)
+				visible_statuses.append(String(status_names.get(status_id, "倒下" if status_id == "incapacitated" else status_id)))
+			var status_text := " · %s" % " / ".join(visible_statuses) if not visible_statuses.is_empty() else ""
+			names.append("%s · 生命 %d/%d · 护盾 %d · 污染 %d%%%s" % [deployed_card.get("display_name", "未知人物"), int(active.get("health", {}).get(actor_id, 0)), int(deployed_card.get("max_health", 0)), int(active.get("barriers", {}).get(actor_id, 0)), pollution, status_text])
 		lines.append("[b]%s[/b]  %s" % [row_names[row_id], " / ".join(names) if not names.is_empty() else "—"])
 	var enemy_lines: Array[String] = []
 	var enemy_units: Dictionary = active.get("enemy_units", {})
@@ -1681,7 +1688,7 @@ func _refresh_combat_page() -> void:
 			])
 			var intent: Dictionary = active.get("enemy_intents", {}).get(enemy_id, {})
 			if not intent.is_empty() and int(enemy_health.get(enemy_id, 0)) > 0:
-				enemy_names.append("意图：攻击%s · 威力 %d（防御/护盾前）" % [row_names.get(String(intent.get("target_row", "")), "未知排位"), int(intent.get("power", 0))])
+				enemy_names.append("意图：攻击%s · 威力 %d · 污染 %d（防御/护盾前）" % [row_names.get(String(intent.get("target_row", "")), "未知排位"), int(intent.get("power", 0)), int(intent.get("pollution_power", 0))])
 				if "disrupted" in enemy.get("statuses", []):
 					enemy_names.append("受到干扰：下次攻击威力减半")
 		enemy_lines.append("[b]%s[/b]  %s" % [row_names[row_id], " / ".join(enemy_names) if not enemy_names.is_empty() else "—"])

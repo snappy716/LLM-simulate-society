@@ -23,6 +23,9 @@ class CampusRetreatTests(unittest.TestCase):
         before_health = bridge.kernel._state.population["player"]["vitals"]["health"]
         before_clock = vars(bridge.kernel._state.clock).copy()
         before_inventory = deepcopy(bridge.kernel._state.inventories["actors"]["player"])
+        before_pollution = bridge.kernel._state.situations["night_world"][
+            "actor_states"
+        ]["player"]["pollution"]
 
         result = self._retreat(bridge, battle)
         task = bridge.kernel._state.tasks[task_id]
@@ -32,6 +35,14 @@ class CampusRetreatTests(unittest.TestCase):
         self.assertEqual(before_clock, vars(bridge.kernel._state.clock))
         self.assertLess(
             bridge.kernel._state.population["player"]["vitals"]["health"], before_health
+        )
+        persistent_pollution = bridge.kernel._state.situations["night_world"][
+            "actor_states"
+        ]["player"]["pollution"]
+        self.assertGreater(persistent_pollution, before_pollution)
+        self.assertEqual(
+            persistent_pollution,
+            bridge.kernel._state.battles[battle["battle_id"]]["pollution"]["player"],
         )
         self.assertEqual(before_inventory, bridge.kernel._state.inventories["actors"]["player"])
         self.assertEqual("open", task["state"])

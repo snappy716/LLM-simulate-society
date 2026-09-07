@@ -27,7 +27,11 @@ def load_campus_ability_definitions(
             target=str(profile["target"]),
             range_pattern=str(profile["range_pattern"]),
             base_power=int(profile["base_power"]),
-            effect_ids=tuple(str(value) for value in profile["effect_ids"]),
+            effect_ids=tuple(dict.fromkeys(
+                str(value) for value in [
+                    *profile["effect_ids"], *payload.get("additional_effect_ids", ())
+                ]
+            )),
         )
         definitions[ability_id] = CampusAbilityDefinition(
             ability_id=ability_id,

@@ -62,12 +62,13 @@
       "type": "object",
       "additionalProperties": {
         "type": "object", "additionalProperties": false,
-        "required": ["round", "action_type", "target_row", "power", "speed"],
+        "required": ["round", "action_type", "target_row", "power", "pollution_power", "speed"],
         "properties": {
           "round": {"type": "integer", "minimum": 1},
           "action_type": {"const": "physical_attack"},
           "target_row": {"enum": ["front", "middle", "back"]},
           "power": {"type": "integer", "minimum": 1},
+          "pollution_power": {"type": "integer", "minimum": 0, "maximum": 10},
           "speed": {"type": "integer", "minimum": 0}
         }
       }
