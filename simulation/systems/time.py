@@ -162,6 +162,7 @@ def action_economy_invariant(state: WorldState) -> Iterable[str]:
 def make_advance_phase_handler(
     policy: ActionEconomyPolicy,
     on_phase_started: Optional[Callable[[Any, SimulationCommand], Dict[str, Any]]] = None,
+    on_phase_ending: Optional[Callable[[Any], Any]] = None,
 ):
     def advance(context, command):
         if command.actor_id not in context.state.population:
@@ -185,6 +186,8 @@ def make_advance_phase_handler(
             )
         previous_day = context.state.clock.day
         previous_phase = context.state.clock.phase
+        if on_phase_ending is not None:
+            on_phase_ending(context)
         context.state.clock.advance_phase()
         reset_all_actor_budgets(context.state, policy)
         phase_execution = on_phase_started(context, command) if on_phase_started else {}

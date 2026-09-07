@@ -46,8 +46,11 @@ def finish_expedition(context, task_id, receipt):
             or battle.get("result") != receipt["result"] or "player" in receipt["actor_ids"]):
         raise ValueError("expedition requires an actual resolved NPC battle")
     ledger = _ledger(context.state)
+    from simulation.systems.campus_tasks import phase_index
     for actor_id in receipt["actor_ids"]:
-        ledger["last_participation"][actor_id] = [context.state.clock.day, context.state.clock.phase]
+        previous = ledger["last_participation"].get(actor_id)
+        if previous is None or phase_index(*previous) <= phase_index(receipt["day"], receipt["phase"]):
+            ledger["last_participation"][actor_id] = [receipt["day"], receipt["phase"]]
     plan = ledger["plans"].get(task_id)
     if plan is None or plan["status"] != "reserved":
         return
@@ -111,12 +114,15 @@ def form_npc_expeditions(context, graph, party_policy, party_handler, messaging_
     if state.clock.phase != "evening":
         return {"npc_expeditions_formed": 0}
     ledger = _ledger(state)
+    attempted = ledger.setdefault("attempted_task_ids", [])
     tasks = [task for task in state.tasks.values() if task.get("forum") == "night" and task.get("state") == "locked"
-             and task.get("assignee_id") not in {None, "player"} and task["task_id"] not in ledger["plans"]]
+             and task.get("assignee_id") not in {None, "player"} and task["task_id"] not in ledger["plans"]
+             and task["task_id"] not in attempted]
     for task in tasks:
         leader_id = task["assignee_id"]
         if party_for_actor(state, leader_id) or has_upcoming_departure(state, leader_id) or recovering_from_defeat(state, leader_id):
             continue
+        attempted.append(task["task_id"])
         party = create_party(state, leader_id, party_policy, purpose_id="autonomous_expedition")
         plan = {"task_id": task["task_id"], "party_id": party["party_id"], "leader_id": leader_id, "day": state.clock.day,
                 "phase": "late_night", "member_ids": [leader_id], "status": "reserved", "history": [], "responses": []}
@@ -246,6 +252,9 @@ def expedition_invariant(state):
     try:
         if ledger["schema_version"] != 1:
             errors.append("invalid expedition schema")
+        attempted = ledger.get("attempted_task_ids", [])
+        if not isinstance(attempted, list) or len(set(attempted)) != len(attempted) or any(task not in state.tasks for task in attempted):
+            errors.append("invalid expedition invitation attempts")
         for actor, marker in ledger["last_participation"].items():
             if actor == "player" or actor not in state.population or not isinstance(marker, list) or len(marker) != 2 or type(marker[0]) is not int or marker[0] < 1 or marker[1] not in {"evening", "late_night"}:
                 errors.append("invalid expedition participation marker")

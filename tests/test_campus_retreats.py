@@ -66,6 +66,8 @@ class CampusRetreatTests(unittest.TestCase):
         task = bridge.kernel._state.tasks[task_id]
         task["expires_day"] = 1
         bridge.kernel._state.clock.day = 2
+        from simulation.systems.campus_forum_attention import _ledger
+        _ledger(bridge.kernel._state)  # Keep this explicit time-jump fixture coherent.
         for budget in bridge.kernel._state.action_economy["actors"].values():
             budget["day"] = 2
         for actor in bridge.kernel._state.population.values():

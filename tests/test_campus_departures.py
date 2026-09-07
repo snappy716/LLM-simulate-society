@@ -60,7 +60,15 @@ class CampusDepartureTests(unittest.TestCase):
     def test_current_spent_action_is_not_refunded(self):
         execute(self.bridge, "ADVANCE_PHASE")
         execute(self.bridge, "ADVANCE_PHASE")
-        self.invite()
+        actor_id = self.invite()
+        state = self.bridge.kernel._state
+        if state.action_economy["actors"][actor_id]["major_remaining"]:
+            # New attention choices may leave this candidate free. Explicitly
+            # exercise the spent-action boundary through the shared charger.
+            policy = build_action_economy_policy([{"id": phase, **rule} for phase, rule in state.action_economy["policy"]["phases"].items()])
+            spent = consume_major_action(state, policy, SimulationCommand("spent-before-reserve", actor_id, "SELF_STUDY",
+                state.revision, source="rule", issued_day=state.clock.day, issued_phase=state.clock.phase))
+            self.assertTrue(spent.success, spent.code)
         before = deepcopy(self.bridge.kernel.state.action_economy)
         self.assertFalse(self.reserve()["ok"])
         self.assertEqual(before, self.bridge.kernel.state.action_economy)

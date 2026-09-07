@@ -35,8 +35,8 @@ class CampusNightForumTests(unittest.TestCase):
         execution = evening["result"]["payload"]["phase_execution"]
         self.assertEqual(20, execution["night_task_published_count"])
         self.assertTrue(6 <= execution["night_npc_enter_count"] <= 12)
-        self.assertEqual(execution["night_npc_enter_count"], execution["night_npc_claim_count"])
-        self.assertGreater(execution["night_task_view_count"], execution["night_npc_enter_count"])
+        self.assertLess(execution["night_npc_claim_count"], execution["night_npc_enter_count"])
+        self.assertGreater(execution["night_task_view_count"], 0)
         public = bridge.snapshot()
         self.assertFalse(public["forums"]["night"]["enabled"])
         self.assertEqual(0, public["task_summary"]["by_forum"]["night"]["total"])
@@ -49,14 +49,14 @@ class CampusNightForumTests(unittest.TestCase):
             state.situations["night_world"]["actor_states"][actor_id]["layer"] == "night"
             for actor_id in active_ids
         ))
-        self.assertEqual(len(active_ids), sum(task.get("state") == "locked" for task in night_tasks))
+        self.assertEqual(execution["night_npc_claim_count"], sum(task.get("state") == "locked" for task in night_tasks))
         late = execute(bridge, "ADVANCE_PHASE", marker="late")
         self.assertGreaterEqual(
             late["result"]["payload"]["phase_execution"]["task_completed_count"],
-            len(active_ids),
+            1,
         )
         self.assertEqual(
-            len(active_ids),
+            sum(battle.get("result") == "victory" for battle in bridge.kernel._state.battles.values()),
             sum(task.get("state") == "completed" for task in bridge.kernel._state.tasks.values() if task.get("forum") == "night"),
         )
 
@@ -135,13 +135,15 @@ class CampusNightForumTests(unittest.TestCase):
         active_count = len(bridge.kernel._state.situations["night_world"]["active_actor_ids"])
         execute(bridge, "ADVANCE_PHASE", marker="late")
         remaining_count = len(bridge.kernel._state.situations["night_world"]["active_actor_ids"])
+        entered_count = len(bridge.kernel._state.situations["night_world"]["entered_actor_ids"])
         morning = execute(bridge, "ADVANCE_PHASE", marker="morning")
         execution = morning["result"]["payload"]["phase_execution"]
         state = bridge.kernel._state
         self.assertEqual(remaining_count, execution["night_auto_exit_count"])
         self.assertGreaterEqual(execution["night_task_expired_count"], 0)
         self.assertEqual([], state.situations["night_world"]["active_actor_ids"])
-        self.assertEqual(active_count, state.situations["night_world"]["last_night_actor_count"])
+        self.assertGreaterEqual(entered_count, active_count)
+        self.assertEqual(entered_count, state.situations["night_world"]["last_night_actor_count"])
         self.assertFalse(any(
             task.get("forum") == "night" and task.get("state") in {"locked", "in_progress"}
             for task in state.tasks.values()

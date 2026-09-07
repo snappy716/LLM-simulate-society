@@ -21,7 +21,7 @@ STANDARD = (
     "inventory_flow", "save_flow", "theme_flow", "inspector_layout", "hud_feedback",
     "operation_feedback", "phone_layout", "social_ui", "startup_flow", "ui_request_lifecycle",
 )
-FIXTURES = ("recovery", "trade", "supply", "enemy", "retreat", "pollution", "combat_item", "investigation", "growth", "knowledge", "goals", "assistance", "autonomous", "expedition")
+FIXTURES = ("recovery", "trade", "supply", "enemy", "retreat", "pollution", "combat_item", "investigation", "growth", "knowledge", "goals", "assistance", "autonomous", "expedition", "attention")
 
 
 def unused_port():
@@ -43,6 +43,7 @@ def main():
         (work / "saves").mkdir()
         port = unused_port()
         environment = dict(os.environ, GODOT_SIM_PORT=str(port),
+                           GODOT_SIM_DISABLE_SOCIAL_PULSE="0" if flow == "attention" else "1",
                            GODOT_SIM_SAVE_DIR=str(work / "saves"),
                            GODOT_SIM_SETTINGS_PATH=str(work / "settings.cfg"))
         environment.pop("GODOT_COMBAT_ITEM_INSPECT", None)

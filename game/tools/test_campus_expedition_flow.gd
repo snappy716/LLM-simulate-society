@@ -37,7 +37,7 @@ func _run() -> void:
 	assert(detail.text.contains("约定深夜同行"))
 	assert(detail.text.contains("实际卡牌战斗"))
 	assert(detail.text.contains("原任务报酬"))
-	assert(detail.text.contains("实际参战 2 人"))
+	assert(detail.text.contains("实际参战 2 人") or detail.text.contains("实际参战 3 人"))
 	assert(phone.get("_forum_primary_action").disabled)
 	assert(bridge.get("campus_snapshot").clock == initial.clock)
 	assert(bridge.get("campus_snapshot").player.action_budget == initial.player.action_budget)

@@ -1052,7 +1052,7 @@ func _refresh_forum_channels() -> void:
 			else "夜相频道 · 当前仅可查看记录；进入夜相后才能接取和执行。"
 		)
 	else:
-		_forum_access_note.text = "校园公开频道 · 委托会被玩家与 NPC 持续浏览、锁定和完成。"
+		_forum_access_note.text = "校园公开频道 · NPC 会陆续查看、考虑和接单。查看手机不消耗时段，其他人仍会继续浏览。"
 
 
 func _show_forum_list() -> void:
@@ -1065,6 +1065,11 @@ func _show_forum_list() -> void:
 func _refresh_forum_list() -> void:
 	if _forum_cards == null:
 		return
+	var scroll_position := _app_scroll.scroll_vertical
+	var focused_task := ""
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused != null and focused.has_meta("forum_task_id"):
+		focused_task = String(focused.get_meta("forum_task_id"))
 	for child in _forum_cards.get_children():
 		_forum_cards.remove_child(child)
 		child.queue_free()
@@ -1096,12 +1101,16 @@ func _refresh_forum_list() -> void:
 		card.add_theme_stylebox_override("normal", _task_card_style(task))
 		card.pressed.connect(_open_task_detail.bind(String(task.get("task_id", ""))))
 		_forum_cards.add_child(card)
+		card.set_meta("forum_task_id", String(task.get("task_id", "")))
+		if String(task.get("task_id", "")) == focused_task:
+			card.grab_focus()
 	if visible_tasks.is_empty():
 		var empty := Label.new()
-		empty.text = "这个分类暂时没有任务。\n推进时段后，论坛状态会继续变化。"
+		empty.text = "这个分类暂时没有任务。\nNPC 的浏览和接单仍会陆续更新，新委托随校园事件发布。"
 		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_forum_cards.add_child(empty)
+	_app_scroll.set_deferred("scroll_vertical", scroll_position)
 
 
 func _task_matches_filter(task: Dictionary) -> bool:
@@ -1311,12 +1320,18 @@ func _on_task_operation_completed(success: bool, result: Dictionary, _action_id:
 func _on_campus_snapshot_updated(_snapshot: Dictionary) -> void:
 	if not _opened:
 		return
+	# Passive forum traffic must not rebuild a hand of cards or a chat form
+	# while the player is choosing a target or typing.
+	if SimulationBridge.last_campus_update_kind == "social_pulse" and not _forum_root.visible:
+		return
 	_refresh_clock()
 	if _forum_root.visible:
 		if _selected_task_id.is_empty():
 			_refresh_forum_list()
 		else:
+			var detail_scroll := _forum_detail.get_v_scroll_bar().value
 			_refresh_forum_detail()
+			_forum_detail.get_v_scroll_bar().set_deferred("value", detail_scroll)
 	elif _club_root.visible:
 		_refresh_club_page()
 	elif _party_root.visible:

@@ -26,19 +26,30 @@ class ExpeditionTests(unittest.TestCase):
         cls.bridge = CampusKernelBridge(46)
         cls.initial, cls.initial_rng = cls.bridge.kernel.capture_checkpoint()
         cls.events = []
-        for index in range(11):
+        for index in range(2):
             state = cls.bridge.kernel.state
             result = cls.bridge.kernel.execute(SimulationCommand(f"expedition-natural:{index}", "player", "ADVANCE_PHASE",
                 state.revision, issued_day=state.clock.day, issued_phase=state.clock.phase))
             assert result.success, result.code
             cls.events.extend(result.events)
-            if index == 9:
-                cls.reserved, cls.reserved_rng = cls.bridge.kernel.capture_checkpoint()
+        for index in range(16):
+            state = cls.bridge.kernel.state
+            if any(plan["status"] == "reserved" for plan in state.cognition["night_expeditions"]["plans"].values()):
+                break
+            result = cls.bridge.kernel.execute(SimulationCommand(f"expedition-attention:{index}", "player", "ADVANCE_SOCIAL_PULSE",
+                state.revision, issued_day=state.clock.day, issued_phase=state.clock.phase))
+            assert result.success, result.code
+            cls.events.extend(result.events)
+        cls.reserved, cls.reserved_rng = cls.bridge.kernel.capture_checkpoint()
+        cls.plan_id = next(key for key, plan in cls.reserved.cognition["night_expeditions"]["plans"].items() if plan["status"] == "reserved")
+        state = cls.bridge.kernel.state
+        result = cls.bridge.kernel.execute(SimulationCommand("expedition-natural:resolve", "player", "ADVANCE_PHASE",
+            state.revision, issued_day=state.clock.day, issued_phase=state.clock.phase))
+        assert result.success, result.code
+        cls.events.extend(result.events)
         cls.completed, cls.completed_rng = cls.bridge.kernel.capture_checkpoint()
         cls.graph = load_campus_location_graph(cls.bridge.registry)
         cls.messaging = load_campus_messaging_policy(cls.bridge.registry)
-        cls.plan_id = next(key for key, plan in cls.completed.cognition["night_expeditions"]["plans"].items()
-                           if plan["status"] == "completed" and len(plan["actual_member_ids"]) > 1)
 
     def setUp(self):
         self.state, self.rng = deepcopy(self.reserved), deepcopy(self.reserved_rng)
@@ -53,14 +64,15 @@ class ExpeditionTests(unittest.TestCase):
     def form_again(self):
         self.state.parties.pop(self.plan["party_id"], None)
         self.state.cognition["night_expeditions"]["plans"].pop(self.plan_id)
+        self.state.cognition["night_expeditions"]["attempted_task_ids"].remove(self.plan_id)
         context = self.context()
         form_npc_expeditions(context, self.graph, party_policy_from_state(self.state),
                              self.bridge.kernel._handlers["INVITE_PARTY_MEMBER"], self.messaging)
         return context
 
-    def test_three_days_naturally_form_and_execute_without_player_or_llm(self):
+    def test_attention_naturally_forms_and_executes_without_player_or_llm(self):
         plan = self.completed.cognition["night_expeditions"]["plans"][self.plan_id]
-        self.assertEqual(3, plan["day"])
+        self.assertEqual(self.reserved.clock.day, plan["day"])
         self.assertEqual(plan["member_ids"], plan["actual_member_ids"])
         battle = self.completed.battles[plan["battle_id"]]
         self.assertEqual("victory", battle["result"])
@@ -89,6 +101,9 @@ class ExpeditionTests(unittest.TestCase):
         finish_expedition(self.context(), self.plan_id, receipt)
         self.assertEqual(before.population, self.state.population)
         self.assertEqual(before.cognition, self.state.cognition)
+        self.state.clock.day += 1
+        finish_expedition(self.context(), self.plan_id, receipt)
+        self.assertEqual(before.cognition, self.state.cognition)
         with self.assertRaises(ValueError):
             finish_expedition(self.context(), self.plan_id, {**receipt, "battle_id": "invented"})
 
@@ -102,12 +117,12 @@ class ExpeditionTests(unittest.TestCase):
         self.assertFalse(any(self.helper in party["member_ids"] for party in self.state.parties.values()))
 
     def test_protected_duty_blocks_invitation(self):
-        self.state.population[self.helper]["weekly_schedule"]["2"]["late_night"]["priority"] = 100
+        self.state.population[self.helper]["weekly_schedule"][str((self.plan["day"] - 1) % 7)]["late_night"]["priority"] = 100
         self.form_again()
         self.assertFalse(any(self.helper in party["member_ids"] for party in self.state.parties.values()))
 
     def test_expiry_releases_party_without_reward_and_only_once(self):
-        self.state.clock.day = 4
+        self.state.clock.day = self.plan["day"] + 1
         self.state.clock.phase = "morning"
         wealth = {key: actor["wealth"] for key, actor in self.state.population.items()}
         upkeep_expeditions(self.context())
@@ -173,9 +188,10 @@ class ExpeditionTests(unittest.TestCase):
         actor.pop("current_activity", None)
         actor.pop("current_decision", None)
         for member in self.plan["member_ids"]:
-            self.state.action_economy["actors"][member].update(day=3, phase="late_night", major_remaining=1, night_combat_paid=False)
+            self.state.action_economy["actors"][member].update(day=self.plan["day"], phase="late_night", major_remaining=1, night_combat_paid=False)
         if helper_exhausted:
-            self.state.action_economy["actors"][self.helper].update(major_remaining=0)
+            for member in self.plan["member_ids"][1:]:
+                self.state.action_economy["actors"][member].update(major_remaining=0)
         if force_defeat:
             for member in self.plan["member_ids"]:
                 self.state.population[member]["vitals"]["health"] = 1
@@ -184,10 +200,10 @@ class ExpeditionTests(unittest.TestCase):
                 enemy.update(max_health=10000, speed=1000)
         context = self.context()
         command = SimulationCommand("expedition-boundary", self.leader, "EXECUTE_NPC_NIGHT_TASK", self.state.revision,
-            parameters={"task_id": self.plan_id}, source="rule", issued_day=3, issued_phase="late_night")
+            parameters={"task_id": self.plan_id}, source="rule", issued_day=self.plan["day"], issued_phase="late_night")
         result = self.bridge.kernel._handlers["EXECUTE_NPC_NIGHT_TASK"](context, command)
         self.assertTrue(result.success, result.code)
-        events = [SimulationEvent(**asdict(draft), event_id=f"boundary:{index}", day=3, phase="late_night",
+        events = [SimulationEvent(**asdict(draft), event_id=f"boundary:{index}", day=self.plan["day"], phase="late_night",
                   minute=0, world_revision=self.state.revision, command_id=command.command_id)
                   for index, draft in enumerate(context.event_drafts)]
         project_growth_events(self.state, events)
@@ -211,7 +227,7 @@ class ExpeditionTests(unittest.TestCase):
         self.assertEqual("defeat", battle["result"])
         self.assertEqual({}, self.plan.get("settled_rewards", {}))
         self.assertEqual(wealth, {member: self.state.population[member]["wealth"] for member in self.plan["member_ids"]})
-        self.assertEqual((3, "late_night"), (self.state.clock.day, self.state.clock.phase))
+        self.assertEqual((self.plan["day"], "late_night"), (self.state.clock.day, self.state.clock.phase))
         self.assertNotIn(self.plan["party_id"], self.state.parties)
 
     def test_checkpoint_replays_real_cooperative_battle_deterministically(self):
@@ -221,7 +237,7 @@ class ExpeditionTests(unittest.TestCase):
             loaded = load_kernel_checkpoint(path)
         self.bridge.kernel.restore_checkpoint(loaded.state, loaded.rng, expected_revision=self.bridge.kernel.state.revision)
         state = self.bridge.kernel.state
-        result = self.bridge.kernel.execute(SimulationCommand("expedition-natural:10", "player", "ADVANCE_PHASE",
+        result = self.bridge.kernel.execute(SimulationCommand("expedition-natural:resolve", "player", "ADVANCE_PHASE",
             state.revision, issued_day=state.clock.day, issued_phase=state.clock.phase))
         self.assertTrue(result.success, result.code)
         after = self.bridge.kernel.state
@@ -233,7 +249,7 @@ class ExpeditionTests(unittest.TestCase):
         self.bridge.kernel.restore_checkpoint(self.reserved, self.reserved_rng, expected_revision=self.bridge.kernel.state.revision)
         before = self.bridge.kernel.state
         result = self.bridge.kernel.execute(SimulationCommand("expedition-cancel", self.leader, "CANCEL_PARTY_DEPARTURE",
-            before.revision, source="rule", issued_day=3, issued_phase="evening"))
+            before.revision, source="rule", issued_day=before.clock.day, issued_phase="evening"))
         self.assertTrue(result.success, result.code)
         after = self.bridge.kernel.state
         self.assertEqual("cancelled", after.cognition["night_expeditions"]["plans"][self.plan_id]["status"])

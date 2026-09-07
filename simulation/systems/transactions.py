@@ -49,10 +49,15 @@ class TransactionContext:
         self.rng = rng
         self.command = command
         self._event_drafts: list[EventDraft] = []
+        self._event_times: list[Tuple[int, str, int]] = []
 
     @property
     def event_drafts(self) -> Tuple[EventDraft, ...]:
         return tuple(self._event_drafts)
+
+    @property
+    def event_times(self) -> Tuple[Tuple[int, str, int], ...]:
+        return tuple(self._event_times)
 
     def emit(
         self,
@@ -83,6 +88,7 @@ class TransactionContext:
             correlation_id=correlation_id,
         )
         self._event_drafts.append(draft)
+        self._event_times.append((self.state.clock.day, self.state.clock.phase, self.state.clock.minute))
         return draft
 
 
@@ -211,7 +217,7 @@ class WorldKernel:
                 next_revision = self._state.revision + 1
                 draft_state.revision = next_revision
                 events = self._materialize_events(
-                    command, context.event_drafts, draft_state, next_revision
+                    command, context.event_drafts, draft_state, next_revision, context.event_times
                 )
                 for projector in self._event_projectors:
                     projector(draft_state, events)
@@ -266,16 +272,18 @@ class WorldKernel:
         drafts: Iterable[EventDraft],
         state: WorldState,
         next_revision: int,
+        event_times: Optional[Tuple[Tuple[int, str, int], ...]] = None,
     ) -> Tuple[SimulationEvent, ...]:
         events: list[SimulationEvent] = []
-        for draft in drafts:
+        for index, draft in enumerate(drafts):
             state.event_sequence += 1
+            day, phase, minute = event_times[index] if event_times is not None else (state.clock.day, state.clock.phase, state.clock.minute)
             events.append(SimulationEvent(
                 event_id=f"evt:{state.event_sequence:010d}",
                 event_type=draft.event_type,
-                day=state.clock.day,
-                phase=state.clock.phase,
-                minute=state.clock.minute,
+                day=day,
+                phase=phase,
+                minute=minute,
                 world_revision=next_revision,
                 command_id=command.command_id,
                 public_summary=draft.public_summary,

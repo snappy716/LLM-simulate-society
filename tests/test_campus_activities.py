@@ -5,6 +5,9 @@ import unittest
 from pathlib import Path
 
 from simulation.api.server import SimulationBridge
+from simulation.systems.campus_expeditions import already_fought_this_phase
+from simulation.systems.campus_enemy_turns import recovering_from_defeat
+from simulation.systems.campus_departures import active_departure
 
 
 class CampusActivityExecutionTests(unittest.TestCase):
@@ -68,13 +71,19 @@ class CampusActivityExecutionTests(unittest.TestCase):
         result = self.advance("to-late-night")
         execution = result["result"]["payload"]["phase_execution"]
         self.assertGreater(execution["free_activity_count"], execution["major_activity_count"])
-        self.assertEqual(200, execution["free_activity_count"] + execution["major_activity_count"])
-        self.assertEqual(0, execution["blocked_actor_count"])
+        self.assertEqual(200, execution["free_activity_count"] + execution["major_activity_count"]
+                         + execution["blocked_actor_count"] + execution["combat_engaged_actor_count"]
+                         + execution["recovering_actor_count"] + execution["expedition_engaged_actor_count"])
 
         state = self.bridge.campus.kernel.state
         self.assertEqual("late_night", state.clock.phase)
         for actor_id, actor in state.population.items():
             if actor_id == "player":
+                continue
+            if not actor.get("current_activity") or actor["current_activity"]["status"] == "blocked":
+                self.assertTrue(already_fought_this_phase(state, actor_id)
+                                or recovering_from_defeat(state, actor_id)
+                                or active_departure(state, actor_id), actor_id)
                 continue
             activity = actor["current_activity"]
             if activity["action_class"] == "free":

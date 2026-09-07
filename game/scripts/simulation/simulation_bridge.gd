@@ -33,8 +33,10 @@ var _request: HTTPRequest
 var _campus_request: HTTPRequest
 var _chronicle_request: HTTPRequest
 var _retry_timer: Timer
+var _social_timer: Timer
 var _pending_operation := ""
 var campus_snapshot: Dictionary = {}
+var last_campus_update_kind := ""
 var _campus_busy := false
 var _campus_pending_operation := ""
 var _campus_pending_passage_id := ""
@@ -88,6 +90,12 @@ func _ready() -> void:
 	_retry_timer.wait_time = 1.0
 	_retry_timer.timeout.connect(_request_snapshot)
 	add_child(_retry_timer)
+	_social_timer = Timer.new()
+	_social_timer.wait_time = 4.0
+	_social_timer.timeout.connect(advance_social_pulse)
+	add_child(_social_timer)
+	if OS.get_environment("GODOT_SIM_DISABLE_SOCIAL_PULSE") != "1":
+		_social_timer.start()
 	if OS.get_environment("GODOT_SIM_EXTERNAL_SERVER") != "1":
 		_start_server()
 	_retry_timer.start()
@@ -147,6 +155,27 @@ func refresh_campus_snapshot() -> void:
 	_campus_busy = true
 	_campus_pending_operation = "snapshot"
 	var error := _campus_request.request(_base_url + "/kernel/campus-snapshot")
+	if error != OK:
+		_campus_busy = false
+		_campus_pending_operation = ""
+
+
+func advance_social_pulse() -> void:
+	if _campus_busy or busy or not connected or campus_snapshot.is_empty():
+		return
+	_campus_command_counter += 1
+	var clock: Dictionary = campus_snapshot.get("clock", {})
+	var command := {
+		"command_id": "godot-social-%d-%d" % [Time.get_ticks_usec(), _campus_command_counter],
+		"actor_id": "player", "action_id": "ADVANCE_SOCIAL_PULSE", "target_ids": [], "parameters": {},
+		"expected_world_revision": int(campus_snapshot.get("revision", 1)),
+		"issued_day": int(clock.get("day", 1)), "issued_phase": String(clock.get("phase", "morning")),
+		"issued_minute": int(clock.get("minute", 0)), "source": "player",
+	}
+	_campus_busy = true
+	_campus_pending_operation = "social_pulse"
+	var error := _campus_request.request(_base_url + "/kernel/command",
+		PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, JSON.stringify(command))
 	if error != OK:
 		_campus_busy = false
 		_campus_pending_operation = ""
@@ -797,6 +826,7 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
 		_finish_with_error("连接目标不是校园服务，请关闭旧服务后重试。")
 		return
 	campus_snapshot = parsed
+	last_campus_update_kind = "snapshot"
 	connected = true
 	_retry_timer.stop()
 	connection_state_changed.emit(true, "校园服务已连接")
@@ -872,6 +902,7 @@ func _on_campus_request_completed(
 		var success := response_code == 200 and bool(response.get("ok", false))
 		if success and response.get("snapshot") is Dictionary:
 			campus_snapshot = response.snapshot
+			last_campus_update_kind = "persistence"
 			campus_snapshot_updated.emit(campus_snapshot)
 		campus_persistence_completed.emit(success, response)
 		if success and response.get("operation") == "load":
@@ -930,11 +961,13 @@ func _on_campus_request_completed(
 		return
 	if operation == "snapshot":
 		campus_snapshot = parsed
+		last_campus_update_kind = "snapshot"
 		campus_snapshot_updated.emit(campus_snapshot)
 		return
 	var updated_snapshot = parsed.get("snapshot", {})
 	if updated_snapshot is Dictionary:
 		campus_snapshot = updated_snapshot
+		last_campus_update_kind = operation
 		campus_snapshot_updated.emit(campus_snapshot)
 	if operation == "inventory":
 		campus_inventory_operation_completed.emit(bool(parsed.get("ok", false)), parsed)

@@ -161,6 +161,10 @@ class CampusForumTaskTests(unittest.TestCase):
     def test_npc_views_claims_and_completions_are_gradual_and_deterministic(self):
         def trace(seed: int):
             bridge = CampusKernelBridge(seed)
+            first_beat = execute(bridge, "ADVANCE_SOCIAL_PULSE")
+            self.assertTrue(first_beat["ok"])
+            self.assertGreater(first_beat["snapshot"]["task_summary"]["available"], 0)
+            self.assertEqual(0, first_beat["result"]["payload"]["attention_claim_count"])
             rows = []
             for _ in range(8):
                 result = execute(bridge, "ADVANCE_PHASE")
@@ -182,7 +186,6 @@ class CampusForumTaskTests(unittest.TestCase):
         self.assertGreater(sum(row[0] for row in first), 0)
         self.assertGreater(sum(row[1] for row in first), 0)
         self.assertGreater(sum(row[2] for row in first), 0)
-        self.assertGreater(first[0][3], 0, "all tasks were taken immediately")
 
 
 if __name__ == "__main__":

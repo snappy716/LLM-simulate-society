@@ -544,7 +544,7 @@ def advance_surface_forum(
     templates: Mapping[str, Mapping[str, Any]],
     policy: CampusForumPolicy,
 ) -> Dict[str, int]:
-    """Publish, expire, browse, and atomically claim tasks at each phase start."""
+    """Publish and expire tasks; staged attention owns browsing and claiming."""
     rng = context.rng.stream("campus_forum")
     summary = {
         "forum_published_count": 0,
@@ -593,87 +593,6 @@ def advance_surface_forum(
         emergent = publish_emergent_surface_tasks(context, templates, policy)
         summary["forum_emergent_published_count"] = len(emergent)
 
-    now = phase_index(context.state.clock.day, context.state.clock.phase)
-    npc_ids = [actor_id for actor_id in sorted(context.state.population) if actor_id != "player"]
-    for task_id in sorted(context.state.tasks):
-        task = context.state.tasks[task_id]
-        if (
-            not isinstance(task, dict)
-            or task.get("forum") != "surface"
-            or task.get("state") not in AVAILABLE_STATES
-        ):
-            continue
-        candidates = [
-            actor_id for actor_id in npc_ids
-            if not _actor_has_active_task(context.state, actor_id)
-            and actor_id != task.get("issuer_id")
-        ]
-        if not candidates:
-            continue
-        unseen = [actor_id for actor_id in candidates if actor_id not in task["viewer_ids"]]
-        view_count = min(
-            len(unseen),
-            rng.randint(policy.npc_viewers_per_phase_min, policy.npc_viewers_per_phase_max),
-        )
-        for actor_id in rng.sample(unseen, view_count):
-            task["viewer_ids"].append(actor_id)
-            summary["forum_new_view_count"] += 1
-        if task["viewer_ids"] and task.get("state") == "open":
-            task["state"] = "viewed"
-
-        ranked = sorted(
-            (
-                (_candidate_score(context.state, graph, task, actor_id), actor_id)
-                for actor_id in task["viewer_ids"]
-                if actor_id in candidates
-            ),
-            key=lambda item: (-item[0], item[1]),
-        )
-        for _, actor_id in ranked[: min(3, len(ranked))]:
-            if actor_id not in task["considering_ids"]:
-                task["considering_ids"].append(actor_id)
-                summary["forum_consider_count"] += 1
-        if task["considering_ids"] and task.get("state") in {"open", "viewed"}:
-            task["state"] = "considering"
-
-        if now < int(task.get("npc_claim_phase_index", now + 1)):
-            continue
-        claimant = next(
-            (
-                actor_id for _, actor_id in ranked
-                if actor_id in task["considering_ids"]
-                and not _actor_has_active_task(context.state, actor_id)
-                and not has_upcoming_departure(context.state, actor_id)
-                and not recovering_from_defeat(context.state, actor_id)
-            ),
-            None,
-        )
-        if claimant is None:
-            continue
-        task["assignee_id"] = claimant
-        task["state"] = "locked"
-        task["lock_revision"] = int(task.get("lock_revision", 0)) + 1
-        task["npc_execute_after_phase_index"] = now + policy.npc_execute_delay_phases
-        assignee = context.state.population[claimant]
-        assignee["active_forum_task_id"] = task_id
-        task.setdefault("history", []).append(
-            _history(
-                context.state.clock.day,
-                context.state.clock.phase,
-                "claimed",
-                f"{assignee.get('display_name', claimant)} 接下了任务。",
-            )
-        )
-        summary["forum_npc_claim_count"] += 1
-        context.emit(
-            "FORUM_TASK_CLAIMED",
-            f"{assignee.get('display_name', claimant)} 接下了《{task['title']}》。",
-            actor_ids=[claimant],
-            target_ids=[task["issuer_id"]],
-            scene_id=task["scene_id"],
-            payload={"task_id": task_id, "forum": "surface"},
-            knowledge_tags=["forum", "task"],
-        )
     return summary
 
 
@@ -906,6 +825,14 @@ def make_forum_task_handler(activity_handler):
             return TransactionOutcome(True, True, "success", "已查看任务。", commit=True)
 
         if action == "CLAIM_FORUM_TASK":
+            if command.actor_id != "player":
+                if command.source != "rule":
+                    return TransactionOutcome(False, False, "npc_control_required", "不能替其他角色接取任务。")
+                from simulation.systems.campus_schedules import current_schedule_slot
+                if (has_upcoming_departure(context.state, command.actor_id)
+                        or recovering_from_defeat(context.state, command.actor_id)
+                        or current_schedule_slot(context.state, command.actor_id).get("priority", 0) >= 90):
+                    return TransactionOutcome(False, False, "npc_commitment_conflict", "当前职责或承诺不允许接取。")
             expected = command.parameters.get("expected_task_revision")
             if isinstance(expected, bool) or not isinstance(expected, int):
                 return TransactionOutcome(False, False, "missing_task_revision", "缺少任务版本。")
@@ -919,15 +846,18 @@ def make_forum_task_handler(activity_handler):
                 task["viewer_ids"].append(command.actor_id)
             task["assignee_id"] = command.actor_id
             task["state"] = "locked"
+            task["considering_ids"] = []
             task["lock_revision"] = expected + 1
-            task["npc_execute_after_phase_index"] = None
+            task["npc_execute_after_phase_index"] = (phase_index(context.state.clock.day, context.state.clock.phase) + 1
+                                                     if command.actor_id != "player" else None)
             actor["active_forum_task_id"] = task_id
+            name = "玩家" if command.actor_id == "player" else actor.get("display_name", command.actor_id)
             task.setdefault("history", []).append(
-                _history(context.state.clock.day, context.state.clock.phase, "claimed", "玩家接下了任务。")
+                _history(context.state.clock.day, context.state.clock.phase, "claimed", f"{name}接下了任务。")
             )
             context.emit(
                 "FORUM_TASK_CLAIMED",
-                f"玩家接下了《{task['title']}》。",
+                f"{name}接下了《{task['title']}》。",
                 actor_ids=[command.actor_id],
                 target_ids=[task["issuer_id"]],
                 scene_id=task["scene_id"],

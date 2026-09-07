@@ -49,6 +49,20 @@ def credit_handler(context, request):
 
 
 class WorldKernelTests(unittest.TestCase):
+    def test_cross_phase_transaction_preserves_each_event_occurrence_time(self):
+        kernel = self.make_kernel()
+        def cross_phase(context, request):
+            context.emit("BEFORE_PHASE", "Observed before advancing")
+            context.state.clock.advance_phase()
+            context.emit("AFTER_PHASE", "Observed after advancing")
+            return TransactionOutcome(True, True, "success", "advanced", commit=True)
+        kernel.register_handler("TEST_CROSS_PHASE", cross_phase)
+        request = SimulationCommand("cross-phase", "player", "TEST_CROSS_PHASE", 1)
+        result = kernel.execute(request)
+        self.assertEqual(["morning", "afternoon"], [event.phase for event in result.events])
+        self.assertEqual([2, 2], [event.world_revision for event in result.events])
+        self.assertEqual(result.events, kernel.execute(request).events)
+
     def make_kernel(self, *, sink=None) -> WorldKernel:
         state = WorldState(inventories={"player": {"money": 10}})
         kernel = WorldKernel(state, event_sink=sink)

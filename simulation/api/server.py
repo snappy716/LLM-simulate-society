@@ -258,7 +258,6 @@ class CampusKernelBridge:
             ))
             summary.update(advance_club_upkeep(context, club_policy))
             summary.update(advance_party_commitments(context, party_policy))
-            summary.update(form_npc_expeditions(context, graph, party_policy, party_handler, messaging_policy))
             summary.update(prepare_npc_combat_supplies(context, graph, traverse_handler, inventory_handler))
             self.cognition_runtime.publish_status(context.state)
             summary.update(advance_cognition_phase(context, cognition_policy))
@@ -266,12 +265,29 @@ class CampusKernelBridge:
             summary.update(advance_assistance_upkeep(context))
             return summary
 
-        phase_upkeep = make_surface_forum_phase_upkeep(
+        forum_phase_upkeep = make_surface_forum_phase_upkeep(
             graph,
             task_templates,
             forum_policy,
             campus_phase_upkeep,
         )
+        from simulation.systems.campus_forum_attention import advance_forum_attention, make_attention_handler, attention_invariant
+        def social_attention(context):
+            from simulation.systems.campus_expeditions import form_npc_expeditions
+            summary = advance_forum_attention(context, graph, task_handler)
+            summary.update(form_npc_expeditions(context, graph, party_policy, party_handler, messaging_policy))
+            return summary
+        def phase_upkeep(context):
+            summary = forum_phase_upkeep(context)
+            for _ in range(4):
+                for key, value in social_attention(context).items():
+                    summary[key] = summary.get(key, 0) + value
+            return summary
+        def finish_phase_attention(context):
+            # Offline/headless worlds also resolve pending consideration. These
+            # are simulation work steps, not extra minutes or player actions.
+            for _ in range(12):
+                social_attention(context)
         self.kernel = WorldKernel(state, rng=rng_pool)
         self.kernel.add_invariant(campus_vitals_invariant)
         self.kernel.register_handler("USE_RECOVERY_SKILL", make_field_recovery_handler())
@@ -371,8 +387,11 @@ class CampusKernelBridge:
                         **advance_assistance_deliveries(context, messaging_policy),
                     },
                 ),
+                on_phase_ending=finish_phase_attention,
         )
         self.kernel.register_handler("ADVANCE_PHASE", advance_phase_handler)
+        self.kernel.register_handler("ADVANCE_SOCIAL_PULSE", make_attention_handler(social_attention))
+        self.kernel.add_invariant(attention_invariant)
         for activity_id in sorted(activity_definitions):
             self.kernel.register_handler(activity_id, activity_handler)
         task_handler = make_forum_task_handler(activity_handler)

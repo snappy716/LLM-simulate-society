@@ -253,87 +253,6 @@ def _task_score(
     return score
 
 
-def _assign_night_tasks(
-    context,
-    graph: CampusLocationGraph,
-    policy: CampusNightWorldPolicy,
-) -> Dict[str, int]:
-    state = context.state
-    aggregate = state.situations["night_world"]
-    if state.clock.phase not in policy.entry_phases or aggregate.get("active_day") != state.clock.day:
-        return {"night_task_view_count": 0, "night_npc_claim_count": 0}
-    rng = context.rng.stream("campus_night_forum")
-    viewed = 0
-    claimed = 0
-    for actor_id in aggregate.get("active_actor_ids", ()):
-        if _actor_has_active_task(state, actor_id) or has_upcoming_departure(state, actor_id):
-            continue
-        schedule = current_schedule_slot(state, actor_id)
-        if schedule and int(schedule.get("priority", 0)) >= 90:
-            continue
-        candidates = [
-            task
-            for task in state.tasks.values()
-            if isinstance(task, dict)
-            and task.get("forum") == "night"
-            and task.get("state") in AVAILABLE_STATES
-            and task.get("issuer_id") != actor_id
-        ]
-        if not candidates:
-            break
-        unseen = [task for task in candidates if actor_id not in task.get("viewer_ids", ())]
-        view_count = min(
-            len(unseen),
-            rng.randint(policy.task_views_per_npc_min, policy.task_views_per_npc_max),
-        )
-        for task in rng.sample(unseen, view_count):
-            task["viewer_ids"].append(actor_id)
-            if task["state"] == "open":
-                task["state"] = "viewed"
-            viewed += 1
-        ranked = sorted(
-            (
-                (score, str(task["task_id"]), task)
-                for task in candidates
-                if actor_id in task.get("viewer_ids", ())
-                for score in [_task_score(state, graph, actor_id, task)]
-                if score is not None
-            ),
-            key=lambda item: (-item[0], item[1]),
-        )
-        if not ranked:
-            continue
-        task = ranked[0][2]
-        if actor_id not in task["considering_ids"]:
-            task["considering_ids"].append(actor_id)
-        task["assignee_id"] = actor_id
-        task["state"] = "locked"
-        task["lock_revision"] = int(task.get("lock_revision", 0)) + 1
-        task["npc_execute_after_phase_index"] = (
-            phase_index(state.clock.day, state.clock.phase) + policy.npc_execute_delay_phases
-        )
-        state.population[actor_id]["active_forum_task_id"] = task["task_id"]
-        task["history"].append(
-            _history(
-                state.clock.day,
-                state.clock.phase,
-                "claimed",
-                f"{state.population[actor_id].get('display_name', actor_id)} 接下了任务。",
-            )
-        )
-        context.emit(
-            "FORUM_TASK_CLAIMED",
-            f"{state.population[actor_id].get('display_name', actor_id)} 接下了《{task['title']}》。",
-            actor_ids=[actor_id],
-            target_ids=[task["issuer_id"]],
-            scene_id=task["scene_id"],
-            payload={"task_id": task["task_id"], "forum": "night", "world_layer": "night"},
-            visibility="secret",
-            severity=3,
-            knowledge_tags=["forum", "task", "night"],
-        )
-        claimed += 1
-    return {"night_task_view_count": viewed, "night_npc_claim_count": claimed}
 
 
 def _expire_previous_night(context) -> int:
@@ -390,7 +309,7 @@ def advance_campus_night_forum(
     policy: CampusNightWorldPolicy,
     social_consequences: Mapping[str, Mapping[str, Any]],
 ) -> Dict[str, int]:
-    """Publish, populate, browse, and claim the restricted forum each phase."""
+    """Publish/expire the restricted board and admit autonomous night actors."""
     summary = {
         "night_task_published_count": 0,
         "night_task_expired_count": _expire_previous_night(context),
@@ -402,7 +321,6 @@ def advance_campus_night_forum(
     summary["night_task_published_count"] = len(published)
     entered = _enter_autonomous_npcs(context, policy)
     summary["night_npc_enter_count"] = len(entered)
-    summary.update(_assign_night_tasks(context, graph, policy))
     return summary
 
 
