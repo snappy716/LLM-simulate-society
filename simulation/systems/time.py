@@ -166,6 +166,19 @@ def make_advance_phase_handler(
     def advance(context, command):
         if command.actor_id not in context.state.population:
             return TransactionOutcome(False, False, "unknown_actor", "行动者不存在。")
+        active_battle_id = context.state.metadata.get("campus_combat", {}).get(
+            "active_battle_by_actor", {}
+        ).get(command.actor_id)
+        active_battle = context.state.battles.get(str(active_battle_id or ""), {})
+        if (
+            command.source == "player"
+            and isinstance(active_battle, dict)
+            and active_battle.get("phase") not in {None, "setup", "ready", "resolved"}
+        ):
+            return TransactionOutcome(
+                False, False, "active_combat_blocks_time_advance",
+                "正式战斗中不能推进世界时段；请继续战斗或选择主动撤退。",
+            )
         if command.issued_day != context.state.clock.day or command.issued_phase != context.state.clock.phase:
             return TransactionOutcome(
                 False, False, "command_clock_mismatch", "推进时段的指令已经过期。"

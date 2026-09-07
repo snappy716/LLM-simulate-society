@@ -96,7 +96,7 @@ class CampusDepartureTests(unittest.TestCase):
             self.assertEqual(0, state.action_economy["actors"][actor_id]["major_remaining"])
             self.assertTrue(state.action_economy["actors"][actor_id]["night_combat_paid"])
 
-    def test_paid_marker_and_reservations_survive_disk_save_and_phase_reset(self):
+    def test_paid_marker_and_reservations_survive_disk_save_then_reset_after_retreat(self):
         battle = deploy_and_start(self.bridge, teammate_count=2)
         state, rng = self.bridge.kernel.capture_checkpoint()
         with tempfile.TemporaryDirectory() as directory:
@@ -108,7 +108,16 @@ class CampusDepartureTests(unittest.TestCase):
         assessment = night_combat_entry_cost(loaded.state, battle["participant_ids"])
         self.assertTrue(assessment["allowed"])
         self.assertEqual([], assessment["due_actor_ids"])
-        execute(self.bridge, "ADVANCE_PHASE")
+        blocked = execute(self.bridge, "ADVANCE_PHASE")
+        self.assertFalse(blocked["ok"])
+        self.assertEqual("active_combat_blocks_time_advance", blocked["result"]["code"])
+        current = self.bridge.snapshot()["combat"]["active_battle"]
+        retreated = combat_execute(self.bridge, "RETREAT_CARD_COMBAT", {
+            "battle_id": current["battle_id"],
+            "expected_battle_revision": current["revision"],
+        }, marker="departure-paid-marker-retreat")
+        self.assertTrue(retreated["ok"])
+        self.assertTrue(execute(self.bridge, "ADVANCE_PHASE")["ok"])
         assessment = night_combat_entry_cost(self.bridge.kernel.state, battle["participant_ids"])
         self.assertEqual(sorted(battle["participant_ids"]), assessment["due_actor_ids"])
 

@@ -91,6 +91,7 @@ var _combat_cancel_action: Button
 var _combat_start_action: Button
 var _combat_hand_detail: RichTextLabel
 var _combat_end_round_action: Button
+var _combat_retreat_action: Button
 var _combat_card_picker: OptionButton
 var _combat_card_target_picker: OptionButton
 var _combat_play_card_action: Button
@@ -562,6 +563,11 @@ func _build_combat_page() -> VBoxContainer:
 	_combat_end_round_action.pressed.connect(_end_combat_round)
 	round_actions.add_child(_combat_end_round_action)
 	root.add_child(round_actions)
+	_combat_retreat_action = Button.new()
+	_combat_retreat_action.text = "承受追击并主动撤退"
+	_combat_retreat_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_combat_retreat_action.pressed.connect(_retreat_from_combat)
+	root.add_child(_combat_retreat_action)
 	_combat_hand_detail = RichTextLabel.new()
 	_combat_hand_detail.bbcode_enabled = true
 	_combat_hand_detail.custom_minimum_size = Vector2(0, 92)
@@ -1630,7 +1636,7 @@ func _refresh_combat_page() -> void:
 
 	if active.is_empty():
 		_combat_formation_detail.text = "[font_size=21][b]人物牌部署[/b][/font_size]\n\n%s\n\n[color=#91a4bc]先接取夜相任务并抵达目标区域。部署不消耗生活主要行动；队友会按真实校园路线前来集合，不会凭空出现。[/color]" % reason_names.get(String(combat.get("preparation_reason", "")), "当前不能建立战斗准备。")
-		if _combat_feedback.text.contains("小队败北"):
+		if _combat_feedback.text.contains("小队败北") or _combat_feedback.text.contains("撤回表世界"):
 			_combat_formation_detail.text = "[b]上次战斗结果[/b]\n%s\n\n%s" % [_combat_feedback.text, _combat_formation_detail.text]
 		_combat_character_picker.clear()
 		_selected_character_card_id = ""
@@ -1642,6 +1648,7 @@ func _refresh_combat_page() -> void:
 		_combat_cancel_action.disabled = true
 		_combat_start_action.disabled = true
 		_combat_end_round_action.disabled = true
+		_combat_retreat_action.disabled = true
 		_reset_combat_action_controls()
 		_combat_hand_detail.text = "[color=#91a4bc]锁定阵型后可生成个人八张牌组与共享战术手牌。[/color]"
 		_refresh_combat_hints()
@@ -1903,6 +1910,7 @@ func _refresh_combat_character_controls(active: Dictionary) -> void:
 	var entry: Dictionary = SimulationBridge.campus_snapshot.get("combat", {}).get("entry_action", {})
 	_combat_start_action.disabled = _combat_start_action.disabled or not bool(entry.get("allowed", false))
 	_combat_end_round_action.disabled = String(active.get("phase", "")) != "player_turn"
+	_combat_retreat_action.disabled = String(active.get("phase", "")) != "player_turn"
 	_refresh_combat_hints()
 
 
@@ -2009,6 +2017,14 @@ func _end_combat_round() -> void:
 	_send_combat_operation("END_COMBAT_ROUND", parameters)
 
 
+func _retreat_from_combat() -> void:
+	var parameters := _active_combat_parameters()
+	if parameters.is_empty() or _combat_retreat_action.disabled:
+		return
+	_combat_feedback.text = "正在承受敌方追击并尝试撤回表世界……"
+	_send_combat_operation("RETREAT_CARD_COMBAT", parameters)
+
+
 func _play_combat_card() -> void:
 	var parameters := _active_combat_parameters()
 	if parameters.is_empty() or _combat_card_target_picker.selected < 0:
@@ -2069,6 +2085,7 @@ func _refresh_combat_hints() -> void:
 		[_combat_cancel_action, "只可取消尚未开战的准备，不等于战中撤退。"],
 		[_combat_start_action, "请先确认阵型，再开始战斗。"],
 		[_combat_end_round_action, "只有己方行动阶段可以结束本轮。"],
+		[_combat_retreat_action, "撤退会先承受当前已预告的敌方攻击；幸存后保留伤势和消耗并释放任务。"],
 		[_combat_play_card_action, "需有可用手牌、合法目标和足够共享指令点。"],
 		[_combat_use_base_action, "需有合法目标、足够共享指令点，且该人物本轮尚未使用基础指令。"],
 	]:

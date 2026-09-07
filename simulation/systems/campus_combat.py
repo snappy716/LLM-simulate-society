@@ -39,6 +39,7 @@ COMBAT_ACTION_IDS = {
     "PLAY_COMBAT_CARD",
     "USE_COMBAT_BASE_COMMAND",
     "END_COMBAT_ROUND",
+    "RETREAT_CARD_COMBAT",
 }
 
 
@@ -1312,7 +1313,7 @@ def make_campus_combat_handler(
             if battle.get("result") == "defeat" and "player" in battle["participant_ids"] and advance_phase_handler:
                 recovery_day = battle["consequences"]["rescue"]["recover_day"]
                 while state.clock.day < recovery_day:
-                    advanced = advance_phase_handler(context, replace(command, action_id="ADVANCE_PHASE",
+                    advanced = advance_phase_handler(context, replace(command, action_id="ADVANCE_PHASE", source="rule",
                         issued_day=state.clock.day, issued_phase=state.clock.phase, issued_minute=state.clock.minute))
                     if not advanced.success:
                         raise ValueError("defeat overnight phase progression failed")
@@ -1323,6 +1324,41 @@ def make_campus_combat_handler(
                     "battle_id": battle["battle_id"],
                     "battle_revision": battle["revision"],
                     "round": battle["round"],
+                    **runtime,
+                },
+            )
+
+        if command.action_id == "RETREAT_CARD_COMBAT":
+            if battle["phase"] != "player_turn":
+                return TransactionOutcome(
+                    False, False, "wrong_battle_phase", "当前不能主动撤退。"
+                )
+            from simulation.systems.campus_enemy_turns import retreat_from_combat
+            runtime = retreat_from_combat(context, battle)
+            if (
+                battle.get("result") == "defeat"
+                and "player" in battle["participant_ids"]
+                and advance_phase_handler
+            ):
+                recovery_day = battle["consequences"]["rescue"]["recover_day"]
+                while state.clock.day < recovery_day:
+                    advanced = advance_phase_handler(context, replace(
+                        command, action_id="ADVANCE_PHASE", source="rule",
+                        issued_day=state.clock.day, issued_phase=state.clock.phase,
+                        issued_minute=state.clock.minute,
+                    ))
+                    if not advanced.success:
+                        raise ValueError("retreat defeat overnight phase progression failed")
+            defeated = battle.get("result") == "defeat"
+            return TransactionOutcome(
+                True, True, "success",
+                "撤退中全队倒下，已按败北流程救回宿舍。" if defeated
+                else "小队承受追击后撤回表世界；伤势与消耗保留，任务已释放。",
+                commit=True,
+                payload={
+                    "battle_id": battle["battle_id"],
+                    "battle_revision": battle["revision"],
+                    "result": battle["result"],
                     **runtime,
                 },
             )

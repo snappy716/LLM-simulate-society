@@ -38,6 +38,10 @@ func _refresh_availability() -> void:
 		blocked = "正在同步校园状态。"
 	elif bool(_bridge.call("is_campus_busy")):
 		blocked = "正在处理行动，请等待结果，勿重复提交。"
+	else:
+		var active_battle: Variant = (snapshot.get("combat", {}) as Dictionary).get("active_battle")
+		if active_battle is Dictionary and String(active_battle.get("phase", "")) not in ["", "setup", "ready", "resolved"]:
+			blocked = "正式战斗中不能结束时段；请继续战斗或在手机战斗页主动撤退。"
 	advance_button.disabled = not blocked.is_empty()
 	advance_button.tooltip_text = blocked if not blocked.is_empty() else "结束当前时段，NPC 与世界同步推进；不能撤销。"
 	var night: Dictionary = snapshot.get("night_world", {})

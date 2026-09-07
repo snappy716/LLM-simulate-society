@@ -136,3 +136,69 @@ def resolve_enemy_turn(context, battle):
     if not any(c.get("deployment_state") == "deployed" for c in battle["character_cards"].values()):
         _finish_defeat(context, battle)
     return results
+
+
+def retreat_from_combat(context, battle):
+    """Resolve the telegraphed pursuit before releasing a surviving party."""
+    results = resolve_enemy_turn(context, battle)
+    if battle.get("result") == "defeat":
+        return {"enemy_results": results, "battle_resolved": True}
+    state = context.state
+    battle["phase"] = "resolved"
+    battle["result"] = "escaped"
+    battle["revision"] += 1
+    mapping = state.metadata["campus_combat"]["active_battle_by_actor"]
+    night = state.situations["night_world"]
+    for actor_id in battle["participant_ids"]:
+        if mapping.get(actor_id) == battle["battle_id"]:
+            del mapping[actor_id]
+        actor_state = night["actor_states"][actor_id]
+        actor_state.update(
+            layer="surface",
+            last_transition_day=state.clock.day,
+            last_transition_phase=state.clock.phase,
+        )
+        night["transition_sequence"] += 1
+        if actor_id in night.get("active_actor_ids", []):
+            night["active_actor_ids"].remove(actor_id)
+    task = state.tasks.get(battle["situation_id"], {})
+    task_reopened = False
+    if task.get("state") in {"locked", "in_progress"}:
+        from simulation.systems.campus_social import apply_task_social_consequence
+        from simulation.systems.campus_tasks import (
+            _history, _settle_origin_hook, _settle_task_support_hooks,
+        )
+        owner_id = str(task.get("assignee_id", ""))
+        task["assignee_id"] = None
+        task["state"] = (
+            "open" if state.clock.day <= int(task.get("expires_day", 0)) else "expired"
+        )
+        task_reopened = task["state"] == "open"
+        task["lock_revision"] = int(task.get("lock_revision", 0)) + 1
+        owner = state.population.get(owner_id, {})
+        if owner.get("active_forum_task_id") == task.get("task_id"):
+            owner.pop("active_forum_task_id")
+        _settle_task_support_hooks(state, task, "abandoned")
+        _settle_origin_hook(state, task, "abandoned")
+        task["social_result"] = apply_task_social_consequence(
+            state, owner_id, task, "abandoned"
+        )
+        task.setdefault("history", []).append(_history(
+            state.clock.day, state.clock.phase, "retreated",
+            "行动小队从现场撤退，任务锁定解除。",
+        ))
+    context.emit(
+        "COMBAT_PARTY_RETREATED",
+        "行动小队承受追击后撤回表世界，伤势与物资消耗保留。",
+        actor_ids=battle["participant_ids"], scene_id=battle["scene_id"],
+        payload={
+            "battle_id": battle["battle_id"], "task_id": battle["situation_id"],
+            "task_reopened": task_reopened, "enemy_results": results,
+        },
+        visibility="private", severity=4,
+        knowledge_tags=["combat", "retreat", "task", "consequence"],
+    )
+    return {
+        "enemy_results": results, "battle_resolved": True,
+        "task_reopened": task_reopened,
+    }

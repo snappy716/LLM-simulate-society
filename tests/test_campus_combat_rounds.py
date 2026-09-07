@@ -202,31 +202,27 @@ class CampusCombatRoundTests(unittest.TestCase):
         self.assertEqual("wrong_battle_phase", blocked_end["result"]["code"])
         self.assertEqual(before, bridge.kernel.state.battles[battle["battle_id"]])
 
-    def test_daylight_safely_interrupts_unresolved_round_runtime(self):
+    def test_manual_time_advance_cannot_bypass_active_combat(self):
         bridge = CampusKernelBridge(46)
         battle = deploy_and_start(bridge, teammate_count=2)
-        teammate_locations = {
-            actor_id: bridge.kernel._state.population[actor_id]["current_location_id"]
-            for actor_id in battle["participant_ids"] if actor_id != "player"
+        before_clock = vars(bridge.kernel.state.clock).copy()
+        before_battle = bridge.kernel.state.battles[battle["battle_id"]].copy()
+        before_locations = {
+            actor_id: bridge.kernel.state.population[actor_id]["current_location_id"]
+            for actor_id in battle["participant_ids"]
         }
-        late_night = execute(bridge, "ADVANCE_PHASE", marker="round-to-late-night")
-        self.assertTrue(late_night["ok"], late_night)
-        self.assertIsNotNone(late_night["snapshot"]["combat"]["active_battle"])
-        self.assertEqual(
-            2,
-            late_night["result"]["payload"]["phase_execution"]["combat_engaged_actor_count"],
-        )
-        self.assertEqual(teammate_locations, {
-            actor_id: bridge.kernel._state.population[actor_id]["current_location_id"]
-            for actor_id in teammate_locations
+        blocked = execute(bridge, "ADVANCE_PHASE", marker="round-block-time-skip")
+        self.assertFalse(blocked["ok"])
+        self.assertEqual("active_combat_blocks_time_advance", blocked["result"]["code"])
+        self.assertEqual(before_clock, vars(bridge.kernel.state.clock))
+        self.assertEqual(before_battle, bridge.kernel.state.battles[battle["battle_id"]])
+        self.assertEqual(before_locations, {
+            actor_id: bridge.kernel.state.population[actor_id]["current_location_id"]
+            for actor_id in battle["participant_ids"]
         })
-        morning = execute(bridge, "ADVANCE_PHASE", marker="round-to-morning")
-        self.assertTrue(morning["ok"], morning)
-        execution = morning["result"]["payload"]["phase_execution"]
-        self.assertEqual(1, execution["battle_interrupted_count"])
-        self.assertIsNone(morning["snapshot"]["combat"]["active_battle"])
-        self.assertEqual("surface", morning["snapshot"]["night_world"]["current_layer"])
-        self.assertNotIn(battle["battle_id"], bridge.kernel._state.battles)
+        self.assertEqual(
+            battle["battle_id"], blocked["snapshot"]["combat"]["active_battle"]["battle_id"]
+        )
 
     def test_active_combat_prevents_campus_map_travel(self):
         bridge = CampusKernelBridge(42)
