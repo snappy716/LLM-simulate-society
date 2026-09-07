@@ -732,6 +732,13 @@ def complete_assigned_task(context, actor_id: str, plan: Mapping[str, Any]) -> b
                     or len(report.get("claim_ids", [])) != 2):
                 return False
             task["completion_evidence"] = {"kind": "field_report", "site_id": task["field_site_id"]}
+        elif task.get("night_site_id"):
+            from simulation.systems.campus_night_sites import site_for_task
+            site = site_for_task(context.state, task)
+            if (not plan.get("site_resolution") or not site or site["status"] != "resolved"
+                    or site["receipt"]["actor_id"] != actor_id):
+                return False
+            task["completion_evidence"] = {"kind": "site_resolution", "site_id": site["site_id"], "battle_id": site["battle_id"]}
         else:
             battle = context.state.battles.get(str(plan.get("battle_id", "")), {})
             if (battle.get("situation_id") != task_id or battle.get("result") != "victory"
@@ -799,6 +806,9 @@ def make_surface_forum_phase_upkeep(graph, templates, policy, base_upkeep):
 
 def make_forum_task_handler(activity_handler):
     def handle(context, command: SimulationCommand) -> TransactionOutcome:
+        from simulation.systems.campus_night_sites import captive_site
+        if captive_site(context.state, command.actor_id):
+            return TransactionOutcome(False, False, "actor_stranded", "被困期间无法承接或执行其他委托。")
         task_id = str(command.parameters.get("task_id", ""))
         task = context.state.tasks.get(task_id)
         if not isinstance(task, dict):

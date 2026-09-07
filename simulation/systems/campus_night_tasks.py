@@ -41,6 +41,13 @@ def load_night_task_templates(registry) -> Dict[str, Dict[str, Any]]:
             validate_field_profile(template["field_profile"])
             if template["activity_id"] != "NIGHT_RECON":
                 raise ValueError("physical recon profile requires NIGHT_RECON")
+        if "site_profile" in template:
+            from simulation.systems.campus_night_sites import validate_site_profile
+            validate_site_profile(template["site_profile"])
+            if "field_profile" in template or template["activity_id"] != "NIGHT_" + template["site_profile"]["kind"].upper():
+                raise ValueError("night objective profile must match its activity")
+            if template["site_profile"].get("kind") == "rescue" and template["site_profile"]["safe_location_id"] not in (set(registry.ids("campus_location")) | set(registry.ids("campus_region"))):
+                raise ValueError("rescue safe location does not exist")
     return templates
 
 
@@ -66,6 +73,9 @@ def _eligible_night_npcs(
     rng = context.rng.stream("campus_night_participation")
     result: list[tuple[float, str]] = []
     for actor_id, actor in sorted(state.population.items()):
+        from simulation.systems.campus_night_sites import captive_site
+        if captive_site(state, actor_id):
+            continue
         if actor_id == "player" or not isinstance(actor, dict) or _actor_has_active_task(state, actor_id):
             continue
         from simulation.systems.campus_parties import party_for_actor
@@ -147,6 +157,7 @@ def _publish_night_tasks(
     templates: Mapping[str, Mapping[str, Any]],
     policy: CampusNightWorldPolicy,
     social_consequences: Mapping[str, Mapping[str, Any]],
+    graph: CampusLocationGraph,
 ) -> list[str]:
     state = context.state
     forum = state.forums["night"]
@@ -167,6 +178,15 @@ def _publish_night_tasks(
     for _ in range(policy.daily_night_task_count):
         template_id = rng.choice(template_ids)
         template = templates[template_id]
+        from simulation.systems.campus_night_sites import rescue_candidates, create_night_site
+        victim_id = None
+        if template.get("site_profile", {}).get("kind") == "rescue":
+            candidates = rescue_candidates(state, template["scene_id"], template["site_profile"]["safe_location_id"], graph)
+            if candidates:
+                victim_id = rng.choice(candidates)
+            else:
+                template_id = rng.choice([key for key in template_ids if templates[key].get("site_profile", {}).get("kind") != "rescue"])
+                template = templates[template_id]
         sequence += 1
         task_id = f"night:d{state.clock.day:02d}:{sequence:04d}:{template_id}"
         task = {
@@ -213,6 +233,8 @@ def _publish_night_tasks(
         if "field_profile" in template:
             from simulation.systems.campus_fieldwork import create_field_site
             create_field_site(context, task, template["field_profile"])
+        if "site_profile" in template:
+            create_night_site(context, task, template["site_profile"], victim_id)
         state.tasks[task_id] = task
         published.append(task_id)
         context.emit(
@@ -325,7 +347,7 @@ def advance_campus_night_forum(
         "night_task_view_count": 0,
         "night_npc_claim_count": 0,
     }
-    published = _publish_night_tasks(context, templates, policy, social_consequences)
+    published = _publish_night_tasks(context, templates, policy, social_consequences, graph)
     summary["night_task_published_count"] = len(published)
     entered = _enter_autonomous_npcs(context, policy)
     summary["night_npc_enter_count"] = len(entered)

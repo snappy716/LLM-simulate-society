@@ -17,7 +17,8 @@ from simulation.systems.campus_expeditions import active_expedition, own_expedit
 DAMAGE = {"deal_physical", "deal_technique", "reveal_pattern", "apply_disruption", "specialization_effect"}
 EXPECTED_NPC_COMBAT_FAILURES = {"npc_control_required", "task_not_owned", "party_commitment", "departure_reserved",
     "incapacitated", "recovering", "night_combat_action_exhausted", "invalid_phase", "night_layer_required",
-    "task_location_required", "fear_limit", "injury_limit", "pollution_limit", "moral_boundary", "battle_already_active"}
+    "task_location_required", "fear_limit", "injury_limit", "pollution_limit", "moral_boundary", "battle_already_active",
+    "rescue_route_unavailable", "rescue_target_unavailable", "actor_stranded", "site_threat_active"}
 
 
 def choose_combat_action(state, battle, leader_id, round_policy):
@@ -71,7 +72,7 @@ def choose_combat_action(state, battle, leader_id, round_policy):
     return chosen[1], chosen[3]
 
 
-def make_autonomous_combat_handler(combat_handler, policy, round_policy, graph):
+def make_autonomous_combat_handler(combat_handler, policy, round_policy, graph, site_resolution_handler=None):
     def handle(context, command):
         state, actor_id = context.state, command.actor_id
         def fail(code, message):
@@ -82,6 +83,11 @@ def make_autonomous_combat_handler(combat_handler, policy, round_policy, graph):
         task = state.tasks.get(task_id, {})
         if task.get("forum") != "night" or task.get("assignee_id") != actor_id or task.get("state") != "locked":
             return fail("task_not_owned", "没有持有可执行的夜间任务。")
+        from simulation.systems.campus_night_sites import site_for_task
+        site = site_for_task(state, task)
+        if site and site["status"] == "suppressed" and site_resolution_handler:
+            return site_resolution_handler(context, replace(command, action_id="RESOLVE_NIGHT_SITE", parameters={
+                "task_id": task_id, "expected_task_revision": task["lock_revision"]}))
         expedition = active_expedition(state, actor_id, leader_only=True)
         own_due = own_expedition_due(state, actor_id) and expedition["task_id"] == task_id
         if has_upcoming_departure(state, actor_id) and not own_due:
@@ -160,7 +166,7 @@ def make_autonomous_combat_handler(combat_handler, policy, round_policy, graph):
         if created:
             del state.parties[party["party_id"]]
         return TransactionOutcome(True, True, "success", text, commit=True,
-            payload={"autonomous_battle": receipt, "task_completed": result == "victory", "effects": {}})
+            payload={"autonomous_battle": receipt, "task_completed": task["state"] == "completed", "effects": {}})
     return handle
 
 
@@ -180,7 +186,7 @@ def autonomous_combat_invariant(state):
                     errors.append("invalid NPC combat execution receipt")
                 seen.add(receipt["battle_id"])
             proof = task.get("completion_evidence")
-            if proof is not None and task.get("resolution_kind") != "field_recon":
+            if proof is not None and task.get("resolution_kind") != "field_recon" and not task.get("night_site_id"):
                 battle = state.battles.get(proof["battle_id"], {})
                 if (proof.get("kind") != "combat_victory" or battle.get("result") != "victory"
                         or battle.get("situation_id") != task.get("task_id") or task.get("state") != "completed"):

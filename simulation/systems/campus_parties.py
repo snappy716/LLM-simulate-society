@@ -97,6 +97,9 @@ def invitation_assessment(
 ) -> Dict[str, Any]:
     leader = state.population.get(leader_id)
     target = state.population.get(target_id)
+    from simulation.systems.campus_night_sites import captive_site
+    if captive_site(state, leader_id) or captive_site(state, target_id):
+        return {"eligible": False, "accepted": False, "score": -1000, "reason": "actor_stranded"}
     if not isinstance(leader, dict) or not isinstance(target, dict) or leader_id == target_id:
         return {"eligible": False, "accepted": False, "score": -1000, "reason": "invalid_target"}
     access = str(target.get("night_access", "unaware"))

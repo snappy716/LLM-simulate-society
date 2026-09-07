@@ -10,6 +10,22 @@ def migrate_campus_content(loaded, expected_version):
     from simulation.persistence.kernel_checkpoint import CheckpointError, LoadedCheckpoint
 
     field_spec = json.loads(Path(__file__).with_name("campus_field_content.json").read_text(encoding="utf-8"))
+    sites_spec = json.loads(Path(__file__).with_name("campus_night_sites_content.json").read_text(encoding="utf-8"))
+    if expected_version == sites_spec["target_version"]:
+        # Traverse only the explicit frozen previous edge, not an arbitrary old
+        # version or a moving alias. Existing victims/sites are never invented.
+        if loaded.state.content_version == field_spec["source_version"]:
+            loaded = migrate_campus_content(loaded, field_spec["target_version"])
+        if (loaded.state.content_version == sites_spec["source_version"]
+                and loaded.content_manifest == sites_spec["source_manifest"]):
+            if (len(loaded.state.population) != 201 or "player" not in loaded.state.population
+                    or loaded.state.inventories.get("schema_version") != 1):
+                raise CheckpointError("night site migration requires a full campus save")
+            migrated = loaded.state.clone()
+            migrated.content_version = expected_version
+            migrated.require_valid()
+            return LoadedCheckpoint(migrated, loaded.rng.clone(), deepcopy(sites_spec["target_manifest"]),
+                                    loaded.migrations + (sites_spec["migration_id"],))
     if (loaded.state.content_version == field_spec["source_version"]
             and expected_version == field_spec["target_version"]
             and loaded.content_manifest == field_spec["source_manifest"]):

@@ -1241,6 +1241,11 @@ func _refresh_forum_detail() -> void:
 	var owned := bool(task.get("owned_by_player", false))
 	var requires_night: bool = String(task.get("forum", "surface")) == "night"
 	var fieldwork: Dictionary = task.get("fieldwork", {})
+	var night_site: Dictionary = task.get("night_site", {})
+	if not night_site.is_empty():
+		_forum_detail.text += "\n\n[b]实际现场 · %s[/b]\n%s\n%s" % [night_site.get("label", ""), night_site.get("status", ""), night_site.get("rule_note", "")]
+		if not String(night_site.get("victim_name", "")).is_empty():
+			_forum_detail.text += "\n被困者：%s · 安全地点：%s" % [night_site.victim_name, night_site.destination_name]
 	if not fieldwork.is_empty():
 		_forum_detail.text += "\n\n[b]调查方法[/b]\n%s" % fieldwork.get("rule_note", "")
 	var night_accessible := bool((SimulationBridge.campus_snapshot.get("night_world", {}) as Dictionary).get("night_forum_accessible", false))
@@ -1257,6 +1262,8 @@ func _refresh_forum_detail() -> void:
 		var at_location: bool = player_location in [
 			task.get("scene_id"), task.get("execution_region_id")
 		]
+		if not fieldwork.is_empty() or not night_site.is_empty():
+			at_location = player_location == task.get("scene_id")
 		var phase: String = String((SimulationBridge.campus_snapshot.get("clock", {}) as Dictionary).get("phase", "morning"))
 		var phase_allowed: bool = phase in task.get("allowed_phases", [])
 		if requires_night:
@@ -1269,6 +1276,8 @@ func _refresh_forum_detail() -> void:
 			_forum_primary_action.text = "前往夜战部署 · 实际战斗结算" if requires_night else "完成当前目标"
 			if not fieldwork.is_empty():
 				_forum_primary_action.text = "提交实地报告 · 免费" if fieldwork.get("ready_to_report", false) else "打开调查笔记 · 深入搜查现场"
+			elif night_site.get("can_follow_through", false):
+				_forum_primary_action.text = "继续处理现场 · 不重打已胜战斗"
 		_forum_primary_action.disabled = not at_location or not phase_allowed or (requires_night and not night_accessible)
 	else:
 		_forum_primary_action.text = _task_state_label(task)
@@ -1287,10 +1296,11 @@ func _perform_primary_task_action() -> void:
 	var state := String(task.get("state", ""))
 	if bool(task.get("owned_by_player", false)) and state == "locked" and task.get("forum") == "night":
 		var fieldwork: Dictionary = task.get("fieldwork", {})
-		if fieldwork.is_empty():
+		var site_ready: bool = (task.get("night_site", {}) as Dictionary).get("can_follow_through", false)
+		if fieldwork.is_empty() and not site_ready:
 			_open_app("combat", "夜战部署")
 			return
-		if not fieldwork.get("ready_to_report", false):
+		if not fieldwork.is_empty() and not fieldwork.get("ready_to_report", false):
 			_open_app("notes", "调查笔记")
 			return
 	_social_pending.forum = _selected_task_id
@@ -1303,6 +1313,8 @@ func _perform_primary_task_action() -> void:
 	elif bool(task.get("owned_by_player", false)) and state == "locked":
 		if task.get("resolution_kind") == "field_recon":
 			SimulationBridge.operate_campus_task("SUBMIT_FIELD_REPORT", _selected_task_id, int(task.get("lock_revision", 0)))
+		elif (task.get("night_site", {}) as Dictionary).get("can_follow_through", false):
+			SimulationBridge.operate_campus_task("RESOLVE_NIGHT_SITE", _selected_task_id, int(task.get("lock_revision", 0)))
 		else:
 			SimulationBridge.operate_campus_task("COMPLETE_FORUM_TASK", _selected_task_id)
 

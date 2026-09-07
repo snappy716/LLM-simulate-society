@@ -206,6 +206,9 @@ def night_entry_assessment(
 
 def make_campus_night_world_handler(policy: CampusNightWorldPolicy, task_handler=None):
     def handle(context, command) -> TransactionOutcome:
+        from simulation.systems.campus_night_sites import captive_site
+        if captive_site(context.state, command.actor_id):
+            return TransactionOutcome(False, False, "actor_stranded", "需要安全护送才能脱离被困现场。")
         state = context.state
         if command.actor_id not in state.population:
             return TransactionOutcome(False, False, "unknown_actor", "行动者不存在。")
@@ -319,8 +322,9 @@ def advance_campus_night_world(context, policy: CampusNightWorldPolicy) -> Dict[
             actor_state["pollution"] = max(0, before - policy.surface_morning_recovery)
             summary["pollution_recovery_count"] += int(actor_state["pollution"] != before)
         elif state.clock.phase in policy.entry_phases and actor_state["layer"] == "night":
+            from simulation.systems.campus_night_sites import site_exposure
             actor_state["pollution"] = min(
-                100, int(actor_state["pollution"]) + int(moon["exposure_pollution"])
+                100, int(actor_state["pollution"]) + int(moon["exposure_pollution"]) + site_exposure(state, actor_id)
             )
             summary["night_exposure_count"] += 1
         battle_id = state.metadata.get("campus_combat", {}).get(

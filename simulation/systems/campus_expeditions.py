@@ -55,7 +55,7 @@ def finish_expedition(context, task_id, receipt):
     if plan is None or plan["status"] != "reserved":
         return
     plan.update(status="completed", battle_id=receipt["battle_id"], actual_member_ids=list(receipt["actor_ids"]))
-    if receipt["result"] == "victory":
+    if receipt["result"] == "victory" and context.state.tasks[task_id]["state"] == "completed":
         total = int(context.state.tasks[task_id].get("reward", {}).get("wealth", 0))
         share = total // len(receipt["actor_ids"])
         plan["settled_rewards"] = {plan["leader_id"]: total}

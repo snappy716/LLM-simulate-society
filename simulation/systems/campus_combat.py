@@ -196,6 +196,9 @@ def combat_readiness_assessment(
         return {"eligible": False, "reason": "unknown_actor_or_party"}
     if actor_id not in party.get("member_ids", ()):
         return {"eligible": False, "reason": "not_party_member"}
+    from simulation.systems.campus_night_sites import captive_site
+    if captive_site(state, actor_id):
+        return {"eligible": False, "reason": "actor_stranded"}
     if actor.get("vitals", {}).get("health", 1) <= 0:
         return {"eligible": False, "reason": "incapacitated"}
     if actor_id != leader_id:
@@ -262,6 +265,9 @@ def combat_preparation_assessment(
 ) -> Dict[str, Any]:
     if actor_id not in state.population:
         return {"allowed": False, "reason": "unknown_actor"}
+    from simulation.systems.campus_night_sites import captive_site
+    if captive_site(state, actor_id):
+        return {"allowed": False, "reason": "actor_stranded"}
     if active_battle_for_actor(state, actor_id) is not None:
         return {"allowed": False, "reason": "battle_already_active"}
     if state.population[actor_id].get("vitals", {}).get("health", 1) <= 0:
@@ -277,6 +283,12 @@ def combat_preparation_assessment(
     task = _task_for_preparation(state, actor_id, task_id)
     if task is None:
         return {"allowed": False, "reason": "owned_night_task_required"}
+    from simulation.systems.campus_night_sites import site_for_task
+    site = site_for_task(state, task)
+    if site and site["status"] == "suppressed":
+        return {"allowed": False, "reason": "site_threat_cleared"}
+    if site and state.population[actor_id]["current_location_id"] != site["location_id"]:
+        return {"allowed": False, "reason": "task_location_required", "required_region_id": task["execution_region_id"]}
     if task.get("execution_region_id") != _actor_region_id(state, actor_id):
         return {
             "allowed": False,
@@ -773,7 +785,7 @@ def resolve_combat_effects(
     return results
 
 
-def _finish_victory(context, battle: Dict[str, Any]) -> bool:
+def _finish_victory(context, battle: Dict[str, Any], site_resolution_handler=None) -> bool:
     if any(int(value) > 0 for value in battle.get("enemy_health", {}).values()):
         return False
     battle["phase"] = "resolved"
@@ -784,12 +796,15 @@ def _finish_victory(context, battle: Dict[str, Any]) -> bool:
         if mapping.get(actor_id) == battle["battle_id"]:
             del mapping[actor_id]
     leader_id = battle_leader_id(context.state, battle)
-    task_completed = complete_assigned_task(
-        context, leader_id, {"task_id": battle["situation_id"], "battle_id": battle["battle_id"]}
-    )
+    from simulation.systems.campus_night_sites import finish_site_combat
+    task_completed = finish_site_combat(context, battle, leader_id, site_resolution_handler)
+    if task_completed is None:
+        task_completed = complete_assigned_task(
+            context, leader_id, {"task_id": battle["situation_id"], "battle_id": battle["battle_id"]}
+        )
     context.emit(
         "COMBAT_VICTORY",
-        "夜相异常失去行动能力，行动小队完成了现场处置。",
+        "夜相威胁已压制，现场目标已完成。" if task_completed else "夜相威胁已压制，现场目标仍待处理。",
         actor_ids=battle["participant_ids"], scene_id=battle["scene_id"],
         payload={
             "battle_id": battle["battle_id"], "task_id": battle["situation_id"],
@@ -818,6 +833,7 @@ def play_combat_card(
     battle: Dict[str, Any],
     card_instance_id: str,
     target_ids: Iterable[str],
+    site_resolution_handler=None,
 ) -> Dict[str, Any]:
     if battle.get("phase") != "player_turn":
         raise ValueError("wrong_battle_phase")
@@ -858,7 +874,7 @@ def play_combat_card(
         knowledge_tags=["combat", "cards", "effect"],
     )
     if resolved:
-        _finish_victory(context, battle)
+        _finish_victory(context, battle, site_resolution_handler)
     return {"effects": effects, "battle_resolved": resolved}
 
 
@@ -868,6 +884,7 @@ def use_combat_base_command(
     source_actor_id: str,
     target_ids: Iterable[str],
     round_policy: CombatRoundPolicy,
+    site_resolution_handler=None,
 ) -> Dict[str, Any]:
     if battle.get("phase") != "player_turn":
         raise ValueError("wrong_battle_phase")
@@ -906,7 +923,7 @@ def use_combat_base_command(
         knowledge_tags=["combat", "base_command", "effect"],
     )
     if resolved:
-        _finish_victory(context, battle)
+        _finish_victory(context, battle, site_resolution_handler)
     return {"effects": effects, "battle_resolved": resolved}
 
 
@@ -1257,6 +1274,7 @@ def make_campus_combat_handler(
     round_policy: CombatRoundPolicy,
     graph: CampusLocationGraph,
     advance_phase_handler=None,
+    site_resolution_handler=None,
 ):
     def handle(context, command) -> TransactionOutcome:
         state = context.state
@@ -1440,6 +1458,7 @@ def make_campus_combat_handler(
                         battle,
                         str(command.parameters.get("card_instance_id", "")),
                         command.parameters.get("target_ids", ()),
+                        site_resolution_handler,
                     )
                     success_message = (
                         "指令牌已结算，战斗胜利。" if runtime["battle_resolved"]
@@ -1452,6 +1471,7 @@ def make_campus_combat_handler(
                         str(command.parameters.get("source_actor_id", command.actor_id)),
                         command.parameters.get("target_ids", ()),
                         round_policy,
+                        site_resolution_handler,
                     )
                     success_message = (
                         "基础指令已结算，战斗胜利。" if runtime["battle_resolved"]

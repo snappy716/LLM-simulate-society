@@ -12,6 +12,27 @@ var _ordered_ids: Array[String] = []
 
 func _ready() -> void:
 	_load_catalog()
+	var bridge := get_node("/root/SimulationBridge")
+	# Let the traversal result place the player before rebuilding map triggers.
+	bridge.connect("campus_snapshot_updated", _sync_player_region, CONNECT_DEFERRED)
+	_sync_player_region(bridge.get("campus_snapshot"))
+
+
+func _sync_player_region(snapshot: Dictionary) -> void:
+	var player: Dictionary = snapshot.get("player", {})
+	var location_id := String(player.get("current_location_id", ""))
+	if location_id.is_empty():
+		return
+	var place: Dictionary = (snapshot.get("places", {}) as Dictionary).get(location_id, {})
+	var region_id := String(place.get("region_id", location_id))
+	# Retain a chosen art variant within the same region; only reconcile a real
+	# mismatch (initial connection, server reconnection or completed escort).
+	if region_id in get_map().get("visible_region_ids", []):
+		return
+	for entry in all_maps():
+		if region_id in entry.get("visible_region_ids", []):
+			select_map(String(entry.id))
+			return
 
 
 func all_maps() -> Array[Dictionary]:

@@ -29,6 +29,7 @@
     },
     {
       "id": "dorm_corridor_stabilize",
+      "site_profile": {"kind": "stabilize", "label": "门牌校准装置", "initial_state": "错位扩散", "resolved_state": "顺序已校准", "operation": "校准门牌顺序"},
       "title": "稳定宿舍走廊的错位门牌",
       "description": "一段宿舍走廊正在重复出现不存在的房间号。",
       "objective": "校准门牌顺序并阻止错位继续扩散。",
@@ -41,6 +42,7 @@
     },
     {
       "id": "west_dorm_name_residue",
+      "site_profile": {"kind": "stabilize", "label": "姓名残响载体", "initial_state": "笔迹持续消退", "resolved_state": "残响已固定", "operation": "拓印并固定残响"},
       "title": "回收西区宿舍的姓名残响",
       "description": "公告栏上有几处姓名被月光擦去，只留下模糊笔迹。",
       "objective": "在痕迹完全消失前完成拓印与稳定。",
@@ -53,6 +55,7 @@
     },
     {
       "id": "south_gate_lost_student",
+      "site_profile": {"kind": "rescue", "label": "重复报到的滞留区域", "initial_state": "学生被困", "resolved_state": "已安全脱离", "operation": "护送学生到校门安全点", "safe_location_id": "south_gate_region"},
       "title": "接应南门外徘徊的学生",
       "description": "一名误入夜相的学生不断重复自己的报到日期。",
       "objective": "找到对方的身份锚点并护送其脱离异常区域。",
@@ -65,6 +68,7 @@
     },
     {
       "id": "sports_center_exhaustion",
+      "site_profile": {"kind": "rescue", "label": "无终点的循环跑道", "initial_state": "学生被困", "resolved_state": "已安全脱离", "operation": "护送学生到医院", "safe_location_id": "hospital_clinic"},
       "title": "救援体育中心的循环跑者",
       "description": "一名学生被困在没有终点的跑道上，身体状态正在迅速恶化。",
       "objective": "打断循环并完成紧急状态评估。",
@@ -77,6 +81,7 @@
     },
     {
       "id": "hospital_shadow_triage",
+      "site_profile": {"kind": "containment", "label": "候诊通道影子闸口", "initial_state": "通道持续堵塞", "resolved_state": "已分流封控", "operation": "关闭异常闸口并分流"},
       "title": "处理医院候诊区的影子拥堵",
       "description": "候诊者的影子脱离本体并堵塞了夜相通道。",
       "objective": "识别高风险影子并完成分流封控。",
@@ -89,6 +94,7 @@
     },
     {
       "id": "ai_lab_false_signal",
+      "site_profile": {"kind": "containment", "label": "伪求救信号节点", "initial_state": "信号仍在传播", "resolved_state": "传播已切断", "operation": "断开异常信号节点"},
       "title": "封存创新中心的伪求救信号",
       "description": "一段无法追溯来源的求救信息正在诱导终端用户进入封闭区域。",
       "objective": "定位信号节点并切断异常传播链。",
@@ -114,6 +120,7 @@
     },
     {
       "id": "maintenance_tunnel_seal",
+      "site_profile": {"kind": "containment", "label": "维修通道裂口", "initial_state": "裂口持续暴露", "resolved_state": "已临时封闭", "operation": "封闭裂口边界"},
       "title": "封闭后勤区的异常缝隙",
       "description": "维修通道墙面出现了通往未知空间的狭窄裂口。",
       "objective": "确认裂口边界并完成临时封闭。",

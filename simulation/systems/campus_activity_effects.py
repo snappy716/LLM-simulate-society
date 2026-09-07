@@ -125,6 +125,9 @@ def advance_campus_phase_upkeep(context) -> Dict[str, int]:
         actor["last_need_tick"] = marker
         _apply_meter_deltas(actor, "needs", NEED_NAMES, PHASE_NEED_DRIFT)
         summary["need_tick_count"] += 1
+        from simulation.systems.campus_night_sites import captive_site
+        if captive_site(context.state, actor_id):
+            continue
         needs = actor["needs"]
         emotions = actor["emotions"]
         routine_actions: list[str] = []
@@ -175,6 +178,9 @@ def make_campus_activity_handler(
     activity_validator=None,
 ):
     def perform(context, command) -> TransactionOutcome:
+        from simulation.systems.campus_night_sites import captive_site
+        if captive_site(context.state, command.actor_id):
+            return TransactionOutcome(False, False, "actor_stranded", "被困期间不能执行日常活动。")
         actor = context.state.population.get(command.actor_id)
         if not isinstance(actor, dict):
             return TransactionOutcome(False, False, "unknown_actor", "行动者不存在。")

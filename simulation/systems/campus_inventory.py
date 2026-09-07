@@ -98,6 +98,9 @@ def _movable(state, actor_id, item_id, quantity, *, ignore_acquisition_lock=Fals
 
 def make_campus_inventory_handler(*, allow_recent_gifts=False):
     def handle(context, command):
+        from simulation.systems.campus_night_sites import captive_site
+        if captive_site(context.state, command.actor_id):
+            return TransactionOutcome(False, False, "actor_stranded", "被困期间不能进行日常物品与购物活动。")
         state, actor_id, params = context.state, command.actor_id, command.parameters
         ledger = state.inventories
         if actor_id not in ledger.get("actors", {}):

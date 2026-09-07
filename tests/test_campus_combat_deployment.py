@@ -50,6 +50,23 @@ def invite_available_members(bridge: CampusKernelBridge, count: int = 2) -> list
     return invited
 
 
+def travel_to_location(bridge, destination, actor_id="player"):
+    """Real passage commands also reach interiors; map travel is outdoor-only."""
+    from simulation.systems.campus_locations import load_campus_location_graph
+    graph = load_campus_location_graph(bridge.registry)
+    state = bridge.kernel.state
+    actor = state.population[actor_id]
+    route = graph.shortest_route(actor["current_location_id"], destination, phase=state.clock.phase, access_tags=actor.get("access_tags", ()))
+    assert route is not None, (actor_id, destination)
+    for index, step in enumerate(route.steps):
+        state = bridge.kernel.state
+        result = bridge.execute({"command_id": f"test-route:{actor_id}:{state.revision}:{destination}:{index}",
+            "actor_id": actor_id, "source": "player" if actor_id == "player" else "rule",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE", "parameters": {"passage_id": step.passage_id}, "target_ids": [], "issued_minute": state.clock.minute,
+            "expected_world_revision": state.revision, "issued_day": state.clock.day, "issued_phase": state.clock.phase})
+        assert result["ok"], result["result"]
+
+
 def enter_with_owned_night_task(bridge: CampusKernelBridge) -> dict:
     execute(bridge, "ADVANCE_PHASE", marker="to-afternoon")
     execute(bridge, "ADVANCE_PHASE", marker="to-evening")
@@ -74,6 +91,7 @@ def enter_with_owned_night_task(bridge: CampusKernelBridge) -> dict:
         {"destination_id": task["execution_region_id"]}, marker="travel-task",
     )
     assert travelled["ok"] or travelled["result"]["code"] == "already_there", travelled
+    travel_to_location(bridge, task["scene_id"])
     return bridge.snapshot()["tasks"][task["task_id"]]
 
 

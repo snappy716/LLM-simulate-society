@@ -25,6 +25,9 @@ def _ledger(state):
 
 
 def _eligible(state, actor_id):
+    from simulation.systems.campus_night_sites import captive_site
+    if captive_site(state, actor_id):
+        return False
     if (actor_id == "player" or _actor_has_active_task(state, actor_id) or has_upcoming_departure(state, actor_id)
             or recovering_from_defeat(state, actor_id) or battle_locked(state, actor_id)
             or current_schedule_slot(state, actor_id).get("priority", 0) >= 90):

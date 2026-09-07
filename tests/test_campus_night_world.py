@@ -70,12 +70,14 @@ class CampusNightWorldTests(unittest.TestCase):
         execute(bridge, "ADVANCE_PHASE", "player", "afternoon")
         execute(bridge, "ADVANCE_PHASE", "player", "evening")
         execute(bridge, "ENTER_NIGHT_WORLD", "player", "enter")
+        from simulation.systems.campus_night_sites import site_exposure
+        expected_pollution = 3 + site_exposure(bridge.kernel.state, "player")
         late = execute(bridge, "ADVANCE_PHASE", "player", "late")
         self.assertEqual("night", late["snapshot"]["night_world"]["current_layer"])
-        self.assertEqual(3, late["snapshot"]["night_world"]["pollution"])
+        self.assertEqual(expected_pollution, late["snapshot"]["night_world"]["pollution"])
         morning = execute(bridge, "ADVANCE_PHASE", "player", "morning")
         self.assertEqual("surface", morning["snapshot"]["night_world"]["current_layer"])
-        self.assertEqual(1, morning["snapshot"]["night_world"]["pollution"])
+        self.assertEqual(expected_pollution - self.policy.surface_morning_recovery, morning["snapshot"]["night_world"]["pollution"])
         phase_execution = morning["result"]["payload"]["phase_execution"]
         self.assertGreaterEqual(phase_execution["night_auto_exit_count"], 1)
         self.assertGreaterEqual(phase_execution["pollution_recovery_count"], 1)

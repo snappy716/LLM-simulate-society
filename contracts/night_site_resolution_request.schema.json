@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://campus.local/contracts/night_site_resolution_request.schema.json",
+  "title": "Resolve an owned physical night objective after actual suppression",
+  "type": "object",
+  "required": ["action_id", "parameters"],
+  "properties": {
+    "action_id": {"const": "RESOLVE_NIGHT_SITE"},
+    "parameters": {
+      "type": "object", "additionalProperties": false,
+      "required": ["task_id", "expected_task_revision"],
+      "properties": {
+        "task_id": {"type": "string", "minLength": 1},
+        "expected_task_revision": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

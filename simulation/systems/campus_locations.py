@@ -118,6 +118,9 @@ def make_traverse_location_handler(graph: CampusLocationGraph):
     """Build the shared player/NPC handler for a mapped Godot transition trigger."""
 
     def traverse(context, command):
+        from simulation.systems.campus_night_sites import captive_site
+        if captive_site(context.state, command.actor_id):
+            return TransactionOutcome(False, False, "actor_stranded", "行动者仍被困在异常现场，需安全护送。")
         actor = context.state.population.get(command.actor_id)
         if not isinstance(actor, dict):
             return TransactionOutcome(False, False, "unknown_actor", "行动者不存在。")
@@ -163,6 +166,10 @@ def make_traverse_location_handler(graph: CampusLocationGraph):
                 return TransactionOutcome(False, False, "access_denied", "行动者没有进入该地点的权限。")
             return TransactionOutcome(False, False, "location_closed", "该入口目前关闭。")
         actor["current_location_id"] = destination_id
+        if actor.get("current_activity", {}).get("status") == "completed":
+            # The completed action remains in its journal/events, not as an
+            # ongoing activity at a location the actor has now left.
+            actor.pop("current_activity", None)
         destination = graph.locations.get(destination_id)
         presentation_key = "campus_outdoor"
         instance_policy = "fixed"
@@ -214,6 +221,9 @@ def make_fast_travel_handler(graph: CampusLocationGraph):
     """Build free campus-map travel without bypassing the authoritative graph."""
 
     def fast_travel(context, command):
+        from simulation.systems.campus_night_sites import captive_site
+        if captive_site(context.state, command.actor_id):
+            return TransactionOutcome(False, False, "actor_stranded", "行动者仍被困，不能自行转移地点。")
         actor = context.state.population.get(command.actor_id)
         if not isinstance(actor, dict):
             return TransactionOutcome(False, False, "unknown_actor", "行动者不存在。")

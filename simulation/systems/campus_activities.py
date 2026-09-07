@@ -70,6 +70,7 @@ def make_scheduled_npc_phase_executor(
             "task_completed_count": 0,
             "combat_engaged_actor_count": 0,
             "recovering_actor_count": 0,
+            "stranded_actor_count": 0,
             "expedition_engaged_actor_count": 0,
             "decision_reason_counts": {},
         }
@@ -82,6 +83,14 @@ def make_scheduled_npc_phase_executor(
                 continue
             actor = context.state.population.get(actor_id)
             if not isinstance(actor, dict):
+                continue
+            from simulation.systems.campus_night_sites import captive_site, rescued_this_phase
+            if captive_site(context.state, actor_id) or rescued_this_phase(context.state, actor_id):
+                # A just-escorted victim does not immediately abandon the safe
+                # destination to run the routine it missed while stranded.
+                summary["stranded_actor_count"] += 1
+                actor.pop("current_decision", None)
+                actor.pop("current_activity", None)
                 continue
             from simulation.systems.campus_enemy_turns import recovering_from_defeat
             from simulation.systems.campus_expeditions import already_fought_this_phase, own_expedition_due
@@ -282,6 +291,9 @@ def make_scheduled_npc_phase_executor(
                 actor["current_activity"]["battle_result"] = activity_outcome.payload["autonomous_battle"]["result"]
                 summary["task_completed_count"] += int(activity_outcome.payload.get("task_completed", False))
             elif activity_outcome.payload.get("field_report"):
+                summary["task_completed_count"] += int(activity_outcome.payload.get("task_completed", False))
+            elif activity_outcome.payload.get("site_resolution"):
+                actor["current_activity"]["location_id"] = actor["current_location_id"]
                 summary["task_completed_count"] += int(activity_outcome.payload.get("task_completed", False))
             if activity_completed is not None and activity_completed(context, actor_id, plan):
                 summary["task_completed_count"] += 1

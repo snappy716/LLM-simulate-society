@@ -11,7 +11,7 @@ from simulation.systems.campus_fieldwork import fieldwork_invariant, report_clai
 from simulation.systems.campus_tasks import complete_assigned_task
 from simulation.systems.transactions import TransactionContext
 from simulation.persistence.kernel_checkpoint import save_kernel_checkpoint, load_kernel_checkpoint
-from tests.test_campus_combat_deployment import execute
+from tests.test_campus_combat_deployment import execute, travel_to_location
 
 
 class FieldworkTests(unittest.TestCase):
@@ -40,8 +40,7 @@ class FieldworkTests(unittest.TestCase):
     def prepare_player(self):
         self.assertTrue(self.act("ENTER_NIGHT_WORLD")["ok"])
         self.assertTrue(self.act("CLAIM_FORUM_TASK", {"task_id": self.task["task_id"], "expected_task_revision": self.task["lock_revision"]})["ok"])
-        result = self.act("FAST_TRAVEL_CAMPUS", {"destination_id": self.task["scene_id"]})
-        self.assertTrue(result["ok"] or result["result"]["code"] == "already_there", result)
+        travel_to_location(self.bridge, self.task["scene_id"])
 
     def submit(self, **extra):
         task = self.bridge.kernel.state.tasks[self.task["task_id"]]
@@ -216,7 +215,8 @@ class FieldworkTests(unittest.TestCase):
         comparison.content_version = state.content_version
         self.assertEqual(state, comparison)
         self.assertEqual(rng.snapshot(), result.rng.snapshot())
-        self.assertEqual(spec["target_manifest"], result.content_manifest)
+        self.assertEqual(self.bridge.registry.manifest, result.content_manifest)
+        self.assertIn(spec["migration_id"], result.migrations)
         loaded = LoadedCheckpoint(state, rng, {})
         with self.assertRaises(CheckpointError):
             migrate_campus_content(loaded, self.bridge.registry.content_version)

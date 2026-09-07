@@ -170,6 +170,9 @@ def valuation(state, actor_id, counterpart, item_id, *, buying):
 
 def _validate_settlement(state, offer):
     buyer, seller, item_id, quantity = (offer[k] for k in ("buyer_id", "seller_id", "item_id", "quantity"))
+    from simulation.systems.campus_night_sites import captive_site
+    if captive_site(state, buyer) or captive_site(state, seller):
+        return _failure("actor_stranded", "被困者不能结算私人交易。")
     if not _same_place(state, buyer, seller):
         return _failure("location_mismatch", "成交时双方必须在同一地点、同一世界层。")
     if _busy(state, buyer) or _busy(state, seller):
@@ -229,6 +232,9 @@ def _close(context, offer, status, reason):
 
 def make_campus_trade_handler():
     def handle(context, command):
+        from simulation.systems.campus_night_sites import captive_site
+        if captive_site(context.state, command.actor_id):
+            return TransactionOutcome(False, False, "actor_stranded", "被困期间不能进行私人交易。")
         state, actor_id, params = context.state, command.actor_id, command.parameters
         trade = state.inventories.get("trade")
         if not trade or actor_id not in state.population:

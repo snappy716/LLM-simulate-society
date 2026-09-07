@@ -4,7 +4,7 @@ import unittest
 from simulation.api.server import CampusKernelBridge
 from simulation.systems.campus_combat import campus_combat_view, combat_policy_from_state, combat_round_policy_from_state
 from simulation.systems.campus_autonomous_combat import choose_combat_action, autonomous_combat_invariant
-from simulation.systems.campus_parties import create_party, party_policy_from_state
+from simulation.systems.campus_parties import create_party, party_policy_from_state, party_for_actor
 from simulation.systems.campus_social import DEFAULT_RELATIONSHIP
 from tests.test_campus_combat_deployment import execute
 
@@ -24,7 +24,8 @@ class AutonomousCombatTests(unittest.TestCase):
         self.state = self.bridge.kernel._state
         self.bridge.cognition_runtime.configure_rule()
         self.task = next(task for task in self.state.tasks.values() if task.get("forum") == "night"
-                         and task.get("resolution_kind") != "field_recon" and task.get("assignee_id"))
+                         and task.get("resolution_kind") != "field_recon" and task.get("assignee_id")
+                         and party_for_actor(self.state, task["assignee_id"]) is None)
         self.npc = self.task["assignee_id"]
         # Explicit unit precondition: at an actually owned task with one action.
         self.actor = self.state.population[self.npc]

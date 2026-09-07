@@ -245,6 +245,8 @@ class CampusKernelBridge:
         def campus_phase_upkeep(context):
             from simulation.systems.campus_expeditions import upkeep_expeditions, form_npc_expeditions, prepare_npc_combat_supplies
             summary = receive_campus_supply(context)
+            from simulation.systems.campus_night_sites import upkeep_night_sites
+            summary.update(upkeep_night_sites(context))
             summary.update(advance_campus_phase_upkeep(context))
             summary.update(advance_campus_combat(context))
             summary.update(upkeep_expeditions(context))
@@ -321,6 +323,10 @@ class CampusKernelBridge:
         self.kernel.register_handler("SUBMIT_FIELD_REPORT", field_report_handler)
         self.kernel.register_handler("EXECUTE_NPC_FIELDWORK", autonomous_fieldwork_handler)
         self.kernel.add_invariant(fieldwork_invariant)
+        from simulation.systems.campus_night_sites import make_site_resolution_handler, night_sites_invariant
+        site_resolution_handler = make_site_resolution_handler(graph, action_policy)
+        self.kernel.register_handler("RESOLVE_NIGHT_SITE", site_resolution_handler)
+        self.kernel.add_invariant(night_sites_invariant)
         for action_id in INVESTIGATION_ACTIONS:
             self.kernel.register_handler(action_id, investigation_handler)
         self.kernel.add_event_projector(project_investigation_events)
@@ -466,9 +472,9 @@ class CampusKernelBridge:
         night_world_handler = make_campus_night_world_handler(night_world_policy, task_handler)
         for action_id in NIGHT_WORLD_ACTION_IDS:
             self.kernel.register_handler(action_id, night_world_handler)
-        combat_handler = make_campus_combat_handler(combat_policy, combat_round_policy, graph, advance_phase_handler)
+        combat_handler = make_campus_combat_handler(combat_policy, combat_round_policy, graph, advance_phase_handler, site_resolution_handler)
         from simulation.systems.campus_autonomous_combat import make_autonomous_combat_handler, autonomous_combat_invariant
-        autonomous_combat_handler = make_autonomous_combat_handler(combat_handler, combat_policy, combat_round_policy, graph)
+        autonomous_combat_handler = make_autonomous_combat_handler(combat_handler, combat_policy, combat_round_policy, graph, site_resolution_handler)
         self.kernel.register_handler("EXECUTE_NPC_NIGHT_TASK", autonomous_combat_handler)
         self.kernel.add_invariant(autonomous_combat_invariant)
         from simulation.systems.campus_expeditions import expedition_invariant
