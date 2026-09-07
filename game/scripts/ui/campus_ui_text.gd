@@ -33,6 +33,9 @@ static func operation_feedback(success: bool, response: Dictionary) -> String:
 const ACTIVITY_NAMES := {
 	"ORIENTATION_OR_CLASS": "报到或上课",
 	"RESEARCH": "研究",
+	"READ_KNOWLEDGE": "研读相关讲义",
+	"REFLECT_ON_CASE": "整理亲历案例",
+	"BUY_ITEM": "购买所需物品",
 	"TEACH": "授课",
 	"COURSEWORK": "完成课程任务",
 	"CLUB_ACTIVITY": "参加社团活动",

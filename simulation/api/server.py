@@ -238,6 +238,7 @@ class CampusKernelBridge:
             forum_policy,
         )
         decision_selector = make_procurement_selector(decision_selector, graph, decision_policy.protected_schedule_priority)
+        from simulation.systems.campus_goals import advance_personal_goals, personal_goals_invariant, make_ask_plan_handler
         def campus_phase_upkeep(context):
             summary = receive_campus_supply(context)
             summary.update(advance_campus_phase_upkeep(context))
@@ -254,6 +255,7 @@ class CampusKernelBridge:
             summary.update(advance_party_commitments(context, party_policy))
             self.cognition_runtime.publish_status(context.state)
             summary.update(advance_cognition_phase(context, cognition_policy))
+            summary.update(advance_personal_goals(context))
             return summary
 
         phase_upkeep = make_surface_forum_phase_upkeep(
@@ -274,6 +276,8 @@ class CampusKernelBridge:
         def scheduled_activity_handler(context, command):
             if command.action_id == "BUY_ITEM":
                 return inventory_handler(context, command)
+            if command.action_id in {"READ_KNOWLEDGE", "REFLECT_ON_CASE"}:
+                return growth_handler(context, command)
             return activity_handler(context, command)
         from simulation.systems.campus_investigation import (
             INVESTIGATION_ACTIONS, make_investigation_handler,
@@ -285,8 +289,11 @@ class CampusKernelBridge:
         self.kernel.add_event_projector(project_investigation_events)
         self.kernel.add_invariant(investigation_invariant)
         from simulation.systems.campus_growth import GROWTH_ACTIONS, make_growth_handler, project_growth_events, growth_invariant
+        growth_handler = make_growth_handler()
         for action_id in GROWTH_ACTIONS:
-            self.kernel.register_handler(action_id, make_growth_handler())
+            self.kernel.register_handler(action_id, growth_handler)
+        self.kernel.register_handler("ASK_NPC_PLAN", make_ask_plan_handler())
+        self.kernel.add_invariant(personal_goals_invariant)
         self.kernel.add_event_projector(project_growth_events)
         self.kernel.add_invariant(growth_invariant)
         self.kernel.add_event_projector(project_chronicle_events)

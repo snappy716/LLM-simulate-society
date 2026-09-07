@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "personal_goal_request.schema.json",
+  "title": "Ask for an NPC volunteered plan statement",
+  "type": "object",
+  "properties": {
+    "action_id": {"const": "ASK_NPC_PLAN"},
+    "parameters": {"type": "object", "properties": {"npc_id": {"type": "string", "minLength": 1}}, "required": ["npc_id"], "additionalProperties": false}
+  },
+  "required": ["action_id", "parameters"]
+}

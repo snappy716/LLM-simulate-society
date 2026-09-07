@@ -20,6 +20,7 @@ signal campus_npc_chronicle_loaded(success: bool, result: Dictionary, npc_id: St
 signal campus_inventory_operation_completed(success: bool, result: Dictionary)
 signal campus_investigation_operation_completed(success: bool, result: Dictionary)
 signal campus_growth_operation_completed(success: bool, result: Dictionary)
+signal campus_goal_operation_completed(success: bool, result: Dictionary)
 signal campus_persistence_completed(success: bool, result: Dictionary)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
@@ -388,12 +389,16 @@ func operate_campus_growth(action_id: String, parameters: Dictionary = {}) -> vo
 	_send_campus_item_or_investigation(action_id, parameters, "growth")
 
 
+func ask_campus_npc_plan(npc_id: String) -> void:
+	_send_campus_item_or_investigation("ASK_NPC_PLAN", {"npc_id": npc_id}, "goal")
+
+
 func operate_campus_inventory(action_id: String, parameters: Dictionary = {}) -> void:
 	_send_campus_item_or_investigation(action_id, parameters, "inventory")
 
 
 func _send_campus_item_or_investigation(action_id: String, parameters: Dictionary, operation: String) -> void:
-	var completed := campus_growth_operation_completed if operation == "growth" else (campus_investigation_operation_completed if operation == "investigation" else campus_inventory_operation_completed)
+	var completed := campus_goal_operation_completed if operation == "goal" else (campus_growth_operation_completed if operation == "growth" else (campus_investigation_operation_completed if operation == "investigation" else campus_inventory_operation_completed))
 	if _campus_busy or not connected or campus_snapshot.is_empty():
 		completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他行动"})
 		return
@@ -874,6 +879,8 @@ func _on_campus_request_completed(
 			campus_investigation_operation_completed.emit(false, parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"})
 		if operation == "growth":
 			campus_growth_operation_completed.emit(false, parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"})
+		if operation == "goal":
+			campus_goal_operation_completed.emit(false, parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"})
 		elif operation == "traverse":
 			var error_payload: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
 			campus_traversal_completed.emit(false, error_payload, passage_id)
@@ -928,6 +935,8 @@ func _on_campus_request_completed(
 		campus_investigation_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
 	if operation == "growth":
 		campus_growth_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
+	if operation == "goal":
+		campus_goal_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
 	elif operation == "advance_phase":
 		campus_phase_advanced.emit(bool(parsed.get("ok", false)), parsed)
 	elif operation == "fast_travel":

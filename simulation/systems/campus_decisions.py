@@ -500,6 +500,12 @@ def rank_campus_npc_activities(
             "day": context.state.clock.day,
             "phase": context.state.clock.phase,
         })
+    from simulation.systems.campus_goals import goal_candidates
+    ranked.extend(goal_candidates(context, actor_id, schedule_plan, graph, occupancy, policy,
+                                  definitions, max((item["score"] for item in ranked), default=0)))
+    ranked.sort(key=lambda item: (-item["score"], item["candidate_id"]))
+    for item in ranked:
+        item["candidate_count"] = len(ranked)
     return ranked
 
 

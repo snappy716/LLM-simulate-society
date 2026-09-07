@@ -237,7 +237,11 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         for npc_id, record in state.population.items()
         if npc_id != "player" and isinstance(record, dict)
     }
+    from simulation.systems.campus_goals import disclosed_plans
+    reported_plans = disclosed_plans(state)
     for npc_id in cast:
+        # Only a dated statement the NPC actually volunteered, never live private plans.
+        cast[npc_id]["stated_plan"] = reported_plans.get(npc_id, {})
         source_record = state.population.get(npc_id, {})
         decision = source_record.get("current_decision") if isinstance(source_record, dict) else None
         cast[npc_id]["current_plan"] = (

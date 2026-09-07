@@ -173,6 +173,9 @@ def make_scheduled_npc_phase_executor(
                 access_tags=actor.get("access_tags", ()),
             )
             if route is None:
+                from simulation.systems.campus_goals import record_goal_outcome
+                from simulation.systems.transactions import TransactionOutcome
+                record_goal_outcome(context, actor_id, plan, TransactionOutcome(False, False, "route_unavailable", "无法抵达计划地点"))
                 actor["current_activity"] = _activity_record(
                     context.state,
                     plan,
@@ -233,12 +236,14 @@ def make_scheduled_npc_phase_executor(
                 source=CommandSource.RULE.value,
             )
             activity_outcome = activity_handler(context, activity_command)
+            from simulation.systems.campus_goals import record_goal_outcome, EXPECTED_STEP_FAILURES
+            record_goal_outcome(context, actor_id, plan, activity_outcome)
             if not activity_outcome.success:
-                if activity_command.action_id == "BUY_ITEM":
+                if activity_command.action_id == "BUY_ITEM" or (plan.get("personal_goal_id") and activity_outcome.code in EXPECTED_STEP_FAILURES):
                     actor["current_activity"] = _activity_record(context.state, plan, status="blocked", route_step_count=route_step_count, block_code=activity_outcome.code)
                     summary["blocked_actor_count"] += 1
                     context.emit("NPC_ACTIVITY_BLOCKED", activity_outcome.message, actor_ids=[actor_id], scene_id=destination_id,
-                                 payload={"activity_id": "BUY_ITEM", "code": activity_outcome.code}, visibility="private", knowledge_tags=["trade"])
+                                 payload={"activity_id": activity_command.action_id, "code": activity_outcome.code}, visibility="private", knowledge_tags=["activity"])
                     continue
                 raise RuntimeError(
                     f"scheduled activity could not execute for {actor_id}: "

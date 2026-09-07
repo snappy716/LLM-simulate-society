@@ -4,6 +4,9 @@ const INTERACTION_DISTANCE := 82.0
 const UI_TEXT = preload("res://scripts/ui/campus_ui_text.gd")
 var _dialogue_pending_target := ""
 var _dialogue_sent_text := ""
+var _plan_button: Button
+var _plan_feedback: Label
+var _plan_pending_target := ""
 
 const COLLEGE_NAMES := {
 	"math_physics": "数理学院",
@@ -95,6 +98,7 @@ func _ready() -> void:
 	SimulationBridge.campus_cognition_operation_completed.connect(_on_cognition_operation_completed)
 	SimulationBridge.campus_phone_message_completed.connect(_on_contact_operation_completed)
 	SimulationBridge.campus_dialogue_completed.connect(_on_dialogue_completed)
+	SimulationBridge.campus_goal_operation_completed.connect(_on_plan_completed)
 	SimulationBridge.campus_social_proposal_completed.connect(_on_social_proposal_completed)
 	SimulationBridge.campus_social_proposal_response_completed.connect(_on_incoming_proposal_response_completed)
 
@@ -212,6 +216,13 @@ func _build_ui() -> void:
 	_load_more.visible = false
 	_load_more.pressed.connect(_load_more_chronicle)
 	column.add_child(_load_more)
+	_plan_button = Button.new()
+	_plan_button.text = "问问最近的打算（免费）"
+	_plan_button.pressed.connect(_ask_plan)
+	column.add_child(_plan_button)
+	_plan_feedback = Label.new()
+	_plan_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(_plan_feedback)
 	var dialogue_label := Label.new()
 	dialogue_label.text = "当面交谈（免费，可继续追问）"
 	dialogue_label.add_theme_color_override("font_color", Color("8fb7d6"))
@@ -317,6 +328,8 @@ func _show_npc(npc: Node) -> void:
 	_selected_npc = npc
 	_body_scroll.scroll_vertical = 0
 	_selected_profile = npc.call("get_campus_profile")
+	_plan_feedback.text = ""
+	_plan_button.disabled = not _plan_pending_target.is_empty()
 	_chronicle_pages.clear()
 	_chronicle_loading = false
 	_title.text = _safe_text(_selected_profile.get("display_name"), _safe_text(_selected_profile.get("npc_id"), "校园成员"))
@@ -463,12 +476,42 @@ func _public_profile_text(profile: Dictionary) -> String:
 	]
 	if not occupation.is_empty():
 		identity_line += "（%s）" % OCCUPATION_NAMES.get(occupation, occupation)
-	return "[b]公开身份[/b]\n%s\n\n[b]当前位置[/b]\n%s\n\n[b]正在做的事[/b]\n%s\n\n[b]可观察状态[/b]\n%s\n\n[color=#91a4bc]内在需求、秘密动机与后续计划不会直接显示；需要通过交流、观察、关系或调查逐渐了解。[/color]" % [
+	var report: Dictionary = profile.get("stated_plan", {})
+	var statement := "尚未向对方询问。"
+	if not report.is_empty():
+		statement = "第 %s 天 · %s，本人告知：\n%s\n（当时的说法，后续可能改变。）" % [
+			str(report.get("day", "?")), {"morning": "上午", "afternoon": "下午", "evening": "晚上", "late_night": "深夜"}.get(String(report.get("phase", "")), "当时"),
+			String(report.get("summary", "")).replace("[", "[lb]")]
+	return "[b]公开身份[/b]\n%s\n\n[b]当前位置[/b]\n%s\n\n[b]正在做的事[/b]\n%s\n\n[b]可观察状态[/b]\n%s\n\n[b]对方说过的打算[/b]\n%s\n\n[color=#91a4bc]内在需求、秘密动机与后续计划不会直接显示；需要通过交流、观察、关系或调查逐渐了解。[/color]" % [
 		identity_line,
 		String(place.get("name", location_id if not location_id.is_empty() else "未知")),
 		ACTIVITY_NAMES.get(activity_id, activity_id if not activity_id.is_empty() else "暂时没有明显行动"),
 		_visible_mood(profile.get("emotions", {})),
+		statement,
 	]
+
+
+func _ask_plan() -> void:
+	if not _plan_pending_target.is_empty() or _selected_profile.is_empty():
+		return
+	_plan_pending_target = _safe_text(_selected_profile.get("npc_id"))
+	_plan_button.disabled = true
+	_plan_feedback.text = "正在询问……"
+	SimulationBridge.ask_campus_npc_plan(_plan_pending_target)
+
+
+func _on_plan_completed(success: bool, result: Dictionary) -> void:
+	var target := _plan_pending_target
+	_plan_pending_target = ""
+	_plan_button.disabled = false
+	if target.is_empty() or target != _safe_text(_selected_profile.get("npc_id")):
+		return
+	var command_result: Dictionary = result.get("result", {})
+	_plan_feedback.text = String(command_result.get("message", result.get("error", "询问结果尚未确认。")))
+	if success:
+		_selected_profile = (SimulationBridge.campus_snapshot.get("population", {}) as Dictionary).get(target, _selected_profile)
+		if _active_tab == "overview":
+			_details.text = _public_profile_text(_selected_profile)
 
 
 func _refresh_awaken_button() -> void:
