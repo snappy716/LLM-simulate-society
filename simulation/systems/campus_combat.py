@@ -145,6 +145,15 @@ def active_battle_for_actor(state: WorldState, actor_id: str) -> Dict[str, Any] 
     return battle if isinstance(battle, dict) else None
 
 
+def battle_leader_id(state: WorldState, battle: Mapping[str, Any]) -> str:
+    """Task ownership also identifies NPC leaders; old player battles need no migration."""
+    candidates = [card.get("actor_id") for card in battle.get("character_cards", {}).values() if isinstance(card, dict)]
+    owner = state.tasks.get(str(battle.get("situation_id", "")), {}).get("assignee_id")
+    if owner in candidates:
+        return str(owner)
+    return "player" if "player" in candidates else str(next(iter(battle.get("participant_ids", ())), ""))
+
+
 def _task_for_preparation(
     state: WorldState,
     actor_id: str,
@@ -768,15 +777,9 @@ def _finish_victory(context, battle: Dict[str, Any]) -> bool:
     for actor_id in battle["participant_ids"]:
         if mapping.get(actor_id) == battle["battle_id"]:
             del mapping[actor_id]
-    leader_id = next(
-        (
-            str(actor_id) for actor_id in battle["participant_ids"]
-            if context.state.population.get(str(actor_id), {}).get("is_player")
-        ),
-        str(battle["participant_ids"][0]),
-    )
+    leader_id = battle_leader_id(context.state, battle)
     task_completed = complete_assigned_task(
-        context, leader_id, {"task_id": battle["situation_id"]}
+        context, leader_id, {"task_id": battle["situation_id"], "battle_id": battle["battle_id"]}
     )
     context.emit(
         "COMBAT_VICTORY",
@@ -1207,13 +1210,7 @@ def advance_campus_combat(context) -> Dict[str, int]:
         if not isinstance(battle, dict) or battle.get("phase") == "resolved":
             continue
         task = state.tasks.get(str(battle.get("situation_id", "")), {})
-        leader_id = next(
-            (
-                actor_id for actor_id in battle.get("participant_ids", ())
-                if state.population.get(actor_id, {}).get("is_player")
-            ),
-            "player",
-        )
+        leader_id = battle_leader_id(state, battle)
         invalid_task = (
             not isinstance(task, dict)
             or task.get("assignee_id") != leader_id
@@ -1596,12 +1593,13 @@ def make_campus_combat_handler(
         if command.action_id == "CONFIRM_BATTLE_DEPLOYMENT":
             if battle["phase"] != "setup":
                 return TransactionOutcome(False, False, "deployment_locked", "阵型已经锁定。")
+            leader_id = battle_leader_id(state, battle)
             player_card = next(
-                (value for value in battle["character_cards"].values() if value.get("actor_id") == "player"),
+                (value for value in battle["character_cards"].values() if value.get("actor_id") == leader_id),
                 None,
             )
             if not isinstance(player_card, dict) or player_card.get("deployment_state") != "deployed":
-                return TransactionOutcome(False, False, "player_must_be_deployed", "玩家人物牌必须上场。")
+                return TransactionOutcome(False, False, "player_must_be_deployed" if leader_id == "player" else "leader_must_be_deployed", "任务队长的人物牌必须上场。")
             deployed_ids = [
                 card_id for card_id, value in battle["character_cards"].items()
                 if value.get("deployment_state") == "deployed"
@@ -1855,10 +1853,10 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
         if battle.get("phase") != "setup" and reserves:
             errors.append(f"battle {battle_id} kept reserves after deployment lock")
         if battle.get("phase") == "ready" and not any(
-            card.get("actor_id") == "player" and card.get("deployment_state") == "deployed"
+            card.get("actor_id") == battle_leader_id(state, battle) and card.get("deployment_state") == "deployed"
             for card in cards.values() if isinstance(card, dict)
         ):
-            errors.append(f"battle {battle_id} ready formation lacks the player")
+            errors.append(f"battle {battle_id} ready formation lacks the task leader")
         if not isinstance(participants, list) or not participants or len(participants) > policy.max_friendly_characters:
             errors.append(f"battle {battle_id} participant list is invalid")
         for actor_id in participants if isinstance(participants, list) else ():

@@ -804,6 +804,12 @@ def complete_assigned_task(context, actor_id: str, plan: Mapping[str, Any]) -> b
     task = context.state.tasks.get(task_id)
     if not isinstance(task, dict) or task.get("assignee_id") != actor_id or task.get("state") != "locked":
         return False
+    if task.get("forum") == "night":
+        battle = context.state.battles.get(str(plan.get("battle_id", "")), {})
+        if (battle.get("situation_id") != task_id or battle.get("result") != "victory"
+                or battle.get("phase") != "resolved" or actor_id not in battle.get("participant_ids", ())):
+            return False
+        task["completion_evidence"] = {"kind": "combat_victory", "battle_id": battle["battle_id"]}
     task["state"] = "in_progress"
     task["lock_revision"] = int(task.get("lock_revision", 0)) + 1
     reward = _apply_reward(context.state, actor_id, task)
@@ -980,6 +986,8 @@ def make_forum_task_handler(activity_handler):
         if action == "COMPLETE_FORUM_TASK":
             if task.get("assignee_id") != command.actor_id or task.get("state") != "locked":
                 return TransactionOutcome(False, False, "task_not_owned", "你没有持有这个任务。")
+            if task.get("forum") == "night":
+                return TransactionOutcome(False, False, "battle_resolution_required", "夜间战斗任务必须由实际卡牌战斗结果结算，不能文字完成。")
             active_battle_id = context.state.metadata.get("campus_combat", {}).get(
                 "active_battle_by_actor", {}
             ).get(command.actor_id)

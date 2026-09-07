@@ -106,12 +106,11 @@ class CampusNightForumTests(unittest.TestCase):
             {"task_id": task["task_id"]},
             marker="complete",
         )
-        self.assertTrue(completed["ok"], completed)
+        self.assertFalse(completed["ok"])
+        self.assertEqual("battle_resolution_required", completed["result"]["code"])
         final_task = bridge.snapshot()["tasks"][task["task_id"]]
-        self.assertEqual("completed", final_task["state"])
-        self.assertGreater(
-            bridge.kernel._state.knowledge["actors"]["player"]["total_progress"], 0
-        )
+        self.assertEqual("locked", final_task["state"])
+        self.assertTrue(bridge.snapshot()["combat"]["can_prepare"])
 
     def test_night_participation_and_task_results_are_deterministic(self):
         def trace(seed: int):
@@ -135,10 +134,11 @@ class CampusNightForumTests(unittest.TestCase):
         advance_to_evening(bridge)
         active_count = len(bridge.kernel._state.situations["night_world"]["active_actor_ids"])
         execute(bridge, "ADVANCE_PHASE", marker="late")
+        remaining_count = len(bridge.kernel._state.situations["night_world"]["active_actor_ids"])
         morning = execute(bridge, "ADVANCE_PHASE", marker="morning")
         execution = morning["result"]["payload"]["phase_execution"]
         state = bridge.kernel._state
-        self.assertEqual(active_count, execution["night_auto_exit_count"])
+        self.assertEqual(remaining_count, execution["night_auto_exit_count"])
         self.assertGreaterEqual(execution["night_task_expired_count"], 0)
         self.assertEqual([], state.situations["night_world"]["active_actor_ids"])
         self.assertEqual(active_count, state.situations["night_world"]["last_night_actor_count"])

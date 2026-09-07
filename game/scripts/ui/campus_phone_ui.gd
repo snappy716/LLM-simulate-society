@@ -1247,12 +1247,14 @@ func _refresh_forum_detail() -> void:
 		]
 		var phase: String = String((SimulationBridge.campus_snapshot.get("clock", {}) as Dictionary).get("phase", "morning"))
 		var phase_allowed: bool = phase in task.get("allowed_phases", [])
+		if requires_night:
+			phase_allowed = phase in ["evening", "late_night"]
 		if not at_location:
 			_forum_primary_action.text = "请先前往：%s" % task.get("scene_name", "任务地点")
 		elif not phase_allowed:
 			_forum_primary_action.text = "当前时段无法执行"
 		else:
-			_forum_primary_action.text = "完成当前目标"
+			_forum_primary_action.text = "前往夜战部署 · 实际战斗结算" if requires_night else "完成当前目标"
 		_forum_primary_action.disabled = not at_location or not phase_allowed or (requires_night and not night_accessible)
 	else:
 		_forum_primary_action.text = _task_state_label(task)
@@ -1269,6 +1271,9 @@ func _perform_primary_task_action() -> void:
 	if task.is_empty():
 		return
 	var state := String(task.get("state", ""))
+	if bool(task.get("owned_by_player", false)) and state == "locked" and task.get("forum") == "night":
+		_open_app("combat", "夜战部署")
+		return
 	_social_pending.forum = _selected_task_id
 	_refresh_forum_detail()
 	_forum_feedback.text = "正在同步论坛状态……"

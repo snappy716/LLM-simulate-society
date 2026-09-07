@@ -231,7 +231,7 @@ def make_scheduled_npc_phase_executor(
                 actor_id=actor_id,
                 action_id=str(plan.get("activity_id", "SCHEDULED_ACTIVITY")),
                 expected_world_revision=context.state.revision,
-                parameters={**plan.get("parameters", {}), "location_id": destination_id, "scheduled": True},
+                parameters={**plan.get("parameters", {}), "location_id": destination_id, "scheduled": True, "forum_task_id": plan.get("task_id", "")},
                 issued_day=context.state.clock.day,
                 issued_phase=context.state.clock.phase,
                 issued_minute=context.state.clock.minute,
@@ -243,7 +243,9 @@ def make_scheduled_npc_phase_executor(
             from simulation.systems.campus_assistance import record_assistance_outcome, EXPECTED_ASSISTANCE_FAILURES
             record_assistance_outcome(context, plan, activity_outcome)
             if not activity_outcome.success:
+                from simulation.systems.campus_autonomous_combat import EXPECTED_NPC_COMBAT_FAILURES
                 if (activity_command.action_id == "BUY_ITEM"
+                        or (plan.get("task_id") and activity_outcome.code in EXPECTED_NPC_COMBAT_FAILURES)
                         or (plan.get("personal_goal_id") and activity_outcome.code in EXPECTED_STEP_FAILURES)
                         or (plan.get("assistance_id") and activity_outcome.code in EXPECTED_ASSISTANCE_FAILURES)):
                     actor["current_activity"] = _activity_record(context.state, plan, status="blocked", route_step_count=route_step_count, block_code=activity_outcome.code)
@@ -269,11 +271,17 @@ def make_scheduled_npc_phase_executor(
                 route_step_count=route_step_count,
             )
             actor["current_activity"]["effects"] = activity_outcome.payload.get("effects", {})
+            if activity_outcome.payload.get("autonomous_battle"):
+                # A defeated/retreated NPC is now at the actual rescue/exit point.
+                actor["current_activity"]["location_id"] = actor["current_location_id"]
+                actor["current_activity"]["battle_result"] = activity_outcome.payload["autonomous_battle"]["result"]
+                summary["task_completed_count"] += int(activity_outcome.payload.get("task_completed", False))
             if activity_completed is not None and activity_completed(context, actor_id, plan):
                 summary["task_completed_count"] += 1
             context.emit(
                 "NPC_ACTIVITY_COMPLETED",
-                f"{actor_id} 在 {destination_id} 完成 {plan.get('activity_id')}。",
+                (f"{actor.get('display_name', actor_id)}：{activity_outcome.message}。"
+                 if activity_outcome.payload.get("autonomous_battle") else f"{actor_id} 在 {destination_id} 完成 {plan.get('activity_id')}。"),
                 actor_ids=[actor_id],
                 scene_id=destination_id,
                 payload={
@@ -282,7 +290,7 @@ def make_scheduled_npc_phase_executor(
                     "location_id": destination_id,
                     "route_step_count": route_step_count,
                 },
-                visibility="private",
+                visibility="secret" if activity_outcome.payload.get("autonomous_battle") else "private",
                 knowledge_tags=["schedule", "activity"],
             )
         if phase_completed is not None:

@@ -278,6 +278,9 @@ class CampusKernelBridge:
         for action_id in TRADE_ACTIONS:
             self.kernel.register_handler(action_id, make_campus_trade_handler())
         def scheduled_activity_handler(context, command):
+            task = context.state.tasks.get(command.parameters.get("forum_task_id", ""), {})
+            if task.get("forum") == "night" and command.actor_id != "player":
+                return autonomous_combat_handler(context, command)
             if command.action_id in {"DELIVER_MATERIAL_HELP", "WAIT_MATERIAL_HELP"}:
                 return assistance_handler(context, command)
             if command.action_id == "BUY_ITEM":
@@ -427,6 +430,10 @@ class CampusKernelBridge:
         for action_id in NIGHT_WORLD_ACTION_IDS:
             self.kernel.register_handler(action_id, night_world_handler)
         combat_handler = make_campus_combat_handler(combat_policy, combat_round_policy, graph, advance_phase_handler)
+        from simulation.systems.campus_autonomous_combat import make_autonomous_combat_handler, autonomous_combat_invariant
+        autonomous_combat_handler = make_autonomous_combat_handler(combat_handler, combat_policy, combat_round_policy, graph)
+        self.kernel.register_handler("EXECUTE_NPC_NIGHT_TASK", autonomous_combat_handler)
+        self.kernel.add_invariant(autonomous_combat_invariant)
         for action_id in COMBAT_ACTION_IDS:
             self.kernel.register_handler(action_id, combat_handler)
 

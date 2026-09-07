@@ -63,6 +63,11 @@ def _eligible_night_npcs(
     for actor_id, actor in sorted(state.population.items()):
         if actor_id == "player" or not isinstance(actor, dict) or _actor_has_active_task(state, actor_id):
             continue
+        from simulation.systems.campus_parties import party_for_actor
+        from simulation.systems.campus_enemy_turns import recovering_from_defeat
+        party = party_for_actor(state, actor_id)
+        if recovering_from_defeat(state, actor_id) or (party and (len(party["member_ids"]) > 1 or party["leader_id"] != actor_id)):
+            continue
         assessment = night_entry_assessment(state, actor_id, policy)
         if not assessment.get("allowed"):
             continue
@@ -128,6 +133,7 @@ def _enter_autonomous_npcs(context, policy: CampusNightWorldPolicy) -> list[str]
         )
     aggregate["active_day"] = state.clock.day
     aggregate["active_actor_ids"] = selected
+    aggregate["entered_actor_ids"] = list(selected)
     return selected
 
 
@@ -368,11 +374,12 @@ def _expire_previous_night(context) -> int:
         )
         expired += 1
     aggregate = state.situations["night_world"]
-    if aggregate.get("active_actor_ids"):
+    if aggregate.get("active_day") is not None:
         aggregate["last_night_day"] = aggregate.get("active_day")
-        aggregate["last_night_actor_count"] = len(aggregate["active_actor_ids"])
+        aggregate["last_night_actor_count"] = len(aggregate.get("entered_actor_ids", aggregate["active_actor_ids"]))
     aggregate["active_day"] = None
     aggregate["active_actor_ids"] = []
+    aggregate["entered_actor_ids"] = []
     return expired
 
 

@@ -158,20 +158,23 @@ class CampusGrowthTests(unittest.TestCase):
         self.assertTrue(all(item["mastery"] == 0 for item in view["topics"]))
         self.assertEqual(before, self.bridge.kernel.state.to_dict())
 
-    def test_npcs_earn_task_cases_without_player_or_card_battle(self):
+    def test_npcs_earn_real_battle_cases_without_player_and_no_duplicate_task_case(self):
         for _step in range(4):
             self.assertTrue(self.act("ADVANCE_PHASE")["ok"])
         state = self.bridge.kernel.state
-        self.assertEqual({}, state.battles)
+        self.assertGreater(len(state.battles), 0)
         cases = [(actor_id, case) for actor_id, record in state.knowledge["growth"]["actors"].items()
                  for case in record["case_records"].values()]
         self.assertGreater(len(cases), 0)
         for actor_id, case in cases:
             self.assertNotEqual("player", actor_id)
-            task = state.tasks[case["task_id"]]
-            self.assertEqual("completed", task["state"])
-            self.assertEqual(actor_id, task["assignee_id"])
-            self.assertIn(case["claim_id"], state.knowledge["beliefs_by_actor"][actor_id])
+            battle = state.battles[case["battle_id"]]
+            self.assertIn(actor_id, battle["participant_ids"])
+            self.assertEqual(case["result"], battle["result"])
+            self.assertIn(case["result"], {"victory", "defeat", "escaped"})
+            self.assertNotIn("task_id", case)
+        identities = [(actor, case["battle_id"], case["topic_id"]) for actor, case in cases]
+        self.assertEqual(len(identities), len(set(identities)))
 
     def test_invalid_component_values_and_containers_rejected(self):
         self.act("READ_KNOWLEDGE", topic_id="moon_fragment")
