@@ -60,6 +60,7 @@ def enter_with_owned_night_task(bridge: CampusKernelBridge) -> dict:
     task = next(
         task for task in bridge.snapshot()["tasks"].values()
         if task.get("forum") == "night"
+        and task.get("resolution_kind") != "field_recon"
         and task.get("state") in {"open", "viewed", "considering"}
     )
     claimed = execute(

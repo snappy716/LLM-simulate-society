@@ -158,7 +158,7 @@ class CampusGrowthTests(unittest.TestCase):
         self.assertTrue(all(item["mastery"] == 0 for item in view["topics"]))
         self.assertEqual(before, self.bridge.kernel.state.to_dict())
 
-    def test_npcs_earn_real_battle_cases_without_player_and_no_duplicate_task_case(self):
+    def test_npcs_earn_real_battle_and_field_cases_without_player_or_duplicate_credit(self):
         for _step in range(4):
             self.assertTrue(self.act("ADVANCE_PHASE")["ok"])
         state = self.bridge.kernel.state
@@ -166,14 +166,24 @@ class CampusGrowthTests(unittest.TestCase):
         cases = [(actor_id, case) for actor_id, record in state.knowledge["growth"]["actors"].items()
                  for case in record["case_records"].values()]
         self.assertGreater(len(cases), 0)
+        self.assertTrue(any("battle_id" in case for _, case in cases))
+        self.assertTrue(any("task_id" in case for _, case in cases))
         for actor_id, case in cases:
             self.assertNotEqual("player", actor_id)
+            if "task_id" in case:
+                task = state.tasks[case["task_id"]]
+                self.assertEqual("completed", task["state"])
+                self.assertEqual(actor_id, task["field_report"]["actor_id"])
+                self.assertEqual(2, len(task["field_report"]["claim_ids"]))
+                self.assertFalse(any(b["situation_id"] == task["task_id"] for b in state.battles.values()))
+                self.assertEqual("task_completed", case["result"])
+                continue
             battle = state.battles[case["battle_id"]]
             self.assertIn(actor_id, battle["participant_ids"])
             self.assertEqual(case["result"], battle["result"])
             self.assertIn(case["result"], {"victory", "defeat", "escaped"})
             self.assertNotIn("task_id", case)
-        identities = [(actor, case["battle_id"], case["topic_id"]) for actor, case in cases]
+        identities = [(actor, case.get("battle_id", case.get("task_id")), case["topic_id"]) for actor, case in cases]
         self.assertEqual(len(identities), len(set(identities)))
 
     def test_invalid_component_values_and_containers_rejected(self):

@@ -11,6 +11,7 @@ from simulation.systems.campus_inventory import campus_inventory_view
 from simulation.systems.campus_investigation import investigation_view
 from simulation.systems.campus_growth import growth_view
 from simulation.systems.campus_assistance import assistance_view
+from simulation.systems.campus_fieldwork import fieldwork_view
 from simulation.systems.campus_vitals import recovery_skills, rest_recovery_allowed, recovery_options
 from simulation.systems.campus_schedules import current_schedule_slot
 from simulation.systems.campus_clubs import club_catalog_view
@@ -282,7 +283,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             for key in (
                 "task_id", "template_id", "forum", "world_layer", "issuer_id", "title", "description", "objective",
                 "action_id", "activity_id", "allowed_phases", "scene_id", "execution_region_id",
-                "created_day", "expires_day",
+                "created_day", "expires_day", "resolution_kind",
                 "state", "assignee_id", "lock_revision", "reward", "tags",
                 "required_skill_ids", "required_item_ids", "history",
                 "helper_ids",
@@ -291,6 +292,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             )
         }
         public_tasks[task_id].update({
+            "fieldwork": fieldwork_view(state, "player", task),
             "issuer_name": issuer.get("display_name", "校园用户"),
             "assignee_name": assignee.get("display_name", "") if isinstance(assignee, dict) else "",
             "scene_name": place.get("name", task.get("scene_id", "")) if isinstance(place, dict) else task.get("scene_id", ""),

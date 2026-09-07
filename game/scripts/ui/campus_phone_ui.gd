@@ -1133,7 +1133,7 @@ func _sort_tasks(a: Dictionary, b: Dictionary) -> bool:
 
 
 func _task_state_label(task: Dictionary) -> String:
-	if bool(task.get("owned_by_player", false)):
+	if bool(task.get("owned_by_player", false)) and String(task.get("state", "")) in ["locked", "in_progress"]:
 		return "[我的]"
 	return {
 		"open": "[新]", "viewed": "[浏览中]", "considering": "[竞争中]",
@@ -1240,6 +1240,9 @@ func _refresh_forum_detail() -> void:
 	var state := String(task.get("state", ""))
 	var owned := bool(task.get("owned_by_player", false))
 	var requires_night: bool = String(task.get("forum", "surface")) == "night"
+	var fieldwork: Dictionary = task.get("fieldwork", {})
+	if not fieldwork.is_empty():
+		_forum_detail.text += "\n\n[b]调查方法[/b]\n%s" % fieldwork.get("rule_note", "")
 	var night_accessible := bool((SimulationBridge.campus_snapshot.get("night_world", {}) as Dictionary).get("night_forum_accessible", false))
 	_forum_abandon_action.visible = owned and state in ["locked", "in_progress"]
 	_forum_abandon_action.disabled = false
@@ -1264,6 +1267,8 @@ func _refresh_forum_detail() -> void:
 			_forum_primary_action.text = "当前时段无法执行"
 		else:
 			_forum_primary_action.text = "前往夜战部署 · 实际战斗结算" if requires_night else "完成当前目标"
+			if not fieldwork.is_empty():
+				_forum_primary_action.text = "提交实地报告 · 免费" if fieldwork.get("ready_to_report", false) else "打开调查笔记 · 深入搜查现场"
 		_forum_primary_action.disabled = not at_location or not phase_allowed or (requires_night and not night_accessible)
 	else:
 		_forum_primary_action.text = _task_state_label(task)
@@ -1281,8 +1286,13 @@ func _perform_primary_task_action() -> void:
 		return
 	var state := String(task.get("state", ""))
 	if bool(task.get("owned_by_player", false)) and state == "locked" and task.get("forum") == "night":
-		_open_app("combat", "夜战部署")
-		return
+		var fieldwork: Dictionary = task.get("fieldwork", {})
+		if fieldwork.is_empty():
+			_open_app("combat", "夜战部署")
+			return
+		if not fieldwork.get("ready_to_report", false):
+			_open_app("notes", "调查笔记")
+			return
 	_social_pending.forum = _selected_task_id
 	_refresh_forum_detail()
 	_forum_feedback.text = "正在同步论坛状态……"
@@ -1291,7 +1301,10 @@ func _perform_primary_task_action() -> void:
 			"CLAIM_FORUM_TASK", _selected_task_id, int(task.get("lock_revision", 0))
 		)
 	elif bool(task.get("owned_by_player", false)) and state == "locked":
-		SimulationBridge.operate_campus_task("COMPLETE_FORUM_TASK", _selected_task_id)
+		if task.get("resolution_kind") == "field_recon":
+			SimulationBridge.operate_campus_task("SUBMIT_FIELD_REPORT", _selected_task_id, int(task.get("lock_revision", 0)))
+		else:
+			SimulationBridge.operate_campus_task("COMPLETE_FORUM_TASK", _selected_task_id)
 
 
 func _abandon_selected_task() -> void:

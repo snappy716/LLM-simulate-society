@@ -204,7 +204,7 @@ def night_entry_assessment(
     }
 
 
-def make_campus_night_world_handler(policy: CampusNightWorldPolicy):
+def make_campus_night_world_handler(policy: CampusNightWorldPolicy, task_handler=None):
     def handle(context, command) -> TransactionOutcome:
         state = context.state
         if command.actor_id not in state.population:
@@ -262,6 +262,17 @@ def make_campus_night_world_handler(policy: CampusNightWorldPolicy):
                 )
             if actor_state.get("layer") != "night":
                 return TransactionOutcome(False, False, "not_in_night_world", "当前并不在夜相中。")
+            released = []
+            for task in state.tasks.values():
+                if task.get("forum") != "night" or task.get("assignee_id") != command.actor_id or task.get("state") not in {"locked", "in_progress"}:
+                    continue
+                if task_handler is None:
+                    return TransactionOutcome(False, False, "night_task_locked", "请先释放未完成的夜间任务。")
+                from dataclasses import replace
+                outcome = task_handler(context, replace(command, action_id="ABANDON_FORUM_TASK", parameters={"task_id": task["task_id"]}))
+                if not outcome.success:
+                    return outcome
+                released.append(task["task_id"])
             actor_state["layer"] = "surface"
             actor_state["last_transition_day"] = state.clock.day
             actor_state["last_transition_phase"] = state.clock.phase
@@ -276,8 +287,8 @@ def make_campus_night_world_handler(policy: CampusNightWorldPolicy):
                 knowledge_tags=["night_world", "pollution", "transition"],
             )
             return TransactionOutcome(
-                True, True, "success", "已返回表世界。", commit=True,
-                payload={"actor_state": deepcopy(actor_state), "action_class": "free"},
+                True, True, "success", "已返回表世界；未完成的夜间任务已按放弃规则释放。" if released else "已返回表世界。", commit=True,
+                payload={"actor_state": deepcopy(actor_state), "action_class": "free", "released_task_ids": released},
             )
         return TransactionOutcome(False, False, "unknown_night_world_action", "未知夜相行动。")
 

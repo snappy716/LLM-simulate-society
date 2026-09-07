@@ -116,6 +116,7 @@ def form_npc_expeditions(context, graph, party_policy, party_handler, messaging_
     ledger = _ledger(state)
     attempted = ledger.setdefault("attempted_task_ids", [])
     tasks = [task for task in state.tasks.values() if task.get("forum") == "night" and task.get("state") == "locked"
+             and task.get("resolution_kind") != "field_recon"
              and task.get("assignee_id") not in {None, "player"} and task["task_id"] not in ledger["plans"]
              and task["task_id"] not in attempted]
     for task in tasks:

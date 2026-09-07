@@ -23,7 +23,8 @@ class AutonomousCombatTests(unittest.TestCase):
         self.bridge.kernel.restore_checkpoint(self.baseline, self.rng, expected_revision=self.bridge.kernel.state.revision)
         self.state = self.bridge.kernel._state
         self.bridge.cognition_runtime.configure_rule()
-        self.task = next(task for task in self.state.tasks.values() if task.get("forum") == "night" and task.get("assignee_id"))
+        self.task = next(task for task in self.state.tasks.values() if task.get("forum") == "night"
+                         and task.get("resolution_kind") != "field_recon" and task.get("assignee_id"))
         self.npc = self.task["assignee_id"]
         # Explicit unit precondition: at an actually owned task with one action.
         self.actor = self.state.population[self.npc]
@@ -161,6 +162,7 @@ class AutonomousCombatTests(unittest.TestCase):
         state = self.bridge.kernel._state
         self.assertEqual("victory", first["result"]["payload"]["autonomous_battle"]["result"])
         task = next(t for t in state.tasks.values() if t.get("forum") == "night"
+                    and t.get("resolution_kind") != "field_recon"
                     and t["state"] in {"open", "viewed", "considering"} and t["issuer_id"] != self.npc)
         claimed = self.act("CLAIM_FORUM_TASK", {"task_id": task["task_id"], "expected_task_revision": task["lock_revision"]})
         self.assertTrue(claimed["ok"], claimed["result"]["code"])

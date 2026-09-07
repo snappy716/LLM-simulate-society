@@ -3,6 +3,7 @@
   "templates": [
     {
       "id": "mirror_lake_echo_trace",
+      "field_profile": {"kind": "echo", "label": "湖岸足迹采样点", "baseline_label": "本人连续行走的步数", "anomaly_label": "同步出现的额外脚步数", "baseline_min": 8, "baseline_max": 16, "offset_min": 2, "offset_max": 6},
       "title": "追踪镜湖边的重复脚步",
       "description": "巡查者报告镜湖边出现了与行人步伐完全同步的第二组脚步声。",
       "objective": "沿镜湖广场完成一次异常轨迹记录。",
@@ -15,6 +16,7 @@
     },
     {
       "id": "library_missing_index",
+      "field_profile": {"kind": "index", "label": "索引与书架对照点", "baseline_label": "索引卡登记的编号", "anomaly_label": "对应书架显现的编号", "baseline_min": 120, "baseline_max": 190, "offset_min": 11, "offset_max": 35},
       "title": "核对图书馆消失的索引",
       "description": "夜相中的书架出现了现实馆藏中不存在的借阅编号。",
       "objective": "确认索引指向的书架并留下可靠记录。",
@@ -99,6 +101,7 @@
     },
     {
       "id": "observatory_moon_measurement",
+      "field_profile": {"kind": "moonlight", "label": "月光交叉测量点", "baseline_label": "遮光对照区读数（游戏单位）", "anomaly_label": "暴露区峰值读数（游戏单位）", "baseline_min": 10, "baseline_max": 25, "offset_min": 20, "offset_max": 50},
       "title": "复测观测台的月光偏差",
       "description": "观测台记录到无法用天气解释的月光强度跳变。",
       "objective": "完成一次交叉测量并标注污染峰值。",

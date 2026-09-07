@@ -171,11 +171,13 @@ class CampusDepartureTests(unittest.TestCase):
         self.assertTrue(won["ok"])
         self.assertIsNone(won["snapshot"]["combat"]["active_battle"])
         task = next(t for t in self.bridge.snapshot()["tasks"].values()
-                    if t.get("forum") == "night" and t.get("state") in {"open", "viewed", "considering"})
+                    if t.get("forum") == "night" and t.get("resolution_kind") != "field_recon"
+                    and t.get("state") in {"open", "viewed", "considering"})
         self.assertTrue(combat_execute(self.bridge, "CLAIM_FORUM_TASK", {
-            "task_id": task["task_id"], "expected_task_revision": task["lock_revision"]})["ok"])
-        combat_execute(self.bridge, "FAST_TRAVEL_CAMPUS", {"destination_id": task["execution_region_id"]})
-        result = combat_execute(self.bridge, "START_BATTLE_PREPARATION", {"task_id": task["task_id"]})
+            "task_id": task["task_id"], "expected_task_revision": task["lock_revision"]}, marker="second-claim")["ok"])
+        travelled = combat_execute(self.bridge, "FAST_TRAVEL_CAMPUS", {"destination_id": task["execution_region_id"]}, marker="second-travel")
+        self.assertTrue(travelled["ok"] or travelled["result"]["code"] == "already_there")
+        result = combat_execute(self.bridge, "START_BATTLE_PREPARATION", {"task_id": task["task_id"]}, marker="second-prepare")
         self.assertTrue(result["ok"], result["result"]["code"])
         battle = result["snapshot"]["combat"]["active_battle"]
         card = next(iter(battle["character_cards"]))

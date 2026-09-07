@@ -1,0 +1,209 @@
+{
+  "migration_id": "campus-field-sites-2026-09-07",
+  "source_version": "637fd86b7862d5ac",
+  "target_version": "d0966319af84c133",
+  "source_manifest": {
+    "items/campus_economy.json": {
+      "schema_version": 1,
+      "sha256": "02fce296e5e6020b48a58547416fb12f8df1941ce4b906c756d4fc2a89ede2cb"
+    },
+    "items/campus_catalog.json": {
+      "schema_version": 1,
+      "sha256": "68984b59dd6b0f4d20ccb376ccf5d8dcc1dfd9118e495da01dca9008c33da9db"
+    },
+    "locations/campus_regions.json": {
+      "schema_version": 1,
+      "sha256": "124a01211ab54ce226dcbc8483f131067a22a3b5d329e6b833e5b9d71c7f7692"
+    },
+    "locations/interior_templates.json": {
+      "schema_version": 1,
+      "sha256": "dfcb315a27071a6a4e9a995b8092943e0d03f3ddfe82c433745379686a31ade0"
+    },
+    "locations/campus_locations.json": {
+      "schema_version": 1,
+      "sha256": "9038a3c56343c52eb6d903071a2d91a06df43e32f53c983801624d5bcd6ebabb"
+    },
+    "locations/campus_passages.json": {
+      "schema_version": 1,
+      "sha256": "aa334d4e31093ea778aed7a193dc448e05d895313d61e32ed17845f9dfec39e3"
+    },
+    "actions/college_skills.json": {
+      "schema_version": 1,
+      "sha256": "f03005d7730a76ed6d79db45120494ebf63057e4f1314b0d89a61e8440b9cd71"
+    },
+    "actions/combat_deployment.json": {
+      "schema_version": 1,
+      "sha256": "cc1ee23d30fbdfb4e8d8a305a821681fc5cd823f76782e3ff7316779ec697aba"
+    },
+    "actions/combat_rounds.json": {
+      "schema_version": 1,
+      "sha256": "4547d4d75a80545ba02cdceda864cf15118df016f88aed4fbf106cfedbe7f5fb"
+    },
+    "actions/action_economy.json": {
+      "schema_version": 1,
+      "sha256": "6682e2e0d4f9714f755cd567188d1b1443c794f221d0ddd11408675033c7b51a"
+    },
+    "actions/campus_activities.json": {
+      "schema_version": 1,
+      "sha256": "c6033b8972b65fb18b23640bc2cd4d57fa4040a97d3d8d8d2c37478908d2b508"
+    },
+    "actions/campus_decisions.json": {
+      "schema_version": 1,
+      "sha256": "05679c9fca2badfd9f60e0556571ce72a10aba632be247f1b1981aa366e34527"
+    },
+    "actions/campus_interactions.json": {
+      "schema_version": 1,
+      "sha256": "f976b7ce47ff1ae24c3fda3945d5166d313e1add4c52ad2466335eb6f8b1a463"
+    },
+    "actions/campus_messaging.json": {
+      "schema_version": 1,
+      "sha256": "f6dd51326b3e143a61923e68203358668d18ab8075a72e8a6f4c60d611e08814"
+    },
+    "actions/campus_schedules.json": {
+      "schema_version": 1,
+      "sha256": "fb98ca1121a674040e5ca359d582d2ec5b8c315c668b3d435832b95866e549f5"
+    },
+    "organizations/clubs.json": {
+      "schema_version": 1,
+      "sha256": "49d63c81c4fb5d45017fca34bddd8ef6ae5713dd42834ba1e756def0f52418fc"
+    },
+    "organizations/party_policy.json": {
+      "schema_version": 1,
+      "sha256": "ac18a13dc9712b017d33c65c197363f8da58981ae809d1a66ec359b153a2af5b"
+    },
+    "situations/surface_tasks.json": {
+      "schema_version": 1,
+      "sha256": "ed180a9b8ba59f83dd21248e893c1e8a23b0c3fffbdfdd7744b2ec08cae9bfcb"
+    },
+    "situations/night_tasks.json": {
+      "schema_version": 1,
+      "sha256": "28f2fe2f62e1664e8700908bf00ddcd661e7fc5bd469f13abe13837093d1dda5"
+    },
+    "situations/forum_policy.json": {
+      "schema_version": 1,
+      "sha256": "0fe87d611038d6e462fe4dff3147cbdaa21cb778c3596de6520443b8c58cef88"
+    },
+    "situations/night_world.json": {
+      "schema_version": 1,
+      "sha256": "9943651f4e906c3aba35858383698083151446214f27385b830b9952381fa4d8"
+    },
+    "npcs/campus_population.json": {
+      "schema_version": 1,
+      "sha256": "5287a85d176a76e2b69a89b53224111b09cfc001e77afac0595caedab0b11116"
+    },
+    "npcs/cognition_policy.json": {
+      "schema_version": 1,
+      "sha256": "11ac6422829a9a8e8989df0fa62e21a87da4417f33ef75c5c1da23b34702e78e"
+    },
+    "main_story/demo_calendar.json": {
+      "schema_version": 1,
+      "sha256": "510bad417b5bd82e68c74b0f4ee3736274f7f6bf2d47f821fc211a436e52a8bf"
+    },
+    "situations/enemy_archetypes.json": {
+      "schema_version": 1,
+      "sha256": "a40cdfce4720bdd8ebba7e4fcb60ffa57d9eb4ab34e26ee86c7fac450c43306f"
+    }
+  },
+  "target_manifest": {
+    "items/campus_economy.json": {
+      "schema_version": 1,
+      "sha256": "02fce296e5e6020b48a58547416fb12f8df1941ce4b906c756d4fc2a89ede2cb"
+    },
+    "items/campus_catalog.json": {
+      "schema_version": 1,
+      "sha256": "68984b59dd6b0f4d20ccb376ccf5d8dcc1dfd9118e495da01dca9008c33da9db"
+    },
+    "locations/campus_regions.json": {
+      "schema_version": 1,
+      "sha256": "124a01211ab54ce226dcbc8483f131067a22a3b5d329e6b833e5b9d71c7f7692"
+    },
+    "locations/interior_templates.json": {
+      "schema_version": 1,
+      "sha256": "dfcb315a27071a6a4e9a995b8092943e0d03f3ddfe82c433745379686a31ade0"
+    },
+    "locations/campus_locations.json": {
+      "schema_version": 1,
+      "sha256": "9038a3c56343c52eb6d903071a2d91a06df43e32f53c983801624d5bcd6ebabb"
+    },
+    "locations/campus_passages.json": {
+      "schema_version": 1,
+      "sha256": "aa334d4e31093ea778aed7a193dc448e05d895313d61e32ed17845f9dfec39e3"
+    },
+    "actions/college_skills.json": {
+      "schema_version": 1,
+      "sha256": "f03005d7730a76ed6d79db45120494ebf63057e4f1314b0d89a61e8440b9cd71"
+    },
+    "actions/combat_deployment.json": {
+      "schema_version": 1,
+      "sha256": "cc1ee23d30fbdfb4e8d8a305a821681fc5cd823f76782e3ff7316779ec697aba"
+    },
+    "actions/combat_rounds.json": {
+      "schema_version": 1,
+      "sha256": "4547d4d75a80545ba02cdceda864cf15118df016f88aed4fbf106cfedbe7f5fb"
+    },
+    "actions/action_economy.json": {
+      "schema_version": 1,
+      "sha256": "6682e2e0d4f9714f755cd567188d1b1443c794f221d0ddd11408675033c7b51a"
+    },
+    "actions/campus_activities.json": {
+      "schema_version": 1,
+      "sha256": "c6033b8972b65fb18b23640bc2cd4d57fa4040a97d3d8d8d2c37478908d2b508"
+    },
+    "actions/campus_decisions.json": {
+      "schema_version": 1,
+      "sha256": "05679c9fca2badfd9f60e0556571ce72a10aba632be247f1b1981aa366e34527"
+    },
+    "actions/campus_interactions.json": {
+      "schema_version": 1,
+      "sha256": "f976b7ce47ff1ae24c3fda3945d5166d313e1add4c52ad2466335eb6f8b1a463"
+    },
+    "actions/campus_messaging.json": {
+      "schema_version": 1,
+      "sha256": "f6dd51326b3e143a61923e68203358668d18ab8075a72e8a6f4c60d611e08814"
+    },
+    "actions/campus_schedules.json": {
+      "schema_version": 1,
+      "sha256": "fb98ca1121a674040e5ca359d582d2ec5b8c315c668b3d435832b95866e549f5"
+    },
+    "organizations/clubs.json": {
+      "schema_version": 1,
+      "sha256": "49d63c81c4fb5d45017fca34bddd8ef6ae5713dd42834ba1e756def0f52418fc"
+    },
+    "organizations/party_policy.json": {
+      "schema_version": 1,
+      "sha256": "ac18a13dc9712b017d33c65c197363f8da58981ae809d1a66ec359b153a2af5b"
+    },
+    "situations/surface_tasks.json": {
+      "schema_version": 1,
+      "sha256": "ed180a9b8ba59f83dd21248e893c1e8a23b0c3fffbdfdd7744b2ec08cae9bfcb"
+    },
+    "situations/night_tasks.json": {
+      "schema_version": 1,
+      "sha256": "1780b6cdb93b26bd98a20cdb2df40d702d2ab55f84f2f7ac7aa6708c504ea7c4"
+    },
+    "situations/forum_policy.json": {
+      "schema_version": 1,
+      "sha256": "0fe87d611038d6e462fe4dff3147cbdaa21cb778c3596de6520443b8c58cef88"
+    },
+    "situations/night_world.json": {
+      "schema_version": 1,
+      "sha256": "9943651f4e906c3aba35858383698083151446214f27385b830b9952381fa4d8"
+    },
+    "npcs/campus_population.json": {
+      "schema_version": 1,
+      "sha256": "5287a85d176a76e2b69a89b53224111b09cfc001e77afac0595caedab0b11116"
+    },
+    "npcs/cognition_policy.json": {
+      "schema_version": 1,
+      "sha256": "11ac6422829a9a8e8989df0fa62e21a87da4417f33ef75c5c1da23b34702e78e"
+    },
+    "main_story/demo_calendar.json": {
+      "schema_version": 1,
+      "sha256": "510bad417b5bd82e68c74b0f4ee3736274f7f6bf2d47f821fc211a436e52a8bf"
+    },
+    "situations/enemy_archetypes.json": {
+      "schema_version": 1,
+      "sha256": "a40cdfce4720bdd8ebba7e4fcb60ffa57d9eb4ab34e26ee86c7fac450c43306f"
+    }
+  }
+}

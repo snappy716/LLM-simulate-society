@@ -300,6 +300,8 @@ class CampusKernelBridge:
         def scheduled_activity_handler(context, command):
             task = context.state.tasks.get(command.parameters.get("forum_task_id", ""), {})
             if task.get("forum") == "night" and command.actor_id != "player":
+                if task.get("resolution_kind") == "field_recon":
+                    return autonomous_fieldwork_handler(context, command)
                 return autonomous_combat_handler(context, command)
             if command.action_id in {"DELIVER_MATERIAL_HELP", "WAIT_MATERIAL_HELP"}:
                 return assistance_handler(context, command)
@@ -313,6 +315,12 @@ class CampusKernelBridge:
             project_investigation_events, investigation_invariant,
         )
         investigation_handler = make_investigation_handler(intelligence_policy)
+        from simulation.systems.campus_fieldwork import make_field_report_handler, make_autonomous_fieldwork_handler, fieldwork_invariant
+        field_report_handler = make_field_report_handler()
+        autonomous_fieldwork_handler = make_autonomous_fieldwork_handler(investigation_handler, field_report_handler)
+        self.kernel.register_handler("SUBMIT_FIELD_REPORT", field_report_handler)
+        self.kernel.register_handler("EXECUTE_NPC_FIELDWORK", autonomous_fieldwork_handler)
+        self.kernel.add_invariant(fieldwork_invariant)
         for action_id in INVESTIGATION_ACTIONS:
             self.kernel.register_handler(action_id, investigation_handler)
         self.kernel.add_event_projector(project_investigation_events)
@@ -455,7 +463,7 @@ class CampusKernelBridge:
                 party_handler,
             ),
         )
-        night_world_handler = make_campus_night_world_handler(night_world_policy)
+        night_world_handler = make_campus_night_world_handler(night_world_policy, task_handler)
         for action_id in NIGHT_WORLD_ACTION_IDS:
             self.kernel.register_handler(action_id, night_world_handler)
         combat_handler = make_campus_combat_handler(combat_policy, combat_round_policy, graph, advance_phase_handler)

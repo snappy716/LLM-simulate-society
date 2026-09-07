@@ -1,5 +1,6 @@
 """Retirement is explicit: production imports must not recreate the old town."""
 import importlib
+import json
 import pkgutil
 import unittest
 from pathlib import Path
@@ -99,7 +100,10 @@ class RuntimeRetirementTests(unittest.TestCase):
         self.assertEqual(["morning", "afternoon", "evening", "late_night"],
                          [phase.value for phase in PHASES])
         self.assertIs(Phase.MORNING, PHASES[0])
-        self.assertEqual("637fd86b7862d5ac", ContentRegistry.load_default(ROOT / "content").content_version)
+        migration = json.loads((ROOT / "simulation/persistence/campus_field_content.json").read_text())
+        self.assertEqual("637fd86b7862d5ac", migration["source_version"])
+        self.assertEqual("d0966319af84c133", migration["target_version"])
+        self.assertEqual(migration["target_version"], ContentRegistry.load_default(ROOT / "content").content_version)
 
 
 if __name__ == "__main__":

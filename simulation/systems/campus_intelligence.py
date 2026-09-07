@@ -69,7 +69,7 @@ def _new_claim(
     known_by: Iterable[str],
     evidence_kind: str,
 ) -> Dict[str, Any]:
-    if subject_id not in state.population:
+    if subject_id not in state.population and subject_id not in state.places:
         raise KeyError(f"unknown campus claim subject: {subject_id}")
     owners = list(dict.fromkeys(known_by))
     if any(owner_id not in state.population for owner_id in owners):
@@ -398,7 +398,7 @@ def campus_intelligence_invariant(state: WorldState) -> Iterable[str]:
     for claim_id, claim in claims.items():
         if not isinstance(claim, dict) or claim.get("claim_id") != claim_id:
             errors.append(f"invalid campus claim {claim_id}")
-        elif claim.get("subject_id") not in state.population:
+        elif claim.get("subject_id") not in state.population and claim.get("subject_id") not in state.places:
             errors.append(f"campus claim {claim_id} references unknown subject")
         elif not 0 <= int(claim.get("secrecy", -1)) <= 100:
             errors.append(f"campus claim {claim_id} has invalid secrecy")

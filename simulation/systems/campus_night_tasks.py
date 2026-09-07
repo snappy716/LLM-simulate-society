@@ -36,6 +36,11 @@ def load_night_task_templates(registry) -> Dict[str, Dict[str, Any]]:
             raise ValueError(f"night task {template_id} references an unknown campus place")
         if template.get("enemy_archetype_id") not in registry.ids("enemy_archetype"):
             raise ValueError(f"night task {template_id} references an unknown enemy archetype")
+        if "field_profile" in template:
+            from simulation.systems.campus_fieldwork import validate_field_profile
+            validate_field_profile(template["field_profile"])
+            if template["activity_id"] != "NIGHT_RECON":
+                raise ValueError("physical recon profile requires NIGHT_RECON")
     return templates
 
 
@@ -205,6 +210,9 @@ def _publish_night_tasks(
                 _history(state.clock.day, state.clock.phase, "published", "异常委托已发布到夜间论坛。")
             ],
         }
+        if "field_profile" in template:
+            from simulation.systems.campus_fieldwork import create_field_site
+            create_field_site(context, task, template["field_profile"])
         state.tasks[task_id] = task
         published.append(task_id)
         context.emit(

@@ -724,11 +724,20 @@ def complete_assigned_task(context, actor_id: str, plan: Mapping[str, Any]) -> b
     if not isinstance(task, dict) or task.get("assignee_id") != actor_id or task.get("state") != "locked":
         return False
     if task.get("forum") == "night":
-        battle = context.state.battles.get(str(plan.get("battle_id", "")), {})
-        if (battle.get("situation_id") != task_id or battle.get("result") != "victory"
-                or battle.get("phase") != "resolved" or actor_id not in battle.get("participant_ids", ())):
-            return False
-        task["completion_evidence"] = {"kind": "combat_victory", "battle_id": battle["battle_id"]}
+        from simulation.systems.campus_fieldwork import is_field_task, report_claim_ids
+        if is_field_task(task):
+            report = task.get("field_report", {})
+            if (not plan.get("field_report") or report.get("actor_id") != actor_id
+                    or report.get("claim_ids") != report_claim_ids(context.state, actor_id, task)
+                    or len(report.get("claim_ids", [])) != 2):
+                return False
+            task["completion_evidence"] = {"kind": "field_report", "site_id": task["field_site_id"]}
+        else:
+            battle = context.state.battles.get(str(plan.get("battle_id", "")), {})
+            if (battle.get("situation_id") != task_id or battle.get("result") != "victory"
+                    or battle.get("phase") != "resolved" or actor_id not in battle.get("participant_ids", ())):
+                return False
+            task["completion_evidence"] = {"kind": "combat_victory", "battle_id": battle["battle_id"]}
     task["state"] = "in_progress"
     task["lock_revision"] = int(task.get("lock_revision", 0)) + 1
     reward = _apply_reward(context.state, actor_id, task)
@@ -892,11 +901,11 @@ def make_forum_task_handler(activity_handler):
                 context.state, command.actor_id, task, "abandoned"
             )
             task.setdefault("history", []).append(
-                _history(context.state.clock.day, context.state.clock.phase, "abandoned", "玩家放弃了任务，任务重新开放。")
+                _history(context.state.clock.day, context.state.clock.phase, "abandoned", f"{actor.get('display_name', command.actor_id)}放弃了任务，任务已释放。")
             )
             context.emit(
                 "FORUM_TASK_ABANDONED",
-                f"玩家放弃了《{task['title']}》。",
+                f"{actor.get('display_name', command.actor_id)}放弃了《{task['title']}》。",
                 actor_ids=[command.actor_id],
                 target_ids=[task["issuer_id"]],
                 scene_id=task["scene_id"],
@@ -917,6 +926,8 @@ def make_forum_task_handler(activity_handler):
             if task.get("assignee_id") != command.actor_id or task.get("state") != "locked":
                 return TransactionOutcome(False, False, "task_not_owned", "你没有持有这个任务。")
             if task.get("forum") == "night":
+                if task.get("resolution_kind") == "field_recon":
+                    return TransactionOutcome(False, False, "field_evidence_required", "请在现场深入搜查，再提交实地报告；文字完成或战斗不能替代调查。")
                 return TransactionOutcome(False, False, "battle_resolution_required", "夜间战斗任务必须由实际卡牌战斗结果结算，不能文字完成。")
             active_battle_id = context.state.metadata.get("campus_combat", {}).get(
                 "active_battle_by_actor", {}

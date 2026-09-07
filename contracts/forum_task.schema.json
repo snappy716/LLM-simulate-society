@@ -16,6 +16,8 @@
     "template_id": {"type": "string", "minLength": 1},
     "action_id": {"type": "string", "minLength": 1},
     "activity_id": {"type": "string", "minLength": 1},
+    "resolution_kind": {"enum": ["field_recon", null]},
+    "field_site_id": {"type": "string", "minLength": 1},
     "allowed_phases": {
       "type": "array",
       "items": {"enum": ["morning", "afternoon", "evening", "late_night"]},

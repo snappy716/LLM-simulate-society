@@ -56,7 +56,8 @@ class CampusNightForumTests(unittest.TestCase):
             1,
         )
         self.assertEqual(
-            sum(battle.get("result") == "victory" for battle in bridge.kernel._state.battles.values()),
+            sum(battle.get("result") == "victory" for battle in bridge.kernel._state.battles.values())
+            + sum(bool(task.get("field_report")) for task in bridge.kernel._state.tasks.values()),
             sum(task.get("state") == "completed" for task in bridge.kernel._state.tasks.values() if task.get("forum") == "night"),
         )
 
@@ -66,6 +67,7 @@ class CampusNightForumTests(unittest.TestCase):
         hidden_task = next(
             task for task in bridge.kernel._state.tasks.values()
             if task.get("forum") == "night" and task.get("state") in {"open", "viewed", "considering"}
+            and task.get("resolution_kind") != "field_recon"
         )
         blocked = execute(
             bridge,

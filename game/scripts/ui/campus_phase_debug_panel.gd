@@ -77,7 +77,11 @@ func _render_snapshot(snapshot: Dictionary) -> void:
 		int(night_world.get("pollution", 0)),
 	]
 	if bool(night_world.get("can_exit", false)):
-		night_world_button.text = "返回表世界（免费）"
+		var holds_night_task := false
+		for task in snapshot.get("tasks", {}).values():
+			if task.get("forum") == "night" and task.get("owned_by_player", false) and task.get("state") in ["locked", "in_progress"]:
+				holds_night_task = true
+		night_world_button.text = "返回表世界并放弃未完成夜间任务" if holds_night_task else "返回表世界（免费）"
 		night_world_button.disabled = false
 	else:
 		night_world_button.text = "进入夜相（免费）" if bool(night_world.get("can_enter", false)) else "夜相当前不可进入"

@@ -130,6 +130,7 @@ def _owned_night_tasks(state: WorldState, actor_id: str) -> list[Dict[str, Any]]
             task for task in state.tasks.values()
             if isinstance(task, dict)
             and task.get("forum") == "night"
+            and task.get("resolution_kind") != "field_recon"
             and task.get("assignee_id") == actor_id
             and task.get("state") in {"locked", "in_progress"}
         ),

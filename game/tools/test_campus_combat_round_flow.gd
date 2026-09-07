@@ -34,7 +34,7 @@ func _run_flow() -> void:
 
 	var task: Dictionary = {}
 	for value in (bridge.get("campus_snapshot") as Dictionary).get("tasks", {}).values():
-		if value is Dictionary and value.get("forum") == "night" and value.get("state") in ["open", "viewed", "considering"]:
+		if value is Dictionary and value.get("forum") == "night" and value.get("resolution_kind") != "field_recon" and value.get("state") in ["open", "viewed", "considering"]:
 			task = value
 			break
 	assert(not task.is_empty())

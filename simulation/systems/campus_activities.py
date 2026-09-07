@@ -250,7 +250,7 @@ def make_scheduled_npc_phase_executor(
             if not activity_outcome.success:
                 from simulation.systems.campus_autonomous_combat import EXPECTED_NPC_COMBAT_FAILURES
                 if (activity_command.action_id == "BUY_ITEM"
-                        or (plan.get("task_id") and activity_outcome.code in EXPECTED_NPC_COMBAT_FAILURES)
+                        or (plan.get("task_id") and activity_outcome.code in EXPECTED_NPC_COMBAT_FAILURES | {"major_action_exhausted", "major_action_reserved", "no_new_evidence", "field_evidence_required"})
                         or (plan.get("personal_goal_id") and activity_outcome.code in EXPECTED_STEP_FAILURES)
                         or (plan.get("assistance_id") and activity_outcome.code in EXPECTED_ASSISTANCE_FAILURES)):
                     actor["current_activity"] = _activity_record(context.state, plan, status="blocked", route_step_count=route_step_count, block_code=activity_outcome.code)
@@ -280,6 +280,8 @@ def make_scheduled_npc_phase_executor(
                 # A defeated/retreated NPC is now at the actual rescue/exit point.
                 actor["current_activity"]["location_id"] = actor["current_location_id"]
                 actor["current_activity"]["battle_result"] = activity_outcome.payload["autonomous_battle"]["result"]
+                summary["task_completed_count"] += int(activity_outcome.payload.get("task_completed", False))
+            elif activity_outcome.payload.get("field_report"):
                 summary["task_completed_count"] += int(activity_outcome.payload.get("task_completed", False))
             if activity_completed is not None and activity_completed(context, actor_id, plan):
                 summary["task_completed_count"] += 1

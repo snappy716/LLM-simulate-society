@@ -106,6 +106,8 @@ def _sources(state, actor_id, deep=False):
                            "summary": f"公告《{task['title']}》目前{state_names.get(task.get('state'), '已更新')}。",
                            "predicate": "task_notice", "location_id": location, "layer": layer})
     else:
+        from simulation.systems.campus_fieldwork import field_sources
+        result.extend(field_sources(state, actor_id))
         for key, trace in ledger.get("traces", {}).items():
             if trace["layer"] == layer and _region(state, trace["location_id"]) == region and trace["claim_id"] not in beliefs:
                 result.append({"source_id": key, "claim_id": trace["claim_id"], "kind": "archive",
