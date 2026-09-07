@@ -105,6 +105,9 @@ func _on_completed(success: bool, result: Dictionary) -> void:
 		_slots = result.get("slots", [])
 	_render()
 	if not success:
-		detail.text = String(result.get("error", "操作未完成，请刷新确认。")) + "\n\n" + detail.text
+		var message := String(result.get("error", "操作未完成，请刷新确认。"))
+		if message.contains("no approved migration"):
+			message = "此存档使用较旧或不同的游戏规则，目前不能直接读取。原存档和当前进度均未修改；可用兼容版本打开旧档，或继续当前世界。"
+		detail.text = message + "\n\n" + detail.text
 	elif result.get("operation") == "save":
 		detail.text = ("保存成功；原异常文件已另外保留，未覆盖有效备份。\n\n" if bool(result.get("preserved_invalid", false)) else "保存成功。\n\n") + detail.text

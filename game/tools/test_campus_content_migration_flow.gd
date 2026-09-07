@@ -1,4 +1,5 @@
 extends SceneTree
+## Unsupported historical gameplay content must not be silently relabelled.
 
 
 func _initialize() -> void:
@@ -12,7 +13,7 @@ func _run() -> void:
 			quit(1)
 	)
 	var save_dir := OS.get_environment("GODOT_SIM_SAVE_DIR")
-	assert(not save_dir.is_empty(), "use an isolated directory with the pre-split slot_1.json")
+	assert(not save_dir.is_empty(), "use an isolated directory with an incompatible historical slot_1.json")
 	var path := save_dir.path_join("slot_1.json")
 	var original_hash := FileAccess.get_sha256(path)
 	assert(not original_hash.is_empty())
@@ -22,6 +23,7 @@ func _run() -> void:
 			break
 		await create_timer(0.05).timeout
 	assert(not (bridge.get("campus_snapshot") as Dictionary).is_empty())
+	var initial: Dictionary = (bridge.get("campus_snapshot") as Dictionary).duplicate(true)
 	change_scene_to_file("res://scenes/campus/campus_collab_test.tscn")
 	await process_frame
 	await process_frame
@@ -37,20 +39,19 @@ func _run() -> void:
 	dialog.confirmed.emit()
 	dialog.hide()
 	var loaded = await bridge.campus_persistence_completed
-	assert(bool(loaded[0]), str(loaded[1]))
-	assert("campus-content-split-2026-09-06" in loaded[1].migrations)
-	assert(loaded[1].snapshot.clock.phase == "afternoon")
-	assert(int(loaded[1].snapshot.economy.balance) == 500)
+	assert(not bool(loaded[0]), "unconverted old battle semantics must be rejected")
+	assert(String(loaded[1].get("error", "")).contains("no approved migration"))
 	assert(original_hash == FileAccess.get_sha256(path), "loading must not rewrite the old slot")
-	for _frame in range(10):
-		await process_frame
-	phone = current_scene.get_node("CampusPhoneUI")
-	phone.call("_set_open", true)
-	phone.call("_open_app", "saves", "存读档")
-	listed = await bridge.campus_persistence_completed
-	assert(bool(listed[0]))
-	panel = phone.get("_save_root")
-	assert((panel.get("detail") as RichTextLabel).text.contains("下午"))
-	print("CAMPUS_CONTENT_MIGRATION_FLOW_OK pre_split_save ui_load unchanged_original restored_afternoon")
+	var after: Dictionary = bridge.get("campus_snapshot")
+	assert(after.revision == initial.revision)
+	assert(after.clock == initial.clock)
+	assert(after.economy.balance == initial.economy.balance)
+	assert(not bool(panel.get("_pending")))
+	assert(not (panel.get("load_button") as Button).disabled)
+	assert((panel.get("detail") as RichTextLabel).text.contains("原存档和当前进度均未修改"))
+	if OS.get_environment("GODOT_MIGRATION_INSPECT") == "1":
+		print("CAMPUS_MIGRATION_INSPECT_READY")
+		await create_timer(45).timeout
+	print("CAMPUS_CONTENT_MIGRATION_FLOW_OK old_content_refused unchanged_original live_world_preserved controls_released")
 	if not "--keep-open" in OS.get_cmdline_user_args():
 		quit(0)

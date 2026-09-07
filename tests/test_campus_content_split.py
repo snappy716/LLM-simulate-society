@@ -50,9 +50,8 @@ class CampusContentSplitTests(unittest.TestCase):
                 digest.update(name.encode())
                 digest.update(record["sha256"].encode("ascii"))
             self.assertEqual(SPEC[side + "_version"], digest.hexdigest()[:16])
-        current = ContentRegistry.load_default(ROOT / "content")
-        self.assertEqual(SPEC["target_version"], current.content_version)
-        self.assertEqual(SPEC["target_manifest"], current.manifest)
+        self.assertEqual("fbd92d2a3d7bef67", SPEC["source_version"])
+        self.assertEqual("382ffb9aa84a36d0", SPEC["target_version"])
 
     def test_campus_boot_content_does_not_need_any_town_document(self):
         content = self.directory / "content"
@@ -61,7 +60,7 @@ class CampusContentSplitTests(unittest.TestCase):
             (content / name).unlink(missing_ok=True)
             self.assertFalse((content / name).exists())
         registry = ContentRegistry.load_default(content)
-        self.assertEqual(SPEC["target_version"], registry.content_version)
+        self.assertEqual(ContentRegistry.load_default(ROOT / "content").content_version, registry.content_version)
         self.assertEqual(SPEC["item_ids"], registry.ids("item"))
         for name in RETIRED:
             self.assertNotIn(name, registry.manifest)
@@ -81,6 +80,26 @@ class CampusContentSplitTests(unittest.TestCase):
     def test_unknown_target_version_is_not_silently_accepted(self):
         with self.assertRaisesRegex(CheckpointError, "content version mismatch"):
             load_kernel_checkpoint(self.path, expected_content_version="unrelated-change")
+
+    def test_historical_content_split_does_not_upgrade_to_new_combat_semantics(self):
+        current = ContentRegistry.load_default(ROOT / "content").content_version
+        self.assertNotEqual(SPEC["target_version"], current)
+        bridge = self.bridge
+        for side in ("source", "target"):
+            with self.subTest(side=side):
+                old = self.old.clone()
+                old.content_version = SPEC[side + "_version"]
+                save_kernel_checkpoint(self.path, old, self.rng, content_manifest=SPEC[side + "_manifest"])
+                original = self.path.read_bytes()
+                before, rng = bridge.kernel.capture_checkpoint()
+                store = CampusSaveStore(self.directory)
+                with self.assertRaisesRegex(CheckpointError, "no approved migration"):
+                    bridge.persistence(store, {"operation": "load", "slot_id": "slot_1",
+                        "expected_token": store.token(self.path), "confirmed": True,
+                        "expected_world_revision": before.revision})
+                self.assertEqual(original, self.path.read_bytes())
+                self.assertEqual(before.to_dict(), bridge.kernel.state.to_dict())
+                self.assertEqual(rng.snapshot(), bridge.kernel.rng_snapshot)
 
     def test_unknown_source_or_missing_or_changed_manifest_is_rejected(self):
         variants = [({}, SPEC["source_version"]),

@@ -1893,11 +1893,14 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
         if not isinstance(statuses, dict) or set(statuses) != participant_set:
             errors.append(f"battle {battle_id} status ledger is invalid")
         elif any(
-            not isinstance(values, list) or len(values) != len(set(values))
+            not isinstance(values, list) or any(not isinstance(value, str) for value in values)
+            or len(values) != len(set(values))
             for values in statuses.values()
         ):
             errors.append(f"battle {battle_id} status values are invalid")
-        elif battle.get("phase") != "resolved" and isinstance(pollution, dict):
+        elif (battle.get("phase") != "resolved" and isinstance(pollution, dict)
+              and set(pollution) == participant_set
+              and all(type(value) is int and 0 <= value <= 100 for value in pollution.values())):
             actor_states = state.situations.get("night_world", {}).get("actor_states", {})
             for actor_id in participant_set:
                 if pollution.get(actor_id) != actor_states.get(actor_id, {}).get("pollution"):

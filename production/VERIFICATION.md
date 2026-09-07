@@ -1,5 +1,16 @@
 # 重构验证清单
 
+## 2026-09-07 / 战斗第 4 步第六批：兼容边界与基础闭环验收
+
+- 恢复历史迁移的固定源/目标及清单：`fbd92d2a3d7bef67 → 382ffb9aa84a36d0`。它仅处理当时的内容拆分，不冒充把旧战斗 schema 3 转成当前 schema 4。旧规则未有明确转换时拒绝读取，保留原文件、当前世界和 RNG；当前格式存档继续支持存读与战斗续接。
+- 在临时目录从 Git 提交 `340a4e3` 提取真实代码，实际建立并开始战斗，生成内容版本 `382ffb9aa84a36d0` / schema 3 / `player_turn` 检查点。当前后端验证输出 `REAL_PRE_POLLUTION_SAVE_REJECTION_OK`，原文件字节、当前世界和随机状态一致；不是仅给新档换旧版本标识。
+- Godot 4.7.2 / macOS Metal 实际读取这份旧档，安全拒绝并显示中文说明“原存档和当前进度均未修改”，确认控件释放，输出 `CAMPUS_CONTENT_MIGRATION_FLOW_OK old_content_refused unchanged_original live_world_preserved controls_released`（`/tmp/campus-combat-closure-migration-gui-final.log`）。同名测试脚本现在验收当前版本的拒绝边界，历史迁移成功记录仅适用于当时版本。
+- 损坏状态数组含非字符串/对象，或污染字段非数值时，校验返回错误而不是集合/整数转换异常；检查点恢复失败不替换当前世界。迁移与污染联合专项 17 项通过。
+- 本轮首个全局分组发现用药请求契约缺少顶层 `type`。第五批契约是在当轮全局启动后补入，原 427 项结果未覆盖该新增文件；补齐声明后契约专项 2 项通过，并在冻结所有程序和契约改动后重跑完整全局。
+- 最终以四个独立进程按完整 unittest 发现清单执行 48 模块 / 429 项，全部通过，汇总核对数目一致并输出 `PYTHON_GLOBAL_OK 48 modules 429 tests`（`/tmp/campus-combat-closure-global-final.log`，分模块日志 `/tmp/campus-closure-python-final/`）。不是缩小测试范围，也不是只复测失败用例。
+- `production/run_godot_checks.py` 最终 22 项全部通过（`/tmp/campus-combat-closure-godot-final.log`），另含上述实际旧档图形检查。测试不使用付费 LLM，Windows 实机未测。只上传开发分支、不合并 main、不提交私人未跟踪世界观草稿。
+- 第 4 步基础可玩闭环验收完成，接着进入第 5 步调查与证据；更多敌人招式、NPC 后台战斗、调查/救援任务目标语义、知识成长和主线都不在这里提前宣称完成。
+
 ## 2026-09-07 / 战斗第 4 步第五批：战斗内真实物品（已验收）
 
 - `USE_COMBAT_ITEM` 使用本队可行动者自己的治疗药品与共享 1 点指令；同排/邻排受伤队友为合法目标，按内容比例恢复并限制上限。没有战斗专用库存，不复活、不清污染、不消耗额外世界时段。职业保留量只限制随意转让，不阻止使用最后一份绷带救人。

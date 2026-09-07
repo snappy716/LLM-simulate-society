@@ -14,6 +14,21 @@ REPOSITORY_DIR = Path(__file__).resolve().parents[1]
 
 
 class CampusCombatPollutionTests(unittest.TestCase):
+    def test_malformed_status_and_pollution_are_rejected_without_crashing_validator(self):
+        bridge = CampusKernelBridge(42)
+        battle = deploy_and_start(bridge)
+        before, rng = bridge.kernel.capture_checkpoint()
+        for field, value in (("statuses", [{"unhashable": True}]), ("statuses", [1]),
+                             ("pollution", "not-a-number"), ("pollution", None)):
+            with self.subTest(field=field, value=value):
+                corrupted = before.clone()
+                corrupted.battles[battle["battle_id"]][field]["player"] = value
+                self.assertTrue(list(campus_combat_invariant(corrupted)))
+                with self.assertRaises(ValueError):
+                    bridge.kernel.restore_checkpoint(corrupted, rng, expected_revision=before.revision)
+                self.assertEqual(before.to_dict(), bridge.kernel.state.to_dict())
+                self.assertEqual(rng.snapshot(), bridge.kernel.rng_snapshot)
+
     def _end_round(self, bridge, battle, marker):
         return execute(bridge, "END_COMBAT_ROUND", {
             "battle_id": battle["battle_id"],

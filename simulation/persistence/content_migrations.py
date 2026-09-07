@@ -9,6 +9,8 @@ from pathlib import Path
 def migrate_campus_content(loaded, expected_version):
     from simulation.persistence.kernel_checkpoint import CheckpointError, LoadedCheckpoint
 
+    # Historical content-only split, not a moving alias to current content.
+    # Later gameplay/schema changes need their own explicit transformations.
     spec = json.loads(Path(__file__).with_name("campus_content_split.json").read_text(encoding="utf-8"))
     if (loaded.state.content_version != spec["source_version"]
             or expected_version != spec["target_version"]
