@@ -19,6 +19,7 @@ signal campus_night_world_operation_completed(success: bool, result: Dictionary,
 signal campus_npc_chronicle_loaded(success: bool, result: Dictionary, npc_id: String, filter_name: String)
 signal campus_inventory_operation_completed(success: bool, result: Dictionary)
 signal campus_investigation_operation_completed(success: bool, result: Dictionary)
+signal campus_growth_operation_completed(success: bool, result: Dictionary)
 signal campus_persistence_completed(success: bool, result: Dictionary)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
@@ -380,20 +381,24 @@ func operate_campus_party(action_id: String, target_id: String = "", extra_param
 
 
 func operate_campus_investigation(action_id: String, parameters: Dictionary = {}) -> void:
-	_send_campus_item_or_investigation(action_id, parameters, true)
+	_send_campus_item_or_investigation(action_id, parameters, "investigation")
+
+
+func operate_campus_growth(action_id: String, parameters: Dictionary = {}) -> void:
+	_send_campus_item_or_investigation(action_id, parameters, "growth")
 
 
 func operate_campus_inventory(action_id: String, parameters: Dictionary = {}) -> void:
-	_send_campus_item_or_investigation(action_id, parameters, false)
+	_send_campus_item_or_investigation(action_id, parameters, "inventory")
 
 
-func _send_campus_item_or_investigation(action_id: String, parameters: Dictionary, investigation: bool) -> void:
-	var completed := campus_investigation_operation_completed if investigation else campus_inventory_operation_completed
+func _send_campus_item_or_investigation(action_id: String, parameters: Dictionary, operation: String) -> void:
+	var completed := campus_growth_operation_completed if operation == "growth" else (campus_investigation_operation_completed if operation == "investigation" else campus_inventory_operation_completed)
 	if _campus_busy or not connected or campus_snapshot.is_empty():
 		completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他行动"})
 		return
 	_campus_busy = true
-	_campus_pending_operation = "investigation" if investigation else "inventory"
+	_campus_pending_operation = operation
 	_campus_command_counter += 1
 	var clock: Dictionary = campus_snapshot.get("clock", {})
 	var command := {
@@ -867,6 +872,8 @@ func _on_campus_request_completed(
 			campus_inventory_operation_completed.emit(false, parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"})
 		if operation == "investigation":
 			campus_investigation_operation_completed.emit(false, parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"})
+		if operation == "growth":
+			campus_growth_operation_completed.emit(false, parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"})
 		elif operation == "traverse":
 			var error_payload: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
 			campus_traversal_completed.emit(false, error_payload, passage_id)
@@ -919,6 +926,8 @@ func _on_campus_request_completed(
 		campus_inventory_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
 	if operation == "investigation":
 		campus_investigation_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
+	if operation == "growth":
+		campus_growth_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
 	elif operation == "advance_phase":
 		campus_phase_advanced.emit(bool(parsed.get("ok", false)), parsed)
 	elif operation == "fast_travel":

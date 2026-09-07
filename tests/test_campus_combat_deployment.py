@@ -100,7 +100,9 @@ class CampusCombatDeploymentTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
-        self.assertEqual(set(schema["required"]), set(player_card))
+        self.assertTrue(set(schema["required"]).issubset(player_card))
+        self.assertTrue(set(player_card).issubset(schema["properties"]))
+        self.assertEqual({}, player_card["knowledge_mastery"])
         self.assertEqual(92, player_card["max_health"])
         self.assertEqual(77, player_card["max_focus"])
         self.assertEqual(5, len(player_card["command_card_ids"]))

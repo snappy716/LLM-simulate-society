@@ -28,6 +28,7 @@ from simulation.systems.content_registry import ContentRegistry
 from simulation.systems.transactions import TransactionOutcome
 from simulation.systems.campus_vitals import change_vital
 from simulation.systems.campus_combat_items import combat_item_options, use_combat_item
+from simulation.systems.campus_growth import mastery_by_topic, configured_growth_deck, validate_deck
 
 
 CAMPUS_COMBAT_SCHEMA_VERSION = 4
@@ -42,6 +43,7 @@ COMBAT_ACTION_IDS = {
     "PLAY_COMBAT_CARD",
     "USE_COMBAT_BASE_COMMAND",
     "USE_COMBAT_ITEM",
+    "USE_KNOWLEDGE_INSIGHT",
     "END_COMBAT_ROUND",
     "RETREAT_CARD_COMBAT",
 }
@@ -331,6 +333,7 @@ def build_character_card(
         "physical_power": derived.physical_power,
         "technique_power": derived.technique_power,
         "cognitive_power": derived.cognitive_power,
+        "knowledge_mastery": mastery_by_topic(state, actor_id),
         "support_power": derived.support_power,
         "base_command_id": str(policy.base_commands[preferred_row]),
         "passive_ids": list(dict.fromkeys(passive_ids)),
@@ -692,9 +695,13 @@ def resolve_combat_effects(
                 else enemy["resistance"]
             )
             amount = max(1, amount - mitigation)
+            mastery = int(source.get("knowledge_mastery", {}).get(enemy.get("archetype_id"), 0))
+            amount = max(1, round(amount * (1 + mastery * .0035)))
             weakness = power_kind in enemy.get("weaknesses", ())
             if weakness:
                 amount = max(1, round(amount * 1.5))
+                if "knowledge_exposed" in enemy["statuses"]:
+                    amount = max(1, round(amount * 1.15))
             before = int(battle["enemy_health"][target_id])
             after = max(0, before - amount)
             battle["enemy_health"][target_id] = after
@@ -709,6 +716,7 @@ def resolve_combat_effects(
                 "effect_id": effect_id, "target_id": target_id,
                 "amount": amount, "before": before, "after": after,
                 "power_kind": power_kind, "weakness": weakness,
+                "knowledge_mastery": mastery,
             })
             continue
         if effect_id == "grant_guard":
@@ -914,6 +922,12 @@ def configured_actor_deck(
         str(card_id) for card_id in character.get("command_card_ids", ())
         if str(card_id) in blueprints
     ]
+    custom = configured_growth_deck(state, actor_id)
+    if custom:
+        problem = validate_deck(state, actor_id, custom)
+        if problem:
+            raise ValueError(problem)
+        return custom
     repeatable = owned or [round_policy.fallback_card_id]
     selected = list(round_policy.required_generic_card_ids)
     selected.extend(owned)
@@ -1294,6 +1308,9 @@ def make_campus_combat_handler(
             return TransactionOutcome(False, False, error, messages.get(error, "战斗准备无效。"))
         if command.action_id == "USE_COMBAT_ITEM":
             return use_combat_item(context, command, battle)
+        if command.action_id == "USE_KNOWLEDGE_INSIGHT":
+            from simulation.systems.campus_knowledge_insight import use_knowledge_insight
+            return use_knowledge_insight(context, command, battle)
         if command.action_id == "CANCEL_BATTLE_PREPARATION":
             if battle["phase"] not in {"setup", "ready"}:
                 return TransactionOutcome(False, False, "battle_already_running", "战斗开始后不能取消准备。")
@@ -1702,6 +1719,8 @@ def campus_combat_view(
             "base_commands": base_options,
             "items": combat_item_options(state, active_view, viewer_id),
         }
+        from simulation.systems.campus_knowledge_insight import knowledge_insight_options
+        active_view["action_options"]["insights"] = knowledge_insight_options(state, active_view, viewer_id)
     return {
         "enabled": True,
         "can_prepare": bool(general.get("allowed", False)),
@@ -1786,6 +1805,14 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
             errors.append(f"battle {battle_id} deployment ledgers are invalid")
             continue
         actor_ids = [card.get("actor_id") for card in cards.values() if isinstance(card, dict)]
+        for card in cards.values():
+            mastery = card.get("knowledge_mastery", {}) if isinstance(card, dict) else None
+            if (not isinstance(mastery, dict) or any(topic not in (enemy_archetypes if isinstance(enemy_archetypes, dict) else {}) or type(value) is not int or not 0 <= value <= 100 for topic, value in mastery.items())):
+                errors.append(f"battle {battle_id} has invalid knowledge mastery")
+        insight_used = battle.get("knowledge_insight_used", [])
+        if (not isinstance(insight_used, list) or any(not isinstance(value, str) for value in insight_used)
+                or len(set(insight_used)) != len(insight_used)):
+            errors.append(f"battle {battle_id} has invalid insight usage")
         if len(actor_ids) != len(set(actor_ids)) or any(actor_id not in state.population for actor_id in actor_ids):
             errors.append(f"battle {battle_id} character actors are invalid")
         occupied: list[str] = []

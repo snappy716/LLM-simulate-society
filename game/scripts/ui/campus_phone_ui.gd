@@ -40,6 +40,7 @@ var _app_title: Label
 var _content: RichTextLabel
 var _inventory_root: VBoxContainer
 var _investigation_root: VBoxContainer
+var _growth_root: VBoxContainer
 var _trade_root: VBoxContainer
 var _health_root: VBoxContainer
 var _save_root: VBoxContainer
@@ -102,6 +103,7 @@ var _combat_base_target_picker: OptionButton
 var _combat_use_base_action: Button
 var _combat_feedback: Label
 var _combat_items: VBoxContainer
+var _combat_insights: VBoxContainer
 var _selected_combat_task_id := ""
 var _selected_character_card_id := ""
 var _selected_combat_card_id := ""
@@ -314,6 +316,9 @@ func _build_app_page() -> VBoxContainer:
 	_investigation_root = preload("res://scripts/ui/campus_investigation_panel.gd").new()
 	_investigation_root.visible = false
 	body.add_child(_investigation_root)
+	_growth_root = preload("res://scripts/ui/campus_growth_panel.gd").new()
+	_growth_root.visible = false
+	body.add_child(_growth_root)
 	_trade_root = preload("res://scripts/ui/campus_trade_panel.gd").new()
 	_trade_root.visible = false
 	body.add_child(_trade_root)
@@ -608,6 +613,15 @@ func _build_combat_page() -> VBoxContainer:
 	_combat_items = COMBAT_ITEM_PANEL.new()
 	_combat_items.use_requested.connect(_use_combat_item)
 	root.add_child(_combat_items)
+	_combat_insights = preload("res://scripts/ui/campus_knowledge_insight_panel.gd").new()
+	_combat_insights.use_requested.connect(func(selection):
+		var parameters := _active_combat_parameters()
+		if not parameters.is_empty():
+			parameters.merge(selection)
+			_combat_feedback.text = "正在运用知识洞察……"
+			_send_combat_operation("USE_KNOWLEDGE_INSIGHT", parameters)
+	)
+	root.add_child(_combat_insights)
 	_combat_feedback = Label.new()
 	_combat_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_combat_feedback.add_theme_color_override("font_color", Color("e0b86a"))
@@ -717,6 +731,10 @@ func _open_app(app_id: String, app_name: String) -> void:
 	var is_message := app_id == "messages"
 	var is_inventory := app_id == "market"
 	var is_investigation := app_id == "notes"
+	var is_growth := app_id == "courses"
+	_growth_root.visible = is_growth
+	if is_growth:
+		_growth_root.call("refresh")
 	_investigation_root.visible = is_investigation
 	if is_investigation:
 		_investigation_root.call("refresh")
@@ -731,7 +749,7 @@ func _open_app(app_id: String, app_name: String) -> void:
 	_inventory_root.visible = is_inventory
 	if is_inventory:
 		_inventory_root.call("refresh")
-	_content.visible = not is_save and not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health and not is_trade and not is_investigation
+	_content.visible = not is_save and not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health and not is_trade and not is_investigation and not is_growth
 	_forum_root.visible = is_forum
 	_club_root.visible = is_club
 	_party_root.visible = is_party
@@ -1636,6 +1654,7 @@ func _refresh_combat_page() -> void:
 	var active_value: Variant = combat.get("active_battle")
 	var active: Dictionary = active_value if active_value is Dictionary else {}
 	_combat_items.refresh(active)
+	_combat_insights.refresh(active)
 	var selected_task_at_scene := (
 		_combat_task_picker.selected >= 0
 		and _combat_task_picker.get_item_tooltip(_combat_task_picker.selected) == "at_scene"

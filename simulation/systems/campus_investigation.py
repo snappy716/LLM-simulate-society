@@ -252,7 +252,7 @@ def make_investigation_handler(intelligence_policy):
             target_ids=[payload["target_id"]] if payload.get("target_id") else [],
             scene_id=state.population[actor_id]["current_location_id"],
             payload={"action_id": action, **deepcopy(payload)}, visibility="private",
-            knowledge_tags=["investigation", "information"])
+            knowledge_tags=["investigation", "information", "evidence"])
         return TransactionOutcome(True, True, "success", message, commit=True, payload=payload)
     return handle
 

@@ -220,6 +220,21 @@ class CampusInvestigationTests(unittest.TestCase):
         project_investigation_events(state, [event])
         self.assertEqual(before, state.knowledge)
 
+    def test_colocated_observer_cannot_read_private_npc_hypothesis_through_chronicle(self):
+        from simulation.api.views import npc_chronicle_view
+        state = self.bridge.kernel._state
+        ids = list(state.knowledge["beliefs_by_actor"][self.npc])[:2]
+        result = self.bridge.execute({"command_id": "private-npc-hypothesis", "actor_id": self.npc,
+            "action_id": "LINK_EVIDENCE", "parameters": {"claim_ids": ids, "summary": "不应给旁观者看的私人判断"},
+            "target_ids": [], "source": "rule", "expected_world_revision": state.revision,
+            "issued_day": state.clock.day, "issued_phase": state.clock.phase, "issued_minute": 0})
+        self.assertTrue(result["ok"], result)
+        state = self.bridge.kernel.state
+        entry = next(entry for entry in state.chronicles["entries"].values() if entry["event_type"] == "CAMPUS_INVESTIGATION_COMPLETED")
+        self.assertEqual("private", entry["visibility"])
+        self.assertNotIn(entry["entry_id"], state.chronicles["known_by"].get("player", {}))
+        self.assertFalse(any(item["event_type"] == "CAMPUS_INVESTIGATION_COMPLETED" for item in npc_chronicle_view(state, self.npc)["items"]))
+
 
 if __name__ == "__main__":
     unittest.main()

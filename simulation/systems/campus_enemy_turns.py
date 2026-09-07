@@ -111,6 +111,15 @@ def resolve_enemy_turn(context, battle):
     for enemy_id, intent in sorted(intents.items(), key=lambda entry: (-entry[1]["speed"], entry[0])):
         if battle["enemy_health"].get(enemy_id, 0) <= 0:
             continue
+        enemy = battle["enemy_units"][enemy_id]
+        if "knowledge_interrupted" in enemy["statuses"]:
+            enemy["statuses"].remove("knowledge_interrupted")
+            result = {"enemy_id": enemy_id, "target_row": intent["target_row"], "interrupted": True, "damage": 0}
+            results.append(result)
+            context.emit("COMBAT_ENEMY_ACTION", "洞察打断了异常本次攻击。", actor_ids=battle["participant_ids"],
+                         payload={"battle_id": battle["battle_id"], **result}, scene_id=battle["scene_id"],
+                         visibility="private", knowledge_tags=["combat", "knowledge", "interrupt"])
+            continue
         targets = sorted((c for c in battle["character_cards"].values()
                           if c.get("deployment_state") == "deployed" and c.get("row") == intent["target_row"]),
                          key=lambda c: c["actor_id"])

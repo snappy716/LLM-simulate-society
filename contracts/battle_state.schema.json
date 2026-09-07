@@ -79,6 +79,7 @@
     "exhaust_piles": {"type": "object"},
     "reshuffle_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
     "base_command_used_actor_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "knowledge_insight_used": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "lost_heart_shell": {"type": "object"},
     "coherence": {"type": ["integer", "null"], "minimum": 0},
     "result": {"enum": ["active", "victory", "defeat", "escaped", "resolved"]},

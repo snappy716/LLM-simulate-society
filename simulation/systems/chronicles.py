@@ -216,7 +216,8 @@ def project_chronicle_events(state: WorldState, events: Iterable[SimulationEvent
                         state, "player", entry.entry_id,
                         source="participant", certainty="reliable",
                     )
-                elif entry.scene_id and player.get("current_location_id") == entry.scene_id:
+                elif (entry.visibility in {"public", "observable"}
+                      and entry.scene_id and player.get("current_location_id") == entry.scene_id):
                     grant_chronicle_knowledge(
                         state, "player", entry.entry_id,
                         source="witnessed", certainty="reliable",

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "title": "Always available actor-owned knowledge tactic",
+  "required": ["battle_id", "expected_battle_revision", "target_id", "tactic"],
+  "properties": {
+    "battle_id": {"type": "string", "minLength": 1},
+    "expected_battle_revision": {"type": "integer", "minimum": 1},
+    "source_actor_id": {"type": "string", "minLength": 1},
+    "target_id": {"type": "string", "minLength": 1},
+    "tactic": {"enum": ["observe", "expose", "interrupt"]}
+  },
+  "additionalProperties": false
+}

@@ -284,6 +284,11 @@ class CampusKernelBridge:
             self.kernel.register_handler(action_id, investigation_handler)
         self.kernel.add_event_projector(project_investigation_events)
         self.kernel.add_invariant(investigation_invariant)
+        from simulation.systems.campus_growth import GROWTH_ACTIONS, make_growth_handler, project_growth_events, growth_invariant
+        for action_id in GROWTH_ACTIONS:
+            self.kernel.register_handler(action_id, make_growth_handler())
+        self.kernel.add_event_projector(project_growth_events)
+        self.kernel.add_invariant(growth_invariant)
         self.kernel.add_event_projector(project_chronicle_events)
         self.kernel.add_event_projector(project_cognition_events)
         self.kernel.add_invariant(chronicle_invariant)

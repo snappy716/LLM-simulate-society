@@ -34,6 +34,7 @@
     "physical_power": {"type": "integer", "minimum": 0},
     "technique_power": {"type": "integer", "minimum": 0},
     "cognitive_power": {"type": "integer", "minimum": 0},
+    "knowledge_mastery": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0, "maximum": 100}},
     "support_power": {"type": "integer", "minimum": 0},
     "base_command_id": {"type": "string", "minLength": 1},
     "passive_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
