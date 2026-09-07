@@ -31,7 +31,7 @@ func _run() -> void:
 		var search := phone.get("_home_search") as LineEdit
 		var home_scroll := phone.get("_home_scroll") as ScrollContainer
 		var buttons: Array = phone.get("_home_buttons")
-		assert(buttons.size() == 14)
+		assert(buttons.size() == 15)
 		search.text = "聊天"
 		search.text_changed.emit(search.text)
 		var found := 0
@@ -57,7 +57,7 @@ func _run() -> void:
 			for _frame in range(4):
 				await process_frame
 			assert(home_scroll.get_global_rect().grow(2).encloses(button.get_global_rect()))
-		for app in ["saves", "messages", "courses", "album", "notes", "market", "trade", "wallet", "health", "clubs", "party", "combat", "forums"]:
+		for app in ["saves", "messages", "assistance", "courses", "album", "notes", "market", "trade", "wallet", "health", "clubs", "party", "combat", "forums"]:
 			phone.call("_open_app", app, app)
 			if app == "saves":
 				await bridge.campus_persistence_completed
@@ -90,6 +90,6 @@ func _run() -> void:
 	root.size = Vector2i(1280, 720)
 	phone.call("_set_open", true)
 	phone.get("_home_scroll").scroll_vertical = 0
-	print("CAMPUS_PHONE_LAYOUT_OK fourteen_apps three_sizes fixed_navigation readable_forms searchable_catalog keyboard_reachability no_action_cost")
+	print("CAMPUS_PHONE_LAYOUT_OK fifteen_apps three_sizes fixed_navigation readable_forms searchable_catalog keyboard_reachability no_action_cost")
 	if not "--keep-open" in OS.get_cmdline_user_args():
 		quit(0)

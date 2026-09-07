@@ -114,6 +114,10 @@ def goal_candidates(context, actor_id, schedule_plan, graph, occupancy, policy, 
         if reason:
             _update(state, goal, step, "blocked", reason)
             continue
+        from simulation.systems.campus_assistance import waiting_for_material_help
+        if step in {"earn_money", "prepare_notebook"} and waiting_for_material_help(state, actor_id, "blank_notebook"):
+            _update(state, goal, step, "blocked", "等待已经答应的物资互助；到期未交付则另作安排")
+            continue
         action, params, destinations, action_class = "", {}, [], "major"
         if step in {"read", "reflect"}:
             action = "READ_KNOWLEDGE" if step == "read" else "REFLECT_ON_CASE"

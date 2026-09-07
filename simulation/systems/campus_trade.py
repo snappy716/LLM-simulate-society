@@ -390,6 +390,11 @@ def make_procurement_selector(base_selector, graph, protected_priority):
             if state.clock.phase not in state.places[shop["location_id"]].get("open_phases", []):
                 continue
             for item_id in shop["accepted_item_ids"]:
+                # A study-material promise postpones duplicate autonomous shopping.
+                # Food and medical shortages can still be solved immediately.
+                from simulation.systems.campus_assistance import waiting_for_material_help
+                if item_id == "blank_notebook" and waiting_for_material_help(state, actor_id, item_id):
+                    continue
                 needed = procurement_demand(state, actor_id, item_id)
                 price = state.inventories["catalog"][item_id]["base_price"]
                 quantity = min(needed, shop["quantities"].get(item_id, 0), actor["wealth"] // price)

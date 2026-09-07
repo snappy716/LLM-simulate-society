@@ -480,7 +480,7 @@ func _public_profile_text(profile: Dictionary) -> String:
 	var statement := "尚未向对方询问。"
 	if not report.is_empty():
 		statement = "第 %s 天 · %s，本人告知：\n%s\n（当时的说法，后续可能改变。）" % [
-			str(report.get("day", "?")), {"morning": "上午", "afternoon": "下午", "evening": "晚上", "late_night": "深夜"}.get(String(report.get("phase", "")), "当时"),
+			str(int(report.get("day", 0))), {"morning": "上午", "afternoon": "下午", "evening": "晚上", "late_night": "深夜"}.get(String(report.get("phase", "")), "当时"),
 			String(report.get("summary", "")).replace("[", "[lb]")]
 	return "[b]公开身份[/b]\n%s\n\n[b]当前位置[/b]\n%s\n\n[b]正在做的事[/b]\n%s\n\n[b]可观察状态[/b]\n%s\n\n[b]对方说过的打算[/b]\n%s\n\n[color=#91a4bc]内在需求、秘密动机与后续计划不会直接显示；需要通过交流、观察、关系或调查逐渐了解。[/color]" % [
 		identity_line,

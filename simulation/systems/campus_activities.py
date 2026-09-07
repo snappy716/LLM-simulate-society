@@ -176,6 +176,8 @@ def make_scheduled_npc_phase_executor(
                 from simulation.systems.campus_goals import record_goal_outcome
                 from simulation.systems.transactions import TransactionOutcome
                 record_goal_outcome(context, actor_id, plan, TransactionOutcome(False, False, "route_unavailable", "无法抵达计划地点"))
+                from simulation.systems.campus_assistance import record_assistance_outcome
+                record_assistance_outcome(context, plan, TransactionOutcome(False, False, "route_unavailable", "无法抵达约定对象所在地"))
                 actor["current_activity"] = _activity_record(
                     context.state,
                     plan,
@@ -238,8 +240,12 @@ def make_scheduled_npc_phase_executor(
             activity_outcome = activity_handler(context, activity_command)
             from simulation.systems.campus_goals import record_goal_outcome, EXPECTED_STEP_FAILURES
             record_goal_outcome(context, actor_id, plan, activity_outcome)
+            from simulation.systems.campus_assistance import record_assistance_outcome, EXPECTED_ASSISTANCE_FAILURES
+            record_assistance_outcome(context, plan, activity_outcome)
             if not activity_outcome.success:
-                if activity_command.action_id == "BUY_ITEM" or (plan.get("personal_goal_id") and activity_outcome.code in EXPECTED_STEP_FAILURES):
+                if (activity_command.action_id == "BUY_ITEM"
+                        or (plan.get("personal_goal_id") and activity_outcome.code in EXPECTED_STEP_FAILURES)
+                        or (plan.get("assistance_id") and activity_outcome.code in EXPECTED_ASSISTANCE_FAILURES)):
                     actor["current_activity"] = _activity_record(context.state, plan, status="blocked", route_step_count=route_step_count, block_code=activity_outcome.code)
                     summary["blocked_actor_count"] += 1
                     context.emit("NPC_ACTIVITY_BLOCKED", activity_outcome.message, actor_ids=[actor_id], scene_id=destination_id,

@@ -344,6 +344,7 @@ class CognitionRuntime:
 
     def _request(self, state: WorldState, actor_id: str, candidates: Sequence[Mapping[str, Any]]) -> BoundedDecisionRequest:
         from simulation.systems.campus_goals import own_goal_context
+        from simulation.systems.campus_assistance import own_assistance_context
         actor = state.population[actor_id]
         reflection = state.cognition.get("reflections", {}).get(actor_id, {})
         memories = state.cognition.get("memory_by_actor", {}).get(actor_id, [])[-self.policy.reflection_memory_limit:]
@@ -377,6 +378,7 @@ class CognitionRuntime:
                 "emotions": deepcopy(actor.get("emotions", {})),
                 "active_task": bool(actor.get("active_forum_task_id")),
                 "personal_goals": own_goal_context(state, actor_id),
+                "material_commitments": own_assistance_context(state, actor_id),
                 "own_resources": {
                     "wealth": actor.get("wealth", 0),
                     "major_remaining": state.action_economy.get("actors", {}).get(actor_id, {}).get("major_remaining", 0),

@@ -84,19 +84,19 @@ def _failure(code, message):
     return TransactionOutcome(False, False, code, message)
 
 
-def _movable(state, actor_id, item_id, quantity):
+def _movable(state, actor_id, item_id, quantity, *, ignore_acquisition_lock=False):
     record = state.inventories["actors"][actor_id]
     reserve = sum(1 for equipped in record["equipped"].values() if equipped == item_id)
     if actor_id != "player":
         from simulation.systems.campus_trade import reserve_quantity, acquisition_locked
-        if acquisition_locked(state, actor_id, item_id):
+        if not ignore_acquisition_lock and acquisition_locked(state, actor_id, item_id):
             return False
         occupation = state.population[actor_id].get("occupation_id")
         reserve = max(reserve, reserve_quantity(state, actor_id, item_id), state.inventories["protected_items"].get(occupation, {}).get(item_id, 0))
     return record["quantities"].get(item_id, 0) - quantity >= reserve
 
 
-def make_campus_inventory_handler():
+def make_campus_inventory_handler(*, allow_recent_gifts=False):
     def handle(context, command):
         state, actor_id, params = context.state, command.actor_id, command.parameters
         ledger = state.inventories
@@ -122,6 +122,7 @@ def make_campus_inventory_handler():
         rule = ledger["rules"][item_id]
         source, destination = record, None
         target_id, shop, total = None, None, 0
+        gift_receipt = None
         if action in {"BUY_ITEM", "SELL_ITEM"}:
             shop_id = params.get("shop_id")
             shop = ledger["shops"].get(shop_id) if isinstance(shop_id, str) else None
@@ -159,10 +160,16 @@ def make_campus_inventory_handler():
         if source["quantities"].get(item_id, 0) < quantity:
             return _failure("item_missing", "库存不足。")
         if destination is not None:
-            if source is record and not _movable(state, actor_id, item_id, quantity):
+            if source is record and not _movable(state, actor_id, item_id, quantity,
+                                                 ignore_acquisition_lock=allow_recent_gifts and action == "GIVE_ITEM"):
                 return _failure("item_protected", "须先卸下装备；NPC 不会交出职业必需品的最后一份。")
             if not _inventory(destination).can_add(item, quantity, catalog):
                 return _failure("inventory_full", "接收方背包负重不足。")
+            if action == "GIVE_ITEM":
+                gift_receipt = {"source_before": source["quantities"].get(item_id, 0),
+                                "source_after": source["quantities"].get(item_id, 0) - quantity,
+                                "target_before": destination["quantities"].get(item_id, 0),
+                                "target_after": destination["quantities"].get(item_id, 0) + quantity}
             _inventory(source).remove(item_id, quantity)
             _inventory(destination).add(item, quantity, catalog)
             from simulation.systems.campus_trade import acquired, remember
@@ -225,6 +232,8 @@ def make_campus_inventory_handler():
         verbs = {"BUY_ITEM":"购买", "SELL_ITEM":"出售", "USE_ITEM":"使用", "GIVE_ITEM":"转交", "DROP_ITEM":"放下", "PICK_UP_ITEM":"拾取", "EQUIP_ITEM":"装备", "UNEQUIP_ITEM":"卸下"}
         message = f"{actor.get('display_name', actor_id)}{verbs[action]}了 {quantity} 件{item.name}。"
         payload = {"action_id":action, "item_id":item_id, "quantity":quantity, "total_price":total, "balance":actor["wealth"], "target_id":target_id, "layer": _layer(state, actor_id)}
+        if gift_receipt is not None:
+            payload["gift_receipt"] = gift_receipt
         if shop:
             payload.update(shop_id=shop["id"], unit_price=unit_price)
         if action == "USE_ITEM":

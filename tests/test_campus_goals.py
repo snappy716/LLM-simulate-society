@@ -125,6 +125,30 @@ class CampusGoalTests(unittest.TestCase):
         self.state.inventories["actors"][self.npc]["quantities"]["blank_notebook"] = 1
         self.assertEqual("REFLECT_ON_CASE", self.candidates()[0]["activity_id"])
 
+    def test_accepted_material_help_waits_then_real_delivery_resumes_case_plan(self):
+        self.reflection_fixture()
+        helper = next(key for key in self.state.population if key not in {"player", self.npc})
+        donor = self.state.population[helper]
+        donor["current_location_id"] = self.actor["current_location_id"]
+        donor.pop("current_activity", None)
+        donor.pop("current_decision", None)
+        donor["needs"].update(rest=0, food=0, safety=0, money=0)
+        donor["personality"].update(altruism=100, agreeableness=100)
+        donor["wealth"] = 500
+        self.state.inventories["actors"][helper]["quantities"]["blank_notebook"] = 2
+        self.state.situations["night_world"]["actor_states"][helper]["layer"] = "surface"
+        result = self.act("REQUEST_MATERIAL_HELP", {"helper_id": helper, "item_id": "blank_notebook"}, self.npc)
+        self.assertTrue(result["ok"], result)
+        request = result["result"]["payload"]["request"]
+        self.assertEqual("accepted", request["status"])
+        self.context.state = self.bridge.kernel._state
+        self.assertNotIn(self.goal["goal_id"], [item["personal_goal_id"] for item in self.candidates()])
+        result = self.act("DELIVER_MATERIAL_HELP", {"request_id": request["request_id"]}, helper)
+        self.assertTrue(result["ok"], result)
+        self.context.state = self.bridge.kernel._state
+        choices = [item for item in self.candidates() if item["personal_goal_id"] == self.goal["goal_id"]]
+        self.assertEqual("REFLECT_ON_CASE", choices[0]["activity_id"])
+
     def test_missing_money_uses_existing_paid_work_and_never_credits_free_money(self):
         self.reflection_fixture(0)
         candidate = self.candidates()[0]

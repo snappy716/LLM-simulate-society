@@ -7,6 +7,7 @@ const APPS := [
 	{"id": "settings", "name": "接口设置"},
 	{"id": "saves", "name": "存读档"},
 	{"id": "messages", "name": "校园通讯"},
+	{"id": "assistance", "name": "互助约定"},
 	{"id": "courses", "name": "课程平台"},
 	{"id": "album", "name": "校园相册"},
 	{"id": "notes", "name": "调查笔记"},
@@ -41,6 +42,7 @@ var _content: RichTextLabel
 var _inventory_root: VBoxContainer
 var _investigation_root: VBoxContainer
 var _growth_root: VBoxContainer
+var _assistance_root: VBoxContainer
 var _trade_root: VBoxContainer
 var _health_root: VBoxContainer
 var _save_root: VBoxContainer
@@ -319,6 +321,9 @@ func _build_app_page() -> VBoxContainer:
 	_growth_root = preload("res://scripts/ui/campus_growth_panel.gd").new()
 	_growth_root.visible = false
 	body.add_child(_growth_root)
+	_assistance_root = preload("res://scripts/ui/campus_assistance_panel.gd").new()
+	_assistance_root.visible = false
+	body.add_child(_assistance_root)
 	_trade_root = preload("res://scripts/ui/campus_trade_panel.gd").new()
 	_trade_root.visible = false
 	body.add_child(_trade_root)
@@ -732,6 +737,10 @@ func _open_app(app_id: String, app_name: String) -> void:
 	var is_inventory := app_id == "market"
 	var is_investigation := app_id == "notes"
 	var is_growth := app_id == "courses"
+	var is_assistance := app_id == "assistance"
+	_assistance_root.visible = is_assistance
+	if is_assistance:
+		_assistance_root.call("refresh")
 	_growth_root.visible = is_growth
 	if is_growth:
 		_growth_root.call("refresh")
@@ -749,7 +758,7 @@ func _open_app(app_id: String, app_name: String) -> void:
 	_inventory_root.visible = is_inventory
 	if is_inventory:
 		_inventory_root.call("refresh")
-	_content.visible = not is_save and not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health and not is_trade and not is_investigation and not is_growth
+	_content.visible = not is_save and not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health and not is_trade and not is_investigation and not is_growth and not is_assistance
 	_forum_root.visible = is_forum
 	_club_root.visible = is_club
 	_party_root.visible = is_party

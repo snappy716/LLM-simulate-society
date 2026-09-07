@@ -13,6 +13,7 @@ const GROUPS := [
 	]},
 	{"title": "人物与世界", "entries": [
 		{"id": "messages", "caption": "联系人与消息", "icon": "phone", "keywords": "聊天对话"},
+		{"id": "assistance", "caption": "求助与履约", "icon": "share1", "keywords": "物资赠送承诺"},
 		{"id": "party", "caption": "成员与协作", "icon": "multiplayer", "keywords": "组队"},
 		{"id": "trade", "caption": "报价与交换", "icon": "share1", "keywords": "买卖交易"},
 		{"id": "forums", "caption": "帖子与委托", "icon": "massiveMultiplayer", "keywords": "任务表世界里世界"},

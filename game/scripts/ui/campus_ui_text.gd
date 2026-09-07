@@ -36,6 +36,8 @@ const ACTIVITY_NAMES := {
 	"READ_KNOWLEDGE": "研读相关讲义",
 	"REFLECT_ON_CASE": "整理亲历案例",
 	"BUY_ITEM": "购买所需物品",
+	"DELIVER_MATERIAL_HELP": "交付约定物资",
+	"WAIT_MATERIAL_HELP": "等待互助碰面",
 	"TEACH": "授课",
 	"COURSEWORK": "完成课程任务",
 	"CLUB_ACTIVITY": "参加社团活动",

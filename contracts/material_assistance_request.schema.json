@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "material_assistance_request.schema.json",
+  "title": "Material assistance request, response and physical delivery",
+  "type": "object",
+  "properties": {
+    "action_id": {"enum": ["REQUEST_MATERIAL_HELP", "RESPOND_MATERIAL_HELP", "DELIVER_MATERIAL_HELP", "CANCEL_MATERIAL_HELP", "WAIT_MATERIAL_HELP"]},
+    "parameters": {"type": "object", "properties": {
+      "helper_id": {"type": "string", "minLength": 1},
+      "item_id": {"enum": ["blank_notebook", "bandage_roll", "bread_loaf"]},
+      "request_id": {"type": "string", "minLength": 1},
+      "accepted": {"type": "boolean"}
+    }, "additionalProperties": false}
+  },
+  "required": ["action_id", "parameters"],
+  "allOf": [
+    {"if": {"properties": {"action_id": {"const": "REQUEST_MATERIAL_HELP"}}}, "then": {"properties": {"parameters": {"required": ["helper_id", "item_id"]}}}, "else": {"properties": {"parameters": {"required": ["request_id"]}}}},
+    {"if": {"properties": {"action_id": {"const": "RESPOND_MATERIAL_HELP"}}}, "then": {"properties": {"parameters": {"required": ["accepted"]}}}}
+  ]
+}

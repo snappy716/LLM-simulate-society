@@ -239,6 +239,9 @@ class CampusKernelBridge:
         )
         decision_selector = make_procurement_selector(decision_selector, graph, decision_policy.protected_schedule_priority)
         from simulation.systems.campus_goals import advance_personal_goals, personal_goals_invariant, make_ask_plan_handler
+        from simulation.systems.campus_assistance import (ASSISTANCE_ACTIONS, advance_assistance_upkeep,
+            advance_assistance_requests, advance_assistance_deliveries, make_assistance_handler, assistance_invariant, project_assistance_events)
+        assistance_handler = make_assistance_handler(messaging_policy)
         def campus_phase_upkeep(context):
             summary = receive_campus_supply(context)
             summary.update(advance_campus_phase_upkeep(context))
@@ -256,6 +259,7 @@ class CampusKernelBridge:
             self.cognition_runtime.publish_status(context.state)
             summary.update(advance_cognition_phase(context, cognition_policy))
             summary.update(advance_personal_goals(context))
+            summary.update(advance_assistance_upkeep(context))
             return summary
 
         phase_upkeep = make_surface_forum_phase_upkeep(
@@ -274,6 +278,8 @@ class CampusKernelBridge:
         for action_id in TRADE_ACTIONS:
             self.kernel.register_handler(action_id, make_campus_trade_handler())
         def scheduled_activity_handler(context, command):
+            if command.action_id in {"DELIVER_MATERIAL_HELP", "WAIT_MATERIAL_HELP"}:
+                return assistance_handler(context, command)
             if command.action_id == "BUY_ITEM":
                 return inventory_handler(context, command)
             if command.action_id in {"READ_KNOWLEDGE", "REFLECT_ON_CASE"}:
@@ -294,6 +300,10 @@ class CampusKernelBridge:
             self.kernel.register_handler(action_id, growth_handler)
         self.kernel.register_handler("ASK_NPC_PLAN", make_ask_plan_handler())
         self.kernel.add_invariant(personal_goals_invariant)
+        for action_id in ASSISTANCE_ACTIONS:
+            self.kernel.register_handler(action_id, assistance_handler)
+        self.kernel.add_invariant(assistance_invariant)
+        self.kernel.add_event_projector(project_assistance_events)
         self.kernel.add_event_projector(project_growth_events)
         self.kernel.add_invariant(growth_invariant)
         self.kernel.add_event_projector(project_chronicle_events)
@@ -350,6 +360,8 @@ class CampusKernelBridge:
                             context, interaction_policy, messaging_policy,
                             self.cognition_runtime,
                         ),
+                        **advance_assistance_requests(context, messaging_policy, interaction_policy.pair_cooldown_phases),
+                        **advance_assistance_deliveries(context, messaging_policy),
                     },
                 ),
         )
