@@ -107,7 +107,7 @@ def make_campus_inventory_handler():
         if command.issued_day != state.clock.day or command.issued_phase != state.clock.phase:
             return _failure("command_clock_mismatch", "物品指令所属的日期或时段已过期。")
         if _busy(state, actor_id):
-            return _failure("battle_locked", "战斗期间的物品费用与效果尚未接通，不能从手机绕过战斗规则。")
+            return _failure("battle_locked", "战斗中请在夜战面板消耗指令点使用药品，不能从背包绕过战斗规则。")
         item_id = params.get("item_id")
         if not isinstance(item_id, str) or item_id not in ledger["catalog"]:
             return _failure("unknown_item", "没有找到这种校园物品。")

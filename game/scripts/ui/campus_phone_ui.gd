@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const UI_TEXT = preload("res://scripts/ui/campus_ui_text.gd")
+const COMBAT_ITEM_PANEL = preload("res://scripts/ui/campus_combat_item_panel.gd")
 
 const APPS := [
 	{"id": "settings", "name": "接口设置"},
@@ -99,6 +100,7 @@ var _combat_base_picker: OptionButton
 var _combat_base_target_picker: OptionButton
 var _combat_use_base_action: Button
 var _combat_feedback: Label
+var _combat_items: VBoxContainer
 var _selected_combat_task_id := ""
 var _selected_character_card_id := ""
 var _selected_combat_card_id := ""
@@ -599,6 +601,9 @@ func _build_combat_page() -> VBoxContainer:
 	_combat_use_base_action.pressed.connect(_use_combat_base_command)
 	base_action_row.add_child(_combat_use_base_action)
 	root.add_child(base_action_row)
+	_combat_items = COMBAT_ITEM_PANEL.new()
+	_combat_items.use_requested.connect(_use_combat_item)
+	root.add_child(_combat_items)
 	_combat_feedback = Label.new()
 	_combat_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_combat_feedback.add_theme_color_override("font_color", Color("e0b86a"))
@@ -1622,6 +1627,7 @@ func _refresh_combat_page() -> void:
 		_selected_combat_task_id = ""
 	var active_value: Variant = combat.get("active_battle")
 	var active: Dictionary = active_value if active_value is Dictionary else {}
+	_combat_items.refresh(active)
 	var selected_task_at_scene := (
 		_combat_task_picker.selected >= 0
 		and _combat_task_picker.get_item_tooltip(_combat_task_picker.selected) == "at_scene"
@@ -2054,6 +2060,15 @@ func _use_combat_base_command() -> void:
 	)]
 	_combat_feedback.text = "正在执行基础指令……"
 	_send_combat_operation("USE_COMBAT_BASE_COMMAND", parameters)
+
+
+func _use_combat_item(selection: Dictionary) -> void:
+	var parameters := _active_combat_parameters()
+	if parameters.is_empty():
+		return
+	parameters.merge(selection)
+	_combat_feedback.text = "正在从使用者库存取药并结算治疗与指令费用……"
+	_send_combat_operation("USE_COMBAT_ITEM", parameters)
 
 
 func _cancel_combat_preparation() -> void:

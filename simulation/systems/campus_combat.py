@@ -27,6 +27,7 @@ from simulation.systems.campus_tasks import complete_assigned_task
 from simulation.systems.content_registry import ContentRegistry
 from simulation.systems.transactions import TransactionOutcome
 from simulation.systems.campus_vitals import change_vital
+from simulation.systems.campus_combat_items import combat_item_options, use_combat_item
 
 
 CAMPUS_COMBAT_SCHEMA_VERSION = 4
@@ -40,6 +41,7 @@ COMBAT_ACTION_IDS = {
     "START_CARD_COMBAT",
     "PLAY_COMBAT_CARD",
     "USE_COMBAT_BASE_COMMAND",
+    "USE_COMBAT_ITEM",
     "END_COMBAT_ROUND",
     "RETREAT_CARD_COMBAT",
 }
@@ -1290,6 +1292,8 @@ def make_campus_combat_handler(
                 "battle_control_denied": "你不能控制这个战斗准备。",
             }
             return TransactionOutcome(False, False, error, messages.get(error, "战斗准备无效。"))
+        if command.action_id == "USE_COMBAT_ITEM":
+            return use_combat_item(context, command, battle)
         if command.action_id == "CANCEL_BATTLE_PREPARATION":
             if battle["phase"] not in {"setup", "ready"}:
                 return TransactionOutcome(False, False, "battle_already_running", "战斗开始后不能取消准备。")
@@ -1696,6 +1700,7 @@ def campus_combat_view(
         active_view["action_options"] = {
             "cards": card_options,
             "base_commands": base_options,
+            "items": combat_item_options(state, active_view, viewer_id),
         }
     return {
         "enabled": True,

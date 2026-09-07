@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/combat_item_command.schema.json",
+  "title": "Use an owned healing item during the team's combat turn",
+  "description": "POST /kernel/command. Inventory, one shared command point and persistent health are settled atomically. No world action cost. Same or adjacent friendly row; no resurrection or pollution cure. Optional action_options.items in combat projection supplies eligible owned stock and exact heal previews.",
+  "allOf": [
+    {"$ref": "simulation_command.schema.json"},
+    {
+      "properties": {
+        "action_id": {"const": "USE_COMBAT_ITEM"},
+        "parameters": {
+          "type": "object",
+          "required": ["battle_id", "item_id"],
+          "properties": {
+            "battle_id": {"type": "string", "minLength": 1},
+            "expected_battle_revision": {"type": "integer", "minimum": 0},
+            "source_actor_id": {"type": "string", "minLength": 1},
+            "target_id": {"type": "string", "minLength": 1},
+            "item_id": {"type": "string", "minLength": 1},
+            "quantity": {"const": 1}
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}
