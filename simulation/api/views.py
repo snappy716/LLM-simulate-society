@@ -8,6 +8,7 @@ from typing import Any, Dict
 
 from simulation.domain.world_state import WorldState
 from simulation.systems.campus_inventory import campus_inventory_view
+from simulation.systems.campus_investigation import investigation_view
 from simulation.systems.campus_vitals import recovery_skills, rest_recovery_allowed, recovery_options
 from simulation.systems.campus_schedules import current_schedule_slot
 from simulation.systems.campus_clubs import club_catalog_view
@@ -465,6 +466,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         "content_version": state.content_version,
         "player": player,
         "economy": campus_inventory_view(state),
+        "investigation": investigation_view(state),
         "places": deepcopy(state.places),
         "passages": deepcopy(state.metadata.get("campus_passages", {})),
         "interior_templates": deepcopy(state.metadata.get("interior_templates", {})),

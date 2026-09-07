@@ -224,7 +224,7 @@ def make_campus_inventory_handler():
                 del record["equipped"][slot]
         verbs = {"BUY_ITEM":"购买", "SELL_ITEM":"出售", "USE_ITEM":"使用", "GIVE_ITEM":"转交", "DROP_ITEM":"放下", "PICK_UP_ITEM":"拾取", "EQUIP_ITEM":"装备", "UNEQUIP_ITEM":"卸下"}
         message = f"{actor.get('display_name', actor_id)}{verbs[action]}了 {quantity} 件{item.name}。"
-        payload = {"action_id":action, "item_id":item_id, "quantity":quantity, "total_price":total, "balance":actor["wealth"], "target_id":target_id}
+        payload = {"action_id":action, "item_id":item_id, "quantity":quantity, "total_price":total, "balance":actor["wealth"], "target_id":target_id, "layer": _layer(state, actor_id)}
         if shop:
             payload.update(shop_id=shop["id"], unit_price=unit_price)
         if action == "USE_ITEM":

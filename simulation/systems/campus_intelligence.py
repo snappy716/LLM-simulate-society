@@ -239,7 +239,8 @@ def disclosable_known_claims(
     disclosure_limit = _disclosure_limit(state, sender_id, receiver_id, policy)
     return [
         item for item in known_claims(state, sender_id)
-        if float(item["belief"].get("confidence", 0.0)) >= policy.minimum_belief_confidence
+        if item["claim"]["claim_id"] not in state.knowledge.get("investigation", {}).get("withheld_by_actor", {}).get(sender_id, [])
+        and float(item["belief"].get("confidence", 0.0)) >= policy.minimum_belief_confidence
         and int(item["claim"].get("secrecy", 100)) <= disclosure_limit
     ]
 
@@ -355,6 +356,7 @@ def share_known_claim(
             not isinstance(claim, dict)
             or not isinstance(belief, dict)
             or claim_id in receiver_beliefs
+            or claim_id in state.knowledge.get("investigation", {}).get("withheld_by_actor", {}).get(sender_id, [])
             or float(belief.get("confidence", 0.0)) < policy.minimum_belief_confidence
             or int(claim.get("secrecy", 100)) > disclosure_limit
         ):

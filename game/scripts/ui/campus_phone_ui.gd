@@ -9,7 +9,7 @@ const APPS := [
 	{"id": "messages", "name": "校园通讯"},
 	{"id": "courses", "name": "课程平台"},
 	{"id": "album", "name": "校园相册"},
-	{"id": "notes", "name": "备忘录"},
+	{"id": "notes", "name": "调查笔记"},
 	{"id": "market", "name": "校园商城"},
 	{"id": "trade", "name": "当面交易"},
 	{"id": "wallet", "name": "电子钱包"},
@@ -39,6 +39,7 @@ var _close_button: Button
 var _app_title: Label
 var _content: RichTextLabel
 var _inventory_root: VBoxContainer
+var _investigation_root: VBoxContainer
 var _trade_root: VBoxContainer
 var _health_root: VBoxContainer
 var _save_root: VBoxContainer
@@ -310,6 +311,9 @@ func _build_app_page() -> VBoxContainer:
 	_inventory_root = preload("res://scripts/ui/campus_inventory_panel.gd").new()
 	_inventory_root.visible = false
 	body.add_child(_inventory_root)
+	_investigation_root = preload("res://scripts/ui/campus_investigation_panel.gd").new()
+	_investigation_root.visible = false
+	body.add_child(_investigation_root)
 	_trade_root = preload("res://scripts/ui/campus_trade_panel.gd").new()
 	_trade_root.visible = false
 	body.add_child(_trade_root)
@@ -712,6 +716,10 @@ func _open_app(app_id: String, app_name: String) -> void:
 	var is_combat := app_id == "combat"
 	var is_message := app_id == "messages"
 	var is_inventory := app_id == "market"
+	var is_investigation := app_id == "notes"
+	_investigation_root.visible = is_investigation
+	if is_investigation:
+		_investigation_root.call("refresh")
 	var is_trade := app_id == "trade"
 	_trade_root.visible = is_trade
 	if is_trade:
@@ -723,7 +731,7 @@ func _open_app(app_id: String, app_name: String) -> void:
 	_inventory_root.visible = is_inventory
 	if is_inventory:
 		_inventory_root.call("refresh")
-	_content.visible = not is_save and not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health and not is_trade
+	_content.visible = not is_save and not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health and not is_trade and not is_investigation
 	_forum_root.visible = is_forum
 	_club_root.visible = is_club
 	_party_root.visible = is_party

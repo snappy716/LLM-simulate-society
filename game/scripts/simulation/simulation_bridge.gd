@@ -18,6 +18,7 @@ signal campus_social_proposal_response_completed(success: bool, result: Dictiona
 signal campus_night_world_operation_completed(success: bool, result: Dictionary, action_id: String)
 signal campus_npc_chronicle_loaded(success: bool, result: Dictionary, npc_id: String, filter_name: String)
 signal campus_inventory_operation_completed(success: bool, result: Dictionary)
+signal campus_investigation_operation_completed(success: bool, result: Dictionary)
 signal campus_persistence_completed(success: bool, result: Dictionary)
 
 const SERVER_SCRIPT := "res://tools/simulation/godot_simulation_server.py"
@@ -378,12 +379,21 @@ func operate_campus_party(action_id: String, target_id: String = "", extra_param
 		campus_party_operation_completed.emit(false, {"error": "无法发送组队请求：%s" % error}, action_id, target_id)
 
 
+func operate_campus_investigation(action_id: String, parameters: Dictionary = {}) -> void:
+	_send_campus_item_or_investigation(action_id, parameters, true)
+
+
 func operate_campus_inventory(action_id: String, parameters: Dictionary = {}) -> void:
+	_send_campus_item_or_investigation(action_id, parameters, false)
+
+
+func _send_campus_item_or_investigation(action_id: String, parameters: Dictionary, investigation: bool) -> void:
+	var completed := campus_investigation_operation_completed if investigation else campus_inventory_operation_completed
 	if _campus_busy or not connected or campus_snapshot.is_empty():
-		campus_inventory_operation_completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他行动"})
+		completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他行动"})
 		return
 	_campus_busy = true
-	_campus_pending_operation = "inventory"
+	_campus_pending_operation = "investigation" if investigation else "inventory"
 	_campus_command_counter += 1
 	var clock: Dictionary = campus_snapshot.get("clock", {})
 	var command := {
@@ -398,7 +408,7 @@ func operate_campus_inventory(action_id: String, parameters: Dictionary = {}) ->
 	if error != OK:
 		_campus_busy = false
 		_campus_pending_operation = ""
-		campus_inventory_operation_completed.emit(false, {"error": "无法发送校园物品请求：%s" % error})
+		completed.emit(false, {"error": "无法发送校园行动请求：%s" % error})
 
 
 func operate_campus_combat(action_id: String, parameters: Dictionary = {}) -> void:
@@ -855,6 +865,8 @@ func _on_campus_request_completed(
 	if response_code != 200 or not parsed is Dictionary:
 		if operation == "inventory":
 			campus_inventory_operation_completed.emit(false, parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"})
+		if operation == "investigation":
+			campus_investigation_operation_completed.emit(false, parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"})
 		elif operation == "traverse":
 			var error_payload: Dictionary = parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"}
 			campus_traversal_completed.emit(false, error_payload, passage_id)
@@ -905,6 +917,8 @@ func _on_campus_request_completed(
 		campus_snapshot_updated.emit(campus_snapshot)
 	if operation == "inventory":
 		campus_inventory_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
+	if operation == "investigation":
+		campus_investigation_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
 	elif operation == "advance_phase":
 		campus_phase_advanced.emit(bool(parsed.get("ok", false)), parsed)
 	elif operation == "fast_travel":

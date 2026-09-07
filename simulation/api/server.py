@@ -275,6 +275,15 @@ class CampusKernelBridge:
             if command.action_id == "BUY_ITEM":
                 return inventory_handler(context, command)
             return activity_handler(context, command)
+        from simulation.systems.campus_investigation import (
+            INVESTIGATION_ACTIONS, make_investigation_handler,
+            project_investigation_events, investigation_invariant,
+        )
+        investigation_handler = make_investigation_handler(intelligence_policy)
+        for action_id in INVESTIGATION_ACTIONS:
+            self.kernel.register_handler(action_id, investigation_handler)
+        self.kernel.add_event_projector(project_investigation_events)
+        self.kernel.add_invariant(investigation_invariant)
         self.kernel.add_event_projector(project_chronicle_events)
         self.kernel.add_event_projector(project_cognition_events)
         self.kernel.add_invariant(chronicle_invariant)
