@@ -140,7 +140,9 @@ class CampusActivityEffectTests(unittest.TestCase):
         ]
         purchases = [event for event in result["result"]["events"]
                      if event["event_type"] == "CAMPUS_ITEM_ACTION_COMPLETED" and event["payload"].get("action_id") == "BUY_ITEM"]
-        self.assertEqual(200, len(effect_events) + len(purchases))
+        supply_count = result["result"]["payload"]["phase_execution"]["npc_combat_supply_purchases"]
+        # A preparatory purchase is followed by the NPC's regular activity.
+        self.assertEqual(200, len(effect_events) + len(purchases) - supply_count)
         self.assertEqual(
             201,
             result["result"]["payload"]["phase_execution"]["need_tick_count"],

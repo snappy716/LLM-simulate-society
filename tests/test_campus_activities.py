@@ -56,7 +56,9 @@ class CampusActivityExecutionTests(unittest.TestCase):
                              state.action_economy["actors"][actor_id]["major_remaining"])
 
         event_types = [event["event_type"] for event in result["result"]["events"]]
-        self.assertEqual(execution["route_step_count"], event_types.count("ACTOR_LOCATION_CHANGED"))
+        # Free daytime supply errands precede the primary scheduled route.
+        self.assertEqual(execution["route_step_count"] + execution["npc_combat_supply_route_steps"],
+                         event_types.count("ACTOR_LOCATION_CHANGED"))
         self.assertEqual(200, event_types.count("NPC_ACTIVITY_COMPLETED"))
         self.assertEqual(1, event_types.count("WORLD_PHASE_ADVANCED"))
 

@@ -69,6 +69,8 @@ def make_scheduled_npc_phase_executor(
             "task_choice_count": 0,
             "task_completed_count": 0,
             "combat_engaged_actor_count": 0,
+            "recovering_actor_count": 0,
+            "expedition_engaged_actor_count": 0,
             "decision_reason_counts": {},
         }
         decision_reasons: Counter[str] = Counter()
@@ -82,7 +84,10 @@ def make_scheduled_npc_phase_executor(
             if not isinstance(actor, dict):
                 continue
             from simulation.systems.campus_enemy_turns import recovering_from_defeat
-            if recovering_from_defeat(context.state, actor_id):
+            from simulation.systems.campus_expeditions import already_fought_this_phase, own_expedition_due
+            if recovering_from_defeat(context.state, actor_id) or already_fought_this_phase(context.state, actor_id):
+                key = "recovering_actor_count" if recovering_from_defeat(context.state, actor_id) else "expedition_engaged_actor_count"
+                summary[key] += 1
                 actor.pop("current_decision", None)
                 actor.pop("current_activity", None)
                 continue
@@ -97,7 +102,7 @@ def make_scheduled_npc_phase_executor(
                 continue
             schedule_plan = current_schedule_slot(context.state, actor_id)
             from simulation.systems.campus_departures import active_departure
-            if active_departure(context.state, actor_id):
+            if active_departure(context.state, actor_id) and not own_expedition_due(context.state, actor_id):
                 actor.pop("current_decision", None)
                 actor["current_activity"] = _activity_record(
                     context.state, schedule_plan, status="blocked", route_step_count=0,

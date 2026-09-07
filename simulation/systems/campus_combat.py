@@ -509,11 +509,11 @@ def _assemble_actor(
     )
     if route is None:
         return TransactionOutcome(False, False, "route_unavailable", "队员当前无法沿校园道路抵达。")
-    # The explicit player-led assembly supersedes the NPC's completed routine
+    # Explicit assembly supersedes the NPC's completed routine
     # for this phase; keeping that old activity attached to its former place
     # would make the authoritative movement ledger contradictory.
-    actor["current_activity"] = None
-    actor["current_decision"] = None
+    actor.pop("current_activity", None)
+    actor.pop("current_decision", None)
     for index, step in enumerate(route.steps):
         actor["current_location_id"] = step.to_id
         context.emit(
@@ -542,6 +542,11 @@ def _assemble_actor(
         night_state["last_transition_day"] = state.clock.day
         night_state["last_transition_phase"] = state.clock.phase
         state.situations["night_world"]["transition_sequence"] += 1
+        aggregate = state.situations["night_world"]
+        if actor_id != "player" and aggregate.get("active_day") == state.clock.day:
+            for field in ("active_actor_ids", "entered_actor_ids"):
+                if actor_id not in aggregate.setdefault(field, []):
+                    aggregate[field].append(actor_id)
         context.emit(
             "NIGHT_WORLD_ENTERED",
             f"{actor.get('display_name', actor_id)}在集合点进入了校园夜相。",

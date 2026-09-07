@@ -197,7 +197,7 @@ def project_growth_events(state, events):
         if not battle:
             continue
         if event.event_type in {"COMBAT_VICTORY", "COMBAT_DEFEAT_RESCUE", "COMBAT_PARTY_RETREATED"}:
-            for actor_id in battle.get("actor_decks", {}):
+            for actor_id in battle.get("participant_ids", []):
                 record = _actor_growth(state, actor_id)
                 for enemy in battle.get("enemy_units", {}).values():
                     topic = enemy.get("archetype_id")

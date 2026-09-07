@@ -243,9 +243,11 @@ class CampusKernelBridge:
             advance_assistance_requests, advance_assistance_deliveries, make_assistance_handler, assistance_invariant, project_assistance_events)
         assistance_handler = make_assistance_handler(messaging_policy)
         def campus_phase_upkeep(context):
+            from simulation.systems.campus_expeditions import upkeep_expeditions, form_npc_expeditions, prepare_npc_combat_supplies
             summary = receive_campus_supply(context)
             summary.update(advance_campus_phase_upkeep(context))
             summary.update(advance_campus_combat(context))
+            summary.update(upkeep_expeditions(context))
             summary.update(advance_campus_night_world(context, night_world_policy))
             summary.update(advance_campus_night_forum(
                 context,
@@ -256,6 +258,8 @@ class CampusKernelBridge:
             ))
             summary.update(advance_club_upkeep(context, club_policy))
             summary.update(advance_party_commitments(context, party_policy))
+            summary.update(form_npc_expeditions(context, graph, party_policy, party_handler, messaging_policy))
+            summary.update(prepare_npc_combat_supplies(context, graph, traverse_handler, inventory_handler))
             self.cognition_runtime.publish_status(context.state)
             summary.update(advance_cognition_phase(context, cognition_policy))
             summary.update(advance_personal_goals(context))
@@ -387,7 +391,13 @@ class CampusKernelBridge:
             "TRANSFER_CLUB_LEADERSHIP",
         ):
             self.kernel.register_handler(action_id, club_handler)
-        party_handler = make_campus_party_handler(party_policy)
+        common_party_handler = make_campus_party_handler(party_policy)
+        def party_handler(context, command):
+            outcome = common_party_handler(context, command)
+            if outcome.success:
+                from simulation.systems.campus_expeditions import upkeep_expeditions
+                upkeep_expeditions(context)
+            return outcome
         for action_id in (
             "INVITE_PARTY_MEMBER",
             "DISMISS_PARTY_MEMBER",
@@ -434,6 +444,8 @@ class CampusKernelBridge:
         autonomous_combat_handler = make_autonomous_combat_handler(combat_handler, combat_policy, combat_round_policy, graph)
         self.kernel.register_handler("EXECUTE_NPC_NIGHT_TASK", autonomous_combat_handler)
         self.kernel.add_invariant(autonomous_combat_invariant)
+        from simulation.systems.campus_expeditions import expedition_invariant
+        self.kernel.add_invariant(expedition_invariant)
         for action_id in COMBAT_ACTION_IDS:
             self.kernel.register_handler(action_id, combat_handler)
 

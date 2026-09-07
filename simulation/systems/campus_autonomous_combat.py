@@ -9,9 +9,10 @@ from simulation.systems.campus_combat import (
     combat_readiness_assessment, night_combat_entry_cost,
 )
 from simulation.systems.campus_parties import create_party, party_for_actor, party_policy_from_state
-from simulation.systems.campus_departures import has_upcoming_departure
+from simulation.systems.campus_departures import has_upcoming_departure, active_departure as active_departure_for_member
 from simulation.systems.campus_enemy_turns import recovering_from_defeat
 from simulation.systems.transactions import TransactionOutcome
+from simulation.systems.campus_expeditions import active_expedition, own_expedition_due, finish_expedition
 
 DAMAGE = {"deal_physical", "deal_technique", "reveal_pattern", "apply_disruption", "specialization_effect"}
 EXPECTED_NPC_COMBAT_FAILURES = {"npc_control_required", "task_not_owned", "party_commitment", "departure_reserved",
@@ -81,7 +82,9 @@ def make_autonomous_combat_handler(combat_handler, policy, round_policy, graph):
         task = state.tasks.get(task_id, {})
         if task.get("forum") != "night" or task.get("assignee_id") != actor_id or task.get("state") != "locked":
             return fail("task_not_owned", "没有持有可执行的夜间任务。")
-        if has_upcoming_departure(state, actor_id):
+        expedition = active_expedition(state, actor_id, leader_only=True)
+        own_due = own_expedition_due(state, actor_id) and expedition["task_id"] == task_id
+        if has_upcoming_departure(state, actor_id) and not own_due:
             return fail("departure_reserved", "已承诺参加另一场出击。")
         if recovering_from_defeat(state, actor_id):
             return fail("recovering", "正在等待正常次日恢复。")
@@ -90,9 +93,7 @@ def make_autonomous_combat_handler(combat_handler, policy, round_policy, graph):
         party = party_for_actor(state, actor_id)
         if party is not None and (party["leader_id"] != actor_id or "player" in party["member_ids"]):
             return fail("party_commitment", "不能接管玩家或其他队长的小队。")
-        # First slice executes solo. Later assembly uses the same controller, but
-        # must not borrow existing members without a distinct agreed departure.
-        if party is not None and len(party["member_ids"]) > 1:
+        if party is not None and len(party["member_ids"]) > 1 and not own_due:
             return fail("party_commitment", "协同行动需要先完成共同出击安排。")
         created = party is None
         if created:
@@ -105,6 +106,15 @@ def make_autonomous_combat_handler(combat_handler, policy, round_policy, graph):
                 del state.parties[party["party_id"]]
             code = assessment["reason"] if not assessment["allowed"] else readiness["reason"] if not readiness["eligible"] else "night_combat_action_exhausted"
             return fail(code, "当前地点、时段、状态或行动预算不允许出战。")
+        deploying = [actor_id]
+        if own_due:
+            for member_id in party["member_ids"]:
+                if member_id == actor_id:
+                    continue
+                eligible = combat_readiness_assessment(state, actor_id, member_id, policy, situation_id=task_id, graph=graph)
+                cost = night_combat_entry_cost(state, [member_id])
+                if eligible["eligible"] and cost["allowed"] and active_departure_for_member(state, member_id):
+                    deploying.append(member_id)
         sequence = 0
         battle = None
         def issue(action, params=None):
@@ -120,8 +130,12 @@ def make_autonomous_combat_handler(combat_handler, policy, round_policy, graph):
             return result
         started = issue("START_BATTLE_PREPARATION", {"task_id": task_id})
         battle = state.battles[started.payload["battle_id"]]
-        character_id, character = next(iter(battle["character_cards"].items()))
-        issue("DEPLOY_COMBAT_CHARACTER", {"character_card_instance_id": character_id, "destination_row": character["preferred_row"]})
+        for character_id, character in battle["character_cards"].items():
+            if character["actor_id"] not in deploying:
+                continue
+            rows = [character["preferred_row"], *character["allowed_rows"]]
+            destination = next(row for row in rows if len(battle["formations"][character["team_id"]][row]) < policy.row_capacity)
+            issue("DEPLOY_COMBAT_CHARACTER", {"character_card_instance_id": character_id, "destination_row": destination})
         issue("CONFIRM_BATTLE_DEPLOYMENT")
         issue("START_CARD_COMBAT")
         # Termination guard retreats through the normal enemy pursuit pipeline.
@@ -142,6 +156,7 @@ def make_autonomous_combat_handler(combat_handler, policy, round_policy, graph):
             "message": f"实际卡牌战斗：{state.population[actor_id]['display_name']}经过 {battle['round']} 轮{text}。"})
         context.emit("NPC_NIGHT_TASK_EXECUTED", text, actor_ids=[actor_id], scene_id=battle["scene_id"],
                      visibility="secret", knowledge_tags=["night", "combat", "task"], payload={"task_id": task_id, **receipt})
+        finish_expedition(context, task_id, receipt)
         if created:
             del state.parties[party["party_id"]]
         return TransactionOutcome(True, True, "success", text, commit=True,
