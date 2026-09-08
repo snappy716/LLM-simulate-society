@@ -21,6 +21,7 @@ SimulationBridge="*res://scripts/simulation/simulation_bridge.gd"
 CampusNavigation="*res://scripts/world/campus_navigation.gd"
 CampusPresentation="*res://scripts/world/campus_presentation.gd"
 InterfaceSettings="*res://scenes/ui/interface_settings_ui.tscn"
+OvernightTransition="*res://scripts/ui/campus_overnight_transition.gd"
 
 [display]
 

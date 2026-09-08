@@ -5,6 +5,7 @@ signal interface_configured(success: bool, result: Dictionary)
 signal campus_snapshot_updated(snapshot: Dictionary)
 signal campus_traversal_completed(success: bool, result: Dictionary, passage_id: String)
 signal campus_phase_advanced(success: bool, result: Dictionary)
+signal campus_phase_started(clock: Dictionary)
 signal campus_fast_travel_completed(success: bool, result: Dictionary, destination_id: String)
 signal campus_task_operation_completed(success: bool, result: Dictionary, action_id: String, task_id: String)
 signal campus_club_operation_completed(success: bool, result: Dictionary, action_id: String, club_id: String)
@@ -238,6 +239,10 @@ func advance_campus_phase() -> void:
 		"issued_minute": int(clock.get("minute", 0)),
 		"source": "player",
 	}
+	# Overnight planning may include bounded model requests. Other commands retain
+	# their ordinary timeout; the presentation never drives or repeats a command.
+	_campus_request.timeout = 180.0 if clock.get("phase") == "late_night" else 30.0
+	campus_phase_started.emit(clock.duplicate(true))
 	var error := _campus_request.request(
 		_base_url + "/kernel/command",
 		PackedStringArray(["Content-Type: application/json"]),
@@ -245,6 +250,7 @@ func advance_campus_phase() -> void:
 		JSON.stringify(command)
 	)
 	if error != OK:
+		_campus_request.timeout = 30.0
 		_campus_busy = false
 		_campus_pending_operation = ""
 		campus_phase_advanced.emit(false, {"error": "无法发送时段推进请求：%s" % error})
@@ -887,6 +893,7 @@ func _on_campus_request_completed(
 	_campus_pending_proposal_id = ""
 	_campus_pending_night_action = ""
 	_campus_busy = false
+	_campus_request.timeout = 30.0
 	var parsed = null
 	if not body.is_empty():
 		var decoder := JSON.new()
