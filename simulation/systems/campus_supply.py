@@ -72,6 +72,8 @@ def review_campus_supply(context):
     orders are allowed; cash reserves remain available for normal shop buybacks.
     """
     state = context.state
+    from simulation.systems.campus_situations import advance_campus_situations, shortage_age
+    advance_campus_situations(context)
     supply = state.inventories.get("supply")
     if not supply or not supply["available"]:
         return {"supply_orders": 0}
@@ -81,7 +83,7 @@ def review_campus_supply(context):
             continue
         targets = supply["targets"][shop_id]
         # Scarcer ratios first. Stable item ids break ties deterministically.
-        candidates = sorted(targets, key=lambda item: (shop["quantities"].get(item, 0) / targets[item], item))
+        candidates = sorted(targets, key=lambda item: (-shortage_age(state, shop_id, item), shop["quantities"].get(item, 0) / targets[item], item))
         for item_id in candidates:
             stock = shop["quantities"].get(item_id, 0)
             target = targets[item_id]

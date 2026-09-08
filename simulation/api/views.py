@@ -472,6 +472,10 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     night_forum = public_forums.setdefault("night", {})
     night_forum["enabled"] = bool(night_world.get("night_forum_unlocked", False))
     night_forum["accessible"] = bool(night_world.get("night_forum_accessible", False))
+    from simulation.systems.campus_situations import situation_forum_view
+    notices = situation_forum_view(state, night_forum["enabled"])
+    public_forums.setdefault("surface", {})["situations"] = notices["surface"]
+    night_forum["situations"] = notices["night"]
     night_forum["access_state"] = (
         "active" if night_forum["accessible"]
         else "read_only" if night_forum["enabled"]

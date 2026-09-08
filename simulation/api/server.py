@@ -249,6 +249,8 @@ class CampusKernelBridge:
             summary = receive_campus_supply(context)
             from simulation.systems.campus_night_sites import upkeep_night_sites
             summary.update(upkeep_night_sites(context))
+            from simulation.systems.campus_situations import advance_campus_situations
+            summary.update(advance_campus_situations(context))
             summary.update(advance_campus_phase_upkeep(context))
             summary.update(advance_campus_combat(context))
             summary.update(upkeep_expeditions(context))
@@ -296,6 +298,8 @@ class CampusKernelBridge:
                 social_attention(context)
         self.kernel = WorldKernel(state, rng=rng_pool)
         self.kernel.add_invariant(campus_vitals_invariant)
+        from simulation.systems.campus_situations import campus_situations_invariant
+        self.kernel.add_invariant(campus_situations_invariant)
         self.kernel.register_handler("USE_RECOVERY_SKILL", make_field_recovery_handler())
         self.kernel.add_invariant(campus_inventory_invariant)
         inventory_handler = make_campus_inventory_handler()

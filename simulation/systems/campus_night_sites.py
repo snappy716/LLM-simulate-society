@@ -95,7 +95,8 @@ def create_night_site(context, task, profile, victim_id=None):
 def site_exposure(state, actor_id):
     location = state.population[actor_id].get("current_location_id")
     region = state.places.get(location, {}).get("region_id") or location
-    return min(3, sum(site["region_id"] == region and site["status"] in {"active", "suppressed"}
+    from simulation.systems.campus_situations import regional_pressure
+    return regional_pressure(state, location) // 4 + min(3, sum(site["region_id"] == region and site["status"] in {"active", "suppressed"}
                       for site in state.situations.get("night_sites", {}).get("sites", {}).values()))
 
 
@@ -188,6 +189,8 @@ def make_site_resolution_handler(graph, action_policy):
             "day": state.clock.day, "phase": state.clock.phase, "destination_id": site["safe_location_id"] or site["location_id"],
             "passage_ids": [step.passage_id for step in routes[actor_id].steps] if victim_id else [], "major_action_cost": cost}
         site.update(status="resolved", revision=site["revision"] + 1, receipt=receipt)
+        from simulation.systems.campus_situations import advance_campus_situations
+        advance_campus_situations(context)
         from simulation.systems.campus_tasks import complete_assigned_task
         if not complete_assigned_task(context, actor_id, {"task_id": task_id, "site_resolution": True}):
             raise RuntimeError("validated site resolution could not settle task")

@@ -63,6 +63,7 @@ var _forum_channel := "surface"
 var _forum_surface_button: Button
 var _forum_night_button: Button
 var _forum_access_note: Label
+var _forum_situations: RichTextLabel
 var _selected_task_id := ""
 var _club_root: VBoxContainer
 var _club_picker: OptionButton
@@ -683,6 +684,13 @@ func _build_forum_page() -> VBoxContainer:
 	_forum_access_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_forum_access_note.add_theme_color_override("font_color", Color("91a4bc"))
 	root.add_child(_forum_access_note)
+	_forum_situations = RichTextLabel.new()
+	_forum_situations.custom_minimum_size = Vector2(0, 100)
+	_forum_situations.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_forum_situations.bbcode_enabled = false
+	_forum_situations.add_theme_font_size_override("normal_font_size", 14)
+	_forum_situations.visible = false
+	root.add_child(_forum_situations)
 
 	_forum_list_view = VBoxContainer.new()
 	_forum_list_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1082,6 +1090,13 @@ func _refresh_forum_channels() -> void:
 		)
 	else:
 		_forum_access_note.text = "校园公开频道 · NPC 会陆续查看、考虑和接单。查看手机不消耗时段，其他人仍会继续浏览。"
+	var notices: Array = (campus.get("forums", {}).get(_forum_channel, {}) as Dictionary).get("situations", [])
+	var lines := PackedStringArray()
+	for notice in notices:
+		if notice is Dictionary:
+			lines.append(String(notice.get("summary", "")))
+	_forum_situations.text = "持续动态（可滚动）\n" + "\n".join(lines)
+	_forum_situations.visible = not lines.is_empty()
 
 
 func _show_forum_list() -> void:

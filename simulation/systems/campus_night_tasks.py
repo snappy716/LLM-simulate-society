@@ -175,8 +175,10 @@ def _publish_night_tasks(
     sequence = int(forum.get("published_total", 0))
     published: list[str] = []
     now = phase_index(state.clock.day, state.clock.phase)
+    from simulation.systems.campus_situations import regional_pressure, weighted_night_templates
+    weighted_templates = weighted_night_templates(state, templates)
     for _ in range(policy.daily_night_task_count):
-        template_id = rng.choice(template_ids)
+        template_id = rng.choice(weighted_templates)
         template = templates[template_id]
         from simulation.systems.campus_night_sites import rescue_candidates, create_night_site
         victim_id = None
@@ -235,6 +237,11 @@ def _publish_night_tasks(
             create_field_site(context, task, template["field_profile"])
         if "site_profile" in template:
             create_night_site(context, task, template["site_profile"], victim_id)
+        pressure = regional_pressure(state, task["scene_id"])
+        if pressure:
+            task["origin_situation_id"] = "regional-pressure:" + task["execution_region_id"]
+            task["pressure_at_creation"] = pressure
+            task["description"] += f"\n该区域遗留异常压力为 {pressure}，历次处置结果会改变后续夜间风险。"
         state.tasks[task_id] = task
         published.append(task_id)
         context.emit(
