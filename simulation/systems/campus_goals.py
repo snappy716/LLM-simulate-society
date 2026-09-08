@@ -221,7 +221,12 @@ def make_ask_plan_handler():
             message = "暂时没有另外的研习安排，先处理手头的课程和生活。"
         agenda = state.cognition.get("daily_plans", {})
         receipt = state.cognition.get("social_agenda_receipts", {})
-        if (not guarded and agenda.get("day") == state.clock.day
+        from simulation.systems.campus_social_coordination import coordination_for, describe_confirmed_arrangement
+        confirmed = describe_confirmed_arrangement(state, target,
+            relation.get("closeness", 0) >= 45 and relation.get("trust", 0) >= 45) if not guarded else ""
+        message += confirmed
+        if (not guarded and not confirmed and agenda.get("day") == state.clock.day
+                and coordination_for(state, target).get("status") != "declined"
                 and not (receipt.get("day") == state.clock.day and target in receipt.get("actors", {}))):
             for slot in agenda.get("actors", {}).get(target, {}).values():
                 social = slot.get("social_intent")

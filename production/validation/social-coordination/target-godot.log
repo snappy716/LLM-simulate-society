@@ -1,0 +1,3 @@
+GODOT_CHECK_LOGS /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-rsn565tp
+PASS coordination: CAMPUS_COORDINATION_FLOW_OK actual_inspector_button confirmed_not_tentative free_query private_ledger explicit_fixture no_api
+GODOT_CHECKS_OK 1 flows

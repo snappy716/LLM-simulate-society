@@ -1,0 +1,1606 @@
+[
+  {
+    "event_id": "evt:0000006704",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "许思齐对谢予安说：‘嗯，好吧，既然你现在不想聊这个，那就算了。我刚上完课，准备去吃点东西，你呢？’",
+    "message": "许思齐对谢予安说：‘嗯，好吧，既然你现在不想聊这个，那就算了。我刚上完课，准备去吃点东西，你呢？’",
+    "actor_ids": [
+      "campus_student_014"
+    ],
+    "target_ids": [
+      "campus_student_013"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000021",
+      "day": 2,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_014",
+      "target_id": "campus_student_013",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 24.102,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "suspicion": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "许思齐对谢予安说：‘嗯，好吧，既然你现在不想聊这个，那就算了。我刚上完课，准备去吃点东西，你呢？’",
+      "wording_source": "llm",
+      "wording_fact_ids": [],
+      "model_reason": "上午有课，下午课程作业，晚上自习，深夜休息。选择与谢予安交换想法，但需匹配上午课程地点。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000006706",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "林晏如对朱云舟说：‘刚上完课，正好遇到你。昨天社团的事没谈拢，我还在想怎么调整方案。你最近在思考什么？’",
+    "message": "林晏如对朱云舟说：‘刚上完课，正好遇到你。昨天社团的事没谈拢，我还在想怎么调整方案。你最近在思考什么？’",
+    "actor_ids": [
+      "campus_student_024"
+    ],
+    "target_ids": [
+      "campus_student_098"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000022",
+      "day": 2,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_024",
+      "target_id": "campus_student_098",
+      "intent_id": "exchange_ideas",
+      "outcome": "accepted",
+      "decision_source": "rule",
+      "acceptance_score": 39.603,
+      "relationship_deltas": {
+        "actor": {
+          "familiarity": 2,
+          "respect": 3
+        },
+        "target": {
+          "familiarity": 2,
+          "respect": 2
+        }
+      },
+      "emotion_deltas": {
+        "actor": {
+          "joy": 1
+        },
+        "target": {
+          "joy": 1
+        }
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": "claim:00000179",
+      "outcome_claim_ids": [],
+      "dialogue_summary": "林晏如对朱云舟说：‘刚上完课，正好遇到你。昨天社团的事没谈拢，我还在想怎么调整方案。你最近在思考什么？’",
+      "wording_source": "llm",
+      "wording_fact_ids": [
+        "claim:00000179"
+      ],
+      "model_reason": ""
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000013811",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 3,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 9,
+    "command_id": "live-audit:4",
+    "public_summary": "吴闻溪对林晏如说：‘嗯，我明白你现在不想聊这个。那我们先各自忙吧，等你想说的时候，我随时在。’",
+    "message": "吴闻溪对林晏如说：‘嗯，我明白你现在不想聊这个。那我们先各自忙吧，等你想说的时候，我随时在。’",
+    "actor_ids": [
+      "campus_student_027"
+    ],
+    "target_ids": [
+      "campus_student_024"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000055",
+      "day": 3,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_027",
+      "target_id": "campus_student_024",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 32.496,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "suspicion": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "吴闻溪对林晏如说：‘嗯，我明白你现在不想聊这个。那我们先各自忙吧，等你想说的时候，我随时在。’",
+      "wording_source": "llm",
+      "wording_fact_ids": [],
+      "model_reason": "需要上课和完成作业，同时想尝试与林晏如交换想法，但需确保时段匹配。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:4"
+  },
+  {
+    "event_id": "evt:0000013813",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 3,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 9,
+    "command_id": "live-audit:4",
+    "public_summary": "于星河对吴清和说：‘嗯，好吧，既然你现在不想聊这个，那就算了。我刚上完课，有点累，先去休息一下。’",
+    "message": "于星河对吴清和说：‘嗯，好吧，既然你现在不想聊这个，那就算了。我刚上完课，有点累，先去休息一下。’",
+    "actor_ids": [
+      "campus_student_103"
+    ],
+    "target_ids": [
+      "campus_student_100"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000056",
+      "day": 3,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_103",
+      "target_id": "campus_student_100",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 25.202,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "suspicion": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "于星河对吴清和说：‘嗯，好吧，既然你现在不想聊这个，那就算了。我刚上完课，有点累，先去休息一下。’",
+      "wording_source": "llm",
+      "wording_fact_ids": [],
+      "model_reason": "需要完成课程和助教工作，同时尝试与吴清和交换想法，但需确保时段匹配。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:4"
+  },
+  {
+    "event_id": "evt:0000020711",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 4,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 13,
+    "command_id": "live-audit:8",
+    "public_summary": "许予川对韩星野说：‘刚下课，正好碰到你。刚才那个想法可能有点急，不过没关系，等你有空再说吧。’",
+    "message": "许予川对韩星野说：‘刚下课，正好碰到你。刚才那个想法可能有点急，不过没关系，等你有空再说吧。’",
+    "actor_ids": [
+      "campus_student_021"
+    ],
+    "target_ids": [
+      "campus_staff_062"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000103",
+      "day": 4,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_021",
+      "target_id": "campus_staff_062",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 25.36,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "suspicion": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "许予川对韩星野说：‘刚下课，正好碰到你。刚才那个想法可能有点急，不过没关系，等你有空再说吧。’",
+      "wording_source": "llm",
+      "wording_fact_ids": [],
+      "model_reason": "上午有课，下午有课业，晚上去图书馆自习，深夜休息。考虑与韩星野交换想法，但需确保时段匹配，选择上午社交并上课。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:8"
+  },
+  {
+    "event_id": "evt:0000020713",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 4,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 13,
+    "command_id": "live-audit:8",
+    "public_summary": "于映雪对郑令仪说：‘早上刚上完课，正好碰到你。上次社团的事还没聊完，现在方便再谈谈吗？’",
+    "message": "于映雪对郑令仪说：‘早上刚上完课，正好碰到你。上次社团的事还没聊完，现在方便再谈谈吗？’",
+    "actor_ids": [
+      "campus_student_053"
+    ],
+    "target_ids": [
+      "campus_student_065"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000104",
+      "day": 4,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_053",
+      "target_id": "campus_student_065",
+      "intent_id": "coordinate_club",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 31.423,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "conflict": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "于映雪对郑令仪说：‘早上刚上完课，正好碰到你。上次社团的事还没聊完，现在方便再谈谈吗？’",
+      "wording_source": "llm",
+      "wording_fact_ids": [],
+      "model_reason": "需要完成学业和兼职，晚上准备材料，并尝试与郑令仪协调社团事务。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "coordinate_club"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:8"
+  },
+  {
+    "event_id": "evt:0000020715",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 4,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 13,
+    "command_id": "live-audit:8",
+    "public_summary": "郭明熙对曹若岚说：‘刚才那个想法可能有点急，没关系。我刚上完课，感觉有点累，想先去吃点东西。你呢？’",
+    "message": "郭明熙对曹若岚说：‘刚才那个想法可能有点急，没关系。我刚上完课，感觉有点累，想先去吃点东西。你呢？’",
+    "actor_ids": [
+      "campus_student_070"
+    ],
+    "target_ids": [
+      "campus_student_063"
+    ],
+    "scene_id": "indoor_sports_hall",
+    "payload": {
+      "interaction_id": "interaction:00000105",
+      "day": 4,
+      "phase": "morning",
+      "scene_id": "indoor_sports_hall",
+      "actor_id": "campus_student_070",
+      "target_id": "campus_student_063",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 32.374,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "suspicion": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "郭明熙对曹若岚说：‘刚才那个想法可能有点急，没关系。我刚上完课，感觉有点累，想先去吃点东西。你呢？’",
+      "wording_source": "llm",
+      "wording_fact_ids": [],
+      "model_reason": "需要完成课程和自习，同时尝试与曹若岚交换想法，但若时间冲突则优先学业。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:8"
+  },
+  {
+    "event_id": "evt:0000020717",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 4,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 13,
+    "command_id": "live-audit:8",
+    "public_summary": "何景行对曾安然说：‘曾安然，上次说好的事我办妥了。刚上完课，正好碰见你，就当面跟你说一声。’",
+    "message": "何景行对曾安然说：‘曾安然，上次说好的事我办妥了。刚上完课，正好碰见你，就当面跟你说一声。’",
+    "actor_ids": [
+      "campus_student_088"
+    ],
+    "target_ids": [
+      "campus_student_048"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000106",
+      "day": 4,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_088",
+      "target_id": "campus_student_048",
+      "intent_id": "follow_up_promise",
+      "outcome": "accepted",
+      "decision_source": "llm",
+      "acceptance_score": 38.81,
+      "relationship_deltas": {
+        "actor": {
+          "trust": 3,
+          "closeness": 2,
+          "respect": 1
+        },
+        "target": {
+          "trust": 4,
+          "closeness": 2,
+          "obligation": 0
+        }
+      },
+      "emotion_deltas": {
+        "actor": {
+          "joy": 2
+        },
+        "target": {
+          "joy": 3,
+          "sadness": 0
+        }
+      },
+      "hook_id": "social_hook:000013",
+      "hook_transition": "completed",
+      "shared_claim_id": "claim:00000360",
+      "outcome_claim_ids": [
+        "claim:00001506"
+      ],
+      "dialogue_summary": "何景行对曾安然说：‘曾安然，上次说好的事我办妥了。刚上完课，正好碰见你，就当面跟你说一声。’",
+      "wording_source": "llm",
+      "wording_fact_ids": [
+        "claim:00000360",
+        "claim:00001506"
+      ],
+      "model_reason": "选择上午赴约，下午完成课业，晚上自习，深夜休息。"
+    },
+    "visibility": "private",
+    "severity": 3,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "follow_up_promise"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:8"
+  },
+  {
+    "event_id": "evt:0000006704",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "许思齐对谢予安说：‘嗯，好吧，既然你现在不想聊这个，那就算了。我刚上完课，准备去吃点东西，你呢？’",
+    "message": "许思齐对谢予安说：‘嗯，好吧，既然你现在不想聊这个，那就算了。我刚上完课，准备去吃点东西，你呢？’",
+    "actor_ids": [
+      "campus_student_014"
+    ],
+    "target_ids": [
+      "campus_student_013"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000021",
+      "day": 2,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_014",
+      "target_id": "campus_student_013",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 24.102,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "suspicion": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "许思齐对谢予安说：‘嗯，好吧，既然你现在不想聊这个，那就算了。我刚上完课，准备去吃点东西，你呢？’",
+      "wording_source": "llm",
+      "wording_fact_ids": [],
+      "model_reason": "上午有课，下午课程作业，晚上自习，深夜休息。选择与谢予安交换想法，但需匹配上午课程地点。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000009934",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 2,
+    "phase": "evening",
+    "minute": 0,
+    "world_revision": 7,
+    "command_id": "live-audit:2",
+    "public_summary": "于南乔对陈嘉言说：“于南乔是校内教职工。”",
+    "message": "于南乔对陈嘉言说：“于南乔是校内教职工。”",
+    "actor_ids": [
+      "campus_staff_007"
+    ],
+    "target_ids": [
+      "campus_student_001"
+    ],
+    "scene_id": "library_reading_hall",
+    "payload": {
+      "interaction_id": "interaction:00000031",
+      "day": 2,
+      "phase": "evening",
+      "scene_id": "library_reading_hall",
+      "actor_id": "campus_staff_007",
+      "target_id": "campus_student_001",
+      "intent_id": "exchange_ideas",
+      "outcome": "accepted",
+      "decision_source": "llm",
+      "acceptance_score": 40.126,
+      "relationship_deltas": {
+        "actor": {
+          "familiarity": 2,
+          "respect": 3
+        },
+        "target": {
+          "familiarity": 2,
+          "respect": 2
+        }
+      },
+      "emotion_deltas": {
+        "actor": {
+          "joy": 1
+        },
+        "target": {
+          "joy": 1
+        }
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": "claim:00000013",
+      "outcome_claim_ids": [],
+      "dialogue_summary": "于南乔对陈嘉言说：“于南乔是校内教职工。”",
+      "wording_source": "rule",
+      "wording_fact_ids": [],
+      "model_reason": "白天有图书馆值班，晚上想和陈嘉言在图书馆交流想法，顺便满足好奇与归属感。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:2"
+  },
+  {
+    "event_id": "evt:0000009937",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 2,
+    "phase": "evening",
+    "minute": 0,
+    "world_revision": 7,
+    "command_id": "live-audit:2",
+    "public_summary": "于映雪 想和 郑令仪 商量社团事务，但没有当场取得一致。",
+    "message": "于映雪 想和 郑令仪 商量社团事务，但没有当场取得一致。",
+    "actor_ids": [
+      "campus_student_053"
+    ],
+    "target_ids": [
+      "campus_student_065"
+    ],
+    "scene_id": "club_room_pool",
+    "payload": {
+      "interaction_id": "interaction:00000032",
+      "day": 2,
+      "phase": "evening",
+      "scene_id": "club_room_pool",
+      "actor_id": "campus_student_053",
+      "target_id": "campus_student_065",
+      "intent_id": "coordinate_club",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 35.504,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "conflict": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "于映雪 想和 郑令仪 商量社团事务，但没有当场取得一致。",
+      "wording_source": "rule",
+      "wording_fact_ids": [],
+      "model_reason": "需要完成学业和助理工作，同时尝试与郑令仪协调社团事务，但上午已有课程，故选择晚间在社团活动室见面。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "coordinate_club"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:2"
+  },
+  {
+    "event_id": "evt:0000009939",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 2,
+    "phase": "evening",
+    "minute": 0,
+    "world_revision": 7,
+    "command_id": "live-audit:2",
+    "public_summary": "董若水对邓知夏说：“董若水来自体育学院。”",
+    "message": "董若水对邓知夏说：“董若水来自体育学院。”",
+    "actor_ids": [
+      "campus_student_131"
+    ],
+    "target_ids": [
+      "campus_student_127"
+    ],
+    "scene_id": "library_reading_hall",
+    "payload": {
+      "interaction_id": "interaction:00000033",
+      "day": 2,
+      "phase": "evening",
+      "scene_id": "library_reading_hall",
+      "actor_id": "campus_student_131",
+      "target_id": "campus_student_127",
+      "intent_id": "exchange_ideas",
+      "outcome": "accepted",
+      "decision_source": "llm",
+      "acceptance_score": 41.151,
+      "relationship_deltas": {
+        "actor": {
+          "familiarity": 2,
+          "respect": 3
+        },
+        "target": {
+          "familiarity": 2,
+          "respect": 2
+        }
+      },
+      "emotion_deltas": {
+        "actor": {
+          "joy": 1
+        },
+        "target": {
+          "joy": 1
+        }
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": "claim:00000480",
+      "outcome_claim_ids": [],
+      "dialogue_summary": "董若水对邓知夏说：“董若水来自体育学院。”",
+      "wording_source": "rule",
+      "wording_fact_ids": [],
+      "model_reason": "想尝试与邓知夏交换想法，但下午已有课程，晚上图书馆自习更适合交流，故选择晚间社交。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:2"
+  },
+  {
+    "event_id": "evt:0000009942",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 2,
+    "phase": "evening",
+    "minute": 0,
+    "world_revision": 7,
+    "command_id": "live-audit:2",
+    "public_summary": "于静姝 提起一个想法，但 郭明熙 暂时不愿深入讨论。",
+    "message": "于静姝 提起一个想法，但 郭明熙 暂时不愿深入讨论。",
+    "actor_ids": [
+      "campus_student_039"
+    ],
+    "target_ids": [
+      "campus_student_070"
+    ],
+    "scene_id": "library_reading_hall",
+    "payload": {
+      "interaction_id": "interaction:00000034",
+      "day": 2,
+      "phase": "evening",
+      "scene_id": "library_reading_hall",
+      "actor_id": "campus_student_039",
+      "target_id": "campus_student_070",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 25.248,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "suspicion": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "于静姝 提起一个想法，但 郭明熙 暂时不愿深入讨论。",
+      "wording_source": "rule",
+      "wording_fact_ids": [],
+      "model_reason": "计划上午上课，下午完成课业，晚上与郭明熙在图书馆交换想法，深夜休息。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:2"
+  },
+  {
+    "event_id": "evt:0000013811",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 3,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 9,
+    "command_id": "live-audit:4",
+    "public_summary": "吴闻溪对林晏如说：‘嗯，我明白你现在不想聊这个。那我们先各自忙吧，等你想说的时候，我随时在。’",
+    "message": "吴闻溪对林晏如说：‘嗯，我明白你现在不想聊这个。那我们先各自忙吧，等你想说的时候，我随时在。’",
+    "actor_ids": [
+      "campus_student_027"
+    ],
+    "target_ids": [
+      "campus_student_024"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000055",
+      "day": 3,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_027",
+      "target_id": "campus_student_024",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 32.496,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "suspicion": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "吴闻溪对林晏如说：‘嗯，我明白你现在不想聊这个。那我们先各自忙吧，等你想说的时候，我随时在。’",
+      "wording_source": "llm",
+      "wording_fact_ids": [],
+      "model_reason": "需要上课和完成作业，同时想尝试与林晏如交换想法，但需确保时段匹配。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:4"
+  },
+  {
+    "event_id": "evt:0000013813",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 3,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 9,
+    "command_id": "live-audit:4",
+    "public_summary": "于星河对吴清和说：‘嗯，好吧，既然你现在不想聊这个，那就算了。我刚上完课，有点累，先去休息一下。’",
+    "message": "于星河对吴清和说：‘嗯，好吧，既然你现在不想聊这个，那就算了。我刚上完课，有点累，先去休息一下。’",
+    "actor_ids": [
+      "campus_student_103"
+    ],
+    "target_ids": [
+      "campus_student_100"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000056",
+      "day": 3,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_103",
+      "target_id": "campus_student_100",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 25.202,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "suspicion": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "于星河对吴清和说：‘嗯，好吧，既然你现在不想聊这个，那就算了。我刚上完课，有点累，先去休息一下。’",
+      "wording_source": "llm",
+      "wording_fact_ids": [],
+      "model_reason": "需要完成课程和助教工作，同时尝试与吴清和交换想法，但需确保时段匹配。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:4"
+  },
+  {
+    "event_id": "evt:0000015283",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 3,
+    "phase": "afternoon",
+    "minute": 0,
+    "world_revision": 10,
+    "command_id": "live-audit:5",
+    "public_summary": "周映雪 提起一个想法，但 傅南乔 暂时不愿深入讨论。",
+    "message": "周映雪 提起一个想法，但 傅南乔 暂时不愿深入讨论。",
+    "actor_ids": [
+      "campus_staff_003"
+    ],
+    "target_ids": [
+      "campus_staff_020"
+    ],
+    "scene_id": "biochemistry_research_building",
+    "payload": {
+      "interaction_id": "interaction:00000067",
+      "day": 3,
+      "phase": "afternoon",
+      "scene_id": "biochemistry_research_building",
+      "actor_id": "campus_staff_003",
+      "target_id": "campus_staff_020",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 25.638,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "suspicion": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "周映雪 提起一个想法，但 傅南乔 暂时不愿深入讨论。",
+      "wording_source": "rule",
+      "wording_fact_ids": [],
+      "model_reason": "今天有教学和科研任务，但社交需求较高，尝试在下午与傅南乔交换想法，若不成则专注工作。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:5"
+  },
+  {
+    "event_id": "evt:0000006698",
+    "event_type": "NPC_SOCIAL_PLAN_RESOLVED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "许予川原计划与韩星野交换想法：未能碰面。",
+    "message": "许予川原计划与韩星野交换想法：未能碰面。",
+    "actor_ids": [
+      "campus_student_021"
+    ],
+    "target_ids": [],
+    "scene_id": null,
+    "payload": {
+      "target_id": "campus_staff_062",
+      "intent_id": "exchange_ideas",
+      "outcome": "not_met",
+      "fallback": "wait_next_day",
+      "planned_day": 2
+    },
+    "visibility": "private",
+    "severity": 1,
+    "knowledge_tags": [
+      "social",
+      "planning"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000006700",
+    "event_type": "NPC_SOCIAL_PLAN_RESOLVED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "何景行原计划与朱云舟交换想法：未能碰面。",
+    "message": "何景行原计划与朱云舟交换想法：未能碰面。",
+    "actor_ids": [
+      "campus_student_088"
+    ],
+    "target_ids": [],
+    "scene_id": null,
+    "payload": {
+      "target_id": "campus_student_098",
+      "intent_id": "exchange_ideas",
+      "outcome": "not_met",
+      "fallback": "wait_next_day",
+      "planned_day": 2
+    },
+    "visibility": "private",
+    "severity": 1,
+    "knowledge_tags": [
+      "social",
+      "planning"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000006702",
+    "event_type": "NPC_SOCIAL_PLAN_RESOLVED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "于星河原计划与吴清和交换想法：未能碰面。",
+    "message": "于星河原计划与吴清和交换想法：未能碰面。",
+    "actor_ids": [
+      "campus_student_103"
+    ],
+    "target_ids": [],
+    "scene_id": null,
+    "payload": {
+      "target_id": "campus_student_100",
+      "intent_id": "exchange_ideas",
+      "outcome": "not_met",
+      "fallback": "wait_next_day",
+      "planned_day": 2
+    },
+    "visibility": "private",
+    "severity": 1,
+    "knowledge_tags": [
+      "social",
+      "planning"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000006705",
+    "event_type": "NPC_SOCIAL_PLAN_RESOLVED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "许思齐原计划与谢予安交换想法：对方婉拒。",
+    "message": "许思齐原计划与谢予安交换想法：对方婉拒。",
+    "actor_ids": [
+      "campus_student_014"
+    ],
+    "target_ids": [],
+    "scene_id": null,
+    "payload": {
+      "target_id": "campus_student_013",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "fallback": "wait_next_day",
+      "planned_day": 2
+    },
+    "visibility": "private",
+    "severity": 1,
+    "knowledge_tags": [
+      "social",
+      "planning"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000008267",
+    "event_type": "NPC_SOCIAL_PLAN_RESOLVED",
+    "day": 2,
+    "phase": "afternoon",
+    "minute": 0,
+    "world_revision": 6,
+    "command_id": "live-audit:1",
+    "public_summary": "周映雪原计划与傅南乔交换想法：未能碰面。",
+    "message": "周映雪原计划与傅南乔交换想法：未能碰面。",
+    "actor_ids": [
+      "campus_staff_003"
+    ],
+    "target_ids": [],
+    "scene_id": null,
+    "payload": {
+      "target_id": "campus_staff_020",
+      "intent_id": "exchange_ideas",
+      "outcome": "not_met",
+      "fallback": "wait_next_day",
+      "planned_day": 2
+    },
+    "visibility": "private",
+    "severity": 1,
+    "knowledge_tags": [
+      "social",
+      "planning"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:1"
+  },
+  {
+    "event_id": "evt:0000009929",
+    "event_type": "NPC_SOCIAL_PLAN_RESOLVED",
+    "day": 2,
+    "phase": "evening",
+    "minute": 0,
+    "world_revision": 7,
+    "command_id": "live-audit:2",
+    "public_summary": "沈星野原计划与傅若水随口交谈：未能碰面。",
+    "message": "沈星野原计划与傅若水随口交谈：未能碰面。",
+    "actor_ids": [
+      "campus_staff_058"
+    ],
+    "target_ids": [],
+    "scene_id": null,
+    "payload": {
+      "target_id": "campus_staff_064",
+      "intent_id": "small_talk",
+      "outcome": "not_met",
+      "fallback": "wait_next_day",
+      "planned_day": 2
+    },
+    "visibility": "private",
+    "severity": 1,
+    "knowledge_tags": [
+      "social",
+      "planning"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:2"
+  },
+  {
+    "event_id": "evt:0000009931",
+    "event_type": "NPC_SOCIAL_PLAN_RESOLVED",
+    "day": 2,
+    "phase": "evening",
+    "minute": 0,
+    "world_revision": 7,
+    "command_id": "live-audit:2",
+    "public_summary": "唐令仪原计划与谢知遥兑现后续约定：未能碰面。",
+    "message": "唐令仪原计划与谢知遥兑现后续约定：未能碰面。",
+    "actor_ids": [
+      "campus_student_032"
+    ],
+    "target_ids": [],
+    "scene_id": null,
+    "payload": {
+      "target_id": "campus_student_134",
+      "intent_id": "follow_up_promise",
+      "outcome": "not_met",
+      "fallback": "wait_next_day",
+      "planned_day": 2
+    },
+    "visibility": "private",
+    "severity": 1,
+    "knowledge_tags": [
+      "social",
+      "planning"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:2"
+  },
+  {
+    "event_id": "evt:0000009932",
+    "event_type": "NPC_SOCIAL_PLAN_RESOLVED",
+    "day": 2,
+    "phase": "evening",
+    "minute": 0,
+    "world_revision": 7,
+    "command_id": "live-audit:2",
+    "public_summary": "吴嘉言原计划与董子衿交换想法：未能碰面。",
+    "message": "吴嘉言原计划与董子衿交换想法：未能碰面。",
+    "actor_ids": [
+      "campus_student_087"
+    ],
+    "target_ids": [],
+    "scene_id": null,
+    "payload": {
+      "target_id": "campus_student_081",
+      "intent_id": "exchange_ideas",
+      "outcome": "not_met",
+      "fallback": "wait_next_day",
+      "planned_day": 2
+    },
+    "visibility": "private",
+    "severity": 1,
+    "knowledge_tags": [
+      "social",
+      "planning"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:2"
+  },
+  {
+    "event_id": "evt:0000005018",
+    "event_type": "NPC_SOCIAL_APPOINTMENT_REPLIED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "见面邀请已确认。",
+    "message": "见面邀请已确认。",
+    "actor_ids": [
+      "campus_staff_058"
+    ],
+    "target_ids": [
+      "campus_staff_064"
+    ],
+    "scene_id": null,
+    "payload": {
+      "phase": "evening",
+      "status": "confirmed",
+      "location_id": "staff_residence"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "planning",
+      "confirmed"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000005021",
+    "event_type": "NPC_SOCIAL_APPOINTMENT_REPLIED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "见面邀请已确认。",
+    "message": "见面邀请已确认。",
+    "actor_ids": [
+      "campus_student_014"
+    ],
+    "target_ids": [
+      "campus_student_013"
+    ],
+    "scene_id": null,
+    "payload": {
+      "phase": "morning",
+      "status": "confirmed",
+      "location_id": "science_classroom_pool"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "planning",
+      "confirmed"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000005024",
+    "event_type": "NPC_SOCIAL_APPOINTMENT_REPLIED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "见面邀请已确认。",
+    "message": "见面邀请已确认。",
+    "actor_ids": [
+      "campus_student_021"
+    ],
+    "target_ids": [
+      "campus_staff_062"
+    ],
+    "scene_id": null,
+    "payload": {
+      "phase": "morning",
+      "status": "confirmed",
+      "location_id": "science_classroom_pool"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "planning",
+      "confirmed"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000005027",
+    "event_type": "NPC_SOCIAL_APPOINTMENT_REPLIED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "见面邀请已确认。",
+    "message": "见面邀请已确认。",
+    "actor_ids": [
+      "campus_student_053"
+    ],
+    "target_ids": [
+      "campus_student_065"
+    ],
+    "scene_id": null,
+    "payload": {
+      "phase": "evening",
+      "status": "confirmed",
+      "location_id": "club_room_pool"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "planning",
+      "confirmed"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000005030",
+    "event_type": "NPC_SOCIAL_APPOINTMENT_REPLIED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "见面邀请已确认。",
+    "message": "见面邀请已确认。",
+    "actor_ids": [
+      "campus_student_087"
+    ],
+    "target_ids": [
+      "campus_student_081"
+    ],
+    "scene_id": null,
+    "payload": {
+      "phase": "evening",
+      "status": "confirmed",
+      "location_id": "library_reading_hall"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "planning",
+      "confirmed"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000005033",
+    "event_type": "NPC_SOCIAL_APPOINTMENT_REPLIED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "见面邀请已确认。",
+    "message": "见面邀请已确认。",
+    "actor_ids": [
+      "campus_student_088"
+    ],
+    "target_ids": [
+      "campus_student_098"
+    ],
+    "scene_id": null,
+    "payload": {
+      "phase": "morning",
+      "status": "confirmed",
+      "location_id": "science_classroom_pool"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "planning",
+      "confirmed"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000005036",
+    "event_type": "NPC_SOCIAL_APPOINTMENT_REPLIED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "见面邀请已确认。",
+    "message": "见面邀请已确认。",
+    "actor_ids": [
+      "campus_student_103"
+    ],
+    "target_ids": [
+      "campus_student_100"
+    ],
+    "scene_id": null,
+    "payload": {
+      "phase": "morning",
+      "status": "confirmed",
+      "location_id": "science_classroom_pool"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "planning",
+      "confirmed"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000005039",
+    "event_type": "NPC_SOCIAL_APPOINTMENT_REPLIED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "见面邀请已确认。",
+    "message": "见面邀请已确认。",
+    "actor_ids": [
+      "campus_student_131"
+    ],
+    "target_ids": [
+      "campus_student_127"
+    ],
+    "scene_id": null,
+    "payload": {
+      "phase": "evening",
+      "status": "confirmed",
+      "location_id": "library_reading_hall"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "planning",
+      "confirmed"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000007584",
+    "event_type": "FORUM_TASK_COMPLETED",
+    "day": 2,
+    "phase": "afternoon",
+    "minute": 0,
+    "world_revision": 6,
+    "command_id": "live-audit:1",
+    "public_summary": "于静姝 完成了《一起核对一条校园资料》。",
+    "message": "于静姝 完成了《一起核对一条校园资料》。",
+    "actor_ids": [
+      "campus_student_039"
+    ],
+    "target_ids": [
+      "campus_staff_043"
+    ],
+    "scene_id": "library_reading_hall",
+    "payload": {
+      "task_id": "surface:d02:0028:emergent_need_campus_staff_043_curiosity",
+      "reward": {
+        "wealth": 15
+      },
+      "social_result": {
+        "outcome": "completed",
+        "issuer_id": "campus_staff_043",
+        "relationship_delta": {
+          "familiarity": 8,
+          "trust": 5,
+          "respect": 3,
+          "obligation": 2
+        }
+      },
+      "unlocked_follow_up_template_ids": [],
+      "issuer_need_result": {
+        "issuer_id": "campus_staff_043",
+        "need_key": "curiosity",
+        "before": 84,
+        "after": 66,
+        "delta": -18
+      },
+      "origin_kind": "need",
+      "origin_ref_id": "need:campus_staff_043:curiosity"
+    },
+    "visibility": "public",
+    "severity": 1,
+    "knowledge_tags": [
+      "forum",
+      "task",
+      "completed"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:1"
+  },
+  {
+    "event_id": "evt:0000007600",
+    "event_type": "FORUM_TASK_COMPLETED",
+    "day": 2,
+    "phase": "afternoon",
+    "minute": 0,
+    "world_revision": 6,
+    "command_id": "live-audit:1",
+    "public_summary": "冯思齐 完成了《一起核对一条校园资料》。",
+    "message": "冯思齐 完成了《一起核对一条校园资料》。",
+    "actor_ids": [
+      "campus_student_041"
+    ],
+    "target_ids": [
+      "campus_staff_012"
+    ],
+    "scene_id": "library_reading_hall",
+    "payload": {
+      "task_id": "surface:d02:0027:emergent_need_campus_staff_012_curiosity",
+      "reward": {
+        "wealth": 15
+      },
+      "social_result": {
+        "outcome": "completed",
+        "issuer_id": "campus_staff_012",
+        "relationship_delta": {
+          "familiarity": 8,
+          "trust": 5,
+          "respect": 3,
+          "obligation": 2
+        }
+      },
+      "unlocked_follow_up_template_ids": [],
+      "issuer_need_result": {
+        "issuer_id": "campus_staff_012",
+        "need_key": "curiosity",
+        "before": 85,
+        "after": 67,
+        "delta": -18
+      },
+      "origin_kind": "need",
+      "origin_ref_id": "need:campus_staff_012:curiosity"
+    },
+    "visibility": "public",
+    "severity": 1,
+    "knowledge_tags": [
+      "forum",
+      "task",
+      "completed"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:1"
+  }
+]

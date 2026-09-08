@@ -26,6 +26,7 @@ SYSTEM_PROMPT += IDENTITY_GUIDANCE
 DAILY_PLAN_SYSTEM_PROMPT += IDENTITY_GUIDANCE
 DAILY_PLAN_SYSTEM_PROMPT += "如果提供 social_options，可额外选择其中一项作为今天想尝试的社交/合作，返回 social_choice（候选 candidate_id 或 null）。根据自己的需要、关系和历史选择，不必每天重复同一人。其 phase 对应的 daily_choices 必须选择该社交候选 location_id 的活动；否则选择 null。社交对象姓名只来自候选 target_name。此计划不是对方已同意或已见面的事实；可能碰不到人、被拒绝或条件失效，失败后等下次规划，不自动换人、不捏造承诺。reason 简述动机，整份输出保持简短。"
 DAILY_PLAN_SYSTEM_PROMPT += "组合校验：选定 social_choice 后，该 phase 的 daily_choices 值必须从这个候选的 compatible_daily_choices 列表原样复制一个编号。先选社交，再填对应时段；若想保留的活动编号不在此列表，social_choice 必须为 null。输出前核对一次这两个字段。"
+DAILY_PLAN_SYSTEM_PROMPT += "如有 previous_social_attempt，这是你自己的上次尝试结果；未碰面不等于对方讨厌你，提前拒约不等于背叛。结合自己的需求考虑换时段、对象或暂不安排，不要把失败说成合作成功。"
 DIALOGUE_SYSTEM_PROMPT += IDENTITY_GUIDANCE + "另外允许使用 identity 的本人身份/性格与 state 中的本人需求、情绪、own_completed_activity 来表达自己的感受和已经完成的日常活动；这不授权任何新事件或对方私事。先回应对方实际问题，不要原样重复 incoming_text 或只把问题反问回去。结合自己的性格简短自然地回答；不知道就说明不知道。不要把准备做的事说成已经完成，也不要承诺尚未验证的合作。"
 
 

@@ -12,7 +12,7 @@ from simulation.systems.campus_schedules import current_schedule_slot
 from simulation.systems.transactions import TransactionContext
 
 
-def make_daily_planner(runtime, graph, definitions, policy, interaction_policy):
+def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, messaging_policy):
     def prepare(context):
         state = context.state
         ledger = state.cognition.get("daily_plans", {})
@@ -58,6 +58,8 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy):
             plans[actor_id] = slots
         state.cognition["daily_plans"] = {"schema_version": 1, "day": state.clock.day,
             "created_phase": state.clock.phase, "actors": plans}
+        from simulation.systems.campus_social_coordination import coordinate_daily_social
+        coordinate_daily_social(context, plans, messaging_policy)
         context.emit("NPC_DAILY_PLANS_PREPARED", "已整理本日安排；日内按计划执行并核对实际条件。",
             visibility="private", knowledge_tags=["schedule", "planning"],
             payload={"day": state.clock.day, "actor_count": len(plans), "bootstrap": state.clock.phase != "morning"})
@@ -134,5 +136,5 @@ def daily_plans_invariant(state):
             if (actor_id not in state.population or actor_id == "player" or not isinstance(receipt, dict)
                     or receipt.get("target_id") not in state.population or receipt.get("target_id") in (actor_id, "player")
                     or receipt.get("phase") not in phases
-                    or receipt.get("status") not in {"accepted", "rejected", "not_met", "busy", "cooldown", "conditions_changed"}):
+                    or receipt.get("status") not in {"accepted", "rejected", "not_met", "busy", "cooldown", "conditions_changed", "declined"}):
                 yield "invalid social agenda receipt"

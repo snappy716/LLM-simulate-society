@@ -1,0 +1,9 @@
+{
+  "model": "deepseek-v4-flash",
+  "base_url": "https://api.deepseek.com",
+  "days": 3,
+  "timeout": 30.0,
+  "thinking_mode": "disabled",
+  "player_participation_during_simulation": false,
+  "transport_payload_override": false
+}

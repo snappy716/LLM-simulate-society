@@ -98,6 +98,12 @@ def bind_cognition_identity(state, request):
     identity = {**request.identity, "npc_id": request.npc_id,
                 "display_name": actor.get("display_name", request.npc_id)}
     local = dict(request.state)
+    if isinstance(request, BoundedDecisionRequest):
+        # Only this actor's own past attempt; never another NPC's private agenda.
+        receipts = state.cognition.get("social_agenda_receipts", {})
+        own_receipt = receipts.get("actors", {}).get(request.npc_id)
+        if own_receipt and receipts.get("day", state.clock.day) < state.clock.day:
+            local["previous_social_attempt"] = {"day": receipts["day"], **own_receipt}
     target_id = getattr(request, "target_id", None) or local.get("interaction_target", {}).get("npc_id")
     if target_id in state.population:
         partner = state.population[target_id]

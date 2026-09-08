@@ -42,6 +42,13 @@ def summarize(source):
     receipts = [e for e in events if e["event_type"] == "NPC_SOCIAL_PLAN_RESOLVED"]
     metric["social_plans"] = len(agendas)
     metric["social_plan_outcomes"] = dict(Counter(e["payload"]["outcome"] for e in receipts))
+    appointments = [e for e in events if e["event_type"] == "NPC_SOCIAL_APPOINTMENT_REPLIED"]
+    confirmed = {(e["day"], e["actor_ids"][0]) for e in appointments if e["payload"]["status"] == "confirmed"}
+    metric["social_appointment_replies"] = dict(Counter(e["payload"]["status"] for e in appointments))
+    metric["confirmed_appointment_outcomes"] = dict(Counter(e["payload"]["outcome"] for e in receipts
+        if (e["day"], e["actor_ids"][0]) in confirmed))
+    metric["planning_requests_with_previous_social_feedback"] = sum(
+        "previous_social_attempt" in r.get("request", {}).get("state", {}) for r in requests if r["kind"] == "plan")
     metric["task_completion_origins"] = {
         name: dict(Counter(e["payload"].get("origin_kind") for e in rows if e["event_type"] == "FORUM_TASK_COMPLETED"))
         for name, rows in (("live", events), ("offline", offline_events))}
@@ -53,6 +60,7 @@ def summarize(source):
     examples = [e for e in social if e["payload"]["wording_source"] == "llm"]
     examples += [e for e in social if e["payload"]["decision_source"] == "llm"][:8]
     examples += receipts[:8]
+    examples += appointments[:8]
     examples += [e for e in events if e["event_type"] == "NPC_PERSONAL_GOAL_PROGRESS" and e["actor_ids"][0] in focus]
     examples += [e for e in events if e["event_type"] == "FORUM_TASK_COMPLETED" and e["payload"].get("origin_kind") == "need"][:2]
     return metric, examples

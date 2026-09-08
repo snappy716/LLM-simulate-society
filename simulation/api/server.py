@@ -200,7 +200,7 @@ class CampusKernelBridge:
         )
         from simulation.systems.campus_daily_plans import make_daily_planner, daily_plans_invariant
         prepare_daily_plans, base_decision_selector = make_daily_planner(
-            self.cognition_runtime, graph, activity_definitions, decision_policy, interaction_policy
+            self.cognition_runtime, graph, activity_definitions, decision_policy, interaction_policy, messaging_policy
         )
         def decision_selector(context, actor_id, schedule_plan, destination_occupancy):
             plan = base_decision_selector(
@@ -352,6 +352,8 @@ class CampusKernelBridge:
         self.kernel.add_invariant(chronicle_invariant)
         self.kernel.add_invariant(cognition_invariant)
         self.kernel.add_invariant(daily_plans_invariant)
+        from simulation.systems.campus_social_coordination import coordination_invariant
+        self.kernel.add_invariant(coordination_invariant)
         self.kernel.add_invariant(campus_interaction_invariant)
         self.kernel.add_invariant(campus_messaging_invariant)
         self.kernel.add_invariant(campus_proposal_invariant)

@@ -637,11 +637,19 @@ def advance_campus_interactions(
         state.cognition["social_agenda_receipts"] = receipts
         name = state.population[actor_id].get("display_name", actor_id)
         target_name = state.population[social["target_id"]].get("display_name", social["target_id"])
-        labels = {"accepted": "已开展", "rejected": "对方婉拒", "not_met": "未能碰面", "cooldown": "刚交流过，暂缓联系", "conditions_changed": "条件已变化", "busy": "参与者本时段已有其他交流"}
+        labels = {"accepted": "已开展", "rejected": "对方婉拒", "not_met": "未能碰面", "cooldown": "刚交流过，暂缓联系", "conditions_changed": "条件已变化", "busy": "参与者本时段已有其他交流", "declined": "提前邀约未达成"}
         context.emit("NPC_SOCIAL_PLAN_RESOLVED", f"{name}原计划与{target_name}{social['reason']}：{labels[outcome]}。",
             actor_ids=[actor_id], visibility="private", knowledge_tags=["social", "planning"],
             payload={"target_id": social["target_id"], "intent_id": social["intent_id"], "outcome": outcome,
                      "fallback": "wait_next_day", "planned_day": agenda["day"]})
+        from simulation.systems.campus_social_coordination import coordination_for
+        confirmation = coordination_for(state, actor_id)
+        if confirmation.get("status") == "confirmed" and outcome not in {"accepted", "rejected"}:
+            from simulation.systems.campus_messaging import CampusMessagingPolicy, append_structured_phone_message, are_phone_contacts
+            if are_phone_contacts(state, actor_id, social["target_id"]):
+                append_structured_phone_message(context, actor_id, social["target_id"],
+                    "刚才约好的交流没能进行，今天先取消，之后有机会再商量。",
+                    CampusMessagingPolicy(**state.cognition["messaging"]["policy"]), source="social_appointment_cancelled")
 
     if agenda.get("day") == state.clock.day:
         from simulation.systems.campus_vitals import actor_layer, battle_locked
@@ -650,6 +658,10 @@ def advance_campus_interactions(
             if not social or actor_id in receipts["actors"]:
                 continue
             target_id = social["target_id"]
+            from simulation.systems.campus_social_coordination import coordination_for
+            if coordination_for(state, actor_id).get("status") == "declined":
+                record_plan(actor_id, social, "declined")
+                continue
             # Remove an incidental copy of this same encounter from pair ranking.
             pairs = [pair for pair in pairs if {pair[1], pair[2]} != {actor_id, target_id}]
             actor, target = state.population[actor_id], state.population[target_id]
@@ -666,7 +678,8 @@ def advance_campus_interactions(
                 record_plan(actor_id, social, "cooldown")
                 continue
             planned[actor_id, target_id] = social
-        pairs.extend((100000.0, actor_id, target_id) for actor_id, target_id in planned)
+        pairs.extend((200000.0 if coordination_for(state, actor_id).get("status") == "confirmed" else 100000.0,
+                      actor_id, target_id) for actor_id, target_id in planned)
     for _, first_id, second_id in sorted(pairs, key=lambda item: (-item[0], item[1], item[2])):
         if len(used) >= policy.max_interactions_per_phase * 2:
             break
