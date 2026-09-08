@@ -14,6 +14,7 @@ from simulation.cognition.provider import (
     OllamaCognitionProvider,
     OpenAICompatibleCognitionProvider,
     RuleOnlyProvider,
+    ProviderFailure,
 )
 from simulation.domain.cognition import (
     BoundedDecisionRequest,
@@ -89,6 +90,30 @@ def _fresh_usage(day: int) -> Dict[str, Any]:
 def _stable_fraction(*values: str) -> float:
     digest = hashlib.sha256(":".join(values).encode("utf-8")).digest()
     return int.from_bytes(digest[:4], "big") / 0xFFFFFFFF
+
+
+def bind_cognition_identity(state, request):
+    """Current participants are authoritative; memory names are not identity."""
+    actor = state.population[request.npc_id]
+    identity = {**request.identity, "npc_id": request.npc_id,
+                "display_name": actor.get("display_name", request.npc_id)}
+    local = dict(request.state)
+    target_id = getattr(request, "target_id", None) or local.get("interaction_target", {}).get("npc_id")
+    if target_id in state.population:
+        partner = state.population[target_id]
+        local["current_partner"] = {"npc_id": target_id, "display_name": partner.get("display_name", "玩家" if target_id == "player" else target_id)}
+    if isinstance(request, BoundedDialogueRequest):
+        # Own completed routine only: no target needs, private goals, omniscient
+        # world snapshot or secret memory summaries are added to player speech.
+        activity = actor.get("current_activity", {})
+        public_routines = {"REST", "TEACH_CLASS", "ATTEND_CLASS", "SELF_STUDY", "RESEARCH",
+            "RESEARCH_OR_OFFICE_HOURS", "LAB_OR_SEMINAR", "COURSEWORK", "PREPARE_OR_REVIEW",
+            "LITERATURE_REVIEW", "PREPARE_MATERIALS", "LIBRARY_SHIFT", "ADMINISTRATION_SHIFT",
+            "CAMPUS_SERVICE_SHIFT", "MAINTENANCE_SHIFT", "MEDICAL_SHIFT", "COUNSELING_SHIFT",
+            "CLUB_ACTIVITY", "CLUB_OR_SELF_STUDY", "CLUB_OR_PERSONAL_ACTIVITY", "PERSONAL_ACTIVITY"}
+        local["own_completed_activity"] = {key: activity.get(key) for key in
+            ("day", "phase", "activity_id", "location_id")} if activity.get("status") == "completed" and activity.get("activity_id") in public_routines else {}
+    return replace(request, identity=identity, state=local)
 
 
 def _event_observers(state: WorldState, event: SimulationEvent) -> Sequence[str]:
@@ -358,14 +383,16 @@ class CognitionRuntime:
             self.provider.secret_forget()
         self.provider = RuleOnlyProvider()
 
-    def configure_openai_compatible(self, base_url: str, model: str, api_key: str) -> None:
+    def configure_openai_compatible(self, base_url: str, model: str, api_key: str, *, thinking_mode="auto", timeout_seconds=None) -> None:
         if not base_url or not model or not api_key:
             raise ValueError("兼容接口需要 Base URL、模型名和 API Key。")
+        replacement = OpenAICompatibleCognitionProvider(
+            base_url, model, api_key, timeout_seconds=self.policy.request_timeout_seconds if timeout_seconds is None else timeout_seconds,
+            thinking_mode=thinking_mode,
+        )
         if isinstance(self.provider, OpenAICompatibleCognitionProvider):
             self.provider.secret_forget()
-        self.provider = OpenAICompatibleCognitionProvider(
-            base_url, model, api_key, timeout_seconds=self.policy.request_timeout_seconds,
-        )
+        self.provider = replacement
 
     def configure_ollama(self, base_url: str, model: str) -> None:
         if not base_url or not model:
@@ -384,6 +411,9 @@ class CognitionRuntime:
             "mode": self.provider.name,
             "configured": self.provider.configured,
             "model": self.provider.model,
+            "thinking_mode": getattr(self.provider, "effective_thinking", "default"),
+            "timeout_seconds": getattr(self.provider, "timeout_seconds", self.policy.request_timeout_seconds),
+            "last_result": deepcopy(getattr(self.provider, "last_result", {"state": "untested", "error_code": "", "actual_model": ""})),
         }
 
     def _request(self, state: WorldState, actor_id: str, candidates: Sequence[Mapping[str, Any]]) -> BoundedDecisionRequest:
@@ -451,6 +481,7 @@ class CognitionRuntime:
         *,
         purpose: str,
     ) -> BoundedDecisionResponse | None:
+        request = bind_cognition_identity(state, request)
         usage = state.cognition["usage"]
         if usage.get("day") != state.clock.day:
             state.cognition["usage"] = usage = _fresh_usage(state.clock.day)
@@ -469,7 +500,7 @@ class CognitionRuntime:
             cache_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
         )
         cache_key = hashlib.sha256(
-            (self.provider.model + purpose + cache_canonical).encode("utf-8")
+            (self.provider.model + str(getattr(self.provider, "base_url", "")) + str(getattr(self.provider, "effective_thinking", "default")) + purpose + cache_canonical).encode("utf-8")
         ).hexdigest()
         cached = state.cognition["decision_cache"].get(cache_key)
         if isinstance(cached, dict):
@@ -477,7 +508,7 @@ class CognitionRuntime:
             raw = deepcopy(cached)
             raw["candidate_revision"] = state.revision
         else:
-            output_tokens = max(512, self.policy.max_output_tokens) if request.daily_options is not None else self.policy.max_output_tokens
+            output_tokens = max(1024 if request.social_options else 512, self.policy.max_output_tokens) if request.daily_options is not None else self.policy.max_output_tokens
             estimated = max(1, len(canonical) // 4) + output_tokens
             purpose_limit = (
                 self.policy.phase_call_limit - self.policy.interaction_reserved_phase_calls
@@ -501,7 +532,10 @@ class CognitionRuntime:
             usage["automated_estimated_tokens"] = automated_estimated_tokens + estimated
             try:
                 raw = dict(self.provider.decide(request, max_output_tokens=output_tokens))
-            except Exception:
+            except Exception as exc:
+                if isinstance(exc, ProviderFailure):
+                    usage["prompt_tokens"] += exc.usage["prompt_tokens"]
+                    usage["completion_tokens"] += exc.usage["completion_tokens"]
                 usage["provider_errors"] += 1
                 usage["fallbacks"] += 1
                 return None
@@ -517,6 +551,8 @@ class CognitionRuntime:
         try:
             response = BoundedDecisionResponse.from_mapping(raw)
         except (TypeError, ValueError):
+            if hasattr(self.provider, "last_result"):
+                self.provider.last_result.update(state="failed", error_code="invalid_decision")
             usage["rejected_responses"] += 1
             usage["fallbacks"] += 1
             return None
@@ -530,17 +566,28 @@ class CognitionRuntime:
             valid_choice = (isinstance(selected, dict) and set(selected) == set(request.daily_options)
                             and all(selected[phase] in {item["candidate_id"] for item in options}
                                     for phase, options in request.daily_options.items()))
+            if response.social_choice is not None:
+                social = next((s for s in request.social_options if s["candidate_id"] == response.social_choice), None)
+                valid_choice = valid_choice and social is not None
+                if valid_choice:
+                    phase = social["phase"]
+                    chosen_slot = next(s for s in request.daily_options[phase] if s["candidate_id"] == selected[phase])
+                    valid_choice = chosen_slot["location_id"] == social["location_id"]
         if (
             response.npc_id != request.npc_id
             or response.candidate_revision != state.revision
             or not valid_choice
         ):
+            if hasattr(self.provider, "last_result"):
+                self.provider.last_result.update(state="failed", error_code="invalid_decision")
             usage["rejected_responses"] += 1
             usage["fallbacks"] += 1
             return None
+        if hasattr(self.provider, "last_result"):
+            self.provider.last_result.update(state="accepted", error_code="")
         return response
 
-    def plan_day(self, state: WorldState, actor_id: str, options: Mapping[str, Sequence[Dict[str, Any]]]) -> Dict[str, Any] | None:
+    def plan_day(self, state: WorldState, actor_id: str, options: Mapping[str, Sequence[Dict[str, Any]]], social_options=()) -> Dict[str, Any] | None:
         if actor_id not in state.cognition.get("focused_ids", ()) or not self.provider.configured:
             return None
         request = self._request(state, actor_id, [])
@@ -549,7 +596,10 @@ class CognitionRuntime:
             "location_id": item["location_id"], "reason": item.get("decision_reason", ""),
             "parameters": deepcopy(item.get("parameters", {})),
         } for index, item in enumerate(candidates[:self.policy.candidate_limit])) for phase, candidates in options.items()}
-        request = replace(request, daily_options=public_options)
+        public_social = tuple({**social, "compatible_daily_choices": [item["candidate_id"]
+            for item in public_options[social["phase"]] if item["location_id"] == social["location_id"]]}
+            for social in social_options)
+        request = replace(request, daily_options=public_options, social_options=public_social)
         response = self._select_response(state, request, purpose="activity")
         if response is None:
             return None
@@ -561,10 +611,15 @@ class CognitionRuntime:
             slot = deepcopy(options[phase][index])
             slot.update(decision_source="llm", decision_reason="overnight_composed_plan")
             schedule[phase] = slot
+        if response.social_choice is not None:
+            social = deepcopy(next(s for s in social_options if s["candidate_id"] == response.social_choice))
+            social["model_reason"] = response.reason
+            schedule[social["phase"]]["social_intent"] = social
         audit = state.cognition["decision_audit"]
         audit.append({"day": state.clock.day, "phase": state.clock.phase, "npc_id": actor_id,
                       "candidate_revision": state.revision, "purpose": "activity", "model": self.provider.model,
-                      "daily_choices": dict(response.daily_choices), "reason": response.reason[:500]})
+                      "daily_choices": dict(response.daily_choices), "social_choice": response.social_choice,
+                      "reason": response.reason[:500]})
         del audit[:-96]
         return schedule
 
@@ -808,6 +863,7 @@ class CognitionRuntime:
         purpose_phase_limit: int | None,
         counts_against_automated_phase: bool,
     ) -> Dict[str, Any] | None:
+        request = bind_cognition_identity(state, request)
         usage = state.cognition["usage"]
         if usage.get("day") != state.clock.day:
             state.cognition["usage"] = usage = _fresh_usage(state.clock.day)
@@ -843,7 +899,10 @@ class CognitionRuntime:
         usage["estimated_tokens"] += estimated
         try:
             raw = dict(self.provider.respond(request, max_output_tokens=self.policy.max_output_tokens))
-        except Exception:
+        except Exception as exc:
+            if isinstance(exc, ProviderFailure):
+                usage["prompt_tokens"] += exc.usage["prompt_tokens"]
+                usage["completion_tokens"] += exc.usage["completion_tokens"]
             usage["provider_errors"] += 1
             usage["fallbacks"] += 1
             return None
@@ -854,16 +913,24 @@ class CognitionRuntime:
         try:
             response = BoundedDialogueResponse.from_mapping(raw)
         except (TypeError, ValueError):
+            if hasattr(self.provider, "last_result"):
+                self.provider.last_result.update(state="failed", error_code="invalid_dialogue")
             usage["rejected_responses"] += 1
             usage["fallbacks"] += 1
             return None
         allowed_ids = {str(item["claim_id"]) for item in request.allowed_facts}
+        normalized = lambda text: "".join(c.lower() for c in text if c.isalnum())
+        incoming = normalized(request.incoming_text)
+        echoed = len(incoming) >= 8 and incoming == normalized(response.utterance)
         if (
             response.npc_id != request.npc_id
             or response.target_id != request.target_id
             or response.candidate_revision != state.revision
             or not set(response.fact_ids_used).issubset(allowed_ids)
+            or echoed
         ):
+            if hasattr(self.provider, "last_result"):
+                self.provider.last_result.update(state="failed", error_code="dialogue_echo" if echoed else "invalid_dialogue")
             usage["rejected_responses"] += 1
             usage["fallbacks"] += 1
             return None
@@ -879,6 +946,8 @@ class CognitionRuntime:
             "fact_ids_used": list(response.fact_ids_used),
         })
         del audit[:-96]
+        if hasattr(self.provider, "last_result"):
+            self.provider.last_result.update(state="accepted", error_code="")
         return {
             "utterance": response.utterance,
             "fact_ids_used": list(response.fact_ids_used),

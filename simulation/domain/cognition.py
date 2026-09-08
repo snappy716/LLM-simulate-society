@@ -109,6 +109,7 @@ class BoundedDecisionRequest:
     memories: Tuple[Mapping[str, Any], ...]
     candidates: Tuple[Mapping[str, Any], ...]
     daily_options: Optional[Mapping[str, Tuple[Mapping[str, Any], ...]]] = None
+    social_options: Tuple[Mapping[str, Any], ...] = ()
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -121,6 +122,7 @@ class BoundedDecisionRequest:
             "reflection": self.reflection,
             "memories": [dict(item) for item in self.memories],
             "candidates": [dict(item) for item in self.candidates],
+            **({"social_options": [dict(item) for item in self.social_options]} if self.social_options else {}),
             **({"daily_options": {phase: [dict(item) for item in options]
                                    for phase, options in self.daily_options.items()}} if self.daily_options is not None else {}),
         }
@@ -133,6 +135,7 @@ class BoundedDecisionResponse:
     selected_action_id: Optional[str]
     reason: str
     daily_choices: Optional[Mapping[str, str]] = None
+    social_choice: Optional[str] = None
 
     @classmethod
     def from_mapping(cls, payload: Mapping[str, Any]) -> "BoundedDecisionResponse":
@@ -152,7 +155,10 @@ class BoundedDecisionResponse:
         if daily_choices is not None and (not isinstance(daily_choices, dict)
                 or any(not isinstance(k, str) or not isinstance(v, str) for k, v in daily_choices.items())):
             raise ValueError("daily_choices must map phases to candidate IDs")
-        return cls(npc_id, revision, selected, reason, daily_choices)
+        social_choice = payload.get("social_choice")
+        if social_choice is not None and not isinstance(social_choice, str):
+            raise ValueError("social_choice must be an ID or null")
+        return cls(npc_id, revision, selected, reason, daily_choices, social_choice)
 
 
 @dataclass(frozen=True)

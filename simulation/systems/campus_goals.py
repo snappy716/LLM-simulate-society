@@ -219,6 +219,17 @@ def make_ask_plan_handler():
             message = "最近想把一些亲身经历整理清楚。下一步打算%s。" % STEP_TEXT[stage]
         else:
             message = "暂时没有另外的研习安排，先处理手头的课程和生活。"
+        agenda = state.cognition.get("daily_plans", {})
+        receipt = state.cognition.get("social_agenda_receipts", {})
+        if (not guarded and agenda.get("day") == state.clock.day
+                and not (receipt.get("day") == state.clock.day and target in receipt.get("actors", {}))):
+            for slot in agenda.get("actors", {}).get(target, {}).values():
+                social = slot.get("social_intent")
+                if social:
+                    phase_name = {"morning": "上午", "afternoon": "下午", "evening": "晚上", "late_night": "凌晨"}[social["phase"]]
+                    partner = social["target_name"] if relation.get("closeness", 0) >= 45 and relation.get("trust", 0) >= 45 else "一位认识的人"
+                    message += f" 今天{phase_name}还想找{partner}{social['reason']}，不过还得看能不能碰面、对方是否方便。"
+                    break
         report = {"npc_id": target, "day": state.clock.day, "phase": state.clock.phase, "summary": message,
                   "source": "本人告知", "withheld": guarded}
         _ledger(state)["disclosures"].setdefault(actor_id, {})[target] = report

@@ -12,7 +12,7 @@ from simulation.systems.campus_schedules import current_schedule_slot
 from simulation.systems.transactions import TransactionContext
 
 
-def make_daily_planner(runtime, graph, definitions, policy):
+def make_daily_planner(runtime, graph, definitions, policy, interaction_policy):
     def prepare(context):
         state = context.state
         ledger = state.cognition.get("daily_plans", {})
@@ -43,7 +43,11 @@ def make_daily_planner(runtime, graph, definitions, policy):
                 options[phase] = deepcopy(candidates[:runtime.policy.candidate_limit] or [dict(schedule)])
             # Legacy saves/new worlds bootstrap locally. Only a new morning is
             # allowed to send autonomous daily planning requests to a provider.
-            slots = runtime.plan_day(state, actor_id, options) if state.clock.phase == "morning" else None
+            social_options = ()
+            if state.clock.phase == "morning" and runtime.provider.configured and actor_id in state.cognition.get("focused_ids", ()):
+                from simulation.cognition.social_planning import build_social_options
+                social_options = build_social_options(preview, actor_id, options, definitions, interaction_policy)
+            slots = runtime.plan_day(state, actor_id, options, social_options) if state.clock.phase == "morning" else None
             planned_source = "llm" if slots is not None else "rule"
             if slots is None:
                 slots = {phase: deepcopy(options[phase][0]) for phase in phases}
@@ -109,3 +113,26 @@ def daily_plans_invariant(state):
         for phase, plan in slots.items():
             if plan.get("day") != ledger["day"] or plan.get("phase") != phase or plan.get("location_id") not in state.places:
                 yield "invalid daily plan clock/location"
+            social = plan.get("social_intent")
+            if social is not None and (not isinstance(social, dict)
+                    or social.get("target_id") not in state.population
+                    or social.get("target_id") in ("player", actor_id)
+                    or social.get("phase") != phase or social.get("location_id") != plan.get("location_id")
+                    or not isinstance(social.get("intent_id"), str)
+                    or not isinstance(social.get("reason"), str)
+                    or not isinstance(social.get("target_name"), str)
+                    or not isinstance(social.get("model_reason"), str)
+                    or not isinstance(social.get("candidate_id"), str)
+                    or social.get("fallback") != "wait_next_day"):
+                yield "invalid daily social intention"
+    receipts = state.cognition.get("social_agenda_receipts")
+    if receipts is not None:
+        if not isinstance(receipts, dict) or type(receipts.get("day")) is not int or not 1 <= receipts["day"] <= state.clock.day or not isinstance(receipts.get("actors"), dict):
+            yield "invalid social agenda receipts"
+            return
+        for actor_id, receipt in receipts["actors"].items():
+            if (actor_id not in state.population or actor_id == "player" or not isinstance(receipt, dict)
+                    or receipt.get("target_id") not in state.population or receipt.get("target_id") in (actor_id, "player")
+                    or receipt.get("phase") not in phases
+                    or receipt.get("status") not in {"accepted", "rejected", "not_met", "busy", "cooldown", "conditions_changed"}):
+                yield "invalid social agenda receipt"

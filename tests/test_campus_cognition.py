@@ -151,17 +151,19 @@ class CampusCognitionTests(unittest.TestCase):
         self.assertTrue(result["ok"])
         state = bridge.kernel.state
         usage = state.cognition["usage"]
-        self.assertEqual(3, len(provider.requests))
+        # Social choices now belong to the daily request; there is no extra
+        # per-encounter decision call. This old fake elects no social intention.
+        self.assertEqual(2, len(provider.requests))
         self.assertEqual(1, len(provider.dialogue_requests))
-        self.assertEqual(4, usage["calls"])
-        self.assertEqual(4, usage["automated_calls"])
+        self.assertEqual(3, usage["calls"])
+        self.assertEqual(3, usage["automated_calls"])
         self.assertEqual(0, usage["player_dialogue_calls"])
-        self.assertEqual(4, usage["phase_calls"]["morning"])
+        self.assertEqual(3, usage["phase_calls"]["morning"])
         self.assertEqual(2, usage["purpose_phase_calls"]["morning:activity"])
-        self.assertEqual(1, usage["purpose_phase_calls"]["morning:interaction"])
+        self.assertEqual(0, usage["purpose_phase_calls"].get("morning:interaction", 0))
         self.assertEqual(1, usage["purpose_phase_calls"]["morning:interaction_dialogue"])
-        self.assertEqual(312, usage["prompt_tokens"])
-        self.assertEqual(74, usage["completion_tokens"])
+        self.assertEqual(232, usage["prompt_tokens"])
+        self.assertEqual(56, usage["completion_tokens"])
         llm_decisions = [
             actor["current_decision"] for actor in state.population.values()
             if isinstance(actor, dict) and actor.get("current_decision", {}).get("decision_source") == "llm"
@@ -171,7 +173,7 @@ class CampusCognitionTests(unittest.TestCase):
         interaction_events = [
             event for event in result["result"]["events"]
             if event["event_type"] == "NPC_INTERACTION_RESOLVED"
-            and event["payload"]["decision_source"] == "llm"
+            and event["payload"]["wording_source"] == "llm"
         ]
         self.assertEqual(1, len(interaction_events))
         self.assertEqual("llm", interaction_events[0]["payload"]["wording_source"])

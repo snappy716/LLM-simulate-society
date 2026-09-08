@@ -1,0 +1,38 @@
+{
+  "returncode": 0,
+  "llm_planned_actors": 20,
+  "usage": {
+    "day": 2,
+    "calls": 22,
+    "estimated_tokens": 50633,
+    "automated_calls": 22,
+    "automated_estimated_tokens": 50633,
+    "player_dialogue_calls": 0,
+    "prompt_tokens": 46039,
+    "completion_tokens": 2855,
+    "phase_calls": {
+      "morning": 22
+    },
+    "purpose_phase_calls": {
+      "morning:activity": 20,
+      "morning:interaction_dialogue": 2
+    },
+    "cache_hits": 0,
+    "fallbacks": 0,
+    "rejected_responses": 0,
+    "provider_errors": 0,
+    "budget_blocks": 0
+  },
+  "provider": {
+    "mode": "openai_compatible",
+    "configured": true,
+    "model": "deepseek-v4-flash",
+    "thinking_mode": "disabled",
+    "timeout_seconds": 30.0,
+    "last_result": {
+      "state": "accepted",
+      "error_code": "",
+      "actual_model": "deepseek-v4-flash"
+    }
+  }
+}

@@ -17,7 +17,12 @@
       "properties": {
         "mode": {"type": "string"},
         "configured": {"type": "boolean"},
-        "model": {"type": "string"}
+        "model": {"type": "string"},
+        "thinking_mode": {"type": "string"},
+        "timeout_seconds": {"type": "number", "minimum": 1},
+        "last_result": {"type": "object", "additionalProperties": false,
+          "required": ["state", "error_code", "actual_model"],
+          "properties": {"state": {"type": "string"}, "error_code": {"type": "string"}, "actual_model": {"type": "string"}}}
       }
     },
     "focused_count": {"type": "integer", "minimum": 0},

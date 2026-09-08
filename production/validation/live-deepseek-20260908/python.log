@@ -1,0 +1,10 @@
+................{"index": 0, "day": null, "kind": "interaction", "seconds": 0.0, "error": null, "finish_reason": "stop"}
+{"index": 0, "day": null, "kind": "interaction", "seconds": 0.0, "error": null, "finish_reason": "stop"}
+.{"index": 0, "day": null, "kind": "interaction", "seconds": 0.0, "error": "ValueError", "finish_reason": "length"}
+{"index": 1, "day": null, "kind": "interaction", "seconds": 0.0, "error": "ValueError", "finish_reason": "length"}
+{"index": 2, "day": null, "kind": "interaction", "seconds": 0.0, "error": "ValueError", "finish_reason": "length"}
+.
+----------------------------------------------------------------------
+Ran 18 tests in 18.789s
+
+OK

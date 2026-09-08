@@ -200,7 +200,7 @@ class CampusKernelBridge:
         )
         from simulation.systems.campus_daily_plans import make_daily_planner, daily_plans_invariant
         prepare_daily_plans, base_decision_selector = make_daily_planner(
-            self.cognition_runtime, graph, activity_definitions, decision_policy
+            self.cognition_runtime, graph, activity_definitions, decision_policy, interaction_policy
         )
         def decision_selector(context, actor_id, schedule_plan, destination_occupancy):
             plan = base_decision_selector(
@@ -503,6 +503,8 @@ class CampusKernelBridge:
                 str(config.get("base_url", "")).strip().rstrip("/"),
                 str(config.get("model", "")).strip(),
                 str(config.get("api_key", "")).strip(),
+                thinking_mode=config.get("thinking_mode", "auto"),
+                timeout_seconds=config.get("timeout_seconds"),
             )
             return
         raise ValueError(f"unsupported provider: {provider}")
@@ -510,6 +512,8 @@ class CampusKernelBridge:
     def snapshot(self) -> dict:
         view = self.kernel.project_view(campus_world_view)
         view["cognition"]["provider"] = self.cognition_runtime.public_status()
+        view["cognition"]["overnight_timeout_seconds"] = max(180, int((2 * view["cognition"]["focused_count"] + 24)
+            * self.cognition_runtime.public_status()["timeout_seconds"] + 60))
         return view
 
     def execute(self, payload: dict) -> dict:

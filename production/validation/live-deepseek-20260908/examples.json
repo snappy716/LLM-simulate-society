@@ -1,0 +1,356 @@
+[
+  {
+    "event_id": "evt:0000006668",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 2,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 5,
+    "command_id": "live-audit:0",
+    "public_summary": "林晏如对朱云舟说：‘昨天的事先放一放，今天早上有课，专心听讲吧。’",
+    "message": "林晏如对朱云舟说：‘昨天的事先放一放，今天早上有课，专心听讲吧。’",
+    "actor_ids": [
+      "campus_student_024"
+    ],
+    "target_ids": [
+      "campus_student_098"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000021",
+      "day": 2,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_024",
+      "target_id": "campus_student_098",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "decision_source": "llm",
+      "acceptance_score": 31.402,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "suspicion": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "林晏如对朱云舟说：‘昨天的事先放一放，今天早上有课，专心听讲吧。’",
+      "wording_source": "llm",
+      "wording_fact_ids": [],
+      "model_reason": "作为生化学院学生，重视成就与真理，且当前在科学教室，与同院学生林晏如共处，交换想法最符合求知与交流的价值观，同时能提升社交需求。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:0"
+  },
+  {
+    "event_id": "evt:0000013732",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 3,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 9,
+    "command_id": "live-audit:4",
+    "public_summary": "林晏如对邓清越说：‘早啊，邓清越。刚才聊得挺有意思的，你最近在琢磨的那个问题，我回去也想了想，感觉换个角度可能会有新发现。’",
+    "message": "林晏如对邓清越说：‘早啊，邓清越。刚才聊得挺有意思的，你最近在琢磨的那个问题，我回去也想了想，感觉换个角度可能会有新发现。’",
+    "actor_ids": [
+      "campus_student_024"
+    ],
+    "target_ids": [
+      "campus_student_076"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000058",
+      "day": 3,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_024",
+      "target_id": "campus_student_076",
+      "intent_id": "exchange_ideas",
+      "outcome": "accepted",
+      "decision_source": "llm",
+      "acceptance_score": 42.069,
+      "relationship_deltas": {
+        "actor": {
+          "familiarity": 2,
+          "respect": 3
+        },
+        "target": {
+          "familiarity": 2,
+          "respect": 2
+        }
+      },
+      "emotion_deltas": {
+        "actor": {
+          "joy": 1
+        },
+        "target": {
+          "joy": 1
+        }
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": "claim:00000180",
+      "outcome_claim_ids": [],
+      "dialogue_summary": "林晏如对邓清越说：‘早啊，邓清越。刚才聊得挺有意思的，你最近在琢磨的那个问题，我回去也想了想，感觉换个角度可能会有新发现。’",
+      "wording_source": "llm",
+      "wording_fact_ids": [
+        "claim:00000180"
+      ],
+      "model_reason": "与朱云舟同处教室，且之前社团事务未达成一致，但当前更倾向于通过交换想法来增进了解，符合我追求真理和成就的价值观。"
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:4"
+  },
+  {
+    "event_id": "evt:0000013735",
+    "event_type": "NPC_INTERACTION_RESOLVED",
+    "day": 3,
+    "phase": "morning",
+    "minute": 0,
+    "world_revision": 9,
+    "command_id": "live-audit:4",
+    "public_summary": "于星河对周予川说：‘嗯，好吧，既然你现在不想聊这个，那就算了。不过如果你之后改变主意，随时可以找我。’",
+    "message": "于星河对周予川说：‘嗯，好吧，既然你现在不想聊这个，那就算了。不过如果你之后改变主意，随时可以找我。’",
+    "actor_ids": [
+      "campus_student_103"
+    ],
+    "target_ids": [
+      "campus_student_085"
+    ],
+    "scene_id": "science_classroom_pool",
+    "payload": {
+      "interaction_id": "interaction:00000060",
+      "day": 3,
+      "phase": "morning",
+      "scene_id": "science_classroom_pool",
+      "actor_id": "campus_student_103",
+      "target_id": "campus_student_085",
+      "intent_id": "exchange_ideas",
+      "outcome": "rejected",
+      "decision_source": "rule",
+      "acceptance_score": 22.485,
+      "relationship_deltas": {
+        "actor": {
+          "conflict": 1
+        },
+        "target": {
+          "suspicion": 1
+        }
+      },
+      "emotion_deltas": {
+        "actor": {},
+        "target": {}
+      },
+      "hook_id": null,
+      "hook_transition": null,
+      "shared_claim_id": null,
+      "outcome_claim_ids": [],
+      "dialogue_summary": "于星河对周予川说：‘嗯，好吧，既然你现在不想聊这个，那就算了。不过如果你之后改变主意，随时可以找我。’",
+      "wording_source": "llm",
+      "wording_fact_ids": [],
+      "model_reason": ""
+    },
+    "visibility": "private",
+    "severity": 2,
+    "knowledge_tags": [
+      "social",
+      "relationship",
+      "interaction",
+      "exchange_ideas"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:4"
+  },
+  {
+    "event_id": "evt:0000016479",
+    "event_type": "NPC_PERSONAL_GOAL_PROGRESS",
+    "day": 3,
+    "phase": "evening",
+    "minute": 0,
+    "world_revision": 11,
+    "command_id": "live-audit:6",
+    "public_summary": "研习计划取得实际进展。",
+    "message": "研习计划取得实际进展。",
+    "actor_ids": [
+      "campus_student_087"
+    ],
+    "target_ids": [],
+    "scene_id": null,
+    "payload": {
+      "goal_id": "understand:shadow_collector",
+      "action_id": "READ_KNOWLEDGE",
+      "result": "success",
+      "step": "read"
+    },
+    "visibility": "private",
+    "severity": 1,
+    "knowledge_tags": [
+      "goal",
+      "discovery"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:6"
+  },
+  {
+    "event_id": "evt:0000018252",
+    "event_type": "NPC_PERSONAL_GOAL_PROGRESS",
+    "day": 3,
+    "phase": "late_night",
+    "minute": 0,
+    "world_revision": 12,
+    "command_id": "live-audit:7",
+    "public_summary": "研习计划取得实际进展。",
+    "message": "研习计划取得实际进展。",
+    "actor_ids": [
+      "campus_student_087"
+    ],
+    "target_ids": [],
+    "scene_id": null,
+    "payload": {
+      "goal_id": "understand:moon_fragment",
+      "action_id": "READ_KNOWLEDGE",
+      "result": "success",
+      "step": "read"
+    },
+    "visibility": "private",
+    "severity": 1,
+    "knowledge_tags": [
+      "goal",
+      "discovery"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:7"
+  },
+  {
+    "event_id": "evt:0000007547",
+    "event_type": "FORUM_TASK_COMPLETED",
+    "day": 2,
+    "phase": "afternoon",
+    "minute": 0,
+    "world_revision": 6,
+    "command_id": "live-audit:1",
+    "public_summary": "于静姝 完成了《一起核对一条校园资料》。",
+    "message": "于静姝 完成了《一起核对一条校园资料》。",
+    "actor_ids": [
+      "campus_student_039"
+    ],
+    "target_ids": [
+      "campus_staff_043"
+    ],
+    "scene_id": "library_reading_hall",
+    "payload": {
+      "task_id": "surface:d02:0028:emergent_need_campus_staff_043_curiosity",
+      "reward": {
+        "wealth": 15
+      },
+      "social_result": {
+        "outcome": "completed",
+        "issuer_id": "campus_staff_043",
+        "relationship_delta": {
+          "familiarity": 8,
+          "trust": 5,
+          "respect": 3,
+          "obligation": 2
+        }
+      },
+      "unlocked_follow_up_template_ids": [],
+      "issuer_need_result": {
+        "issuer_id": "campus_staff_043",
+        "need_key": "curiosity",
+        "before": 84,
+        "after": 66,
+        "delta": -18
+      },
+      "origin_kind": "need",
+      "origin_ref_id": "need:campus_staff_043:curiosity"
+    },
+    "visibility": "public",
+    "severity": 1,
+    "knowledge_tags": [
+      "forum",
+      "task",
+      "completed"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:1"
+  },
+  {
+    "event_id": "evt:0000007563",
+    "event_type": "FORUM_TASK_COMPLETED",
+    "day": 2,
+    "phase": "afternoon",
+    "minute": 0,
+    "world_revision": 6,
+    "command_id": "live-audit:1",
+    "public_summary": "冯思齐 完成了《一起核对一条校园资料》。",
+    "message": "冯思齐 完成了《一起核对一条校园资料》。",
+    "actor_ids": [
+      "campus_student_041"
+    ],
+    "target_ids": [
+      "campus_staff_012"
+    ],
+    "scene_id": "library_reading_hall",
+    "payload": {
+      "task_id": "surface:d02:0027:emergent_need_campus_staff_012_curiosity",
+      "reward": {
+        "wealth": 15
+      },
+      "social_result": {
+        "outcome": "completed",
+        "issuer_id": "campus_staff_012",
+        "relationship_delta": {
+          "familiarity": 8,
+          "trust": 5,
+          "respect": 3,
+          "obligation": 2
+        }
+      },
+      "unlocked_follow_up_template_ids": [],
+      "issuer_need_result": {
+        "issuer_id": "campus_staff_012",
+        "need_key": "curiosity",
+        "before": 85,
+        "after": 67,
+        "delta": -18
+      },
+      "origin_kind": "need",
+      "origin_ref_id": "need:campus_staff_012:curiosity"
+    },
+    "visibility": "public",
+    "severity": 1,
+    "knowledge_tags": [
+      "forum",
+      "task",
+      "completed"
+    ],
+    "causation_id": null,
+    "correlation_id": "live-audit:1"
+  }
+]

@@ -624,7 +624,49 @@ def advance_campus_interactions(
                 if score >= policy.minimum_pair_score:
                     pairs.append((score, first_id, second_id))
     used: set[str] = set()
-    interaction_llm_attempted = False
+    # Durable per-day receipts make a planned encounter single-shot, including
+    # after checkpoint restore. Plans are intentions, never teleports/consent.
+    agenda = state.cognition.get("daily_plans", {})
+    planned = {}
+    receipts = state.cognition.get("social_agenda_receipts", {})
+    if receipts.get("day") != state.clock.day:
+        receipts = {"day": state.clock.day, "actors": {}}
+
+    def record_plan(actor_id, social, outcome):
+        receipts["actors"][actor_id] = {"phase": state.clock.phase, "target_id": social["target_id"], "status": outcome}
+        state.cognition["social_agenda_receipts"] = receipts
+        name = state.population[actor_id].get("display_name", actor_id)
+        target_name = state.population[social["target_id"]].get("display_name", social["target_id"])
+        labels = {"accepted": "已开展", "rejected": "对方婉拒", "not_met": "未能碰面", "cooldown": "刚交流过，暂缓联系", "conditions_changed": "条件已变化", "busy": "参与者本时段已有其他交流"}
+        context.emit("NPC_SOCIAL_PLAN_RESOLVED", f"{name}原计划与{target_name}{social['reason']}：{labels[outcome]}。",
+            actor_ids=[actor_id], visibility="private", knowledge_tags=["social", "planning"],
+            payload={"target_id": social["target_id"], "intent_id": social["intent_id"], "outcome": outcome,
+                     "fallback": "wait_next_day", "planned_day": agenda["day"]})
+
+    if agenda.get("day") == state.clock.day:
+        from simulation.systems.campus_vitals import actor_layer, battle_locked
+        for actor_id, slots in sorted(agenda.get("actors", {}).items()):
+            social = slots.get(state.clock.phase, {}).get("social_intent")
+            if not social or actor_id in receipts["actors"]:
+                continue
+            target_id = social["target_id"]
+            # Remove an incidental copy of this same encounter from pair ranking.
+            pairs = [pair for pair in pairs if {pair[1], pair[2]} != {actor_id, target_id}]
+            actor, target = state.population[actor_id], state.population[target_id]
+            if (actor.get("current_location_id") != social["location_id"] or target.get("current_location_id") != social["location_id"]
+                    or actor_layer(state, actor_id) != actor_layer(state, target_id)):
+                record_plan(actor_id, social, "not_met")
+                continue
+            if (battle_locked(state, actor_id) or battle_locked(state, target_id)
+                    or any(person.get("current_activity", {}).get("status") != "completed" for person in (actor, target))):
+                record_plan(actor_id, social, "conditions_changed")
+                continue
+            last = interaction_state["pair_last_phase"].get(_pair_key(actor_id, target_id))
+            if isinstance(last, int) and now - last <= policy.pair_cooldown_phases:
+                record_plan(actor_id, social, "cooldown")
+                continue
+            planned[actor_id, target_id] = social
+        pairs.extend((100000.0, actor_id, target_id) for actor_id, target_id in planned)
     for _, first_id, second_id in sorted(pairs, key=lambda item: (-item[0], item[1], item[2])):
         if len(used) >= policy.max_interactions_per_phase * 2:
             break
@@ -632,35 +674,34 @@ def advance_campus_interactions(
             continue
         first = state.population[first_id]
         second = state.population[second_id]
-        if (_initiative(first), first_id) >= (_initiative(second), second_id):
+        social = planned.get((first_id, second_id))
+        if social or (_initiative(first), first_id) >= (_initiative(second), second_id):
             actor_id, target_id = first_id, second_id
         else:
             actor_id, target_id = second_id, first_id
         candidates = _legal_intents(state, actor_id, target_id, policy)
         if not candidates:
+            if social:
+                record_plan(actor_id, social, "conditions_changed")
             continue
         chosen = candidates[0]
         source = "rule"
         model_reason = ""
-        if (
-            not interaction_llm_attempted
-            and cognition_runtime is not None
-            and actor_id in state.cognition.get("focused_ids", ())
-        ):
-            interaction_llm_attempted = True
-            llm_choice = cognition_runtime.select_interaction(
-                state, actor_id, target_id, candidates
-            )
-            if llm_choice is not None:
-                chosen = llm_choice
-                source = "llm"
-                model_reason = str(llm_choice.get("model_reason", ""))
+        if social:
+            chosen = next((item for item in candidates if item["intent_id"] == social["intent_id"]), None)
+            if chosen is None:
+                record_plan(actor_id, social, "conditions_changed")
+                continue
+            source = "llm"
+            model_reason = str(social.get("model_reason", ""))
         open_before = _open_hook(state, actor_id, target_id)
         record = _resolve_interaction(
             context, actor_id, target_id, chosen, policy, source, model_reason, now,
             intelligence_policy, cognition_runtime,
         )
         used.update((actor_id, target_id))
+        if social:
+            record_plan(actor_id, social, record["outcome"])
         summary["interaction_count"] += 1
         summary[f"interaction_{record['outcome']}_count"] += 1
         summary[f"interaction_{source}_count"] += 1
@@ -672,6 +713,9 @@ def advance_campus_interactions(
             summary["interaction_information_shared_count"] += 1
         summary["interaction_outcome_claim_count"] += len(record.get("outcome_claim_ids", ()))
         summary[f"interaction_{record['wording_source']}_wording_count"] += 1
+    for (actor_id, target_id), social in planned.items():
+        if actor_id not in receipts["actors"]:
+            record_plan(actor_id, social, "busy")
     return summary
 
 

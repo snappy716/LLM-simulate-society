@@ -241,7 +241,7 @@ func advance_campus_phase() -> void:
 	}
 	# Overnight planning may include bounded model requests. Other commands retain
 	# their ordinary timeout; the presentation never drives or repeats a command.
-	_campus_request.timeout = maxf(180.0, float(campus_snapshot.get("cognition", {}).get("overnight_timeout_seconds", 180))) if clock.get("phase") == "late_night" else 30.0
+	_campus_request.timeout = maxf(180.0, float(campus_snapshot.get("cognition", {}).get("overnight_timeout_seconds", 180))) if clock.get("phase") == "late_night" else _ordinary_request_timeout()
 	campus_phase_started.emit(clock.duplicate(true))
 	var error := _campus_request.request(
 		_base_url + "/kernel/command",
@@ -250,7 +250,7 @@ func advance_campus_phase() -> void:
 		JSON.stringify(command)
 	)
 	if error != OK:
-		_campus_request.timeout = 30.0
+		_campus_request.timeout = _ordinary_request_timeout()
 		_campus_busy = false
 		_campus_pending_operation = ""
 		campus_phase_advanced.emit(false, {"error": "无法发送时段推进请求：%s" % error})
@@ -806,6 +806,10 @@ func _request_snapshot() -> void:
 		connected = false
 
 
+func _ordinary_request_timeout() -> float:
+	return maxf(30.0, float(campus_snapshot.get("cognition", {}).get("provider", {}).get("timeout_seconds", 8)) + 10.0)
+
+
 func _on_request_completed(_result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	var operation := _pending_operation
 	_pending_operation = ""
@@ -820,6 +824,9 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
 		if response_code != 200 or not parsed is Dictionary:
 			interface_configured.emit(false, parsed if parsed is Dictionary else {"error": "接口配置失败，HTTP %d" % response_code})
 			return
+		if bool(parsed.get("ok", false)):
+			campus_snapshot.get_or_add("cognition", {})["provider"] = parsed.get("status", {})
+			_campus_request.timeout = _ordinary_request_timeout()
 		interface_configured.emit(bool(parsed.get("ok", false)), parsed)
 		return
 	if response_code != 200:
@@ -893,7 +900,7 @@ func _on_campus_request_completed(
 	_campus_pending_proposal_id = ""
 	_campus_pending_night_action = ""
 	_campus_busy = false
-	_campus_request.timeout = 30.0
+	_campus_request.timeout = _ordinary_request_timeout()
 	var parsed = null
 	if not body.is_empty():
 		var decoder := JSON.new()

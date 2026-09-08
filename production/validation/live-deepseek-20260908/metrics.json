@@ -1,0 +1,336 @@
+{
+  "seed": 42,
+  "days": 3,
+  "requests": 68,
+  "request_kinds": {
+    "interaction": 3,
+    "plan": 60,
+    "dialogue": 5
+  },
+  "tokens": {
+    "prompt_tokens": 100175,
+    "completion_tokens": 7067,
+    "total_tokens": 107242
+  },
+  "plan_choices": 240,
+  "non_first_choices": 67,
+  "planned_focused_slots": 240,
+  "accepted_llm_slots": 240,
+  "completed_focused_slots": 240,
+  "matching_plan_activity_and_location": 212,
+  "changed_actual_slots_all": 161,
+  "changed_actual_slots_focused": 65,
+  "all_compared_completed_slots": 2398,
+  "usage_by_day": [
+    {
+      "day": 2,
+      "calls": 22,
+      "estimated_tokens": 33164,
+      "automated_calls": 22,
+      "automated_estimated_tokens": 33164,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 32189,
+      "completion_tokens": 2350,
+      "phase_calls": {
+        "morning": 22
+      },
+      "purpose_phase_calls": {
+        "morning:activity": 20,
+        "morning:interaction": 1,
+        "morning:interaction_dialogue": 1
+      },
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    },
+    {
+      "day": 3,
+      "calls": 23,
+      "estimated_tokens": 34742,
+      "automated_calls": 23,
+      "automated_estimated_tokens": 34742,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 34342,
+      "completion_tokens": 2571,
+      "phase_calls": {
+        "morning": 23
+      },
+      "purpose_phase_calls": {
+        "morning:activity": 20,
+        "morning:interaction": 1,
+        "morning:interaction_dialogue": 2
+      },
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    },
+    {
+      "day": 4,
+      "calls": 20,
+      "estimated_tokens": 32936,
+      "automated_calls": 20,
+      "automated_estimated_tokens": 32936,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 32527,
+      "completion_tokens": 2052,
+      "phase_calls": {
+        "morning": 20
+      },
+      "purpose_phase_calls": {
+        "morning:activity": 20
+      },
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    }
+  ],
+  "live_phases": [
+    {
+      "day": 2,
+      "phase": "morning",
+      "minute": 0,
+      "seconds": 33.147,
+      "requests": 22,
+      "committed_events": 1895
+    },
+    {
+      "day": 2,
+      "phase": "afternoon",
+      "minute": 0,
+      "seconds": 0.27,
+      "requests": 0,
+      "committed_events": 1582
+    },
+    {
+      "day": 2,
+      "phase": "evening",
+      "minute": 0,
+      "seconds": 0.289,
+      "requests": 0,
+      "committed_events": 1650
+    },
+    {
+      "day": 2,
+      "phase": "late_night",
+      "minute": 0,
+      "seconds": 0.356,
+      "requests": 0,
+      "committed_events": 2036
+    },
+    {
+      "day": 3,
+      "phase": "morning",
+      "minute": 0,
+      "seconds": 35.485,
+      "requests": 23,
+      "committed_events": 1805
+    },
+    {
+      "day": 3,
+      "phase": "afternoon",
+      "minute": 0,
+      "seconds": 0.325,
+      "requests": 0,
+      "committed_events": 1482
+    },
+    {
+      "day": 3,
+      "phase": "evening",
+      "minute": 0,
+      "seconds": 0.379,
+      "requests": 0,
+      "committed_events": 1655
+    },
+    {
+      "day": 3,
+      "phase": "late_night",
+      "minute": 0,
+      "seconds": 0.367,
+      "requests": 0,
+      "committed_events": 1805
+    },
+    {
+      "day": 4,
+      "phase": "morning",
+      "minute": 0,
+      "seconds": 28.221,
+      "requests": 20,
+      "committed_events": 1912
+    },
+    {
+      "day": 4,
+      "phase": "afternoon",
+      "minute": 0,
+      "seconds": 0.375,
+      "requests": 0,
+      "committed_events": 1463
+    },
+    {
+      "day": 4,
+      "phase": "evening",
+      "minute": 0,
+      "seconds": 0.407,
+      "requests": 0,
+      "committed_events": 1786
+    },
+    {
+      "day": 4,
+      "phase": "late_night",
+      "minute": 0,
+      "seconds": 0.475,
+      "requests": 0,
+      "committed_events": 1865
+    }
+  ],
+  "event_counts": {
+    "live": {
+      "CAMPUS_SUPPLY_DELIVERED": 4,
+      "CAMPUS_ITEM_ACTION_COMPLETED": 907,
+      "NPC_ROUTINE_ACTION_COMPLETED": 795,
+      "NIGHT_WORLD_AUTO_EXITED": 26,
+      "FORUM_TASK_EXPIRED": 39,
+      "CLUB_MEMBER_RECRUITED": 25,
+      "NPC_PERSONAL_GOAL_CREATED": 23,
+      "NPC_DAILY_PLANS_PREPARED": 3,
+      "FORUM_TASK_PUBLISHED": 72,
+      "FORUM_TASK_VIEWED": 581,
+      "FORUM_TASK_CLAIMED": 73,
+      "NPC_DECISION_MADE": 2396,
+      "ACTOR_LOCATION_CHANGED": 10283,
+      "CAMPUS_ACTIVITY_EFFECT_APPLIED": 2185,
+      "NPC_ACTIVITY_COMPLETED": 2396,
+      "CAMPUS_GROWTH_COMPLETED": 34,
+      "NPC_PERSONAL_GOAL_PROGRESS": 34,
+      "CAMPUS_TRADE_OFFERED": 74,
+      "CAMPUS_TRADE_SETTLED": 74,
+      "CAMPUS_SUPPLY_ORDERED": 4,
+      "NPC_INTERACTION_RESOLVED": 129,
+      "PHONE_MESSAGE_SENT": 113,
+      "WORLD_PHASE_ADVANCED": 12,
+      "NPC_COMBAT_SUPPLY_PREPARED": 4,
+      "FORUM_TASK_COMPLETED": 69,
+      "NPC_INFORMATION_SHARED": 45,
+      "NPC_SOCIAL_PROPOSAL_CREATED": 5,
+      "NPC_STRANDED_IN_NIGHT": 2,
+      "NIGHT_WORLD_ENTERED": 29,
+      "PARTY_INVITATION_DECLINED": 29,
+      "CLUB_ACTIVITY_ATTENDED": 36,
+      "CAMPUS_INVESTIGATION_COMPLETED": 14,
+      "FIELD_REPORT_SUBMITTED": 14,
+      "BATTLE_PREPARATION_STARTED": 11,
+      "COMBAT_CHARACTER_DEPLOYED": 11,
+      "BATTLE_DEPLOYMENT_CONFIRMED": 11,
+      "NIGHT_COMBAT_ENTRY_ACCOUNTED": 11,
+      "COMBAT_ROUND_STARTED": 70,
+      "COMBAT_ENEMY_INTENTS": 70,
+      "COMBAT_CARD_PLAYED": 95,
+      "COMBAT_BASE_COMMAND_USED": 27,
+      "COMBAT_ENEMY_ACTION": 61,
+      "NIGHT_SITE_RESOLVED": 9,
+      "COMBAT_VICTORY": 9,
+      "NPC_NIGHT_TASK_EXECUTED": 11,
+      "CAMPUS_REST_RECOVERY": 6,
+      "NIGHT_RESCUE_MISSED": 1,
+      "COMBAT_CHARACTER_INCAPACITATED": 1,
+      "COMBAT_DEFEAT_RESCUE": 1,
+      "COMBAT_PARTY_RETREATED": 1,
+      "KNOWLEDGE_INSIGHT_USED": 1
+    },
+    "offline": {
+      "CAMPUS_SUPPLY_DELIVERED": 4,
+      "CAMPUS_ITEM_ACTION_COMPLETED": 911,
+      "NPC_ROUTINE_ACTION_COMPLETED": 793,
+      "NIGHT_WORLD_AUTO_EXITED": 27,
+      "FORUM_TASK_EXPIRED": 36,
+      "CLUB_MEMBER_RECRUITED": 25,
+      "NPC_PERSONAL_GOAL_CREATED": 23,
+      "NPC_DAILY_PLANS_PREPARED": 3,
+      "FORUM_TASK_PUBLISHED": 72,
+      "FORUM_TASK_VIEWED": 575,
+      "FORUM_TASK_CLAIMED": 72,
+      "NPC_DECISION_MADE": 2396,
+      "ACTOR_LOCATION_CHANGED": 10211,
+      "CAMPUS_ACTIVITY_EFFECT_APPLIED": 2186,
+      "NPC_ACTIVITY_COMPLETED": 2396,
+      "CAMPUS_GROWTH_COMPLETED": 33,
+      "NPC_PERSONAL_GOAL_PROGRESS": 33,
+      "CAMPUS_TRADE_OFFERED": 72,
+      "CAMPUS_TRADE_SETTLED": 72,
+      "CAMPUS_SUPPLY_ORDERED": 4,
+      "NPC_INTERACTION_RESOLVED": 129,
+      "PHONE_MESSAGE_SENT": 122,
+      "WORLD_PHASE_ADVANCED": 12,
+      "NPC_COMBAT_SUPPLY_PREPARED": 4,
+      "FORUM_TASK_COMPLETED": 70,
+      "NPC_INFORMATION_SHARED": 36,
+      "NPC_STRANDED_IN_NIGHT": 2,
+      "NIGHT_WORLD_ENTERED": 25,
+      "PARTY_INVITATION_DECLINED": 31,
+      "CLUB_ACTIVITY_ATTENDED": 35,
+      "NPC_SOCIAL_PROPOSAL_CREATED": 2,
+      "CAMPUS_INVESTIGATION_COMPLETED": 12,
+      "FIELD_REPORT_SUBMITTED": 12,
+      "BATTLE_PREPARATION_STARTED": 12,
+      "COMBAT_CHARACTER_DEPLOYED": 12,
+      "BATTLE_DEPLOYMENT_CONFIRMED": 12,
+      "NIGHT_COMBAT_ENTRY_ACCOUNTED": 12,
+      "COMBAT_ROUND_STARTED": 77,
+      "COMBAT_ENEMY_INTENTS": 77,
+      "COMBAT_CARD_PLAYED": 107,
+      "COMBAT_BASE_COMMAND_USED": 41,
+      "COMBAT_ENEMY_ACTION": 65,
+      "NIGHT_SITE_RESOLVED": 12,
+      "COMBAT_VICTORY": 12,
+      "NPC_NIGHT_TASK_EXECUTED": 12,
+      "CAMPUS_REST_RECOVERY": 6,
+      "NIGHT_RESCUE_MISSED": 1,
+      "KNOWLEDGE_INSIGHT_USED": 1,
+      "COMBAT_ITEM_USED": 1
+    }
+  },
+  "player_dialogue_samples": [
+    {
+      "npc_id": "campus_staff_002",
+      "deep": true,
+      "reply": {
+        "utterance": "你好，最近在校园里过得怎么样？",
+        "fact_ids_used": [],
+        "source": "llm"
+      }
+    },
+    {
+      "npc_id": "campus_student_001",
+      "deep": false,
+      "reply": {
+        "utterance": "还行吧，就是最近有点忙，你呢？",
+        "fact_ids_used": [],
+        "source": "llm"
+      }
+    }
+  ],
+  "interaction_model_decisions": 2,
+  "interaction_model_wording": 3,
+  "task_completion_origins": {
+    "live": {
+      "template": 59,
+      "need": 6,
+      "interaction_hook": 4
+    },
+    "offline": {
+      "template": 60,
+      "need": 6,
+      "interaction_hook": 4
+    }
+  },
+  "plan_override_reasons": {
+    "necessary_item_shortage": 21,
+    "accepted_forum_task": 6,
+    "unspecified": 1
+  }
+}

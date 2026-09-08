@@ -1,0 +1,38 @@
+[
+  {
+    "index": 0,
+    "npc_id": null,
+    "day": null,
+    "phase": null,
+    "kind": "interaction",
+    "output_limit": 160,
+    "request": {
+      "test": "campus API connectivity"
+    },
+    "http_status": 200,
+    "actual_model": "deepseek-v4-flash",
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 121,
+      "completion_tokens": 111,
+      "total_tokens": 232,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 105
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 121
+    },
+    "content_chars": 11,
+    "response": {
+      "ok": true,
+      "_usage": {
+        "prompt_tokens": 121,
+        "completion_tokens": 111
+      }
+    },
+    "seconds": 1.47
+  }
+]

@@ -2,6 +2,7 @@ extends CanvasLayer
 
 const SETTINGS_PATH := "user://llm_interfaces.cfg"
 const PROVIDERS := ["rule", "openai_compatible", "ollama"]
+const THINKING_MODES := ["auto", "default", "disabled", "enabled"]
 
 @onready var panel: Control = $Panel
 @onready var profile_list: ItemList = $Panel/Window/ProfileList
@@ -11,6 +12,8 @@ const PROVIDERS := ["rule", "openai_compatible", "ollama"]
 @onready var model: LineEdit = $Panel/Window/Model
 @onready var api_key: LineEdit = $Panel/Window/ApiKey
 @onready var status: Label = $Panel/Window/Status
+@onready var thinking: OptionButton = $Panel/Window/Thinking
+@onready var request_timeout: SpinBox = $Panel/Window/RequestTimeout
 
 var profiles: Array[Dictionary] = []
 var selected_index := -1
@@ -23,6 +26,9 @@ func _ready() -> void:
 	panel.visible = false
 	for label in ["规则模式（离线）", "OpenAI 兼容接口", "Ollama（本地）"]:
 		provider.add_item(label)
+	for label in ["自动适配", "服务默认", "关闭思考", "开启思考"]:
+		thinking.add_item(label)
+	thinking.tooltip_text = "自动：官方 DeepSeek V4 使用非思考模式；其他兼容服务不添加私有参数。显式开关要求服务支持 thinking 参数。"
 	profile_list.item_selected.connect(_select_profile)
 	$Panel/Window/Add.pressed.connect(_add_profile)
 	$Panel/Window/Delete.pressed.connect(_delete_profile)
@@ -57,6 +63,12 @@ func open_settings() -> void:
 	_load_profiles()
 	panel.visible = true
 	get_tree().paused = true
+	var current: Dictionary = SimulationBridge.campus_snapshot.get("cognition", {}).get("provider", {})
+	var last: Dictionary = current.get("last_result", {})
+	var labels := {"untested": "尚未验证", "received": "已收到响应，待校验", "accepted": "最近响应已通过校验", "failed": "最近请求失败"}
+	var errors := {"output_truncated": "输出被截断，请关闭思考或调整模型", "timeout": "模型请求超时", "invalid_json": "响应不是合法 JSON", "http_401": "密钥验证失败", "http_402": "账户余额不足"}
+	var error_code := str(last.get("error_code", ""))
+	status.text = "当前：%s · %s\n%s" % [current.get("model", "离线"), labels.get(last.get("state", "untested"), "待核对"), errors.get(error_code, error_code)]
 
 
 func _settings_path() -> String:
@@ -75,6 +87,8 @@ func _load_profiles() -> void:
 				"base_url": config.get_value(section, "base_url", ""),
 				"model": config.get_value(section, "model", ""),
 				"api_key": config.get_value(section, "api_key", ""),
+				"thinking_mode": config.get_value(section, "thinking_mode", "auto"),
+				"timeout_seconds": config.get_value(section, "timeout_seconds", 30.0),
 			})
 	if profiles.is_empty():
 		profiles = [
@@ -103,6 +117,8 @@ func _select_profile(index: int) -> void:
 	base_url.text = String(item.base_url)
 	model.text = String(item.model)
 	api_key.text = String(item.api_key)
+	thinking.select(maxi(0, THINKING_MODES.find(str(item.get("thinking_mode", "auto")))))
+	request_timeout.value = float(item.get("timeout_seconds", 30.0))
 	_provider_changed(provider.selected)
 	status.text = "配置仅保存在本机 user://"
 
@@ -134,8 +150,11 @@ func _save_and_apply() -> void:
 		"base_url": base_url.text.strip_edges(),
 		"model": model.text.strip_edges(),
 		"api_key": api_key.text.strip_edges(),
+		"thinking_mode": THINKING_MODES[thinking.selected],
+		"timeout_seconds": request_timeout.value,
 	}
-	_save_profiles()
+	if not _save_profiles():
+		return
 	_rebuild_list()
 	profile_list.select(selected_index)
 	status.text = "正在应用接口……"
@@ -143,7 +162,7 @@ func _save_and_apply() -> void:
 	SimulationBridge.configure_interface(profiles[selected_index])
 
 
-func _save_profiles() -> void:
+func _save_profiles() -> bool:
 	var config := ConfigFile.new()
 	for index in range(profiles.size()):
 		var section := "profile_%03d" % index
@@ -152,6 +171,8 @@ func _save_profiles() -> void:
 	var error := config.save(_settings_path())
 	if error != OK:
 		status.text = "本地配置保存失败：%s" % error
+		return false
+	return true
 
 
 func _provider_changed(index: int) -> void:
@@ -160,6 +181,8 @@ func _provider_changed(index: int) -> void:
 	base_url.editable = not offline
 	model.editable = not offline
 	api_key.editable = provider_id == "openai_compatible"
+	thinking.disabled = provider_id != "openai_compatible"
+	request_timeout.editable = provider_id == "openai_compatible"
 	if provider_id == "ollama":
 		api_key.text = ""
 
@@ -173,6 +196,8 @@ func _normalize_provider_id(provider_id: String) -> String:
 func _interface_configured(success: bool, result: Dictionary) -> void:
 	$Panel/Window/SaveApply.disabled = false
 	status.text = String(result.get("message", "接口已应用")) if success else "应用失败：%s" % result.get("error", "未知错误")
+	if success and bool(result.get("status", {}).get("configured", false)):
+		status.text = "接口已应用（尚未请求验证）\n%s · 思考：%s" % [result.get("model", ""), result.get("status", {}).get("thinking_mode", "default")]
 
 
 func _close() -> void:

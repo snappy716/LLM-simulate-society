@@ -1,0 +1,246 @@
+[
+  {
+    "index": 0,
+    "npc_id": "campus_staff_002",
+    "day": 2,
+    "phase": "morning",
+    "kind": "plan",
+    "output_limit": 512,
+    "request": {
+      "npc_id": "campus_staff_002",
+      "candidate_revision": 4,
+      "day": 2,
+      "phase": "morning",
+      "identity": {
+        "role_kind": "staff",
+        "college_id": "artificial_intelligence",
+        "occupation_id": "academic_faculty",
+        "core_values": [
+          "achievement",
+          "security",
+          "freedom"
+        ],
+        "moral_boundaries": [
+          "do_not_abandon_companions",
+          "do_not_betray_confidence"
+        ],
+        "fear_id": "being_forgotten",
+        "obsession_id": "prove_theory",
+        "contradiction_id": "seeks_control_but_craves_surprise",
+        "personality": {
+          "extraversion": 24,
+          "agreeableness": 80,
+          "conscientiousness": 32,
+          "openness": 30,
+          "emotional_sensitivity": 70,
+          "risk_tolerance": 24,
+          "rule_alignment": 30,
+          "altruism": 25
+        }
+      },
+      "state": {
+        "location_id": "staff_residence",
+        "needs": {
+          "rest": 25,
+          "food": 34,
+          "safety": 2,
+          "social": 42,
+          "money": 23,
+          "achievement": 44,
+          "curiosity": 33,
+          "commitment_pressure": 43
+        },
+        "emotions": {
+          "joy": 28,
+          "fear": 1,
+          "anger": 6,
+          "sadness": 15,
+          "shame": 3
+        },
+        "active_task": false,
+        "personal_goals": [],
+        "material_commitments": [],
+        "own_relationships": {},
+        "own_resources": {
+          "wealth": 2051,
+          "major_remaining": 1,
+          "notebooks": 1
+        }
+      },
+      "reflection": "高令闻 决定进行 REST。；campus_staff_002 前往 university_library。；campus_staff_002 前往 central_region。",
+      "memories": [
+        {
+          "day": 1,
+          "phase": "late_night",
+          "summary": "高令闻 决定进行 REST。",
+          "confidence": 0.891,
+          "interpretation": "亲历"
+        },
+        {
+          "day": 1,
+          "phase": "late_night",
+          "summary": "campus_staff_002 前往 university_library。",
+          "confidence": 0.824,
+          "interpretation": "亲历"
+        },
+        {
+          "day": 1,
+          "phase": "late_night",
+          "summary": "campus_staff_002 前往 central_region。",
+          "confidence": 0.837,
+          "interpretation": "亲历"
+        },
+        {
+          "day": 1,
+          "phase": "late_night",
+          "summary": "campus_staff_002 前往 student_life_region。",
+          "confidence": 0.87,
+          "interpretation": "亲历"
+        },
+        {
+          "day": 1,
+          "phase": "late_night",
+          "summary": "campus_staff_002 前往 west_dorm_region。",
+          "confidence": 0.833,
+          "interpretation": "亲历"
+        },
+        {
+          "day": 1,
+          "phase": "late_night",
+          "summary": "campus_staff_002 前往 staff_residence。",
+          "confidence": 0.86,
+          "interpretation": "亲历"
+        },
+        {
+          "day": 1,
+          "phase": "late_night",
+          "summary": "高令闻 完成 REST。",
+          "confidence": 0.894,
+          "interpretation": "亲历"
+        },
+        {
+          "day": 1,
+          "phase": "late_night",
+          "summary": "campus_staff_002 在 staff_residence 完成 REST。",
+          "confidence": 0.867,
+          "interpretation": "亲历"
+        }
+      ],
+      "candidates": [],
+      "daily_options": {
+        "morning": [
+          {
+            "candidate_id": "morning:0",
+            "activity_id": "TEACH_CLASS",
+            "location_id": "science_classroom_pool",
+            "reason": "schedule_commitment",
+            "parameters": {}
+          }
+        ],
+        "afternoon": [
+          {
+            "candidate_id": "afternoon:0",
+            "activity_id": "RESEARCH_OR_OFFICE_HOURS",
+            "location_id": "ai_innovation_building",
+            "reason": "schedule_commitment",
+            "parameters": {}
+          },
+          {
+            "candidate_id": "afternoon:1",
+            "activity_id": "REST",
+            "location_id": "staff_residence",
+            "reason": "rest_need",
+            "parameters": {}
+          },
+          {
+            "candidate_id": "afternoon:2",
+            "activity_id": "SELF_STUDY",
+            "location_id": "library_reading_hall",
+            "reason": "achievement_or_curiosity",
+            "parameters": {}
+          },
+          {
+            "candidate_id": "afternoon:3",
+            "activity_id": "PERSONAL_ACTIVITY",
+            "location_id": "staff_residence",
+            "reason": "emotional_recovery",
+            "parameters": {}
+          },
+          {
+            "candidate_id": "afternoon:4",
+            "activity_id": "SOCIAL_OR_SELF_STUDY",
+            "location_id": "mirror_lake_square",
+            "reason": "social_need",
+            "parameters": {}
+          }
+        ],
+        "evening": [
+          {
+            "candidate_id": "evening:0",
+            "activity_id": "PREPARE_OR_REVIEW",
+            "location_id": "library_reading_hall",
+            "reason": "schedule_commitment",
+            "parameters": {}
+          },
+          {
+            "candidate_id": "evening:1",
+            "activity_id": "REST",
+            "location_id": "staff_residence",
+            "reason": "rest_need",
+            "parameters": {}
+          },
+          {
+            "candidate_id": "evening:2",
+            "activity_id": "SELF_STUDY",
+            "location_id": "library_reading_hall",
+            "reason": "achievement_or_curiosity",
+            "parameters": {}
+          },
+          {
+            "candidate_id": "evening:3",
+            "activity_id": "PERSONAL_ACTIVITY",
+            "location_id": "staff_residence",
+            "reason": "emotional_recovery",
+            "parameters": {}
+          },
+          {
+            "candidate_id": "evening:4",
+            "activity_id": "SOCIAL_OR_SELF_STUDY",
+            "location_id": "mirror_lake_square",
+            "reason": "social_need",
+            "parameters": {}
+          }
+        ],
+        "late_night": [
+          {
+            "candidate_id": "late_night:0",
+            "activity_id": "REST",
+            "location_id": "staff_residence",
+            "reason": "schedule_commitment",
+            "parameters": {}
+          }
+        ]
+      }
+    },
+    "http_status": 200,
+    "actual_model": "deepseek-v4-flash",
+    "finish_reason": "length",
+    "usage": {
+      "prompt_tokens": 1408,
+      "completion_tokens": 512,
+      "total_tokens": 1920,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 512
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 1408
+    },
+    "content_chars": 0,
+    "error": "ValueError",
+    "cause": "JSONDecodeError",
+    "seconds": 5.207
+  }
+]

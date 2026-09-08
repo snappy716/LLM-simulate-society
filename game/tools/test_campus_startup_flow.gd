@@ -45,6 +45,21 @@ func _run() -> void:
 	assert(FileAccess.file_exists(OS.get_environment("GODOT_SIM_SETTINGS_PATH")))
 	assert(not bool(configured[1].status.configured))
 	assert((settings.get("status") as Label).text.contains("接口已应用"))
+	settings.call("_add_profile")
+	(settings.get("base_url") as LineEdit).text = "https://api.deepseek.com"
+	(settings.get("model") as LineEdit).text = "deepseek-v4-flash"
+	(settings.get("api_key") as LineEdit).text = "fake-no-paid-request"
+	(settings.get("request_timeout") as SpinBox).value = 30
+	settings.call("_save_and_apply")
+	var deepseek = await bridge.interface_configured
+	assert(bool(deepseek[0]))
+	assert(deepseek[1].status.thinking_mode == "disabled")
+	assert(deepseek[1].status.timeout_seconds == 30)
+	assert(deepseek[1].status.last_result.state == "untested")
+	assert((settings.get("status") as Label).text.contains("尚未请求验证"))
+	settings.call("_select_profile", 0)
+	settings.call("_save_and_apply")
+	await bridge.interface_configured
 	settings.call("_close")
 	assert(not paused)
 	var escape := InputEventAction.new()
