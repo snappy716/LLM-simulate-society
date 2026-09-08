@@ -25,6 +25,8 @@ var _overlay: ColorRect
 var _phone_panel: PanelContainer
 var _home: Control
 var _combat_pending := false
+var _contact_check_picker: OptionButton
+var _contact_check_button: Button
 var _message_pending := ""
 var _message_pending_target := ""
 var _message_sent_text := ""
@@ -400,6 +402,15 @@ func _build_message_page() -> VBoxContainer:
 	_message_send_action.pressed.connect(_send_phone_message)
 	composer.add_child(_message_send_action)
 	root.add_child(composer)
+	var check_row := HBoxContainer.new()
+	_contact_check_picker = OptionButton.new()
+	_contact_check_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	check_row.add_child(_contact_check_picker)
+	_contact_check_button = Button.new()
+	_contact_check_button.text = "请人实地留意"
+	_contact_check_button.pressed.connect(_request_contact_check)
+	check_row.add_child(_contact_check_button)
+	root.add_child(check_row)
 	var proposal_row := HBoxContainer.new()
 	_message_proposal_picker = OptionButton.new()
 	_message_proposal_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -946,6 +957,15 @@ func _refresh_message_thread() -> void:
 	var messaging: Dictionary = SimulationBridge.campus_snapshot.get("messaging", {})
 	var threads: Dictionary = messaging.get("threads", {})
 	var thread: Dictionary = threads.get(_selected_message_contact_id, {})
+	var selected_point := _contact_check_picker.selected
+	_contact_check_picker.clear()
+	for point in messaging.get("check_points", []):
+		_contact_check_picker.add_item(String(point.get("name", "公共会面点")))
+		_contact_check_picker.set_item_metadata(_contact_check_picker.item_count - 1, point.get("location_id", ""))
+	if selected_point >= 0 and selected_point < _contact_check_picker.item_count:
+		_contact_check_picker.select(selected_point)
+	_contact_check_button.disabled = String(thread.get("contact_status", {}).get("status", "")) != "awaiting" or not _message_pending.is_empty()
+	_contact_check_button.tooltip_text = "基于本人未回应记录，请人在所选公共地点留意；不代表确认失踪。"
 	var lines: Array[String] = []
 	var contact_status: Dictionary = thread.get("contact_status", {})
 	match String(contact_status.get("status", "")):
@@ -985,6 +1005,16 @@ func _send_phone_message() -> void:
 	_send_phone_message_from_input(_message_input.text)
 
 
+func _request_contact_check() -> void:
+	if not _message_pending.is_empty() or _contact_check_picker.selected < 0:
+		return
+	_message_pending = "inquiry"
+	_message_pending_target = _selected_message_contact_id
+	_contact_check_button.disabled = true
+	_message_feedback.text = "正在发布公共地点寻访……"
+	SimulationBridge.operate_campus_message("REQUEST_CONTACT_CHECK", _selected_message_contact_id, String(_contact_check_picker.get_item_metadata(_contact_check_picker.selected)))
+
+
 func _send_phone_message_from_input(text: String) -> void:
 	if not _message_pending.is_empty():
 		return
@@ -1007,12 +1037,14 @@ func _on_phone_message_completed(
 	success: bool, result: Dictionary, action_id: String, target_id: String
 ) -> void:
 	var own_send := action_id == "SEND_PHONE_MESSAGE" and _message_pending == "send" and _message_pending_target == target_id
+	if action_id == "REQUEST_CONTACT_CHECK" and _message_pending == "inquiry" and _message_pending_target == target_id:
+		_message_pending = ""
 	if own_send:
 		_message_pending = ""
 	if target_id != _selected_message_contact_id:
 		_refresh_message_page()
 		return
-	if action_id == "SEND_PHONE_MESSAGE":
+	if action_id in ["SEND_PHONE_MESSAGE", "REQUEST_CONTACT_CHECK"]:
 		_message_feedback.text = UI_TEXT.operation_feedback(success, result)
 		_message_feedback.add_theme_color_override("font_color", Color("9bcf9b") if success else Color("ee8174"))
 		if success and own_send and _message_input.text.strip_edges() == _message_sent_text:
@@ -1185,6 +1217,8 @@ func _sort_tasks(a: Dictionary, b: Dictionary) -> bool:
 
 
 func _task_state_label(task: Dictionary) -> String:
+	if task.get("contact_inquiry", {}).get("status") == "withdrawn":
+		return "联系恢复 · 已撤回（不计失约）"
 	if bool(task.get("owned_by_player", false)) and String(task.get("state", "")) in ["locked", "in_progress"]:
 		return "[我的]"
 	return {
@@ -1293,6 +1327,10 @@ func _refresh_forum_detail() -> void:
 	var owned := bool(task.get("owned_by_player", false))
 	var requires_night: bool = String(task.get("forum", "surface")) == "night"
 	var fieldwork: Dictionary = task.get("fieldwork", {})
+	var inquiry: Dictionary = task.get("contact_inquiry", {})
+	if not inquiry.is_empty():
+		var inquiry_status: String = {"open": "待实地核对", "observed": "已在指定点见到", "not_observed": "此次实地未见", "expired": "委托到期", "withdrawn": "联系恢复，已撤回"}.get(String(inquiry.get("status", "")), "待确认")
+		_forum_detail.text += "\n\n[b]公共地点寻访[/b]\n%s\n状态：%s\n%s\n%s" % [inquiry.get("rule_note", ""), inquiry_status, inquiry.get("target_name", "承接后可查看具体对象"), inquiry.get("report", {}).get("summary", "") if inquiry.get("report") is Dictionary else ""]
 	var night_site: Dictionary = task.get("night_site", {})
 	if not night_site.is_empty():
 		_forum_detail.text += "\n\n[b]实际现场 · %s[/b]\n%s\n%s" % [night_site.get("label", ""), night_site.get("status", ""), night_site.get("rule_note", "")]
@@ -1314,7 +1352,7 @@ func _refresh_forum_detail() -> void:
 		var at_location: bool = player_location in [
 			task.get("scene_id"), task.get("execution_region_id")
 		]
-		if not fieldwork.is_empty() or not night_site.is_empty():
+		if not fieldwork.is_empty() or not night_site.is_empty() or not inquiry.is_empty():
 			at_location = player_location == task.get("scene_id")
 		var phase: String = String((SimulationBridge.campus_snapshot.get("clock", {}) as Dictionary).get("phase", "morning"))
 		var phase_allowed: bool = phase in task.get("allowed_phases", [])
@@ -1326,6 +1364,8 @@ func _refresh_forum_detail() -> void:
 			_forum_primary_action.text = "当前时段无法执行"
 		else:
 			_forum_primary_action.text = "前往夜战部署 · 实际战斗结算" if requires_night else "完成当前目标"
+			if not inquiry.is_empty():
+				_forum_primary_action.text = "实地核对并报告 · 1 次主要行动"
 			if not fieldwork.is_empty():
 				_forum_primary_action.text = "提交实地报告 · 免费" if fieldwork.get("ready_to_report", false) else "打开调查笔记 · 深入搜查现场"
 			elif night_site.get("can_follow_through", false):
@@ -1363,7 +1403,9 @@ func _perform_primary_task_action() -> void:
 			"CLAIM_FORUM_TASK", _selected_task_id, int(task.get("lock_revision", 0))
 		)
 	elif bool(task.get("owned_by_player", false)) and state == "locked":
-		if task.get("resolution_kind") == "field_recon":
+		if task.get("resolution_kind") == "contact_inquiry":
+			SimulationBridge.operate_campus_task("CHECK_CONTACT_LOCATION", _selected_task_id, int(task.get("lock_revision", 0)))
+		elif task.get("resolution_kind") == "field_recon":
 			SimulationBridge.operate_campus_task("SUBMIT_FIELD_REPORT", _selected_task_id, int(task.get("lock_revision", 0)))
 		elif (task.get("night_site", {}) as Dictionary).get("can_follow_through", false):
 			SimulationBridge.operate_campus_task("RESOLVE_NIGHT_SITE", _selected_task_id, int(task.get("lock_revision", 0)))

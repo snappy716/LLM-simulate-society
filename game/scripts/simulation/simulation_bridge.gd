@@ -558,6 +558,8 @@ func operate_campus_message(action_id: String, target_id: String, text: String =
 	var parameters := {"target_id": target_id}
 	if action_id == "SEND_PHONE_MESSAGE":
 		parameters["text"] = text
+	elif action_id == "REQUEST_CONTACT_CHECK":
+		parameters["location_id"] = text
 	var command := {
 		"command_id": "godot-message-%d-%d" % [Time.get_ticks_usec(), _campus_command_counter],
 		"actor_id": "player",

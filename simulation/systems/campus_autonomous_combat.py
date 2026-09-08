@@ -186,7 +186,7 @@ def autonomous_combat_invariant(state):
                     errors.append("invalid NPC combat execution receipt")
                 seen.add(receipt["battle_id"])
             proof = task.get("completion_evidence")
-            if proof is not None and task.get("resolution_kind") != "field_recon" and not task.get("night_site_id"):
+            if proof is not None and task.get("resolution_kind") not in {"field_recon", "contact_inquiry"} and not task.get("night_site_id"):
                 battle = state.battles.get(proof["battle_id"], {})
                 if (proof.get("kind") != "combat_victory" or battle.get("result") != "victory"
                         or battle.get("situation_id") != task.get("task_id") or task.get("state") != "completed"):

@@ -12,6 +12,7 @@ from simulation.systems.campus_investigation import investigation_view
 from simulation.systems.campus_growth import growth_view
 from simulation.systems.campus_assistance import assistance_view
 from simulation.systems.campus_fieldwork import fieldwork_view
+from simulation.systems.campus_contact_inquiries import contact_inquiry_view, CHECK_POINTS
 from simulation.systems.campus_night_sites import site_view
 from simulation.systems.campus_vitals import recovery_skills, rest_recovery_allowed, recovery_options
 from simulation.systems.campus_schedules import current_schedule_slot
@@ -294,6 +295,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         }
         public_tasks[task_id].update({
             "fieldwork": fieldwork_view(state, "player", task),
+            "contact_inquiry": contact_inquiry_view(state, "player", task),
             "night_site": site_view(state, "player", task),
             "issuer_name": issuer.get("display_name", "校园用户"),
             "assignee_name": assignee.get("display_name", "") if isinstance(assignee, dict) else "",
@@ -558,6 +560,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         ) if state.metadata.get("campus_combat") else {"enabled": False},
         "cognition": cognition_status,
         "messaging": {
+            "check_points": [{"location_id": n, "name": state.places[n]["name"]} for n in CHECK_POINTS if n in state.places],
             "contacts": message_contacts,
             "threads": player_threads,
             "unread_total": sum(

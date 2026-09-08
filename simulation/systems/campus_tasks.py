@@ -607,6 +607,7 @@ def make_task_aware_decision_selector(base_selector, definitions, graph, policy)
             task = None
         if task is not None:
             definition = definitions.get(task.get("activity_id"))
+            contact_task = task.get("resolution_kind") == "contact_inquiry"
             execute_after = task.get("npc_execute_after_phase_index")
             route = graph.shortest_route(
                 str(context.state.population[actor_id].get("current_location_id", "")),
@@ -616,14 +617,14 @@ def make_task_aware_decision_selector(base_selector, definitions, graph, policy)
             )
             if (
                 definition is not None
-                and context.state.clock.phase in definition.allowed_phases
+                and context.state.clock.phase in (task["allowed_phases"] if contact_task else definition.allowed_phases)
                 and isinstance(execute_after, int)
                 and now >= execute_after
                 and int(schedule_plan.get("priority", 0)) < policy.protected_schedule_priority
                 and route is not None
             ):
                 return {
-                    "activity_id": definition.activity_id,
+                    "activity_id": task["action_id"] if contact_task else definition.activity_id,
                     "action_class": definition.action_class,
                     "location_id": task["scene_id"],
                     "priority": 85,
@@ -725,6 +726,11 @@ def complete_assigned_task(context, actor_id: str, plan: Mapping[str, Any]) -> b
     task = context.state.tasks.get(task_id)
     if not isinstance(task, dict) or task.get("assignee_id") != actor_id or task.get("state") != "locked":
         return False
+    from simulation.systems.campus_contact_inquiries import is_contact_task, contact_report_valid
+    if is_contact_task(task):
+        if not plan.get("contact_report") or not contact_report_valid(context.state, actor_id, task):
+            return False
+        task["completion_evidence"] = {"kind": "contact_report", "inquiry_id": task["inquiry_id"]}
     if task.get("forum") == "night":
         from simulation.systems.campus_fieldwork import is_field_task, report_claim_ids
         if is_field_task(task):
@@ -806,7 +812,7 @@ def make_surface_forum_phase_upkeep(graph, templates, policy, base_upkeep):
     return upkeep
 
 
-def make_forum_task_handler(activity_handler):
+def make_forum_task_handler(activity_handler, contact_handler=None):
     def handle(context, command: SimulationCommand) -> TransactionOutcome:
         from simulation.systems.campus_night_sites import captive_site
         if captive_site(context.state, command.actor_id):
@@ -846,6 +852,10 @@ def make_forum_task_handler(activity_handler):
             return TransactionOutcome(True, True, "success", "已查看任务。", commit=True)
 
         if action == "CLAIM_FORUM_TASK":
+            if task.get("resolution_kind") == "contact_inquiry":
+                case = context.state.situations["contact_inquiries"]["cases"][task["inquiry_id"]]
+                if command.actor_id in {case["issuer_id"], case["target_id"]}:
+                    return TransactionOutcome(False, False, "independent_checker_required", "请由独立承接者进行实地核对。")
             if command.actor_id != "player":
                 if command.source != "rule":
                     return TransactionOutcome(False, False, "npc_control_required", "不能替其他角色接取任务。")
@@ -935,6 +945,11 @@ def make_forum_task_handler(activity_handler):
             return TransactionOutcome(True, True, "success", "任务已放弃。", commit=True)
 
         if action == "COMPLETE_FORUM_TASK":
+            if task.get("resolution_kind") == "contact_inquiry":
+                if contact_handler is None:
+                    return TransactionOutcome(False, False, "contact_report_required", "需要真实的实地核对报告。")
+                from dataclasses import replace
+                return contact_handler(context, replace(command, action_id="CHECK_CONTACT_LOCATION"))
             if task.get("assignee_id") != command.actor_id or task.get("state") != "locked":
                 return TransactionOutcome(False, False, "task_not_owned", "你没有持有这个任务。")
             if task.get("forum") == "night":

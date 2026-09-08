@@ -99,6 +99,10 @@ def bind_cognition_identity(state, request):
                 "display_name": actor.get("display_name", request.npc_id)}
     local = dict(request.state)
     if isinstance(request, BoundedDecisionRequest):
+        local["own_contact_concerns"] = [{"target_id": gap["receiver_id"], "status": gap["status"],
+            "attempted_phases": gap["distinct_phases"]}
+            for gap in state.cognition.get("messaging", {}).get("contact_gaps", {}).values()
+            if gap["sender_id"] == request.npc_id and gap["status"] == "awaiting"][-6:]
         local["own_open_disputes"] = [{"case_id": c["case_id"], "status": c["status"],
             "reason": (c.get("source_refs") or [{}])[-1].get("summary", "尚未说清的分歧"),
             "other_id": next(n for n in c["parties"] if n != request.npc_id)}

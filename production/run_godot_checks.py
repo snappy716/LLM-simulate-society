@@ -21,7 +21,7 @@ STANDARD = (
     "inventory_flow", "save_flow", "theme_flow", "inspector_layout", "hud_feedback",
     "operation_feedback", "phone_layout", "social_ui", "startup_flow", "ui_request_lifecycle", "overnight_flow",
 )
-FIXTURES = ("recovery", "trade", "supply", "enemy", "retreat", "pollution", "combat_item", "investigation", "growth", "knowledge", "goals", "assistance", "autonomous", "expedition", "attention", "fieldwork", "sites", "friend", "coordination", "situations", "disputes", "welfare", "commitment", "contact")
+FIXTURES = ("recovery", "trade", "supply", "enemy", "retreat", "pollution", "combat_item", "investigation", "growth", "knowledge", "goals", "assistance", "autonomous", "expedition", "attention", "fieldwork", "sites", "friend", "coordination", "situations", "disputes", "welfare", "commitment", "contact", "inquiry")
 
 
 def unused_port():

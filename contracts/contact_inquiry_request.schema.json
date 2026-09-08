@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Contact inquiry action parameters",
+  "type": "object",
+  "required": ["action_id", "parameters"],
+  "properties": {
+    "action_id": {"enum": ["REQUEST_CONTACT_CHECK", "CHECK_CONTACT_LOCATION"]},
+    "parameters": {"type": "object"}
+  },
+  "allOf": [
+    {"if": {"properties": {"action_id": {"const": "REQUEST_CONTACT_CHECK"}}},
+     "then": {"properties": {"parameters": {"type": "object", "required": ["target_id"],
+       "properties": {"target_id": {"type": "string", "minLength": 1}, "location_id": {"enum": ["south_gate", "campus_security_office"]}},
+       "additionalProperties": false}}}},
+    {"if": {"properties": {"action_id": {"const": "CHECK_CONTACT_LOCATION"}}},
+     "then": {"properties": {"parameters": {"type": "object", "required": ["task_id", "expected_task_revision"],
+       "properties": {"task_id": {"type": "string", "minLength": 1}, "expected_task_revision": {"type": "integer", "minimum": 0}},
+       "additionalProperties": false}}}}
+  ]
+}

@@ -282,11 +282,14 @@ class CampusKernelBridge:
             campus_phase_upkeep,
         )
         from simulation.systems.campus_forum_attention import advance_forum_attention, make_attention_handler, attention_invariant
+        from simulation.systems.campus_contact_inquiries import make_contact_inquiry_handler, advance_contact_inquiries, contact_inquiries_invariant
+        contact_handler = make_contact_inquiry_handler(action_policy, messaging_policy)
         def social_attention(context):
             from simulation.systems.campus_expeditions import form_npc_expeditions
             from simulation.systems.campus_messaging import advance_pending_phone_replies
             summary = advance_forum_attention(context, graph, task_handler)
             summary.update(advance_pending_phone_replies(context, messaging_policy))
+            summary.update(advance_contact_inquiries(context, contact_handler))
             summary.update(form_npc_expeditions(context, graph, party_policy, party_handler, messaging_policy))
             return summary
         def phase_upkeep(context):
@@ -301,6 +304,9 @@ class CampusKernelBridge:
             for _ in range(12):
                 social_attention(context)
         self.kernel = WorldKernel(state, rng=rng_pool)
+        self.kernel.add_invariant(contact_inquiries_invariant)
+        self.kernel.register_handler("REQUEST_CONTACT_CHECK", contact_handler)
+        self.kernel.register_handler("CHECK_CONTACT_LOCATION", contact_handler)
         self.kernel.add_invariant(campus_vitals_invariant)
         from simulation.systems.campus_situations import campus_situations_invariant
         self.kernel.add_invariant(campus_situations_invariant)
@@ -313,6 +319,10 @@ class CampusKernelBridge:
             self.kernel.register_handler(action_id, make_campus_trade_handler())
         def scheduled_activity_handler(context, command):
             task = context.state.tasks.get(command.parameters.get("forum_task_id", ""), {})
+            if task.get("resolution_kind") == "contact_inquiry":
+                from dataclasses import replace
+                return contact_handler(context, replace(command, action_id="CHECK_CONTACT_LOCATION",
+                    parameters={"task_id": task["task_id"], "expected_task_revision": task["lock_revision"]}))
             if task.get("forum") == "night" and command.actor_id != "player":
                 if task.get("resolution_kind") == "field_recon":
                     return autonomous_fieldwork_handler(context, command)
@@ -432,7 +442,7 @@ class CampusKernelBridge:
         self.kernel.add_invariant(attention_invariant)
         for activity_id in sorted(activity_definitions):
             self.kernel.register_handler(activity_id, activity_handler)
-        task_handler = make_forum_task_handler(activity_handler)
+        task_handler = make_forum_task_handler(activity_handler, contact_handler)
         for action_id in (
             "VIEW_FORUM_TASK",
             "CLAIM_FORUM_TASK",
