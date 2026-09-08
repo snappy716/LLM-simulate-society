@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "welfare_request.schema.json",
+  "title": "Voluntary welfare follow-up, no diagnosis or direct healing",
+  "type": "object",
+  "properties": {
+    "action_id": {"const": "CHECK_NPC_WELFARE"},
+    "parameters": {
+      "type": "object", "properties": {"npc_id": {"type": "string", "minLength": 1}},
+      "required": ["npc_id"], "additionalProperties": false
+    }
+  },
+  "required": ["action_id", "parameters"]
+}

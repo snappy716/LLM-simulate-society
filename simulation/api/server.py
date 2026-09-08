@@ -268,6 +268,8 @@ class CampusKernelBridge:
             self.cognition_runtime.publish_status(context.state)
             summary.update(advance_cognition_phase(context, cognition_policy))
             summary.update(advance_assistance_upkeep(context))
+            from simulation.systems.campus_welfare import advance_welfare
+            summary.update(advance_welfare(context, messaging_policy))
             if context.state.cognition.get("daily_plans", {}).get("day") != context.state.clock.day:
                 summary.update(advance_personal_goals(context))
                 summary.update(prepare_daily_plans(context))
@@ -349,6 +351,9 @@ class CampusKernelBridge:
         for action_id in DISPUTE_ACTIONS:
             self.kernel.register_handler(action_id, dispute_handler)
         self.kernel.add_invariant(disputes_invariant)
+        from simulation.systems.campus_welfare import make_welfare_handler, welfare_invariant
+        self.kernel.register_handler("CHECK_NPC_WELFARE", make_welfare_handler(messaging_policy))
+        self.kernel.add_invariant(welfare_invariant)
         self.kernel.add_invariant(personal_goals_invariant)
         for action_id in ASSISTANCE_ACTIONS:
             self.kernel.register_handler(action_id, assistance_handler)

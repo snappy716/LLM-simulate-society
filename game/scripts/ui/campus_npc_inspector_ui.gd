@@ -13,6 +13,9 @@ var _dispute_other: Button
 var _dispute_feedback: Label
 var _dispute_case: Dictionary = {}
 var _dispute_pending := ""
+var _welfare_button: Button
+var _welfare_feedback: Label
+var _welfare_pending := ""
 
 const COLLEGE_NAMES := {
 	"math_physics": "数理学院",
@@ -107,6 +110,7 @@ func _ready() -> void:
 	SimulationBridge.campus_dialogue_completed.connect(_on_dialogue_completed)
 	SimulationBridge.campus_goal_operation_completed.connect(_on_plan_completed)
 	SimulationBridge.campus_investigation_operation_completed.connect(_on_dispute_completed)
+	SimulationBridge.campus_investigation_operation_completed.connect(_on_welfare_completed)
 	SimulationBridge.campus_social_proposal_completed.connect(_on_social_proposal_completed)
 	SimulationBridge.campus_social_proposal_response_completed.connect(_on_incoming_proposal_response_completed)
 
@@ -248,6 +252,13 @@ func _build_ui() -> void:
 	_dispute_feedback = Label.new()
 	_dispute_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_dispute_feedback)
+	_welfare_button = Button.new()
+	_welfare_button.text = "确认近况 / 报平安回访（免费）"
+	_welfare_button.pressed.connect(_check_welfare)
+	column.add_child(_welfare_button)
+	_welfare_feedback = Label.new()
+	_welfare_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(_welfare_feedback)
 	var dialogue_label := Label.new()
 	dialogue_label.text = "当面交谈（免费，可继续追问）"
 	dialogue_label.add_theme_color_override("font_color", Color("8fb7d6"))
@@ -359,6 +370,11 @@ func _show_npc(npc: Node) -> void:
 	_dispute_other.visible = false
 	_dispute_mediate.visible = false
 	_dispute_ask.disabled = not _dispute_pending.is_empty()
+	_welfare_button.disabled = not _welfare_pending.is_empty()
+	_welfare_feedback.text = ""
+	for report in SimulationBridge.campus_snapshot.get("social", {}).get("welfare", []):
+		if report.get("npc_id", "") == _selected_profile.get("npc_id", ""):
+			_welfare_feedback.text = "第 %d 天的近况：%s" % [int(report.day), report.summary]
 	_plan_button.disabled = not _plan_pending_target.is_empty()
 	_chronicle_pages.clear()
 	_chronicle_loading = false
@@ -544,6 +560,23 @@ func _on_plan_completed(success: bool, result: Dictionary) -> void:
 			_details.text = _public_profile_text(_selected_profile)
 
 
+func _check_welfare() -> void:
+	if not _welfare_pending.is_empty() or not _dispute_pending.is_empty() or _selected_profile.is_empty(): return
+	_welfare_pending = String(_selected_profile.npc_id)
+	_welfare_button.disabled = true
+	_welfare_feedback.text = "正在联系；未回应不等于失踪……"
+	SimulationBridge.operate_campus_investigation("CHECK_NPC_WELFARE", {"npc_id": _welfare_pending})
+
+
+func _on_welfare_completed(success: bool, result: Dictionary) -> void:
+	if _welfare_pending.is_empty(): return
+	var target := _welfare_pending
+	_welfare_pending = ""
+	_welfare_button.disabled = false
+	if target != String(_selected_profile.get("npc_id", "")): return
+	_welfare_feedback.text = String(result.get("result", {}).get("message", result.get("error", "近况尚未确认。")))
+
+
 func _ask_dispute() -> void:
 	if not _dispute_pending.is_empty() or _selected_profile.is_empty(): return
 	_send_dispute("ASK_NPC_DISPUTE", {"npc_id": _selected_profile.npc_id})
@@ -562,7 +595,7 @@ func _mediate_dispute() -> void:
 
 
 func _send_dispute(action: String, parameters: Dictionary) -> void:
-	if not _dispute_pending.is_empty(): return
+	if not _dispute_pending.is_empty() or not _welfare_pending.is_empty(): return
 	_dispute_pending = String(_selected_profile.get("npc_id", ""))
 	_dispute_ask.disabled = true
 	_dispute_other.disabled = true
