@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dispute_request.schema.json",
+  "title": "Private dispute interviews and consensual mediation",
+  "type": "object",
+  "properties": {
+    "action_id": {"enum": ["ASK_NPC_DISPUTE", "MEDIATE_DISPUTE"]},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "npc_id": {"type": "string", "minLength": 1},
+        "case_id": {"type": "string", "minLength": 1},
+        "expected_case_revision": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["action_id", "parameters"],
+  "allOf": [
+    {
+      "if": {"properties": {"action_id": {"const": "ASK_NPC_DISPUTE"}}},
+      "then": {"properties": {"parameters": {"required": ["npc_id"]}}},
+      "else": {"properties": {"parameters": {"required": ["case_id", "expected_case_revision"]}}}
+    }
+  ]
+}

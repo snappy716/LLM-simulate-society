@@ -99,6 +99,10 @@ def bind_cognition_identity(state, request):
                 "display_name": actor.get("display_name", request.npc_id)}
     local = dict(request.state)
     if isinstance(request, BoundedDecisionRequest):
+        local["own_open_disputes"] = [{"case_id": c["case_id"], "status": c["status"],
+            "other_id": next(n for n in c["parties"] if n != request.npc_id)}
+            for c in state.situations.get("campus_disputes", {}).get("cases", {}).values()
+            if request.npc_id in c["parties"] and c["status"] in {"open", "easing"}][-6:]
         # Only this actor's own past attempt; never another NPC's private agenda.
         receipts = state.cognition.get("social_agenda_receipts", {})
         own_receipt = receipts.get("actors", {}).get(request.npc_id)

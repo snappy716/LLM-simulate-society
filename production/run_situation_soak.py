@@ -27,6 +27,7 @@ def main():
         row = {"day": state.clock.day, "phase": state.clock.phase,
             "pressure": {k: v["pressure"] for k, v in ledger.get("regions", {}).items()},
             "shortages": dict(Counter(v["status"] for v in ledger.get("shortages", {}).values())),
+            "disputes": dict(Counter(v["status"] for v in state.situations.get("campus_disputes", {}).get("cases", {}).values())),
             "completed_tasks": sum(t["state"] == "completed" for t in state.tasks.values()),
             "model_calls_today": state.cognition["usage"]["calls"]}
         rows.append(row)

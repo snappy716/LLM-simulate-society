@@ -7,6 +7,12 @@ var _dialogue_sent_text := ""
 var _plan_button: Button
 var _plan_feedback: Label
 var _plan_pending_target := ""
+var _dispute_ask: Button
+var _dispute_mediate: Button
+var _dispute_other: Button
+var _dispute_feedback: Label
+var _dispute_case: Dictionary = {}
+var _dispute_pending := ""
 
 const COLLEGE_NAMES := {
 	"math_physics": "数理学院",
@@ -100,6 +106,7 @@ func _ready() -> void:
 	SimulationBridge.campus_phone_message_completed.connect(_on_contact_operation_completed)
 	SimulationBridge.campus_dialogue_completed.connect(_on_dialogue_completed)
 	SimulationBridge.campus_goal_operation_completed.connect(_on_plan_completed)
+	SimulationBridge.campus_investigation_operation_completed.connect(_on_dispute_completed)
 	SimulationBridge.campus_social_proposal_completed.connect(_on_social_proposal_completed)
 	SimulationBridge.campus_social_proposal_response_completed.connect(_on_incoming_proposal_response_completed)
 
@@ -224,6 +231,23 @@ func _build_ui() -> void:
 	_plan_feedback = Label.new()
 	_plan_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_plan_feedback)
+	_dispute_ask = Button.new()
+	_dispute_ask.text = "询问是否有未解的争执（免费）"
+	_dispute_ask.pressed.connect(_ask_dispute)
+	column.add_child(_dispute_ask)
+	_dispute_other = Button.new()
+	_dispute_other.text = "听取另一方意见（需当面或已有联系方式）"
+	_dispute_other.pressed.connect(_ask_dispute_other)
+	_dispute_other.visible = false
+	column.add_child(_dispute_other)
+	_dispute_mediate = Button.new()
+	_dispute_mediate.text = "尝试调解（双方可拒绝）"
+	_dispute_mediate.pressed.connect(_mediate_dispute)
+	_dispute_mediate.visible = false
+	column.add_child(_dispute_mediate)
+	_dispute_feedback = Label.new()
+	_dispute_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(_dispute_feedback)
 	var dialogue_label := Label.new()
 	dialogue_label.text = "当面交谈（免费，可继续追问）"
 	dialogue_label.add_theme_color_override("font_color", Color("8fb7d6"))
@@ -330,6 +354,11 @@ func _show_npc(npc: Node) -> void:
 	_body_scroll.scroll_vertical = 0
 	_selected_profile = npc.call("get_campus_profile")
 	_plan_feedback.text = ""
+	_dispute_case = {}
+	_dispute_feedback.text = ""
+	_dispute_other.visible = false
+	_dispute_mediate.visible = false
+	_dispute_ask.disabled = not _dispute_pending.is_empty()
 	_plan_button.disabled = not _plan_pending_target.is_empty()
 	_chronicle_pages.clear()
 	_chronicle_loading = false
@@ -513,6 +542,54 @@ func _on_plan_completed(success: bool, result: Dictionary) -> void:
 		_selected_profile = (SimulationBridge.campus_snapshot.get("population", {}) as Dictionary).get(target, _selected_profile)
 		if _active_tab == "overview":
 			_details.text = _public_profile_text(_selected_profile)
+
+
+func _ask_dispute() -> void:
+	if not _dispute_pending.is_empty() or _selected_profile.is_empty(): return
+	_send_dispute("ASK_NPC_DISPUTE", {"npc_id": _selected_profile.npc_id})
+
+
+func _ask_dispute_other() -> void:
+	for party in _dispute_case.get("parties", []):
+		if not bool(party.get("heard", false)):
+			_send_dispute("ASK_NPC_DISPUTE", {"npc_id": party.npc_id, "case_id": _dispute_case.case_id})
+			return
+
+
+func _mediate_dispute() -> void:
+	if not _dispute_case.is_empty():
+		_send_dispute("MEDIATE_DISPUTE", {"case_id": _dispute_case.case_id, "expected_case_revision": _dispute_case.revision})
+
+
+func _send_dispute(action: String, parameters: Dictionary) -> void:
+	if not _dispute_pending.is_empty(): return
+	_dispute_pending = String(_selected_profile.get("npc_id", ""))
+	_dispute_ask.disabled = true
+	_dispute_other.disabled = true
+	_dispute_mediate.disabled = true
+	_dispute_feedback.text = "正在确认对方的意见……"
+	SimulationBridge.operate_campus_investigation(action, parameters)
+
+
+func _on_dispute_completed(success: bool, result: Dictionary) -> void:
+	if _dispute_pending.is_empty(): return
+	var target := _dispute_pending
+	_dispute_pending = ""
+	_dispute_ask.disabled = false
+	_dispute_other.disabled = false
+	_dispute_mediate.disabled = false
+	if target != String(_selected_profile.get("npc_id", "")): return
+	var outcome: Dictionary = result.get("result", {})
+	_dispute_feedback.text = String(outcome.get("message", result.get("error", "交谈未完成。")))
+	if success:
+		_dispute_case = outcome.get("payload", {}).get("case", {})
+	var parties: Array = _dispute_case.get("parties", [])
+	var missing: Array = parties.filter(func(p): return not bool(p.get("heard", false)))
+	_dispute_other.visible = not missing.is_empty()
+	if not missing.is_empty():
+		_dispute_other.text = "听取 %s 的意见（需当面或已有联系方式）" % missing[0].get("name", "另一方")
+	_dispute_mediate.visible = not _dispute_case.is_empty()
+	_dispute_mediate.disabled = not missing.is_empty() or not bool(_dispute_case.get("can_attempt", false))
 
 
 func _refresh_awaken_button() -> void:

@@ -344,6 +344,11 @@ class CampusKernelBridge:
         for action_id in GROWTH_ACTIONS:
             self.kernel.register_handler(action_id, growth_handler)
         self.kernel.register_handler("ASK_NPC_PLAN", make_ask_plan_handler())
+        from simulation.systems.campus_disputes import DISPUTE_ACTIONS, make_dispute_handler, disputes_invariant, advance_dispute_mediation
+        dispute_handler = make_dispute_handler(messaging_policy)
+        for action_id in DISPUTE_ACTIONS:
+            self.kernel.register_handler(action_id, dispute_handler)
+        self.kernel.add_invariant(disputes_invariant)
         self.kernel.add_invariant(personal_goals_invariant)
         for action_id in ASSISTANCE_ACTIONS:
             self.kernel.register_handler(action_id, assistance_handler)
@@ -410,6 +415,7 @@ class CampusKernelBridge:
                         ),
                         **advance_assistance_requests(context, messaging_policy, interaction_policy.pair_cooldown_phases),
                         **advance_assistance_deliveries(context, messaging_policy),
+                        **advance_dispute_mediation(context, messaging_policy),
                     },
                 ),
                 on_phase_ending=finish_phase_attention,

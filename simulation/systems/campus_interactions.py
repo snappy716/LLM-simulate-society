@@ -550,6 +550,8 @@ def _resolve_interaction(
     interaction_state["recent"].append(record)
     del interaction_state["recent"][:-policy.max_recent_interactions]
     interaction_state["pair_last_phase"][_pair_key(actor_id, target_id)] = now
+    from simulation.systems.campus_disputes import record_dispute
+    record_dispute(context, record)
     context.emit(
         "NPC_INTERACTION_RESOLVED",
         dialogue_summary,
