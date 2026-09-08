@@ -287,6 +287,8 @@ def _task_score(
         score += 14.0
     score += 1.5 * float(attributes.get("insight", 5))
     score += 1.0 * float(attributes.get("focus", 5))
+    from simulation.systems.campus_regional_choices import situation_task_motivation
+    score += situation_task_motivation(state, actor_id, task)["adjustment"]
     return score
 
 

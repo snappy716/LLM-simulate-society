@@ -204,6 +204,7 @@ def retreat_from_combat(context, battle):
         )
         owner_id = str(task.get("assignee_id", ""))
         task["assignee_id"] = None
+        task.pop("situation_choice", None)
         task["state"] = (
             "open" if state.clock.day <= int(task.get("expires_day", 0)) else "expired"
         )

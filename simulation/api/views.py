@@ -286,6 +286,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
                 "task_id", "template_id", "forum", "world_layer", "issuer_id", "title", "description", "objective",
                 "action_id", "activity_id", "allowed_phases", "scene_id", "execution_region_id",
                 "created_day", "expires_day", "resolution_kind",
+                "pressure_at_creation", "situation_choice",
                 "state", "assignee_id", "lock_revision", "reward", "tags",
                 "required_skill_ids", "required_item_ids", "history",
                 "helper_ids",

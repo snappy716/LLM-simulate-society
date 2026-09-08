@@ -32,6 +32,8 @@ def main():
             "contact_gaps": dict(Counter(v["status"] for v in state.cognition["messaging"].get("contact_gaps", {}).values())),
             "contact_inquiries": dict(Counter(v["status"] for v in state.situations.get("contact_inquiries", {}).get("cases", {}).values())),
             "completed_tasks": sum(t["state"] == "completed" for t in state.tasks.values()),
+            "regional_choices": sum(bool(t.get("situation_choice")) for t in state.tasks.values()),
+            "regional_notice_readers": len(state.cognition.get("regional_awareness", {})),
             "model_calls_today": state.cognition["usage"]["calls"]}
         rows.append(row)
         print(json.dumps(row, ensure_ascii=False), flush=True)

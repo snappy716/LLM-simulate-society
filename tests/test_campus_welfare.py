@@ -29,6 +29,12 @@ def prepare_welfare_fixture(bridge):
     travel_to_location(bridge, "south_gate", victim)
     state = bridge.kernel._state
     task = next(t for t in state.tasks.values() if t.get("night_site_id") and t["state"] in {"open", "viewed", "considering"})
+    # This fixture relocates an existing post below; discard awareness of its
+    # original publication rather than forging an observation of the new place.
+    for regions in state.cognition.get("regional_awareness", {}).values():
+        for region, notice in list(regions.items()):
+            if notice["source_task_id"] == task["task_id"]:
+                del regions[region]
     context = TransactionContext(state, DeterministicRngPool(42), SimulationCommand("welfare-fixture", "player", "ADVANCE_PHASE", state.revision))
     create_night_site(context, task, {"kind": "rescue", "label": "受控滞留点", "initial_state": "待脱离",
         "resolved_state": "已安全脱离", "operation": "护送", "safe_location_id": "hospital_clinic"}, victim)

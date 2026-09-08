@@ -56,6 +56,40 @@ class SituationTests(unittest.TestCase):
         self.assertTrue(situation_forum_view(self.state, True)["night"])
         self.assertNotIn("source_site_ids", str(situation_forum_view(self.state, False)))
 
+    def test_same_region_night_expiries_share_cap_but_retain_all_receipts(self):
+        from collections import defaultdict
+        sites = self.state.situations["night_sites"]["sites"]
+        groups = defaultdict(list)
+        for site_id, site in sites.items():
+            if site["status"] == "expired":
+                groups[(site["region_id"], site["expires_day"])].append(site_id)
+        self.assertTrue(any(len(ids) > 1 for ids in groups.values()))
+        # Re-evaluate the actual previous night's expired sites from empty pressure.
+        ledger = self.state.situations["campus_dynamics"]
+        ledger["regions"] = {}
+        ledger["processed_sites"] = {k: s["status"] for k, s in sites.items() if s["status"] == "resolved"}
+        advance_campus_situations(self.context)
+        for (region, _), ids in groups.items():
+            self.assertEqual(2, ledger["regions"][region]["pressure"])
+            self.assertTrue(all(ledger["processed_sites"][k] == "expired" for k in ids))
+        before = deepcopy(ledger)
+        advance_campus_situations(self.context)
+        self.assertEqual(before, ledger)
+
+    def test_prior_expiry_receipt_prevents_recharge_after_checkpoint(self):
+        sites = self.state.situations["night_sites"]["sites"]
+        ledger = self.state.situations["campus_dynamics"]
+        for site_id, site in sites.items():
+            if site["status"] == "expired" and any(k != site_id and s["status"] == "expired"
+                    and s["region_id"] == site["region_id"] and s["expires_day"] == site["expires_day"] for k, s in sites.items()):
+                ledger["processed_sites"].pop(site_id)
+                before = ledger["regions"][site["region_id"]]["pressure"]
+                advance_campus_situations(self.context)
+                self.assertEqual(before, ledger["regions"][site["region_id"]]["pressure"])
+                break
+        else:
+            self.fail("expected naturally multiple expired sites in one region")
+
     def test_pressure_settles_once_per_day_and_checkpoint_roundtrip(self):
         ledger = self.state.situations["campus_dynamics"]
         before = {r: d["pressure"] for r, d in ledger["regions"].items()}

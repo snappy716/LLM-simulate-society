@@ -839,6 +839,8 @@ def make_forum_task_handler(activity_handler, contact_handler=None):
             if command.actor_id in task["viewer_ids"]:
                 return TransactionOutcome(False, True, "already_viewed", "已经查看过该任务。")
             task["viewer_ids"].append(command.actor_id)
+            from simulation.systems.campus_regional_choices import record_regional_notice
+            record_regional_notice(context.state, command.actor_id, task)
             if task["state"] == "open":
                 task["state"] = "viewed"
             context.emit(
@@ -875,7 +877,16 @@ def make_forum_task_handler(activity_handler, contact_handler=None):
                 return TransactionOutcome(False, False, "actor_has_active_task", "请先完成或放弃当前任务。")
             if command.actor_id not in task["viewer_ids"]:
                 task["viewer_ids"].append(command.actor_id)
+            from simulation.systems.campus_regional_choices import record_regional_notice
+            record_regional_notice(context.state, command.actor_id, task)
             task["assignee_id"] = command.actor_id
+            task.pop("situation_choice", None)
+            if command.actor_id != "player":
+                from simulation.systems.campus_regional_choices import situation_task_motivation
+                motive = situation_task_motivation(context.state, command.actor_id, task)
+                if motive["reason"]:
+                    task["situation_choice"] = {"actor_id": command.actor_id, "pressure": motive["pressure"], "reason": motive["reason"]}
+                    task["history"].append(_history(context.state.clock.day, context.state.clock.phase, "choice_reason", motive["reason"]))
             task["state"] = "locked"
             task["considering_ids"] = []
             task["lock_revision"] = expected + 1
@@ -915,6 +926,7 @@ def make_forum_task_handler(activity_handler, contact_handler=None):
                     "请先取消该任务对应的战斗准备。",
                 )
             task["assignee_id"] = None
+            task.pop("situation_choice", None)
             task["state"] = "open" if context.state.clock.day <= int(task["expires_day"]) else "expired"
             task["lock_revision"] = int(task.get("lock_revision", 0)) + 1
             actor.pop("active_forum_task_id", None)

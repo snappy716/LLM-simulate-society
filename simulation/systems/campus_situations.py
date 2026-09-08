@@ -6,6 +6,7 @@ resolved/expired site twice; historical evidence is retained in world events.
 from copy import deepcopy
 
 MAX_PRESSURE = 12
+MAX_EXPIRY_GROWTH_PER_REGION_NIGHT = 2
 
 
 def _ledger(state):
@@ -61,7 +62,14 @@ def advance_campus_situations(context):
         region = site["region_id"]
         record = ledger["regions"].setdefault(region, {"pressure": 0, "source_site_ids": []})
         before = record["pressure"]
-        record["pressure"] = max(0, min(MAX_PRESSURE, before + (2 if site["status"] == "expired" else -3)))
+        # Multiple failed jobs describe one regional night's unresolved danger,
+        # not unlimited independent regional escalations. Existing receipts also
+        # cover old saves: never charge the same region/night again after load.
+        already_escalated = any(other_id != site_id and status == "expired"
+            and sites[other_id]["region_id"] == region and sites[other_id]["expires_day"] == site["expires_day"]
+            for other_id, status in ledger["processed_sites"].items())
+        delta = (0 if already_escalated else MAX_EXPIRY_GROWTH_PER_REGION_NIGHT) if site["status"] == "expired" else -3
+        record["pressure"] = max(0, min(MAX_PRESSURE, before + delta))
         record["source_site_ids"] = [*record["source_site_ids"], site_id][-12:]
         actors = [(site.get("receipt") or {}).get("actor_id")]
         _record(context, ledger, "night_pressure", region, before, record["pressure"], site_id,
@@ -112,7 +120,7 @@ def situation_forum_view(state, night_unlocked):
         for region, entry in ledger.get("regions", {}).items():
             pressure = entry["pressure"]
             night.append({"id": region, "pressure": pressure, "exposure_bonus": pressure // 4,
-                "summary": f"{state.places[region]['name']} · 异常压力 {pressure}/{MAX_PRESSURE}；夜间额外暴露 +{pressure // 4}",
+                "summary": f"{state.places[region]['name']} · 异常压力 {pressure}/{MAX_PRESSURE}；夜间额外暴露 +{pressure // 4}（同区域每夜未处理现场合计增压至多 2，实际处置减压 3）",
                 "source_site_ids": list(entry["source_site_ids"]),
                 "history": [deepcopy(row) for row in ledger.get("recent", ())
                             if row["kind"] == "night_pressure" and row["subject_id"] == region][-8:]})

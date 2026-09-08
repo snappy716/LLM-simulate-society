@@ -99,6 +99,10 @@ def bind_cognition_identity(state, request):
                 "display_name": actor.get("display_name", request.npc_id)}
     local = dict(request.state)
     if isinstance(request, BoundedDecisionRequest):
+        # Dated, actually read publications, never live unseen regional state.
+        local["own_read_regional_notices"] = [dict(row) for row in sorted(
+            state.cognition.get("regional_awareness", {}).get(request.npc_id, {}).values(),
+            key=lambda row: (row["published_day"], row["region_id"]))[-6:]]
         local["own_contact_concerns"] = [{"target_id": gap["receiver_id"], "status": gap["status"],
             "attempted_phases": gap["distinct_phases"]}
             for gap in state.cognition.get("messaging", {}).get("contact_gaps", {}).values()

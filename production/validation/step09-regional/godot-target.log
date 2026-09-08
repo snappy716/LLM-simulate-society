@@ -1,0 +1,4 @@
+GODOT_CHECK_LOGS /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-yvn3972a
+PASS situations: CAMPUS_SITUATIONS_FLOW_OK dual_forum_real_buttons actual_night_unlock natural_pressure actual_npc_choice_reason explicit_stock secret_filter no_api
+PASS inquiry: CAMPUS_INQUIRY_FLOW_OK actual_phone_publish actual_forum_claim private_target physical_report real_action_cost no_fake_missing explicit_incident no_api
+GODOT_CHECKS_OK 2 flows

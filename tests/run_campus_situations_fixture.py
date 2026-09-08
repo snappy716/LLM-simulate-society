@@ -14,7 +14,10 @@ def main():
     bridge = SimulationBridge()
     for _ in range(6):
         assert command(bridge.campus, "ADVANCE_PHASE")["ok"]
+    for _ in range(12):
+        assert command(bridge.campus, "ADVANCE_SOCIAL_PULSE")["ok"]
     state = bridge.campus.kernel._state
+    assert any(t.get("situation_choice") for t in state.tasks.values())
     shop = next(iter(state.inventories["shops"].values()))
     shop["quantities"].pop(next(iter(shop["quantities"])))
     advance_campus_situations(context_for(state))

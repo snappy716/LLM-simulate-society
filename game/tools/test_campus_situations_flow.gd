@@ -30,7 +30,21 @@ func _run() -> void:
 	phone.get("_forum_night_button").pressed.emit()
 	assert(phone.get("_forum_situations").text.contains("异常压力"))
 	assert(phone.get("_forum_situations").text.contains("额外暴露"))
+	var selected := ""
+	for task in bridge.campus_snapshot.tasks.values():
+		if task.get("situation_choice") is Dictionary and not task.situation_choice.is_empty():
+			selected = task.task_id
+			break
+	assert(not selected.is_empty())
+	phone.call("_open_task_detail", selected)
+	for _attempt in range(400):
+		if not bridge.call("is_campus_busy"): break
+		await create_timer(0.05).timeout
+	assert(not bridge.call("is_campus_busy"))
+	assert(phone.get("_forum_detail").text.contains("承接者留言"))
+	assert(phone.get("_forum_detail").text.contains("已读公告"))
+	assert(not phone.get("_forum_detail").text.contains("risk_tolerance"))
 	phone.get("_forum_surface_button").pressed.emit()
 	assert(not phone.get("_forum_situations").text.contains("异常压力"))
-	print("CAMPUS_SITUATIONS_FLOW_OK dual_forum_real_buttons actual_night_unlock natural_pressure explicit_stock secret_filter no_api")
+	print("CAMPUS_SITUATIONS_FLOW_OK dual_forum_real_buttons actual_night_unlock natural_pressure actual_npc_choice_reason explicit_stock secret_filter no_api")
 	quit(0)

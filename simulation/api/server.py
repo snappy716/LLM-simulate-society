@@ -310,6 +310,8 @@ class CampusKernelBridge:
         self.kernel.add_invariant(campus_vitals_invariant)
         from simulation.systems.campus_situations import campus_situations_invariant
         self.kernel.add_invariant(campus_situations_invariant)
+        from simulation.systems.campus_regional_choices import regional_awareness_invariant
+        self.kernel.add_invariant(regional_awareness_invariant)
         self.kernel.register_handler("USE_RECOVERY_SKILL", make_field_recovery_handler())
         self.kernel.add_invariant(campus_inventory_invariant)
         inventory_handler = make_campus_inventory_handler()

@@ -55,6 +55,12 @@ class NightSitesTests(unittest.TestCase):
                           and not party_for_actor(state, key) and not captive_site(state, key))
             travel_to_location(self.bridge, "south_gate", victim)
             state, rng = self.bridge.kernel.capture_checkpoint()
+            # Controlled relocation invalidates readings of the old post; do
+            # not forge knowledge of the fixture's new incident location.
+            for regions in state.cognition.get("regional_awareness", {}).values():
+                for region, notice in list(regions.items()):
+                    if notice["source_task_id"] == self.task_id:
+                        del regions[region]
             command = SimulationCommand("controlled-incident", "player", "ADVANCE_PHASE", state.revision,
                                         issued_day=state.clock.day, issued_phase=state.clock.phase)
             context = TransactionContext(state, rng, command)

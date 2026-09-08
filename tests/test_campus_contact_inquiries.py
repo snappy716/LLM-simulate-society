@@ -94,6 +94,36 @@ class ContactInquiryTests(unittest.TestCase):
         self.assertFalse(complete_assigned_task(context, "player", {"task_id": self.task_id}))
         self.assertFalse(complete_assigned_task(context, "player", {"task_id": self.task_id, "contact_report": True}))
 
+    def test_attention_excludes_subject_and_releases_stale_self_claim(self):
+        from unittest.mock import patch
+        from simulation.systems.campus_forum_attention import advance_forum_attention, _ledger
+        from simulation.systems.transactions import TransactionOutcome
+        from simulation.systems import load_campus_location_graph
+        # Isolate the subject's attention to test the eligibility boundary; the
+        # actual incident/post remains real, not a fabricated successful search.
+        state = self.state
+        ledger = _ledger(state)
+        ledger["actors"] = {self.target: {"stage": 0, "due": 1, "order": 0, "task_id": "", "task_revision": 0}}
+        context = TransactionContext(state, DeterministicRngPool(42), SimulationCommand("attention-subject", "player", "ADVANCE_SOCIAL_PULSE", state.revision))
+        attempts = []
+        def handler(context, command):
+            attempts.append((command.action_id, command.parameters["task_id"]))
+            return TransactionOutcome(False, False, "independent_checker_required", "独立承接者") if command.action_id == "CLAIM_FORUM_TASK" else TransactionOutcome(True, True, "success", "已查看")
+        graph = load_campus_location_graph(self.bridge.registry)
+        with patch("simulation.systems.campus_forum_attention._eligible", side_effect=lambda s, actor: actor == self.target):
+            advance_forum_attention(context, graph, handler)
+            self.assertNotIn(("VIEW_FORUM_TASK", self.task_id), attempts)
+            ledger["actors"][self.target].update(stage=2, due=1, task_id=self.task_id, task_revision=0)
+            advance_forum_attention(context, graph, handler)
+            self.assertEqual(0, ledger["actors"][self.target]["stage"])
+            self.assertIn(("CLAIM_FORUM_TASK", self.task_id), attempts)
+        self.assertIsNone(state.tasks[self.task_id]["assignee_id"])
+
+    def test_incapacitated_npc_does_not_browse_or_claim(self):
+        from simulation.systems.campus_forum_attention import _eligible
+        self.state.population[self.issuer]["vitals"]["health"] = 0
+        self.assertFalse(_eligible(self.state, self.issuer))
+
     def test_repeated_request_dedup_and_follow_up_only_other_public_point(self):
         before = len(self.state.tasks)
         repeated = as_npc(self.bridge, self.issuer, "REQUEST_CONTACT_CHECK", {"target_id": self.target, "location_id": "campus_security_office"})

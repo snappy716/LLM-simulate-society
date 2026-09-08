@@ -1328,6 +1328,9 @@ func _refresh_forum_detail() -> void:
 	var requires_night: bool = String(task.get("forum", "surface")) == "night"
 	var fieldwork: Dictionary = task.get("fieldwork", {})
 	var inquiry: Dictionary = task.get("contact_inquiry", {})
+	var regional_choice: Dictionary = task.get("situation_choice", {}) if task.get("situation_choice") is Dictionary else {}
+	if not regional_choice.is_empty() and regional_choice.get("actor_id") == task.get("assignee_id"):
+		_forum_detail.text += "\n\n[b]承接者留言[/b]\n%s：%s" % [task.get("assignee_name", "校园用户"), regional_choice.get("reason", "")]
 	if not inquiry.is_empty():
 		var inquiry_status: String = {"open": "待实地核对", "observed": "已在指定点见到", "not_observed": "此次实地未见", "expired": "委托到期", "withdrawn": "联系恢复，已撤回"}.get(String(inquiry.get("status", "")), "待确认")
 		_forum_detail.text += "\n\n[b]公共地点寻访[/b]\n%s\n状态：%s\n%s\n%s" % [inquiry.get("rule_note", ""), inquiry_status, inquiry.get("target_name", "承接后可查看具体对象"), inquiry.get("report", {}).get("summary", "") if inquiry.get("report") is Dictionary else ""]

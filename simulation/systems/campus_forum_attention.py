@@ -26,7 +26,7 @@ def _ledger(state):
 
 def _eligible(state, actor_id):
     from simulation.systems.campus_night_sites import captive_site
-    if captive_site(state, actor_id):
+    if captive_site(state, actor_id) or state.population[actor_id].get("vitals", {}).get("health", 1) <= 0:
         return False
     if (actor_id == "player" or _actor_has_active_task(state, actor_id) or has_upcoming_departure(state, actor_id)
             or recovering_from_defeat(state, actor_id) or battle_locked(state, actor_id)
@@ -79,6 +79,8 @@ def advance_forum_attention(context, graph, task_handler):
             actor = state.population[actor_id]
             tasks = [task for task in state.tasks.values() if task.get("forum") == layer
                      and task.get("state") in AVAILABLE_STATES and task.get("issuer_id") != actor_id
+                     and (task.get("resolution_kind") != "contact_inquiry" or
+                          state.situations["contact_inquiries"]["cases"][task["inquiry_id"]]["target_id"] != actor_id)
                      and task.get("expires_day", state.clock.day) >= state.clock.day]
             def issue(action, task):
                 return task_handler(context, replace(context.command,
@@ -125,7 +127,7 @@ def advance_forum_attention(context, graph, task_handler):
                     if outcome.success:
                         summary["attention_claim_count"] += 1
                         summary["night_npc_claim_count" if layer == "night" else "forum_npc_claim_count"] += 1
-                    elif outcome.code not in {"task_revision_conflict", "task_unavailable", "actor_has_active_task", "npc_commitment_conflict", "night_layer_required"}:
+                    elif outcome.code not in {"task_revision_conflict", "task_unavailable", "actor_has_active_task", "npc_commitment_conflict", "night_layer_required", "independent_checker_required"}:
                         raise RuntimeError("unexpected NPC claim refusal: " + outcome.code)
                 _release(state, actor_id, record)
             # Attention cadence depends on rest and interest, not actor ID order.
