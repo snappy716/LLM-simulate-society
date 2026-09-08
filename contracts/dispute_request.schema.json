@@ -4,7 +4,7 @@
   "title": "Private dispute interviews and consensual mediation",
   "type": "object",
   "properties": {
-    "action_id": {"enum": ["ASK_NPC_DISPUTE", "MEDIATE_DISPUTE"]},
+    "action_id": {"enum": ["ASK_NPC_DISPUTE", "REVIEW_DISPUTE_RECORD", "MEDIATE_DISPUTE"]},
     "parameters": {
       "type": "object",
       "properties": {
@@ -20,7 +20,11 @@
     {
       "if": {"properties": {"action_id": {"const": "ASK_NPC_DISPUTE"}}},
       "then": {"properties": {"parameters": {"required": ["npc_id"]}}},
-      "else": {"properties": {"parameters": {"required": ["case_id", "expected_case_revision"]}}}
+      "else": {"properties": {"parameters": {"required": ["case_id"]}}}
+    },
+    {
+      "if": {"properties": {"action_id": {"const": "MEDIATE_DISPUTE"}}},
+      "then": {"properties": {"parameters": {"required": ["expected_case_revision"]}}}
     }
   ]
 }

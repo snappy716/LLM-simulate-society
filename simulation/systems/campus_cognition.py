@@ -100,6 +100,7 @@ def bind_cognition_identity(state, request):
     local = dict(request.state)
     if isinstance(request, BoundedDecisionRequest):
         local["own_open_disputes"] = [{"case_id": c["case_id"], "status": c["status"],
+            "reason": (c.get("source_refs") or [{}])[-1].get("summary", "尚未说清的分歧"),
             "other_id": next(n for n in c["parties"] if n != request.npc_id)}
             for c in state.situations.get("campus_disputes", {}).get("cases", {}).values()
             if request.npc_id in c["parties"] and c["status"] in {"open", "easing"}][-6:]

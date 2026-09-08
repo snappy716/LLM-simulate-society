@@ -13,6 +13,7 @@ var _dispute_other: Button
 var _dispute_feedback: Label
 var _dispute_case: Dictionary = {}
 var _dispute_pending := ""
+var _dispute_review: Button
 var _welfare_button: Button
 var _welfare_feedback: Label
 var _welfare_pending := ""
@@ -244,6 +245,11 @@ func _build_ui() -> void:
 	_dispute_other.pressed.connect(_ask_dispute_other)
 	_dispute_other.visible = false
 	column.add_child(_dispute_other)
+	_dispute_review = Button.new()
+	_dispute_review.text = "核对公开委托记录（免费）"
+	_dispute_review.visible = false
+	_dispute_review.pressed.connect(func(): _send_dispute("REVIEW_DISPUTE_RECORD", {"case_id": _dispute_case.case_id}))
+	column.add_child(_dispute_review)
 	_dispute_mediate = Button.new()
 	_dispute_mediate.text = "尝试调解（双方可拒绝）"
 	_dispute_mediate.pressed.connect(_mediate_dispute)
@@ -370,6 +376,7 @@ func _show_npc(npc: Node) -> void:
 	_dispute_other.visible = false
 	_dispute_mediate.visible = false
 	_dispute_ask.disabled = not _dispute_pending.is_empty()
+	_dispute_review.visible = false
 	_welfare_button.disabled = not _welfare_pending.is_empty()
 	_welfare_feedback.text = ""
 	for report in SimulationBridge.campus_snapshot.get("social", {}).get("welfare", []):
@@ -599,6 +606,7 @@ func _send_dispute(action: String, parameters: Dictionary) -> void:
 	_dispute_pending = String(_selected_profile.get("npc_id", ""))
 	_dispute_ask.disabled = true
 	_dispute_other.disabled = true
+	_dispute_review.disabled = true
 	_dispute_mediate.disabled = true
 	_dispute_feedback.text = "正在确认对方的意见……"
 	SimulationBridge.operate_campus_investigation(action, parameters)
@@ -610,6 +618,7 @@ func _on_dispute_completed(success: bool, result: Dictionary) -> void:
 	_dispute_pending = ""
 	_dispute_ask.disabled = false
 	_dispute_other.disabled = false
+	_dispute_review.disabled = false
 	_dispute_mediate.disabled = false
 	if target != String(_selected_profile.get("npc_id", "")): return
 	var outcome: Dictionary = result.get("result", {})
@@ -622,7 +631,9 @@ func _on_dispute_completed(success: bool, result: Dictionary) -> void:
 	if not missing.is_empty():
 		_dispute_other.text = "听取 %s 的意见（需当面或已有联系方式）" % missing[0].get("name", "另一方")
 	_dispute_mediate.visible = not _dispute_case.is_empty()
-	_dispute_mediate.disabled = not missing.is_empty() or not bool(_dispute_case.get("can_attempt", false))
+	var needs_record := bool(_dispute_case.get("record_required", false)) and not bool(_dispute_case.get("record_reviewed", false))
+	_dispute_review.visible = needs_record
+	_dispute_mediate.disabled = not missing.is_empty() or needs_record or not bool(_dispute_case.get("can_attempt", false))
 
 
 func _refresh_awaken_button() -> void:

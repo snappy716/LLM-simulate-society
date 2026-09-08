@@ -1,0 +1,664 @@
+{
+  "seed": 7,
+  "days": 7,
+  "phases": [
+    {
+      "day": 1,
+      "phase": "afternoon",
+      "pressure": {},
+      "shortages": {},
+      "disputes": {},
+      "welfare": {},
+      "completed_tasks": 10,
+      "model_calls_today": 0
+    },
+    {
+      "day": 1,
+      "phase": "evening",
+      "pressure": {},
+      "shortages": {
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "unconfirmed": 1
+      },
+      "completed_tasks": 11,
+      "model_calls_today": 0
+    },
+    {
+      "day": 1,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 0,
+        "research_innovation_region": 0,
+        "west_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "unconfirmed": 1
+      },
+      "completed_tasks": 19,
+      "model_calls_today": 0
+    },
+    {
+      "day": 2,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 4,
+        "research_innovation_region": 0,
+        "west_dorm_region": 2,
+        "south_gate_region": 2,
+        "service_logistics_region": 8,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "needs_care": 1
+      },
+      "completed_tasks": 19,
+      "model_calls_today": 0
+    },
+    {
+      "day": 2,
+      "phase": "afternoon",
+      "pressure": {
+        "sports_health_region": 4,
+        "research_innovation_region": 0,
+        "west_dorm_region": 2,
+        "south_gate_region": 2,
+        "service_logistics_region": 8,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "needs_care": 1
+      },
+      "completed_tasks": 32,
+      "model_calls_today": 0
+    },
+    {
+      "day": 2,
+      "phase": "evening",
+      "pressure": {
+        "sports_health_region": 4,
+        "research_innovation_region": 0,
+        "west_dorm_region": 2,
+        "south_gate_region": 2,
+        "service_logistics_region": 8,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "needs_care": 1,
+        "unconfirmed": 1
+      },
+      "completed_tasks": 34,
+      "model_calls_today": 0
+    },
+    {
+      "day": 2,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 4,
+        "research_innovation_region": 0,
+        "west_dorm_region": 0,
+        "south_gate_region": 2,
+        "service_logistics_region": 2,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "needs_care": 1,
+        "unconfirmed": 1
+      },
+      "completed_tasks": 44,
+      "model_calls_today": 0
+    },
+    {
+      "day": 3,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 9,
+        "research_innovation_region": 0,
+        "west_dorm_region": 2,
+        "south_gate_region": 3,
+        "service_logistics_region": 5,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "resolved": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 1,
+        "needs_care": 1
+      },
+      "completed_tasks": 44,
+      "model_calls_today": 0
+    },
+    {
+      "day": 3,
+      "phase": "afternoon",
+      "pressure": {
+        "sports_health_region": 9,
+        "research_innovation_region": 0,
+        "west_dorm_region": 2,
+        "south_gate_region": 3,
+        "service_logistics_region": 5,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "resolved": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 1,
+        "needs_care": 1
+      },
+      "completed_tasks": 59,
+      "model_calls_today": 0
+    },
+    {
+      "day": 3,
+      "phase": "evening",
+      "pressure": {
+        "sports_health_region": 9,
+        "research_innovation_region": 0,
+        "west_dorm_region": 2,
+        "south_gate_region": 3,
+        "service_logistics_region": 5,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "resolved": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 1,
+        "needs_care": 1,
+        "unconfirmed": 1
+      },
+      "completed_tasks": 59,
+      "model_calls_today": 0
+    },
+    {
+      "day": 3,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 6,
+        "research_innovation_region": 0,
+        "west_dorm_region": 2,
+        "south_gate_region": 3,
+        "service_logistics_region": 5,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "resolved": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 1,
+        "needs_care": 1,
+        "unconfirmed": 1
+      },
+      "completed_tasks": 64,
+      "model_calls_today": 0
+    },
+    {
+      "day": 4,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 12,
+        "research_innovation_region": 2,
+        "west_dorm_region": 1,
+        "south_gate_region": 4,
+        "service_logistics_region": 12,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 2,
+        "needs_care": 1
+      },
+      "completed_tasks": 64,
+      "model_calls_today": 0
+    },
+    {
+      "day": 4,
+      "phase": "afternoon",
+      "pressure": {
+        "sports_health_region": 12,
+        "research_innovation_region": 2,
+        "west_dorm_region": 1,
+        "south_gate_region": 4,
+        "service_logistics_region": 12,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 2,
+        "needs_care": 1
+      },
+      "completed_tasks": 79,
+      "model_calls_today": 0
+    },
+    {
+      "day": 4,
+      "phase": "evening",
+      "pressure": {
+        "sports_health_region": 12,
+        "research_innovation_region": 2,
+        "west_dorm_region": 1,
+        "south_gate_region": 4,
+        "service_logistics_region": 12,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 2,
+        "needs_care": 1
+      },
+      "completed_tasks": 80,
+      "model_calls_today": 0
+    },
+    {
+      "day": 4,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 9,
+        "research_innovation_region": 2,
+        "west_dorm_region": 0,
+        "south_gate_region": 4,
+        "service_logistics_region": 9,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 2,
+        "needs_care": 1
+      },
+      "completed_tasks": 88,
+      "model_calls_today": 0
+    },
+    {
+      "day": 5,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 12,
+        "research_innovation_region": 3,
+        "west_dorm_region": 0,
+        "south_gate_region": 3,
+        "service_logistics_region": 12,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "shortage": 1,
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 3
+      },
+      "completed_tasks": 88,
+      "model_calls_today": 0
+    },
+    {
+      "day": 5,
+      "phase": "afternoon",
+      "pressure": {
+        "sports_health_region": 12,
+        "research_innovation_region": 3,
+        "west_dorm_region": 0,
+        "south_gate_region": 3,
+        "service_logistics_region": 12,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "shortage": 1,
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 3
+      },
+      "completed_tasks": 104,
+      "model_calls_today": 0
+    },
+    {
+      "day": 5,
+      "phase": "evening",
+      "pressure": {
+        "sports_health_region": 12,
+        "research_innovation_region": 3,
+        "west_dorm_region": 0,
+        "south_gate_region": 3,
+        "service_logistics_region": 12,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "shortage": 1,
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 3,
+        "unconfirmed": 1
+      },
+      "completed_tasks": 105,
+      "model_calls_today": 0
+    },
+    {
+      "day": 5,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 6,
+        "research_innovation_region": 3,
+        "west_dorm_region": 0,
+        "south_gate_region": 0,
+        "service_logistics_region": 6,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "shortage": 1,
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 3,
+        "unconfirmed": 1
+      },
+      "completed_tasks": 111,
+      "model_calls_today": 0
+    },
+    {
+      "day": 6,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 11,
+        "research_innovation_region": 4,
+        "west_dorm_region": 4,
+        "south_gate_region": 0,
+        "service_logistics_region": 12,
+        "east_dorm_region": 3
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4
+      },
+      "completed_tasks": 111,
+      "model_calls_today": 0
+    },
+    {
+      "day": 6,
+      "phase": "afternoon",
+      "pressure": {
+        "sports_health_region": 11,
+        "research_innovation_region": 4,
+        "west_dorm_region": 4,
+        "south_gate_region": 0,
+        "service_logistics_region": 12,
+        "east_dorm_region": 3
+      },
+      "shortages": {
+        "watch": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4
+      },
+      "completed_tasks": 127,
+      "model_calls_today": 0
+    },
+    {
+      "day": 6,
+      "phase": "evening",
+      "pressure": {
+        "sports_health_region": 11,
+        "research_innovation_region": 4,
+        "west_dorm_region": 4,
+        "south_gate_region": 0,
+        "service_logistics_region": 12,
+        "east_dorm_region": 3
+      },
+      "shortages": {
+        "watch": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4
+      },
+      "completed_tasks": 127,
+      "model_calls_today": 0
+    },
+    {
+      "day": 6,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 8,
+        "research_innovation_region": 0,
+        "west_dorm_region": 4,
+        "south_gate_region": 0,
+        "service_logistics_region": 12,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4
+      },
+      "completed_tasks": 136,
+      "model_calls_today": 0
+    },
+    {
+      "day": 7,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 11,
+        "research_innovation_region": 0,
+        "west_dorm_region": 5,
+        "south_gate_region": 0,
+        "service_logistics_region": 12,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4
+      },
+      "completed_tasks": 136,
+      "model_calls_today": 0
+    },
+    {
+      "day": 7,
+      "phase": "afternoon",
+      "pressure": {
+        "sports_health_region": 11,
+        "research_innovation_region": 0,
+        "west_dorm_region": 5,
+        "south_gate_region": 0,
+        "service_logistics_region": 12,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4
+      },
+      "completed_tasks": 152,
+      "model_calls_today": 0
+    },
+    {
+      "day": 7,
+      "phase": "evening",
+      "pressure": {
+        "sports_health_region": 11,
+        "research_innovation_region": 0,
+        "west_dorm_region": 5,
+        "south_gate_region": 0,
+        "service_logistics_region": 12,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4
+      },
+      "completed_tasks": 152,
+      "model_calls_today": 0
+    },
+    {
+      "day": 7,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 0,
+        "west_dorm_region": 2,
+        "south_gate_region": 0,
+        "service_logistics_region": 12,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4
+      },
+      "completed_tasks": 163,
+      "model_calls_today": 0
+    },
+    {
+      "day": 8,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 5,
+        "research_innovation_region": 0,
+        "west_dorm_region": 1,
+        "south_gate_region": 0,
+        "service_logistics_region": 12,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4
+      },
+      "completed_tasks": 163,
+      "model_calls_today": 0
+    }
+  ],
+  "events": {
+    "FORUM_TASK_VIEWED": 1259,
+    "FORUM_TASK_CLAIMED": 168,
+    "CAMPUS_ITEM_ACTION_COMPLETED": 2115,
+    "NPC_ROUTINE_ACTION_COMPLETED": 1793,
+    "ACTOR_LOCATION_CHANGED": 22668,
+    "NPC_COMBAT_SUPPLY_PREPARED": 23,
+    "NPC_DAILY_PLANS_PREPARED": 8,
+    "NPC_DECISION_MADE": 5590,
+    "CAMPUS_ACTIVITY_EFFECT_APPLIED": 5023,
+    "NPC_ACTIVITY_COMPLETED": 5590,
+    "FORUM_TASK_COMPLETED": 163,
+    "CAMPUS_TRADE_OFFERED": 170,
+    "CAMPUS_TRADE_SETTLED": 170,
+    "NPC_INTERACTION_RESOLVED": 310,
+    "WORLD_PHASE_ADVANCED": 28,
+    "FORUM_TASK_PUBLISHED": 168,
+    "NPC_STRANDED_IN_NIGHT": 4,
+    "NIGHT_WORLD_ENTERED": 65,
+    "CLUB_ACTIVITY_ATTENDED": 78,
+    "CAMPUS_SITUATION_CHANGED": 136,
+    "CAMPUS_SUPPLY_ORDERED": 10,
+    "NPC_INFORMATION_SHARED": 125,
+    "PHONE_MESSAGE_SENT": 228,
+    "NPC_SOCIAL_PROPOSAL_CREATED": 11,
+    "PARTY_INVITATION_DECLINED": 53,
+    "PARTY_MEMBER_COMMITTED": 2,
+    "PARTY_DEPARTURE_RESERVED": 2,
+    "NPC_EXPEDITION_UPDATED": 6,
+    "CAMPUS_INVESTIGATION_COMPLETED": 25,
+    "FIELD_REPORT_SUBMITTED": 25,
+    "NPC_DEPARTURE_WAITING": 2,
+    "BATTLE_PREPARATION_STARTED": 32,
+    "COMBAT_CHARACTER_DEPLOYED": 34,
+    "BATTLE_DEPLOYMENT_CONFIRMED": 32,
+    "NIGHT_COMBAT_ENTRY_ACCOUNTED": 32,
+    "COMBAT_ROUND_STARTED": 158,
+    "COMBAT_ENEMY_INTENTS": 158,
+    "COMBAT_CARD_PLAYED": 229,
+    "COMBAT_BASE_COMMAND_USED": 127,
+    "COMBAT_ENEMY_ACTION": 126,
+    "NIGHT_SITE_RESOLVED": 32,
+    "COMBAT_VICTORY": 32,
+    "NPC_NIGHT_TASK_EXECUTED": 32,
+    "CAMPUS_SUPPLY_DELIVERED": 9,
+    "NIGHT_RESCUE_MISSED": 3,
+    "NIGHT_WORLD_AUTO_EXITED": 65,
+    "FORUM_TASK_EXPIRED": 83,
+    "CLUB_MEMBER_RECRUITED": 34,
+    "CAMPUS_WELFARE_REPORTED": 7,
+    "NPC_PERSONAL_GOAL_CREATED": 41,
+    "CAMPUS_GROWTH_COMPLETED": 71,
+    "NPC_PERSONAL_GOAL_PROGRESS": 71,
+    "CAMPUS_REST_RECOVERY": 16,
+    "KNOWLEDGE_INSIGHT_USED": 4
+  },
+  "site_outcomes": {
+    "expired": 65,
+    "resolved": 32
+  },
+  "npc_resolved_sites": 32,
+  "player_participation": false,
+  "api_calls": 0
+}

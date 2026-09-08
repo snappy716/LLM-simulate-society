@@ -574,6 +574,8 @@ def advance_surface_forum(
                 _history(context.state.clock.day, context.state.clock.phase, "expired", "任务已超过截止日期。")
             )
             _settle_origin_hook(context.state, task, "expired")
+            from simulation.systems.campus_disputes import record_failed_commitment
+            record_failed_commitment(context, task)
             context.emit(
                 "FORUM_TASK_EXPIRED",
                 f"《{task['title']}》已超过截止日期。",

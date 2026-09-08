@@ -11,7 +11,7 @@ from simulation.systems.campus_social import DEFAULT_RELATIONSHIP, adjust_relati
 from simulation.systems.campus_vitals import actor_layer, battle_locked
 from simulation.systems.transactions import TransactionOutcome
 
-DISPUTE_ACTIONS = ("ASK_NPC_DISPUTE", "MEDIATE_DISPUTE")
+DISPUTE_ACTIONS = ("ASK_NPC_DISPUTE", "REVIEW_DISPUTE_RECORD", "MEDIATE_DISPUTE")
 OPEN = {"open", "easing"}
 
 
@@ -34,8 +34,35 @@ def record_dispute(context, interaction):
     if (interaction["intent_id"] != "confront" or interaction["outcome"] != "rejected"
             or "player" in (first, second) or any(actor_layer(state, n) != "surface" for n in (first, second))):
         return
-    ledger = _ledger(state)
-    if any(interaction["interaction_id"] in c["source_interaction_ids"] for c in ledger["cases"].values()):
+    _record_source(context, first, second, interaction["scene_id"], {
+        "kind": "confrontation", "source_id": interaction["interaction_id"],
+        "summary": "一次未缓和的当面争执留下了待处理的分歧，双方尚未和解。"})
+
+
+def record_failed_commitment(context, task):
+    """Only an actually accepted, now expired surface obligation needs clarification.
+
+    Unclaimed notices, declined invitations and cancelled tasks are not breaches.
+    Existing task consequences own relationship penalties; never double-penalize.
+    """
+    state = context.state
+    issuer, assignee = task.get("issuer_id"), task.get("assignee_id")
+    if (state.tasks.get(task.get("task_id")) is not task
+            or not any(r.get("kind") == "claimed" for r in task.get("history", []))
+            or task.get("forum") != "surface" or task.get("state") != "expired"
+            or state.clock.day <= task.get("expires_day", state.clock.day)
+            or not isinstance(assignee, str) or assignee == issuer or "player" in (issuer, assignee)
+            or any(n not in state.population for n in (issuer, assignee))):
+        return
+    _record_source(context, issuer, assignee, task["scene_id"], {
+        "kind": "expired_commitment", "source_id": "task-expired:" + task["task_id"], "task_id": task["task_id"],
+        "summary": f"已承接的委托《{task['title']}》超过期限，双方需要核对未完成的原因；逾期不等于故意违约。"})
+
+
+def _record_source(context, first, second, location, source):
+    state, ledger = context.state, _ledger(context.state)
+    if any(source["source_id"] in c["source_interaction_ids"] or any(r["source_id"] == source["source_id"] for r in c.get("source_refs", []))
+           for c in ledger["cases"].values()):
         return
     parties = sorted((first, second))
     case = next((c for c in ledger["cases"].values() if c["parties"] == parties and c["status"] in OPEN), None)
@@ -44,16 +71,19 @@ def record_dispute(context, interaction):
         case_id = f"campus-dispute:{ledger['sequence']}"
         case = {"case_id": case_id, "parties": parties, "created_day": state.clock.day, "created_tick": _tick(state),
             "status": "open", "revision": 0, "source_interaction_ids": [], "statements": {}, "disclosed_to": [],
-            "last_attempt_day": 0, "history": [], "location_id": interaction["scene_id"]}
+            "last_attempt_day": 0, "history": [], "location_id": location}
         ledger["cases"][case_id] = case
-    case["source_interaction_ids"] = [*case["source_interaction_ids"], interaction["interaction_id"]][-12:]
+    if source["kind"] == "confrontation":
+        case["source_interaction_ids"] = [*case["source_interaction_ids"], source["source_id"]][-12:]
+    case["source_refs"] = [*case.get("source_refs", []), {**source, "day": state.clock.day, "phase": state.clock.phase}][-12:]
     case["revision"] += 1
     case["status"] = "open"
     case["statements"] = {}  # New disagreement invalidates old willingness.
-    case["history"] = [*case["history"], {"day": state.clock.day, "kind": "confrontation", "source": interaction["interaction_id"]}][-24:]
-    context.emit("CAMPUS_DISPUTE_OPENED", "一次未缓和的当面争执留下了待处理的分歧，双方尚未和解。",
-        actor_ids=parties, scene_id=interaction["scene_id"], visibility="private", severity=3,
-        knowledge_tags=["social", "dispute"], payload={"case_id": case["case_id"], "source_interaction_id": interaction["interaction_id"]})
+    case["history"] = [*case["history"], {"day": state.clock.day, "kind": source["kind"], "source": source["source_id"]}][-24:]
+    context.emit("CAMPUS_DISPUTE_OPENED", source["summary"],
+        actor_ids=parties, scene_id=location, visibility="private", severity=3,
+        knowledge_tags=["social", "dispute"], payload={"case_id": case["case_id"], "source_kind": source["kind"], "source_id": source["source_id"],
+            **({"source_interaction_id": source["source_id"]} if source["kind"] == "confrontation" else {})})
 
 
 def _reachable(state, actor, target):
@@ -72,6 +102,8 @@ def _statement(context, case, actor, target, messaging_policy):
     state = context.state
     willing = _willing(state, target, actor)
     text = "之前那次当面争执还没有说清。我愿意先听听彼此的想法，不代表已经原谅或同意对方。" if willing else "这件事我现在不想谈，请先给我一点空间。"
+    if willing and any(r["kind"] == "expired_commitment" for r in case.get("source_refs", [])):
+        text = "那项已经承接的委托逾期了，事情还没说清。我愿意一起核对公开记录和双方的情况；不能仅凭逾期断定谁在故意失信。"
     case["statements"].setdefault(actor, {})[target] = {"day": state.clock.day, "case_revision": case["revision"], "willing": willing, "summary": text}
     if actor not in case["disclosed_to"]:
         case["disclosed_to"].append(actor)
@@ -93,6 +125,9 @@ def dispute_view(state, actor_id="player"):
                          "heard": n in statements and statements[n]["case_revision"] == case["revision"] and statements[n]["day"] == state.clock.day}
                         for n in case["parties"]],
             "can_attempt": case["status"] in OPEN and case["last_attempt_day"] != state.clock.day,
+            "record_required": any(r["kind"] == "expired_commitment" for r in case.get("source_refs", [])),
+            "record_reviewed": case.get("record_reviews", {}).get(actor_id, {}).get("revision") == case["revision"],
+            "source_summary": "；".join(r["summary"] for r in case.get("source_refs", [])[-3:]),
             "summary": "待听取双方意见" if case["status"] == "open" else "分歧已缓和，仍需后续沟通" if case["status"] == "easing" else "本次分歧已达成和解"})
     return rows
 
@@ -136,6 +171,36 @@ def make_dispute_handler(messaging_policy):
             return fail("unknown_dispute", "尚未了解这项纠纷。")
         if actor in case["parties"]:
             return fail("not_neutral", "调解者不能是纠纷当事人。")
+        if command.action_id == "REVIEW_DISPUTE_RECORD":
+            from simulation.systems.campus_intelligence import create_campus_claim
+            if battle_locked(state, actor) or actor_layer(state, actor) != "surface":
+                return fail("not_available", "请在表世界且未参战时核对记录。")
+            if case["status"] not in OPEN:
+                return fail("dispute_closed", "本次分歧已经处理。")
+            sources = [r for r in case.get("source_refs", []) if r["kind"] == "expired_commitment"]
+            if not sources:
+                return fail("no_public_record", "没有可核对的委托逾期记录，请分别听取双方。")
+            old = case.get("record_reviews", {}).get(actor, {})
+            if old.get("revision") == case["revision"]:
+                return TransactionOutcome(True, True, "already_reviewed", "这份版本的公开记录已经核对。",
+                    payload={"case": next(r for r in dispute_view(state, actor) if r["case_id"] == case_id)})
+            claims = []
+            for source in sources:
+                task = state.tasks.get(source["task_id"], {})
+                if task.get("state") != "expired" or set((task.get("issuer_id"), task.get("assignee_id"))) != set(case["parties"]):
+                    return fail("source_changed", "原始委托记录已变化，不能核实。")
+            for source in sources:
+                task = state.tasks[source["task_id"]]
+                claim = create_campus_claim(state, subject_id=task["assignee_id"], predicate="accepted_task_expired",
+                    object_id=task["task_id"], summary=source["summary"], secrecy=20, known_by=[actor], evidence_kind="public_record")
+                claim["source_context"] = {"location_id": task["scene_id"], "layer": "surface", "source_kind": "public_record",
+                    "source_id": task["task_id"], "day": source["day"], "phase": source["phase"]}
+                claims.append(claim["claim_id"])
+            case.setdefault("record_reviews", {})[actor] = {"revision": case["revision"], "claim_ids": claims}
+            context.emit("CAMPUS_DISPUTE_RECORD_REVIEWED", "核对了已承接委托的逾期记录；原因与责任仍需听取双方意见。",
+                actor_ids=[actor], visibility="private", knowledge_tags=["dispute", "evidence"], payload={"case_id": case_id, "claim_ids": claims})
+            return TransactionOutcome(True, True, "success", "公开委托记录已核对并进入调查笔记；这不是故意违约的证明。", commit=True,
+                payload={"case": next(r for r in dispute_view(state, actor) if r["case_id"] == case_id)})
         if case["status"] not in OPEN:
             return fail("dispute_closed", "本次分歧已经处理，不能重复获取效果。")
         if case["last_attempt_day"] == state.clock.day:
@@ -149,6 +214,8 @@ def make_dispute_handler(messaging_policy):
         statements = case["statements"].get(actor, {})
         if any(statements.get(n, {}).get("case_revision") != case["revision"] or statements.get(n, {}).get("day") != state.clock.day for n in case["parties"]):
             return fail("both_statements_required", "需要先分别听取双方今天的意见，不能只听一面之词。")
+        if any(r["kind"] == "expired_commitment" for r in case.get("source_refs", [])) and case.get("record_reviews", {}).get(actor, {}).get("revision") != case["revision"]:
+            return fail("public_record_required", "请先核对原委托的公开记录，再讨论处理方式。")
         case["last_attempt_day"] = state.clock.day
         if not all(_willing(state, n, actor) for n in case["parties"]):
             text, kind = "有一方现在不愿继续，调解暂停；未强行改变双方关系。", "declined"
@@ -163,6 +230,8 @@ def make_dispute_handler(messaging_policy):
             case["status"] = "settled" if max(_relation(state, first, second)["conflict"], _relation(state, second, first)["conflict"]) <= 10 else "easing"
             kind = case["status"]
             text = "双方在沟通后达成了本次和解；这不代表所有旧问题都被抹去。" if kind == "settled" else "双方的紧张已有缓和，但分歧仍需之后继续处理。"
+            if any(r["kind"] == "expired_commitment" for r in case.get("source_refs", [])):
+                text += "原委托仍为逾期，未将工作标为完成，也没有补发任务奖励。"
         case["history"] = [*case["history"], {"day": state.clock.day, "kind": kind, "mediator_id": actor}][-24:]
         context.emit("CAMPUS_DISPUTE_MEDIATED", text, actor_ids=[actor], target_ids=case["parties"], visibility="private", severity=3,
             knowledge_tags=["social", "dispute", kind], payload={"case_id": case_id, "outcome": kind})
@@ -192,11 +261,13 @@ def advance_dispute_mediation(context, messaging_policy):
             continue
         actor = candidates[0]
         first = case["parties"][0]
-        append_structured_phone_message(context, first, actor, "我们之前有一次没说清的争执。你认识我们双方，方便分别听听，再帮忙沟通吗？", messaging_policy, source="dispute_help_request")
+        append_structured_phone_message(context, first, actor, "我们有一件还没说清的分歧。你认识我们双方，方便分别听听并核对已有记录，再帮忙沟通吗？", messaging_policy, source="dispute_help_request")
         base = SimulationCommand(f"npc-mediation:{case['case_id']}:{_tick(state)}", actor, "ASK_NPC_DISPUTE", state.revision,
             issued_day=state.clock.day, issued_phase=state.clock.phase, source="rule")
         for party in case["parties"]:
             handler(context, replace(base, parameters={"case_id": case["case_id"], "npc_id": party}))
+        if any(r["kind"] == "expired_commitment" for r in case.get("source_refs", [])):
+            handler(context, replace(base, action_id="REVIEW_DISPUTE_RECORD", parameters={"case_id": case["case_id"]}))
         handler(context, replace(base, action_id="MEDIATE_DISPUTE", parameters={"case_id": case["case_id"], "expected_case_revision": case["revision"]}))
         attempts += 1
         used.add(actor)
@@ -218,7 +289,7 @@ def disputes_invariant(state):
             if (key != case["case_id"] or len(parties) != 2 or len(set(parties)) != 2 or any(n not in state.population or n == "player" for n in parties)
                     or case["status"] not in OPEN | {"settled"} or type(case["revision"]) is not int or case["revision"] < 1
                     or not 0 <= case["last_attempt_day"] <= state.clock.day or not 1 <= case["created_day"] <= state.clock.day
-                    or case["location_id"] not in state.places or not case["source_interaction_ids"] or len(case["source_interaction_ids"]) > 12
+                    or case["location_id"] not in state.places or not (case["source_interaction_ids"] or case.get("source_refs")) or len(case["source_interaction_ids"]) > 12
                     or len(case["history"]) > 24 or any(n not in state.population for n in case["disclosed_to"])):
                 yield "invalid dispute case"
             pair = tuple(sorted(parties))
@@ -232,5 +303,18 @@ def disputes_invariant(state):
                 for participant, row in statements.items():
                     if participant not in parties or type(row["willing"]) is not bool or not 1 <= row["day"] <= state.clock.day or row["case_revision"] != case["revision"]:
                         yield "invalid dispute statement"
+            sources = case.get("source_refs", [])
+            if len(sources) > 12 or len({r["source_id"] for r in sources}) != len(sources):
+                yield "invalid dispute sources"
+            for source in sources:
+                if source["kind"] not in {"confrontation", "expired_commitment"} or not isinstance(source["summary"], str):
+                    yield "invalid dispute source"
+                if source["kind"] == "expired_commitment":
+                    task = state.tasks.get(source["task_id"], {})
+                    if task.get("forum") != "surface" or task.get("state") != "expired" or set((task.get("issuer_id"), task.get("assignee_id"))) != set(parties):
+                        yield "invalid dispute task source"
+            for reviewer, row in case.get("record_reviews", {}).items():
+                if reviewer not in state.population or reviewer in parties or not 1 <= row["revision"] <= case["revision"] or any(c not in state.knowledge["claims"] for c in row["claim_ids"]):
+                    yield "invalid dispute record review"
     except (KeyError, TypeError, AttributeError, ValueError):
         yield "malformed dispute ledger"
