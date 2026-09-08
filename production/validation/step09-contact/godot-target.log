@@ -1,0 +1,3 @@
+GODOT_CHECK_LOGS /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-hf_8z41y
+PASS contact: CAMPUS_CONTACT_FLOW_OK real_phone_buttons unanswered_not_missing no_quota free real_dawn one_ack continued_dialogue explicit_incident no_api
+GODOT_CHECKS_OK 1 flows

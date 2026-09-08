@@ -947,6 +947,14 @@ func _refresh_message_thread() -> void:
 	var threads: Dictionary = messaging.get("threads", {})
 	var thread: Dictionary = threads.get(_selected_message_contact_id, {})
 	var lines: Array[String] = []
+	var contact_status: Dictionary = thread.get("contact_status", {})
+	match String(contact_status.get("status", "")):
+		"awaiting":
+			lines.append("[color=#d9bc83]已有 %d 个时段尝试联系，暂未收到回应。尚不能据此确认失踪或原因。[/color]" % int(contact_status.get("distinct_phases", 1)))
+		"contact_resumed":
+			lines.append("[color=#91a4bc]对方已恢复联系；不代表此前的问题或委托已经解决。[/color]")
+		"record_expired":
+			lines.append("[color=#91a4bc]先前未回应消息已超出记录保留范围，尚未确认联系恢复。[/color]")
 	for message in thread.get("messages", []):
 		if not message is Dictionary:
 			continue

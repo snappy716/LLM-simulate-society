@@ -235,9 +235,18 @@ def _append_message(
     thread["last_message_day"] = state.clock.day
     thread["last_message_phase"] = state.clock.phase
     thread["last_message_id"] = message_id
+    # A genuine incoming message also restores contact (including welfare and
+    # structured invitations); do not leave an awaiting banner beside a reply.
+    reverse_key = receiver_id + ">" + sender_id
+    if reverse_key in messaging.get("contact_gaps", {}) and phone_available(state, sender_id):
+        _clear_deferred(state, receiver_id, sender_id, message)
     while len(thread["message_ids"]) > policy.max_messages_per_thread:
         removed_id = thread["message_ids"].pop(0)
         messaging["messages"].pop(removed_id, None)
+        for pending_key, pending_id in list(messaging.get("pending_replies", {}).items()):
+            if pending_id == removed_id:
+                del messaging["pending_replies"][pending_key]
+                messaging["contact_gaps"][pending_key]["status"] = "record_expired"
         for actor_id in thread["participant_ids"]:
             thread["unread_by_actor"][actor_id] = min(
                 int(thread["unread_by_actor"].get(actor_id, 0)),
@@ -259,6 +268,64 @@ def _emit_message_event(context, message: Mapping[str, Any]) -> None:
         severity=1,
         knowledge_tags=["phone", "message", "social"],
     )
+
+
+def phone_available(state, actor_id):
+    """Ordinary night-world phone use remains valid; incapacity is not a quota."""
+    from simulation.systems.campus_night_sites import captive_site
+    from simulation.systems.campus_vitals import battle_locked
+    return (not captive_site(state, actor_id) and not battle_locked(state, actor_id)
+            and state.population[actor_id].get("vitals", {}).get("health", 1) > 0)
+
+
+def _defer_reply(context, sent):
+    state, messaging = context.state, context.state.cognition["messaging"]
+    key = sent["sender_id"] + ">" + sent["receiver_id"]
+    messaging.setdefault("pending_replies", {})[key] = sent["message_id"]
+    gaps = messaging.setdefault("contact_gaps", {})
+    now = phase_index(state.clock.day, state.clock.phase)
+    gap = gaps.get(key)
+    if not gap or gap["status"] != "awaiting":
+        gap = {"sender_id": sent["sender_id"], "receiver_id": sent["receiver_id"], "first_tick": now,
+               "last_tick": now, "distinct_phases": 1, "status": "awaiting", "reply_id": None}
+        gaps[key] = gap
+    elif gap["last_tick"] != now:
+        gap["distinct_phases"] += 1
+    gap.update(last_tick=now, message_id=sent["message_id"])
+    context.emit("PHONE_REPLY_DEFERRED", "消息已发送，但这次尚未收到回应；不能据此断定对方失踪或获知原因。",
+        actor_ids=[sent["sender_id"]], target_ids=[sent["receiver_id"]], visibility="private",
+        knowledge_tags=["phone", "contact_attempt"], payload={"message_id": sent["message_id"]})
+
+
+def _clear_deferred(state, sender, receiver, reply):
+    messaging = state.cognition["messaging"]
+    key = sender + ">" + receiver
+    messaging.get("pending_replies", {}).pop(key, None)
+    gap = messaging.get("contact_gaps", {}).get(key)
+    if gap and gap["status"] in {"awaiting", "record_expired"}:
+        gap.update(status="contact_resumed", reply_id=reply["message_id"])
+
+
+def advance_pending_phone_replies(context, policy):
+    """One truthful availability acknowledgment per pending direction, no LLM."""
+    state, count = context.state, 0
+    messaging = state.cognition["messaging"]
+    for key, message_id in list(messaging.get("pending_replies", {}).items()):
+        message = messaging["messages"].get(message_id)
+        if not message:
+            del messaging["pending_replies"][key]
+            messaging["contact_gaps"][key]["status"] = "record_expired"
+            continue
+        sender, receiver = message["sender_id"], message["receiver_id"]
+        if receiver == "player" or not phone_available(state, receiver):
+            continue
+        reply = _append_message(state, receiver, sender,
+            "刚才没能及时回复，现在可以联系了。我收到了你之前的消息；你还想继续聊那件事吗？", policy,
+            source="deferred_acknowledgment", reply_to_message_id=message_id)
+        _clear_deferred(state, sender, receiver, reply)
+        _emit_message_event(context, reply)
+        count += 1
+    return {"phone_deferred_reply_count": count}
 
 
 def are_phone_contacts(state: WorldState, first_id: str, second_id: str) -> bool:
@@ -355,6 +422,8 @@ def make_campus_messaging_handler(
     def handle(context, command: SimulationCommand) -> TransactionOutcome:
         if command.actor_id not in context.state.population:
             return TransactionOutcome(False, False, "unknown_actor", "发送者不存在。")
+        if command.source == "player" and command.actor_id != "player":
+            return TransactionOutcome(False, False, "actor_not_authorized", "不能代替其他人发送消息。")
         target_id = str(command.parameters.get("target_id", ""))
         if target_id not in context.state.population or target_id == command.actor_id:
             return TransactionOutcome(False, False, "invalid_message_target", "联系人不存在。")
@@ -363,6 +432,11 @@ def make_campus_messaging_handler(
                 return TransactionOutcome(False, False, "player_only", "目前只有玩家可以主动添加联系人。")
             actor = context.state.population[command.actor_id]
             target = context.state.population[target_id]
+            from simulation.systems.campus_vitals import actor_layer
+            if (not phone_available(context.state, command.actor_id)
+                    or not phone_available(context.state, target_id)
+                    or actor_layer(context.state, command.actor_id) != actor_layer(context.state, target_id)):
+                return TransactionOutcome(False, False, "contact_not_met", "需要实际见到当前可以交流的对方。")
             if _region_id(context.state, actor.get("current_location_id")) != _region_id(
                 context.state, target.get("current_location_id")
             ):
@@ -385,8 +459,8 @@ def make_campus_messaging_handler(
             )
         if not _are_contacts(context.state, command.actor_id, target_id):
             return TransactionOutcome(False, False, "not_a_contact", "需要先见面并交换联系方式。")
-        thread = _ensure_thread(context.state, command.actor_id, target_id)
         if command.action_id == "MARK_PHONE_THREAD_READ":
+            thread = _ensure_thread(context.state, command.actor_id, target_id)
             unread = int(thread["unread_by_actor"].get(command.actor_id, 0))
             if unread == 0:
                 return TransactionOutcome(False, True, "already_read", "当前没有未读消息。")
@@ -397,19 +471,30 @@ def make_campus_messaging_handler(
             )
         if command.action_id != "SEND_PHONE_MESSAGE":
             return TransactionOutcome(False, False, "unsupported_message_action", "不支持的通讯操作。")
+        if command.issued_day != context.state.clock.day or command.issued_phase != context.state.clock.phase:
+            return TransactionOutcome(False, False, "command_clock_mismatch", "本次发送所属时段已过期。")
+        if not phone_available(context.state, command.actor_id):
+            return TransactionOutcome(False, False, "sender_unavailable", "当前状态无法主动发送，请先处理正在进行的行动。")
         text = str(command.parameters.get("text", "")).strip()
         if not text:
             return TransactionOutcome(False, False, "empty_message", "消息内容不能为空。")
         if len(text) > policy.max_text_length:
             return TransactionOutcome(False, False, "message_too_long", "消息不能超过 240 个字符。")
+        thread = _ensure_thread(context.state, command.actor_id, target_id)
         sent = _append_message(
             context.state, command.actor_id, target_id, text, policy,
             source=command.source,
         )
         thread["unread_by_actor"][command.actor_id] = 0
         _emit_message_event(context, sent)
+        _clear_deferred(context.state, target_id, command.actor_id, sent)
         replies: list[Dict[str, Any]] = []
         information_shares: list[Dict[str, Any]] = []
+        if target_id != "player" and not phone_available(context.state, target_id):
+            _defer_reply(context, sent)
+            return TransactionOutcome(True, True, "reply_pending", "消息已发送，暂未收到回复；并不代表已知对方的处境。", commit=True,
+                payload={"thread_id": thread["thread_id"], "sent_message": deepcopy(sent), "reply_messages": [],
+                         "information_shares": [], "action_class": "free", "reply_pending": True})
         if command.actor_id == "player" and target_id != "player" and policy.player_auto_reply:
             reply_text = _rule_reply(context.state, target_id, "player")
             reply_source = "rule"
@@ -466,6 +551,7 @@ def make_campus_messaging_handler(
                     correlation_id=sent["message_id"],
                 )
             replies.append(reply)
+            _clear_deferred(context.state, command.actor_id, target_id, reply)
         return TransactionOutcome(
             True, True, "success", "消息已发送。", commit=True,
             payload={
@@ -533,6 +619,7 @@ def advance_campus_phone_messages(
     """Run a few justified remote NPC conversations after phase activities."""
     state = context.state
     messaging = state.cognition["messaging"]
+    resumed = advance_pending_phone_replies(context, policy)
     now = phase_index(state.clock.day, state.clock.phase)
     rng = context.rng.stream("campus_phone_messaging")
     npc_ids = [
@@ -577,14 +664,23 @@ def advance_campus_phone_messages(
             >= int(state.population[second_id].get("needs", {}).get("social", 0))
             else (second_id, first_id)
         )
+        if not phone_available(state, sender_id):
+            continue
         selected.append((sender_id, receiver_id))
         used.update((sender_id, receiver_id))
         if len(selected) >= policy.max_autonomous_conversations_per_phase:
             break
-    shared_count = 0
+    shared_count, pending_count = 0, 0
     for sender_id, receiver_id in selected:
         pair_key = _pair_key(sender_id, receiver_id)
         messaging["pair_last_autonomous_phase"][pair_key] = now
+        if not phone_available(state, receiver_id):
+            sent = _append_message(state, sender_id, receiver_id, _autonomous_text(state, sender_id, receiver_id), policy, source="rule")
+            _emit_message_event(context, sent)
+            _clear_deferred(state, receiver_id, sender_id, sent)
+            _defer_reply(context, sent)
+            pending_count += 1
+            continue
         interaction_id = f"phone_exchange:{now}:{pair_key}"
         information = share_known_claim(
             state,
@@ -610,6 +706,8 @@ def advance_campus_phone_messages(
             source="rule", reply_to_message_id=sent["message_id"],
         )
         _emit_message_event(context, reply)
+        _clear_deferred(state, receiver_id, sender_id, sent)
+        _clear_deferred(state, sender_id, receiver_id, reply)
         adjust_relationship(state, sender_id, receiver_id, {"familiarity": 1})
         adjust_relationship(state, receiver_id, sender_id, {"familiarity": 1})
         sender = state.population[sender_id]
@@ -618,9 +716,12 @@ def advance_campus_phone_messages(
         receiver["needs"]["social"] = max(0, int(receiver["needs"].get("social", 0)) - 2)
         shared_count += int(information is not None)
     return {
-        "phone_conversation_count": len(selected),
-        "phone_message_count": len(selected) * 2,
+        "phone_conversation_count": len(selected) - pending_count,
+        "phone_contact_attempt_count": len(selected),
+        "phone_message_count": len(selected) * 2 - pending_count,
         "phone_information_share_count": shared_count,
+        "phone_pending_count": pending_count,
+        **resumed,
     }
 
 
@@ -689,13 +790,46 @@ def campus_messaging_invariant(state: WorldState) -> Iterable[str]:
     indexed = {message_id for thread in threads.values() if isinstance(thread, dict) for message_id in thread.get("message_ids", ())}
     if indexed != set(messages):
         errors.append("campus messaging contains unindexed messages")
+    pending = aggregate.get("pending_replies", {})
+    gaps = aggregate.get("contact_gaps", {})
+    if not isinstance(pending, dict) or not isinstance(gaps, dict):
+        return [*errors, "phone contact gaps and pending replies must be mappings"]
+    for key, gap in gaps.items():
+        if not isinstance(gap, dict):
+            errors.append("invalid phone contact gap")
+            continue
+        sender, receiver = gap.get("sender_id"), gap.get("receiver_id")
+        if (not isinstance(sender, str) or not isinstance(receiver, str)
+                or sender not in state.population or receiver not in state.population
+                or sender == receiver or key != sender + ">" + receiver
+                or not _are_contacts(state, sender, receiver)):
+            errors.append("phone contact gap has invalid participants")
+        ticks = [gap.get("first_tick"), gap.get("last_tick"), gap.get("distinct_phases")]
+        if any(isinstance(value, bool) or not isinstance(value, int) or value < 0 for value in ticks):
+            errors.append("phone contact gap has invalid time")
+        elif ticks[1] < ticks[0] or not 1 <= ticks[2] <= ticks[1] - ticks[0] + 1:
+            errors.append("phone contact gap has inconsistent attempts")
+        if gap.get("status") not in ("awaiting", "contact_resumed", "record_expired"):
+            errors.append("phone contact gap has invalid status")
+        if (gap.get("status") == "awaiting") != (key in pending):
+            errors.append("phone contact gap pending status does not match index")
+        if gap.get("status") == "contact_resumed" and not isinstance(gap.get("reply_id"), str):
+            errors.append("phone resumed contact needs a reply record id")
+    for key, message_id in pending.items():
+        message = messages.get(message_id) if isinstance(message_id, str) else None
+        gap = gaps.get(key)
+        if (not isinstance(message, dict) or not isinstance(gap, dict)
+                or message_id != gap.get("message_id") or gap.get("status") != "awaiting"
+                or message.get("sender_id") != gap.get("sender_id")
+                or message.get("receiver_id") != gap.get("receiver_id")):
+            errors.append("phone pending reply references invalid message or contact gap")
     return errors
 
 
 __all__ = [
     "CAMPUS_MESSAGING_SCHEMA_VERSION", "PHONE_ACTION_IDS", "CampusMessagingPolicy",
     "append_structured_phone_exchange", "append_structured_phone_message", "are_phone_contacts",
-    "advance_campus_phone_messages", "campus_messaging_invariant",
+    "advance_campus_phone_messages", "advance_pending_phone_replies", "phone_available", "campus_messaging_invariant",
     "install_campus_messaging", "load_campus_messaging_policy",
     "make_campus_messaging_handler",
 ]

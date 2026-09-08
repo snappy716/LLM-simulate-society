@@ -284,7 +284,9 @@ class CampusKernelBridge:
         from simulation.systems.campus_forum_attention import advance_forum_attention, make_attention_handler, attention_invariant
         def social_attention(context):
             from simulation.systems.campus_expeditions import form_npc_expeditions
+            from simulation.systems.campus_messaging import advance_pending_phone_replies
             summary = advance_forum_attention(context, graph, task_handler)
+            summary.update(advance_pending_phone_replies(context, messaging_policy))
             summary.update(form_npc_expeditions(context, graph, party_policy, party_handler, messaging_policy))
             return summary
         def phase_upkeep(context):

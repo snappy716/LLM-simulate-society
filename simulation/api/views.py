@@ -433,6 +433,12 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
             "last_message_phase": thread.get("last_message_phase"),
             "messages": messages,
         }
+        gap = messaging.get("contact_gaps", {}).get("player>" + counterpart_id)
+        if gap:
+            # Only the player's attempted contact, never a hidden incapacity reason.
+            player_threads[counterpart_id]["contact_status"] = {
+                key: gap[key] for key in ("status", "first_tick", "last_tick", "distinct_phases")
+            }
     player_contact_ids = set(
         messaging.get("contacts_by_actor", {}).get("player", ())
         if isinstance(messaging, dict) else ()
