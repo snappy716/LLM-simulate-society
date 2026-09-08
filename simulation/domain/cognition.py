@@ -8,7 +8,11 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 @dataclass(frozen=True)
 class CognitionPolicy:
     total_focus_slots: int = 20
-    player_awakened_slots: int = 6
+    player_awakened_slots: int = 0  # 0 means additional friends have no quota.
+    enforce_automated_budgets: bool = False
+    friend_min_closeness: int = 45
+    friend_min_trust: int = 45
+    friend_max_conflict: int = 40
     candidate_limit: int = 5
     memory_limit_per_actor: int = 48
     persistent_memory_limit_per_actor: int = 8
@@ -32,7 +36,6 @@ class CognitionPolicy:
     def __post_init__(self) -> None:
         integer_values = {
             "total_focus_slots": self.total_focus_slots,
-            "player_awakened_slots": self.player_awakened_slots,
             "candidate_limit": self.candidate_limit,
             "memory_limit_per_actor": self.memory_limit_per_actor,
             "persistent_memory_limit_per_actor": self.persistent_memory_limit_per_actor,
@@ -50,8 +53,13 @@ class CognitionPolicy:
         }
         if any(isinstance(value, bool) or not isinstance(value, int) or value < 1 for value in integer_values.values()):
             raise ValueError("cognition policy integer limits must be positive")
-        if self.player_awakened_slots > self.total_focus_slots:
-            raise ValueError("player awakened slots cannot exceed total focus slots")
+        if type(self.enforce_automated_budgets) is not bool:
+            raise ValueError("enforce_automated_budgets must be boolean")
+        if type(self.player_awakened_slots) is not int or self.player_awakened_slots < 0:
+            raise ValueError("additional friend quota must be nonnegative")
+        for value in (self.friend_min_closeness, self.friend_min_trust, self.friend_max_conflict):
+            if type(value) is not int or not 0 <= value <= 100:
+                raise ValueError("friend thresholds must be integers between 0 and 100")
         if not 1 <= self.interaction_phase_call_limit <= self.interaction_reserved_phase_calls <= self.phase_call_limit:
             raise ValueError("interaction calls must fit inside the reserved phase budget")
         if (
@@ -67,6 +75,10 @@ class CognitionPolicy:
         return {
             "total_focus_slots": self.total_focus_slots,
             "player_awakened_slots": self.player_awakened_slots,
+            "enforce_automated_budgets": self.enforce_automated_budgets,
+            "friend_min_closeness": self.friend_min_closeness,
+            "friend_min_trust": self.friend_min_trust,
+            "friend_max_conflict": self.friend_max_conflict,
             "candidate_limit": self.candidate_limit,
             "memory_limit_per_actor": self.memory_limit_per_actor,
             "persistent_memory_limit_per_actor": self.persistent_memory_limit_per_actor,
@@ -96,6 +108,7 @@ class BoundedDecisionRequest:
     reflection: str
     memories: Tuple[Mapping[str, Any], ...]
     candidates: Tuple[Mapping[str, Any], ...]
+    daily_options: Optional[Mapping[str, Tuple[Mapping[str, Any], ...]]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -108,6 +121,8 @@ class BoundedDecisionRequest:
             "reflection": self.reflection,
             "memories": [dict(item) for item in self.memories],
             "candidates": [dict(item) for item in self.candidates],
+            **({"daily_options": {phase: [dict(item) for item in options]
+                                   for phase, options in self.daily_options.items()}} if self.daily_options is not None else {}),
         }
 
 
@@ -117,6 +132,7 @@ class BoundedDecisionResponse:
     candidate_revision: int
     selected_action_id: Optional[str]
     reason: str
+    daily_choices: Optional[Mapping[str, str]] = None
 
     @classmethod
     def from_mapping(cls, payload: Mapping[str, Any]) -> "BoundedDecisionResponse":
@@ -132,7 +148,11 @@ class BoundedDecisionResponse:
             raise ValueError("candidate_revision must be a positive integer")
         if not isinstance(reason, str) or len(reason) > 500:
             raise ValueError("reason must be a string of at most 500 characters")
-        return cls(npc_id, revision, selected, reason)
+        daily_choices = payload.get("daily_choices")
+        if daily_choices is not None and (not isinstance(daily_choices, dict)
+                or any(not isinstance(k, str) or not isinstance(v, str) for k, v in daily_choices.items())):
+            raise ValueError("daily_choices must map phases to candidate IDs")
+        return cls(npc_id, revision, selected, reason, daily_choices)
 
 
 @dataclass(frozen=True)

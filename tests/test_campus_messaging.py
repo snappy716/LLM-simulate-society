@@ -61,7 +61,7 @@ class CampusMessagingIntegrationTests(unittest.TestCase):
     def test_focused_contact_uses_bounded_llm_wording_and_discloses_only_allowed_fact(self):
         bridge = CampusKernelBridge(42)
         target_id = str(bridge.snapshot()["messaging"]["contacts"][0]["actor_id"])
-        self.assertTrue(execute(bridge, "AWAKEN_NPC", {"target_id": target_id})["ok"])
+        # Player-initiated dialogue also works without deep-focus membership.
         provider = DialogueProvider()
         bridge.cognition_runtime.provider = provider
         result = execute(bridge, "SEND_PHONE_MESSAGE", {
@@ -89,7 +89,7 @@ class CampusMessagingIntegrationTests(unittest.TestCase):
     def test_player_dialogue_is_not_limited_by_autonomous_budget(self):
         bridge = CampusKernelBridge(9)
         target_id = str(bridge.snapshot()["messaging"]["contacts"][0]["actor_id"])
-        self.assertTrue(execute(bridge, "AWAKEN_NPC", {"target_id": target_id})["ok"])
+        # No permanent awakening is needed just to have an LLM conversation.
         provider = DialogueProvider()
         bridge.cognition_runtime.provider = provider
         usage = bridge.kernel.state.cognition["usage"]

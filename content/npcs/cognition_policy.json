@@ -1,7 +1,11 @@
 {
   "schema_version": 1,
   "total_focus_slots": 20,
-  "player_awakened_slots": 6,
+  "player_awakened_slots": 0,
+  "enforce_automated_budgets": false,
+  "friend_min_closeness": 45,
+  "friend_min_trust": 45,
+  "friend_max_conflict": 40,
   "candidate_limit": 5,
   "memory_limit_per_actor": 48,
   "persistent_memory_limit_per_actor": 8,

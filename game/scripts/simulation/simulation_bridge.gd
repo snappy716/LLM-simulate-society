@@ -241,7 +241,7 @@ func advance_campus_phase() -> void:
 	}
 	# Overnight planning may include bounded model requests. Other commands retain
 	# their ordinary timeout; the presentation never drives or repeats a command.
-	_campus_request.timeout = 180.0 if clock.get("phase") == "late_night" else 30.0
+	_campus_request.timeout = maxf(180.0, float(campus_snapshot.get("cognition", {}).get("overnight_timeout_seconds", 180))) if clock.get("phase") == "late_night" else 30.0
 	campus_phase_started.emit(clock.duplicate(true))
 	var error := _campus_request.request(
 		_base_url + "/kernel/command",

@@ -193,7 +193,8 @@ class CampusContentTests(unittest.TestCase):
         self.assertEqual(200, rules["persistent"])
         self.assertEqual(20, rules["focused"])
         self.assertEqual(rules["focused"], cognition["total_focus_slots"])
-        self.assertEqual(6, cognition["player_awakened_slots"])
+        self.assertEqual(0, cognition["player_awakened_slots"])
+        self.assertFalse(cognition["enforce_automated_budgets"])
         self.assertEqual(28, calendar["total_days"])
         self.assertEqual(4, len(calendar["stages"]))
 

@@ -376,16 +376,28 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     )
     cognition = state.cognition
     cognition_policy = cognition.get("policy", {})
+    from simulation.domain.cognition import CognitionPolicy
+    from simulation.systems.campus_cognition import friend_focus_eligibility
+    policy = CognitionPolicy(**cognition_policy)
+    for npc_id, profile in cast.items():
+        profile["friend_focus"] = friend_focus_eligibility(state, npc_id, policy)
+        profile["base_deep_npc"] = npc_id in cognition.get("base_focused_ids", ())
     usage = cognition.get("usage", {})
     cognition_status = {
         "provider": deepcopy(cognition.get("provider", {})),
         "focused_count": len(cognition.get("focused_ids", ())),
+        "base_focused_count": len(cognition.get("base_focused_ids", ())),
+        # Conservative finite transport window for serial provider timeouts. This
+        # is not a call quota and grows when the player adds more deep friends.
+        "overnight_timeout_seconds": max(180, int((2 * len(cognition.get("focused_ids", ()))
+            + 2 * state.cognition.get("interactions", {}).get("policy", {}).get("max_interactions_per_phase", 12))
+            * policy.request_timeout_seconds + 60)),
         "focus_slot_limit": int(cognition_policy.get("total_focus_slots", 20)),
         "awakened_count": len(cognition.get("awakened_ids", ())),
-        "awakened_slot_limit": int(cognition_policy.get("player_awakened_slots", 6)),
-        "daily_call_limit": int(cognition_policy.get("daily_call_limit", 0)),
-        "phase_call_limit": int(cognition_policy.get("phase_call_limit", 0)),
-        "daily_estimated_token_limit": int(cognition_policy.get("daily_estimated_token_limit", 0)),
+        "awakened_slot_limit": policy.player_awakened_slots or None,
+        "daily_call_limit": policy.daily_call_limit if policy.enforce_automated_budgets else None,
+        "phase_call_limit": policy.phase_call_limit if policy.enforce_automated_budgets else None,
+        "daily_estimated_token_limit": policy.daily_estimated_token_limit if policy.enforce_automated_budgets else None,
         "usage": {
             key: int(usage.get(key, 0))
             for key in (

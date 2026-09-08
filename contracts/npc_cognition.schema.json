@@ -5,9 +5,9 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "provider", "focused_count", "focus_slot_limit", "awakened_count",
+    "provider", "focused_count", "base_focused_count", "focus_slot_limit", "awakened_count",
     "awakened_slot_limit", "daily_call_limit", "phase_call_limit",
-    "daily_estimated_token_limit", "usage"
+    "daily_estimated_token_limit", "overnight_timeout_seconds", "usage"
   ],
   "properties": {
     "provider": {
@@ -20,13 +20,15 @@
         "model": {"type": "string"}
       }
     },
-    "focused_count": {"type": "integer", "minimum": 0, "maximum": 20},
+    "focused_count": {"type": "integer", "minimum": 0},
+    "base_focused_count": {"type": "integer", "minimum": 0, "maximum": 20},
+    "overnight_timeout_seconds": {"type": "integer", "minimum": 180},
     "focus_slot_limit": {"const": 20},
-    "awakened_count": {"type": "integer", "minimum": 0, "maximum": 6},
-    "awakened_slot_limit": {"const": 6},
-    "daily_call_limit": {"type": "integer", "minimum": 1},
-    "phase_call_limit": {"type": "integer", "minimum": 1},
-    "daily_estimated_token_limit": {"type": "integer", "minimum": 1},
+    "awakened_count": {"type": "integer", "minimum": 0},
+    "awakened_slot_limit": {"type": ["integer", "null"], "minimum": 1},
+    "daily_call_limit": {"type": ["integer", "null"], "minimum": 1},
+    "phase_call_limit": {"type": ["integer", "null"], "minimum": 1},
+    "daily_estimated_token_limit": {"type": ["integer", "null"], "minimum": 1},
     "usage": {
       "type": "object",
       "additionalProperties": false,

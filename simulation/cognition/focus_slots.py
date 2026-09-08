@@ -23,8 +23,8 @@ class FocusCandidate:
 
 
 class FocusSlotAllocator:
-    def __init__(self, total_slots: int = 20, permanent_player_slots: int = 6) -> None:
-        if total_slots < 1 or permanent_player_slots < 0 or permanent_player_slots > total_slots:
+    def __init__(self, total_slots: int = 20, permanent_player_slots: int = 0) -> None:
+        if total_slots < 1 or permanent_player_slots < 0:
             raise ValueError("invalid focus slot budget")
         self.total_slots = total_slots
         self.permanent_player_slots = permanent_player_slots
@@ -37,18 +37,20 @@ class FocusSlotAllocator:
     def awaken(self, npc_id: str) -> None:
         if npc_id in self._awakened_ids:
             return
-        if len(self._awakened_ids) >= self.permanent_player_slots:
+        if self.permanent_player_slots and len(self._awakened_ids) >= self.permanent_player_slots:
             raise ValueError("no permanent player focus slots remain")
         self._awakened_ids.append(npc_id)
 
-    def allocate(self, candidates: Iterable[FocusCandidate]) -> List[str]:
+    def allocate(self, candidates: Iterable[FocusCandidate], base_ids: Iterable[str] = ()) -> List[str]:
         by_id: Dict[str, FocusCandidate] = {candidate.npc_id: candidate for candidate in candidates}
         selected = list(self._awakened_ids)
-        remaining = self.total_slots - len(selected)
+        base = [npc_id for npc_id in dict.fromkeys(base_ids) if npc_id in by_id and npc_id not in selected][:self.total_slots]
+        remaining = self.total_slots - len(base)
         ranked = sorted(
-            (candidate for npc_id, candidate in by_id.items() if npc_id not in selected),
+            (candidate for npc_id, candidate in by_id.items() if npc_id not in selected and npc_id not in base),
             key=lambda candidate: (-candidate.priority, candidate.npc_id),
         )
+        selected.extend(base)
         selected.extend(candidate.npc_id for candidate in ranked[:remaining])
         return selected
 

@@ -99,8 +99,6 @@ class PlayerNpcDialogueTests(unittest.TestCase):
         bridge = CampusKernelBridge(35)
         target_id = self._place_with_target(bridge)
         state = bridge.kernel._state
-        if target_id not in state.cognition["focused_ids"]:
-            state.cognition["focused_ids"][-1] = target_id
         provider = DialogueProvider()
         bridge.cognition_runtime.provider = provider
         usage = state.cognition["usage"]

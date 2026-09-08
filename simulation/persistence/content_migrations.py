@@ -11,6 +11,17 @@ def migrate_campus_content(loaded, expected_version):
 
     field_spec = json.loads(Path(__file__).with_name("campus_field_content.json").read_text(encoding="utf-8"))
     sites_spec = json.loads(Path(__file__).with_name("campus_night_sites_content.json").read_text(encoding="utf-8"))
+    friend_spec = json.loads(Path(__file__).with_name("campus_friend_content.json").read_text(encoding="utf-8"))
+    if expected_version == friend_spec["target_version"]:
+        if loaded.state.content_version != friend_spec["source_version"]:
+            loaded = migrate_campus_content(loaded, friend_spec["source_version"])
+        if loaded.content_manifest != friend_spec["source_manifest"]:
+            raise CheckpointError("friend cognition content migration manifest mismatch")
+        migrated = loaded.state.clone()
+        migrated.content_version = expected_version
+        migrated.require_valid()
+        return LoadedCheckpoint(migrated, loaded.rng.clone(), deepcopy(friend_spec["target_manifest"]),
+                                loaded.migrations + (friend_spec["migration_id"],))
     if expected_version == sites_spec["target_version"]:
         # Traverse only the explicit frozen previous edge, not an arbitrary old
         # version or a moving alias. Existing victims/sites are never invented.

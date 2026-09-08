@@ -69,6 +69,7 @@ var _tab_buttons: Dictionary = {}
 var _load_more: Button
 var _awaken_button: Button
 var _awaken_feedback: Label
+var _awaken_pending_target := ""
 var _contact_button: Button
 var _contact_feedback: Label
 var _dialogue_intent: OptionButton
@@ -521,11 +522,13 @@ func _refresh_awaken_button() -> void:
 	_awaken_button.visible = true
 	var cognition: Dictionary = SimulationBridge.campus_snapshot.get("cognition", {})
 	var awakened := bool(_selected_profile.get("awakened_by_player", false))
-	_awaken_button.disabled = awakened or int(cognition.get("awakened_count", 0)) >= int(cognition.get("awakened_slot_limit", 6))
-	_awaken_button.tooltip_text = "该人物已记名觉醒。" if awakened else ("永久觉醒名额已用完。" if _awaken_button.disabled else "占用一个永久觉醒名额；接口不可用时仍按规则降级。")
-	_awaken_button.text = "已记名觉醒" if awakened else "记名觉醒（%d / %d）" % [
-		int(cognition.get("awakened_count", 0)), int(cognition.get("awakened_slot_limit", 6)),
-	]
+	var eligibility: Dictionary = _selected_profile.get("friend_focus", {})
+	var base := bool(_selected_profile.get("base_deep_npc", false))
+	_awaken_button.disabled = awakened or base or not bool(eligibility.get("eligible", false)) or not _awaken_pending_target.is_empty()
+	_awaken_button.tooltip_text = String(eligibility.get("reason", "请刷新人物关系后再试。")) + "\n接口不可用时按规则运行，不影响游戏继续。"
+	_awaken_button.text = "已建立长期认知联系" if awakened else ("基础深度 NPC（长期认知）" if base else "好友觉醒 · 额外接入 LLM")
+	if not awakened and not base:
+		_awaken_button.tooltip_text += "\n基础 %d 人 + 好友 %d 人；好友不占基础名额。" % [int(cognition.get("base_focused_count", 20)), int(cognition.get("awakened_count", 0))]
 
 
 func _refresh_contact_button() -> void:
@@ -593,6 +596,7 @@ func _on_dialogue_completed(success: bool, result: Dictionary, target_id: String
 		_dialogue_feedback.text = UI_TEXT.operation_feedback(success, result)
 		_dialogue_feedback.add_theme_color_override("font_color", Color("ee8174"))
 	_on_dialogue_text_changed(_dialogue_input.text)
+	_refresh_awaken_button()
 
 
 func _submit_social_proposal() -> void:
@@ -682,14 +686,20 @@ func _on_contact_operation_completed(
 
 func _awaken_selected_npc() -> void:
 	var npc_id := _safe_text(_selected_profile.get("npc_id"))
-	if npc_id.is_empty():
+	if npc_id.is_empty() or not _awaken_pending_target.is_empty():
 		return
+	_awaken_pending_target = npc_id
 	_awaken_button.disabled = true
-	_awaken_feedback.text = "正在建立长期认知槽位……"
+	_awaken_feedback.text = "正在建立长期认知联系……"
 	SimulationBridge.operate_campus_cognition("AWAKEN_NPC", npc_id)
 
 
 func _on_cognition_operation_completed(success: bool, result: Dictionary, _action_id: String, target_id: String) -> void:
+	if _action_id != "AWAKEN_NPC":
+		return
+	if target_id == _awaken_pending_target:
+		_awaken_pending_target = ""
+	_refresh_awaken_button()
 	if _selected_profile.is_empty() or target_id != _safe_text(_selected_profile.get("npc_id")):
 		return
 	var command_result: Dictionary = result.get("result", {})

@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 from copy import deepcopy
+from dataclasses import replace
 from typing import Any, Dict, Iterable, Mapping, Sequence
 
 from simulation.actions.commands import SimulationCommand
@@ -27,7 +28,7 @@ from simulation.systems.transactions import TransactionOutcome
 from simulation.systems.campus_intelligence import known_claims
 
 
-COGNITION_SCHEMA_VERSION = 1
+COGNITION_SCHEMA_VERSION = 2
 _SKIPPED_MEMORY_EVENTS = {"WORLD_PHASE_ADVANCED"}
 
 
@@ -51,6 +52,7 @@ def install_campus_cognition(state: WorldState, policy: CognitionPolicy) -> None
         "schema_version": COGNITION_SCHEMA_VERSION,
         "policy": policy.to_dict(),
         "focused_ids": initial,
+        "base_focused_ids": list(initial),
         "awakened_ids": [],
         "observations": {},
         "observation_ids_by_actor": {actor_id: [] for actor_id in state.population if actor_id != "player"},
@@ -204,13 +206,50 @@ def allocate_focus_slots(state: WorldState, policy: CognitionPolicy) -> list[str
                 + (25 if actor.get("simulation_tier") == "focused" else 0)
             ),
         ))
-    selected = allocator.allocate(candidates)
+    selected = allocator.allocate(candidates, state.cognition.get("base_focused_ids", ()))
     state.cognition["focused_ids"] = selected
+    state.cognition["base_focused_ids"] = [actor_id for actor_id in selected if actor_id not in allocator.awakened_ids]
     for actor_id, actor in state.population.items():
         if actor_id != "player" and isinstance(actor, dict):
             actor["simulation_tier"] = "focused" if actor_id in selected else "persistent"
             actor["awakened_by_player"] = actor_id in allocator.awakened_ids
     return selected
+
+
+def migrate_friend_cognition(state: WorldState) -> bool:
+    """Upgrade known v1 saves in memory; keep friends, memories and today's plan."""
+    if not state.cognition or state.cognition.get("schema_version") != 1:
+        return False
+    old = state.cognition
+    errors = list(cognition_invariant(state))
+    if errors:
+        raise ValueError("invalid legacy cognition: " + "; ".join(errors))
+    policy = CognitionPolicy(**{**old["policy"], "player_awakened_slots": 0, "enforce_automated_budgets": False})
+    old["policy"] = policy.to_dict()
+    old["base_focused_ids"] = [npc_id for npc_id in old["focused_ids"] if npc_id not in old["awakened_ids"]]
+    allocate_focus_slots(state, policy)
+    old["schema_version"] = COGNITION_SCHEMA_VERSION
+    return True
+
+
+def friend_focus_eligibility(state: WorldState, target_id: str, policy: CognitionPolicy) -> Dict[str, Any]:
+    relation = state.relationships.get(target_id, {}).get("player", {})
+    values = {key: int(relation.get(key, 0)) for key in ("closeness", "trust", "conflict")}
+    reason = ""
+    if target_id not in state.population or target_id == "player":
+        reason = "目标 NPC 不存在。"
+    elif target_id in state.cognition.get("awakened_ids", ()):
+        reason = "已建立长期认知联系。"
+    elif target_id in state.cognition.get("base_focused_ids", ()):
+        reason = "该人物已是基础深度 NPC，无需额外接入。"
+    elif policy.player_awakened_slots and len(state.cognition.get("awakened_ids", ())) >= policy.player_awakened_slots:
+        reason = "额外好友名额已用完。"
+    elif (values["closeness"] < policy.friend_min_closeness or values["trust"] < policy.friend_min_trust
+          or values["conflict"] > policy.friend_max_conflict):
+        reason = "需亲近度 ≥ %d、信任 ≥ %d、冲突 ≤ %d；当前 %d / %d / %d。" % (
+            policy.friend_min_closeness, policy.friend_min_trust, policy.friend_max_conflict,
+            values["closeness"], values["trust"], values["conflict"])
+    return {"eligible": not reason, "reason": reason or "建立长期认知联系，不占基础 20 人名额；不消耗主要行动。"}
 
 
 def _reflect_actor(state: WorldState, actor_id: str, policy: CognitionPolicy) -> None:
@@ -266,8 +305,9 @@ def make_awaken_npc_handler(policy: CognitionPolicy):
         awakened = context.state.cognition.setdefault("awakened_ids", [])
         if target_id in awakened:
             return TransactionOutcome(False, True, "already_awakened", "该 NPC 已经被记名觉醒。")
-        if len(awakened) >= policy.player_awakened_slots:
-            return TransactionOutcome(False, False, "awakened_slots_full", "玩家的记名觉醒名额已用完。")
+        eligibility = friend_focus_eligibility(context.state, target_id, policy)
+        if not eligibility["eligible"]:
+            return TransactionOutcome(False, False, "friend_focus_unavailable", eligibility["reason"])
         awakened.append(target_id)
         allocate_focus_slots(context.state, policy)
         context.emit(
@@ -281,7 +321,7 @@ def make_awaken_npc_handler(policy: CognitionPolicy):
         return TransactionOutcome(True, True, "success", "NPC 记名觉醒完成。", commit=True, payload={
             "target_id": target_id,
             "awakened_count": len(awakened),
-            "remaining_slots": policy.player_awakened_slots - len(awakened),
+            "remaining_slots": policy.player_awakened_slots - len(awakened) if policy.player_awakened_slots else None,
         })
     return awaken
 
@@ -386,6 +426,9 @@ class CognitionRuntime:
                 "active_task": bool(actor.get("active_forum_task_id")),
                 "personal_goals": own_goal_context(state, actor_id),
                 "material_commitments": own_assistance_context(state, actor_id),
+                "own_relationships": {target_id: deepcopy(relation) for target_id, relation in sorted(
+                    state.relationships.get(actor_id, {}).items(),
+                    key=lambda pair: -(int(pair[1].get("closeness", 0)) + int(pair[1].get("conflict", 0))))[:6]},
                 "own_resources": {
                     "wealth": actor.get("wealth", 0),
                     "major_remaining": state.action_economy.get("actors", {}).get(actor_id, {}).get("major_remaining", 0),
@@ -434,13 +477,14 @@ class CognitionRuntime:
             raw = deepcopy(cached)
             raw["candidate_revision"] = state.revision
         else:
-            estimated = max(1, len(canonical) // 4) + self.policy.max_output_tokens
+            output_tokens = max(512, self.policy.max_output_tokens) if request.daily_options is not None else self.policy.max_output_tokens
+            estimated = max(1, len(canonical) // 4) + output_tokens
             purpose_limit = (
                 self.policy.phase_call_limit - self.policy.interaction_reserved_phase_calls
                 if purpose == "activity"
                 else self.policy.interaction_phase_call_limit
             )
-            if (
+            if self.policy.enforce_automated_budgets and (
                 automated_calls >= self.policy.daily_call_limit
                 or phase_calls >= self.policy.phase_call_limit
                 or current_purpose_calls >= purpose_limit
@@ -456,7 +500,7 @@ class CognitionRuntime:
             usage["estimated_tokens"] += estimated
             usage["automated_estimated_tokens"] = automated_estimated_tokens + estimated
             try:
-                raw = dict(self.provider.decide(request, max_output_tokens=self.policy.max_output_tokens))
+                raw = dict(self.provider.decide(request, max_output_tokens=output_tokens))
             except Exception:
                 usage["provider_errors"] += 1
                 usage["fallbacks"] += 1
@@ -480,15 +524,49 @@ class CognitionRuntime:
             str(item.get("candidate_id"))
             for item in request.candidates[:self.policy.candidate_limit]
         }
+        valid_choice = response.selected_action_id in legal_ids
+        if request.daily_options is not None:
+            selected = response.daily_choices
+            valid_choice = (isinstance(selected, dict) and set(selected) == set(request.daily_options)
+                            and all(selected[phase] in {item["candidate_id"] for item in options}
+                                    for phase, options in request.daily_options.items()))
         if (
             response.npc_id != request.npc_id
             or response.candidate_revision != state.revision
-            or response.selected_action_id not in legal_ids
+            or not valid_choice
         ):
             usage["rejected_responses"] += 1
             usage["fallbacks"] += 1
             return None
         return response
+
+    def plan_day(self, state: WorldState, actor_id: str, options: Mapping[str, Sequence[Dict[str, Any]]]) -> Dict[str, Any] | None:
+        if actor_id not in state.cognition.get("focused_ids", ()) or not self.provider.configured:
+            return None
+        request = self._request(state, actor_id, [])
+        public_options = {phase: tuple({
+            "candidate_id": f"{phase}:{index}", "activity_id": item["activity_id"],
+            "location_id": item["location_id"], "reason": item.get("decision_reason", ""),
+            "parameters": deepcopy(item.get("parameters", {})),
+        } for index, item in enumerate(candidates[:self.policy.candidate_limit])) for phase, candidates in options.items()}
+        request = replace(request, daily_options=public_options)
+        response = self._select_response(state, request, purpose="activity")
+        if response is None:
+            return None
+        schedule = {}
+        for phase, selected_id in response.daily_choices.items():
+            # Model-facing IDs are not domain IDs: goal continuations inspect
+            # the original candidate ID suffix when checking the current step.
+            index = next(i for i, item in enumerate(public_options[phase]) if item["candidate_id"] == selected_id)
+            slot = deepcopy(options[phase][index])
+            slot.update(decision_source="llm", decision_reason="overnight_composed_plan")
+            schedule[phase] = slot
+        audit = state.cognition["decision_audit"]
+        audit.append({"day": state.clock.day, "phase": state.clock.phase, "npc_id": actor_id,
+                      "candidate_revision": state.revision, "purpose": "activity", "model": self.provider.model,
+                      "daily_choices": dict(response.daily_choices), "reason": response.reason[:500]})
+        del audit[:-96]
+        return schedule
 
     def compose_phone_reply(
         self,
@@ -502,7 +580,7 @@ class CognitionRuntime:
     ) -> Dict[str, Any] | None:
         """Generate non-authoritative wording from an NPC's bounded knowledge."""
         if (
-            npc_id not in state.cognition.get("focused_ids", ())
+            (target_id != "player" and npc_id not in state.cognition.get("focused_ids", ()))
             or not self.provider.configured
             or not callable(getattr(self.provider, "respond", None))
         ):
@@ -649,9 +727,9 @@ class CognitionRuntime:
         recent_dialogues: Sequence[Mapping[str, Any]],
         allowed_facts: Sequence[Mapping[str, Any]],
     ) -> Dict[str, Any] | None:
-        """Reply to a player in person without consuming autonomous budgets."""
+        """Any encountered NPC can reply; dialogue does not allocate a deep slot."""
         if (
-            npc_id not in state.cognition.get("focused_ids", ())
+            npc_id not in state.population
             or not self.provider.configured
             or not callable(getattr(self.provider, "respond", None))
         ):
@@ -745,7 +823,7 @@ class CognitionRuntime:
             request.to_dict(), ensure_ascii=False, sort_keys=True, separators=(",", ":")
         )
         estimated = max(1, len(canonical) // 4) + self.policy.max_output_tokens
-        if counts_against_automated_phase and (
+        if self.policy.enforce_automated_budgets and counts_against_automated_phase and (
             automated_calls >= self.policy.daily_call_limit
             or (purpose_phase_limit is not None and current_purpose_calls >= purpose_phase_limit)
             or phase_calls >= self.policy.phase_call_limit
@@ -915,7 +993,8 @@ def cognition_invariant(state: WorldState) -> Iterable[str]:
     if not aggregate:
         return ()
     errors: list[str] = []
-    if aggregate.get("schema_version") != COGNITION_SCHEMA_VERSION:
+    legacy = aggregate.get("schema_version") == 1
+    if aggregate.get("schema_version") not in (1, COGNITION_SCHEMA_VERSION):
         errors.append("cognition schema_version is unsupported")
     try:
         policy = CognitionPolicy(**aggregate.get("policy", {}))
@@ -923,10 +1002,11 @@ def cognition_invariant(state: WorldState) -> Iterable[str]:
         return [f"invalid cognition policy: {exc}"]
     focused = aggregate.get("focused_ids")
     awakened = aggregate.get("awakened_ids")
-    if not isinstance(focused, list) or len(focused) != len(set(focused)) or len(focused) > policy.total_focus_slots:
+    maximum = policy.total_focus_slots + (0 if legacy else len(awakened or ()))
+    if not isinstance(focused, list) or len(focused) != len(set(focused)) or len(focused) > maximum:
         errors.append("cognition focused_ids exceed or violate slot policy")
         focused = []
-    if not isinstance(awakened, list) or len(awakened) != len(set(awakened)) or len(awakened) > policy.player_awakened_slots:
+    if not isinstance(awakened, list) or len(awakened) != len(set(awakened)) or (policy.player_awakened_slots and len(awakened) > policy.player_awakened_slots):
         errors.append("cognition awakened_ids exceed or violate slot policy")
         awakened = []
     unknown = (set(focused) | set(awakened)) - (set(state.population) - {"player"})
@@ -934,6 +1014,11 @@ def cognition_invariant(state: WorldState) -> Iterable[str]:
         errors.append("cognition slots reference unknown NPCs")
     if not set(awakened).issubset(set(focused)):
         errors.append("awakened NPCs must remain focused")
+    if not legacy:
+        base = aggregate.get("base_focused_ids", [])
+        if (not isinstance(base, list) or len(base) != len(set(base)) or len(base) > policy.total_focus_slots
+                or set(base) & set(awakened) or set(base) | set(awakened) != set(focused)):
+            errors.append("base and additional friend focus must be disjoint and cover focused NPCs")
     for actor_id, memory_ids in aggregate.get("memory_by_actor", {}).items():
         if actor_id not in state.population or actor_id == "player" or not isinstance(memory_ids, list):
             errors.append(f"invalid cognition memory owner {actor_id}")

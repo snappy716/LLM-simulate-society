@@ -235,8 +235,6 @@ class CampusProposalTests(unittest.TestCase):
         target_id = bridge.snapshot()["messaging"]["contacts"][0]["actor_id"]
         make_willing(bridge, target_id)
         state = bridge.kernel._state
-        if target_id not in state.cognition["focused_ids"]:
-            state.cognition["focused_ids"][-1] = target_id
         provider = self.ProposalProvider()
         bridge.cognition_runtime.provider = provider
         state.cognition["usage"]["automated_calls"] = bridge.cognition_runtime.policy.daily_call_limit

@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import json
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 from simulation.api.server import CampusKernelBridge
 from simulation.domain.cognition import CognitionPolicy
 from simulation.persistence.kernel_checkpoint import build_kernel_checkpoint
 from simulation.systems import cognition_invariant
+from simulation.systems.campus_social import DEFAULT_RELATIONSHIP
 
 
 REPOSITORY_DIR = Path(__file__).resolve().parents[1]
@@ -41,6 +43,11 @@ class LastLegalProvider:
 
     def decide(self, request, *, max_output_tokens):
         self.requests.append(request)
+        if request.daily_options is not None:
+            return {"npc_id": request.npc_id, "candidate_revision": request.candidate_revision,
+                    "selected_action_id": None, "reason": "分别安排每个时段。",
+                    "daily_choices": {phase: options[-1]["candidate_id"] for phase, options in request.daily_options.items()},
+                    "_usage": {"prompt_tokens": 80, "completion_tokens": 18}}
         return {
             "npc_id": request.npc_id,
             "candidate_revision": request.candidate_revision,
@@ -92,7 +99,8 @@ class CampusCognitionTests(unittest.TestCase):
         self.assertEqual([], list(cognition_invariant(state)))
         view = bridge.snapshot()["cognition"]
         self.assertEqual(20, view["focused_count"])
-        self.assertEqual(6, view["awakened_slot_limit"])
+        self.assertIsNone(view["awakened_slot_limit"])
+        self.assertIsNone(view["daily_call_limit"])
         self.assertNotIn("observations", view)
         self.assertNotIn("memory_by_actor", view)
         self.assertNotIn("api_key", json.dumps(view))
@@ -101,23 +109,25 @@ class CampusCognitionTests(unittest.TestCase):
         )
         self.assertEqual(set(schema["required"]), set(view))
 
-    def test_player_can_awaken_six_npcs_and_seventh_is_rejected(self):
+    def test_player_friends_are_additional_and_seventh_is_allowed(self):
         bridge = CampusKernelBridge(3)
-        actor_ids = sorted(bridge.snapshot()["population"])[:7]
-        for actor_id in actor_ids[:6]:
+        base = list(bridge.kernel.state.cognition["base_focused_ids"])
+        actor_ids = [npc for npc in sorted(bridge.snapshot()["population"]) if npc not in base][:7]
+        for actor_id in actor_ids:
+            bridge.kernel._state.relationships.setdefault(actor_id, {})["player"] = {**DEFAULT_RELATIONSHIP, "closeness": 50, "trust": 50, "conflict": 0}
             result = command(bridge, "AWAKEN_NPC", target_id=actor_id)
             self.assertTrue(result["ok"])
             self.assertTrue(result["snapshot"]["population"][actor_id]["awakened_by_player"])
-        blocked = command(bridge, "AWAKEN_NPC", target_id=actor_ids[6])
-        self.assertFalse(blocked["ok"])
-        self.assertEqual("awakened_slots_full", blocked["result"]["code"])
         state = bridge.kernel.state
-        self.assertEqual(6, len(state.cognition["awakened_ids"]))
+        self.assertEqual(base, state.cognition["base_focused_ids"])
+        self.assertEqual(7, len(state.cognition["awakened_ids"]))
+        self.assertEqual(27, len(state.cognition["focused_ids"]))
         self.assertTrue(set(state.cognition["awakened_ids"]).issubset(state.cognition["focused_ids"]))
 
     def test_committed_event_becomes_target_subjective_memory_not_public_chronicle_dump(self):
         bridge = CampusKernelBridge(9)
-        actor_id = sorted(bridge.snapshot()["population"])[0]
+        actor_id = next(npc for npc in sorted(bridge.snapshot()["population"]) if npc not in bridge.kernel.state.cognition["focused_ids"])
+        bridge.kernel._state.relationships.setdefault(actor_id, {})["player"] = {**DEFAULT_RELATIONSHIP, "closeness": 50, "trust": 50}
         result = command(bridge, "AWAKEN_NPC", target_id=actor_id)
         self.assertTrue(result["ok"])
         state = bridge.kernel.state
@@ -130,6 +140,8 @@ class CampusCognitionTests(unittest.TestCase):
 
     def test_fake_provider_uses_only_legal_candidates_and_obeys_phase_budget(self):
         bridge = CampusKernelBridge(42)
+        # Explicit opt-in test harness budget, not the shipped game policy.
+        bridge.cognition_runtime.policy = replace(bridge.cognition_runtime.policy, enforce_automated_budgets=True)
         provider = LastLegalProvider()
         bridge.cognition_runtime.provider = provider
         for _ in range(3):

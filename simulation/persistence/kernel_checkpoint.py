@@ -125,7 +125,15 @@ def load_kernel_checkpoint(
     loaded = LoadedCheckpoint(state=state, rng=rng, content_manifest=manifest)
     if expected_content_version is not None and content_version != expected_content_version:
         from simulation.persistence.content_migrations import migrate_campus_content
-        return migrate_campus_content(loaded, expected_content_version)
+        loaded = migrate_campus_content(loaded, expected_content_version)
+    from simulation.systems.campus_cognition import migrate_friend_cognition
+    try:
+        upgraded = migrate_friend_cognition(loaded.state)
+    except (TypeError, ValueError) as exc:
+        raise CheckpointError(str(exc)) from exc
+    if upgraded:
+        loaded = LoadedCheckpoint(loaded.state, loaded.rng, loaded.content_manifest,
+                                  loaded.migrations + ("cognition-v2-additional-friends",))
     return loaded
 
 

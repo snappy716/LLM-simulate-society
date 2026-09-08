@@ -24,7 +24,7 @@ func _run() -> void:
 		bridge.advance_campus_phase()
 		assert(transition.is_active() == (phase == "morning"))
 		assert(paused == (phase == "morning"))
-		assert((bridge.get("_campus_request") as HTTPRequest).timeout == (180.0 if phase == "morning" else 30.0))
+		assert((bridge.get("_campus_request") as HTTPRequest).timeout == (float(bridge.get("campus_snapshot").cognition.overnight_timeout_seconds) if phase == "morning" else 30.0))
 		if phase == "morning":
 			# Duplicate calls are rejected without closing the pending overnight visual.
 			bridge.advance_campus_phase()

@@ -40,27 +40,16 @@ def make_daily_planner(runtime, graph, definitions, policy):
                 candidates = [candidate for candidate in candidates if candidate["activity_id"] != "CLUB_ACTIVITY" or any(
                     club_has_activity(preview, club, state.clock.day, phase)
                     for club in preview.population[actor_id].get("club_ids", ()))]
-                options[phase] = candidates[:3] or [dict(schedule)]
-            # One bounded model choice describes an entire day. The alternatives
-            # use only legal actions known now; the model cannot invent objects.
-            bundles = []
-            for index in range(3):
-                slots = {phase: deepcopy(options[phase][min(index, len(options[phase])-1)]) for phase in phases}
-                anchor = slots[phases[0]]
-                bundles.append({"candidate_id": f"daily:{actor_id}:{state.clock.day}:{index}",
-                    "activity_id": "DAILY_PLAN", "location_id": anchor.get("location_id", ""),
-                    "decision_source": "rule", "decision_reason": "overnight_day_plan",
-                    "reason_codes": ["daily_plan", "known_conditions"], "score": 100-index,
-                    "daily_schedule": slots})
+                options[phase] = deepcopy(candidates[:runtime.policy.candidate_limit] or [dict(schedule)])
             # Legacy saves/new worlds bootstrap locally. Only a new morning is
             # allowed to send autonomous daily planning requests to a provider.
-            choice = (runtime.select(state, actor_id, bundles) if state.clock.phase == "morning" else None) or bundles[0]
-            slots = deepcopy(choice["daily_schedule"])
+            slots = runtime.plan_day(state, actor_id, options) if state.clock.phase == "morning" else None
+            planned_source = "llm" if slots is not None else "rule"
+            if slots is None:
+                slots = {phase: deepcopy(options[phase][0]) for phase in phases}
             for phase, slot in slots.items():
                 slot.update(day=state.clock.day, phase=phase, planned_day=state.clock.day)
-                slot["planned_source"] = choice.get("decision_source", "rule")
-                if choice.get("decision_source") == "llm":
-                    slot["decision_source"] = "llm"
+                slot["planned_source"] = planned_source
                 reserve_decision_destination(graph, occupancy[phase], slot.get("location_id", ""))
             plans[actor_id] = slots
         state.cognition["daily_plans"] = {"schema_version": 1, "day": state.clock.day,

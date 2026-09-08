@@ -182,7 +182,21 @@ class CampusDecisionTests(unittest.TestCase):
                 activity = actor["current_activity"]
                 self.assertEqual("completed", activity["status"], actor_id)
                 self.assertEqual(decision["activity_id"], activity["activity_id"], actor_id)
-                self.assertEqual(decision["location_id"], actor["current_location_id"], actor_id)
+                self.assertEqual(activity["location_id"], actor["current_location_id"], actor_id)
+                if (decision["location_id"] != actor["current_location_id"]
+                        and decision["activity_id"] == "NIGHT_RESCUE" and activity.get("battle_result") == "victory"):
+                    # Successful rescue ends at the escorted victim's safe point,
+                    # not the intended combat site. Require an actual receipt.
+                    task = state.tasks[decision["task_id"]]
+                    site = state.situations["night_sites"]["sites"][task["night_site_id"]]
+                    self.assertEqual("completed", task["state"])
+                    self.assertEqual(site["receipt"]["destination_id"], actor["current_location_id"])
+                    self.assertEqual(site["receipt"]["day"], state.clock.day)
+                    self.assertEqual(site["receipt"]["phase"], state.clock.phase)
+                    self.assertEqual(site["receipt"]["actor_id"], actor_id)
+                    self.assertTrue(site["receipt"]["passage_ids"])
+                else:
+                    self.assertEqual(decision["location_id"], actor["current_location_id"], actor_id)
         second = CampusKernelBridge(42)
         second_trace: list[tuple] = []
         for step in range(4):

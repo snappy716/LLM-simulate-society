@@ -292,6 +292,8 @@ class NightSitesTests(unittest.TestCase):
         comparison.content_version = state.content_version
         self.assertEqual(state, comparison)
         self.assertEqual(rng.snapshot(), result.rng.snapshot())
-        self.assertEqual(spec["target_manifest"], result.content_manifest)
+        self.assertEqual(self.bridge.registry.manifest, result.content_manifest)
+        self.assertIn(spec["migration_id"], result.migrations)
+        self.assertIn("campus-additional-friend-cognition-v2", result.migrations)
         with self.assertRaises(CheckpointError):
             migrate_campus_content(LoadedCheckpoint(state, rng, {}), self.bridge.registry.content_version)
