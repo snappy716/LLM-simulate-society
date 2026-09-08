@@ -108,6 +108,11 @@ class ExpeditionTests(unittest.TestCase):
             finish_expedition(self.context(), self.plan_id, {**receipt, "battle_id": "invented"})
 
     def test_npc_can_refuse_and_is_not_forced_into_party(self):
+        # Isolate consent from the evolving candidate shortlist: a tired helper
+        # can otherwise rank below the four invitations actually sent.
+        for actor_id, candidate in self.state.population.items():
+            if actor_id not in {self.leader, self.helper, "player"}:
+                candidate["night_access"] = "none"
         actor = self.state.population[self.helper]
         actor["needs"].update(safety=100, rest=100, commitment_pressure=100)
         actor["personality"].update(risk_tolerance=0, altruism=0)

@@ -6,10 +6,10 @@
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -350.0
+offset_left = -284.0
 offset_top = 18.0
 offset_right = -20.0
-offset_bottom = 238.0
+offset_bottom = 170.0
 grow_horizontal = 0
 script = ExtResource("1_panel")
 
@@ -30,6 +30,7 @@ text = "第 1 天 · 上午"
 text = "主要行动剩余：1"
 
 [node name="Status" type="Label" parent="Margin/VBox"]
+theme_override_font_sizes/font_size = 14
 autowrap_mode = 3
 text = "正在同步校园状态……"
 
@@ -37,5 +38,6 @@ text = "正在同步校园状态……"
 text = "结束当前时段"
 
 [node name="NightWorld" type="Button" parent="Margin/VBox"]
+theme_override_font_sizes/font_size = 14
 text = "夜相尚未开放"
 disabled = true

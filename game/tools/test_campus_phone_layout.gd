@@ -50,6 +50,7 @@ func _run() -> void:
 			await process_frame
 		assert(not (phone.get("_home_empty") as Label).visible)
 		assert(home_scroll.get_h_scroll_bar().max_value <= home_scroll.size.x + 1)
+		assert(home_scroll.get_v_scroll_bar().max_value <= home_scroll.size.y + 1, "all fifteen apps should fit the desktop home")
 		assert(close.get_viewport_rect().encloses(search.get_global_rect()))
 		for button in buttons:
 			assert(button.visible and button.is_visible_in_tree())
@@ -70,7 +71,8 @@ func _run() -> void:
 			assert(scroll.get_h_scroll_bar().max_value <= scroll.size.x + 1, "horizontal overflow: " + app)
 			if app == "combat":
 				assert((phone.get("_combat_formation_detail") as Control).size.y >= 160)
-				assert(scroll.get_v_scroll_bar().max_value > scroll.size.y)
+				assert(not (phone.get("_combat_formation_detail") as RichTextLabel).scroll_active)
+				assert(not (phone.get("_combat_play_card_action") as Control).is_visible_in_tree())
 			if app == "courses":
 				assert(not (phone.get("_content") as RichTextLabel).text.contains("ORIENTATION_OR_CLASS"))
 			scroll.scroll_vertical = 10000

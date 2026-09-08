@@ -22,6 +22,7 @@ const APPS := [
 ]
 
 var _overlay: ColorRect
+var _phone_panel: PanelContainer
 var _home: Control
 var _combat_pending := false
 var _message_pending := ""
@@ -167,13 +168,12 @@ func _build_ui() -> void:
 	_overlay.visible = false
 	add_child(_overlay)
 	var phone := PanelContainer.new()
+	_phone_panel = phone
 	phone.set_anchors_preset(Control.PRESET_CENTER)
-	phone.offset_left = -195
-	phone.offset_top = -250
-	phone.offset_right = 195
-	phone.offset_bottom = 250
 	phone.theme_type_variation = &"CampusPhone"
 	_overlay.add_child(phone)
+	_overlay.resized.connect(_fit_shell)
+	call_deferred("_fit_shell")
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
 		margin.add_theme_constant_override("margin_%s" % side, 14)
@@ -210,6 +210,17 @@ func _build_ui() -> void:
 	column.add_child(hint)
 
 
+func _fit_shell() -> void:
+	# A desktop terminal, not a narrow physical-phone imitation. Logical canvas
+	# dimensions keep the same readable controls on Windows and macOS.
+	var available := _overlay.size
+	var extent := Vector2(minf(840, available.x - 32), minf(660, available.y - 32))
+	_phone_panel.offset_left = -extent.x / 2
+	_phone_panel.offset_right = extent.x / 2
+	_phone_panel.offset_top = -extent.y / 2
+	_phone_panel.offset_bottom = extent.y / 2
+
+
 func _build_home() -> Control:
 	var home := VBoxContainer.new()
 	var heading := Label.new()
@@ -225,12 +236,13 @@ func _build_home() -> Control:
 	_home_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_home_scroll.follow_focus = true
 	home.add_child(_home_scroll)
-	var body := VBoxContainer.new()
+	var body := HBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", 12)
 	_home_scroll.add_child(body)
 	for group in preload("res://scripts/ui/campus_phone_catalog.gd").GROUPS:
 		var section := VBoxContainer.new()
+		section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		body.add_child(section)
 		_home_sections.append(section)
 		var label := Label.new()
@@ -238,9 +250,9 @@ func _build_home() -> Control:
 		label.add_theme_color_override("font_color", Color("edca88"))
 		section.add_child(label)
 		var grid := GridContainer.new()
-		grid.columns = 2
+		grid.columns = 1
 		grid.add_theme_constant_override("h_separation", 8)
-		grid.add_theme_constant_override("v_separation", 8)
+		grid.add_theme_constant_override("v_separation", 6)
 		section.add_child(grid)
 		for entry in group.entries:
 			for app in APPS:
@@ -251,8 +263,8 @@ func _build_home() -> Control:
 				button.icon = load("res://assets/ui/kenney_game_icons/%s.png" % entry.icon)
 				button.expand_icon = true
 				button.add_theme_constant_override("icon_max_width", 26)
-				button.add_theme_font_size_override("font_size", 13)
-				button.custom_minimum_size = Vector2(152, 64)
+				button.add_theme_font_size_override("font_size", 14)
+				button.custom_minimum_size = Vector2(152, 42)
 				button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				button.tooltip_text = "%s · %s" % [app.name, entry.caption]
 				button.set_meta("search", app.name + entry.caption + entry.keywords)
@@ -263,6 +275,7 @@ func _build_home() -> Control:
 	_home_empty = Label.new()
 	_home_empty.text = "没有匹配的功能，请换个关键词。"
 	_home_empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_home_empty.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_home_empty.visible = false
 	body.add_child(_home_empty)
 	return home
@@ -308,7 +321,8 @@ func _build_app_page() -> VBoxContainer:
 	_app_scroll.add_child(body)
 	_content = RichTextLabel.new()
 	_content.bbcode_enabled = true
-	_content.fit_content = false
+	_content.fit_content = true
+	_content.scroll_active = false
 	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_content.add_theme_font_size_override("normal_font_size", 15)
 	body.add_child(_content)
@@ -522,12 +536,25 @@ func _build_combat_page() -> VBoxContainer:
 	_combat_prepare_action.pressed.connect(_start_combat_preparation)
 	task_row.add_child(_combat_prepare_action)
 	root.add_child(task_row)
+	var workspace := HBoxContainer.new()
+	workspace.add_theme_constant_override("separation", 20)
+	root.add_child(workspace)
+	var formation := VBoxContainer.new()
+	formation.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	formation.size_flags_stretch_ratio = 1.0
+	workspace.add_child(formation)
+	var commands := VBoxContainer.new()
+	commands.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	commands.size_flags_stretch_ratio = 1.0
+	workspace.add_child(commands)
 	_combat_formation_detail = RichTextLabel.new()
 	_combat_formation_detail.bbcode_enabled = true
-	_combat_formation_detail.fit_content = false
-	_combat_formation_detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_combat_formation_detail.fit_content = true
+	_combat_formation_detail.scroll_active = false
+	_combat_formation_detail.custom_minimum_size.y = 160
+	_combat_formation_detail.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_combat_formation_detail.add_theme_font_size_override("normal_font_size", 14)
-	root.add_child(_combat_formation_detail)
+	formation.add_child(_combat_formation_detail)
 	var selection_row := HBoxContainer.new()
 	_combat_character_picker = OptionButton.new()
 	_combat_character_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -544,7 +571,7 @@ func _build_combat_page() -> VBoxContainer:
 			_combat_row_picker.item_count - 1, String(row_entry.id)
 		)
 	selection_row.add_child(_combat_row_picker)
-	root.add_child(selection_row)
+	formation.add_child(selection_row)
 	var formation_actions := HBoxContainer.new()
 	_combat_deploy_action = Button.new()
 	_combat_deploy_action.text = "部署 / 换位"
@@ -555,7 +582,7 @@ func _build_combat_page() -> VBoxContainer:
 	_combat_withdraw_action.text = "撤回候选"
 	_combat_withdraw_action.pressed.connect(_withdraw_combat_character)
 	formation_actions.add_child(_combat_withdraw_action)
-	root.add_child(formation_actions)
+	formation.add_child(formation_actions)
 	var confirmation_actions := HBoxContainer.new()
 	_combat_confirm_action = Button.new()
 	_combat_confirm_action.text = "锁定阵型"
@@ -566,7 +593,7 @@ func _build_combat_page() -> VBoxContainer:
 	_combat_cancel_action.text = "取消准备"
 	_combat_cancel_action.pressed.connect(_cancel_combat_preparation)
 	confirmation_actions.add_child(_combat_cancel_action)
-	root.add_child(confirmation_actions)
+	formation.add_child(confirmation_actions)
 	var round_actions := HBoxContainer.new()
 	_combat_start_action = Button.new()
 	_combat_start_action.text = "开始战斗"
@@ -578,17 +605,19 @@ func _build_combat_page() -> VBoxContainer:
 	_combat_end_round_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_combat_end_round_action.pressed.connect(_end_combat_round)
 	round_actions.add_child(_combat_end_round_action)
-	root.add_child(round_actions)
+	commands.add_child(round_actions)
 	_combat_retreat_action = Button.new()
 	_combat_retreat_action.text = "承受追击并主动撤退"
 	_combat_retreat_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_combat_retreat_action.pressed.connect(_retreat_from_combat)
-	root.add_child(_combat_retreat_action)
+	commands.add_child(_combat_retreat_action)
 	_combat_hand_detail = RichTextLabel.new()
 	_combat_hand_detail.bbcode_enabled = true
+	_combat_hand_detail.fit_content = true
+	_combat_hand_detail.scroll_active = false
 	_combat_hand_detail.custom_minimum_size = Vector2(0, 92)
 	_combat_hand_detail.add_theme_font_size_override("normal_font_size", 13)
-	root.add_child(_combat_hand_detail)
+	commands.add_child(_combat_hand_detail)
 	var card_action_row := HBoxContainer.new()
 	_combat_card_picker = OptionButton.new()
 	_combat_card_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -601,7 +630,7 @@ func _build_combat_page() -> VBoxContainer:
 	_combat_play_card_action.text = "出牌"
 	_combat_play_card_action.pressed.connect(_play_combat_card)
 	card_action_row.add_child(_combat_play_card_action)
-	root.add_child(card_action_row)
+	commands.add_child(card_action_row)
 	var base_action_row := HBoxContainer.new()
 	_combat_base_picker = OptionButton.new()
 	_combat_base_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -614,10 +643,10 @@ func _build_combat_page() -> VBoxContainer:
 	_combat_use_base_action.text = "基础指令"
 	_combat_use_base_action.pressed.connect(_use_combat_base_command)
 	base_action_row.add_child(_combat_use_base_action)
-	root.add_child(base_action_row)
+	commands.add_child(base_action_row)
 	_combat_items = COMBAT_ITEM_PANEL.new()
 	_combat_items.use_requested.connect(_use_combat_item)
-	root.add_child(_combat_items)
+	commands.add_child(_combat_items)
 	_combat_insights = preload("res://scripts/ui/campus_knowledge_insight_panel.gd").new()
 	_combat_insights.use_requested.connect(func(selection):
 		var parameters := _active_combat_parameters()
@@ -626,7 +655,7 @@ func _build_combat_page() -> VBoxContainer:
 			_combat_feedback.text = "正在运用知识洞察……"
 			_send_combat_operation("USE_KNOWLEDGE_INSIGHT", parameters)
 	)
-	root.add_child(_combat_insights)
+	commands.add_child(_combat_insights)
 	_combat_feedback = Label.new()
 	_combat_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_combat_feedback.add_theme_color_override("font_color", Color("e0b86a"))
@@ -1709,6 +1738,7 @@ func _refresh_combat_page() -> void:
 	var active: Dictionary = active_value if active_value is Dictionary else {}
 	_combat_items.refresh(active)
 	_combat_insights.refresh(active)
+	_refresh_combat_presentation(active)
 	var selected_task_at_scene := (
 		_combat_task_picker.selected >= 0
 		and _combat_task_picker.get_item_tooltip(_combat_task_picker.selected) == "at_scene"
@@ -1784,8 +1814,8 @@ func _refresh_combat_page() -> void:
 		"enemy_turn": "敌方行动", "round_end": "轮次结算", "resolved": "战斗结束",
 	}
 	var phase_name := String(phase_names.get(String(active.get("phase", "")), "战斗中"))
-	_combat_formation_detail.text = "[font_size=21][b]%s[/b][/font_size]  ·  %s\n[b]我方阵型[/b]\n%s\n\n[b]敌方阵型[/b]\n%s\n\n[color=#91a4bc]每排最多两人；玩家必须上场；锁定后本场不能替补。目标与排位限制由模拟内核判定。[/color]" % [
-		phase_name, active.get("battle_id", ""), "\n".join(lines), "\n".join(enemy_lines)
+	_combat_formation_detail.text = "[font_size=21][b]%s[/b][/font_size]\n[b]我方阵型[/b]\n%s\n\n[b]敌方阵型[/b]\n%s\n\n[color=#91a4bc]每排最多两人；玩家必须上场；锁定后本场不能替补。[/color]" % [
+		phase_name, "\n".join(lines), "\n".join(enemy_lines)
 	]
 	_refresh_combat_hand(active, cards)
 	var previous_card := _selected_character_card_id
@@ -1820,6 +1850,23 @@ func _refresh_combat_page() -> void:
 	_refresh_combat_hints()
 
 
+func _refresh_combat_presentation(active: Dictionary) -> void:
+	var phase := String(active.get("phase", ""))
+	var setup := phase == "setup"
+	var fighting := phase in ["player_turn", "enemy_turn", "round_end"]
+	_combat_task_picker.get_parent().visible = active.is_empty()
+	_combat_character_picker.get_parent().visible = setup
+	_combat_deploy_action.get_parent().visible = setup
+	_combat_confirm_action.get_parent().visible = setup
+	_combat_start_action.visible = phase == "ready"
+	_combat_end_round_action.visible = fighting
+	_combat_retreat_action.visible = fighting
+	_combat_card_picker.get_parent().visible = fighting
+	_combat_base_picker.get_parent().visible = fighting
+	_combat_items.visible = fighting
+	_combat_insights.visible = fighting
+
+
 func _refresh_combat_hand(active: Dictionary, characters: Dictionary) -> void:
 	var phase := String(active.get("phase", ""))
 	if phase == "setup":
@@ -1847,7 +1894,7 @@ func _refresh_combat_hand(active: Dictionary, characters: Dictionary) -> void:
 			actor_names.get(String(instance.get("owner_actor_id", "")), "人物"),
 			instance.get("display_name", instance.get("card_id", "指令牌")),
 			int(instance.get("command_cost", 0)),
-			instance.get("card_type", "card"),
+			{"attack": "攻击", "defense": "防御", "control": "控制", "knowledge": "知识", "signature": "特质", "support": "支援", "technique": "技巧"}.get(String(instance.get("card_type", "")), "指令"),
 		])
 	_combat_hand_detail.text = "[b]第 %d 轮 · 共享指令点 %d/%d[/b]\n%s" % [
 		int(active.get("round", 1)), points, cap,

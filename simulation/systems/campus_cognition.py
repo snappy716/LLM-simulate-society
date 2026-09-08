@@ -232,6 +232,9 @@ def _reflect_actor(state: WorldState, actor_id: str, policy: CognitionPolicy) ->
 
 def advance_cognition_phase(context, policy: CognitionPolicy) -> Dict[str, Any]:
     state = context.state
+    if state.cognition.get("last_reflection_day") == state.clock.day:
+        return {"cognition_focused_count": len(state.cognition.get("focused_ids", ())),
+                "cognition_awakened_count": len(state.cognition.get("awakened_ids", ()))}
     usage = state.cognition.get("usage", {})
     if usage.get("day") != state.clock.day:
         state.cognition["usage"] = _fresh_usage(state.clock.day)
@@ -245,6 +248,7 @@ def advance_cognition_phase(context, policy: CognitionPolicy) -> Dict[str, Any]:
     focused = allocate_focus_slots(state, policy)
     for actor_id in focused:
         _reflect_actor(state, actor_id, policy)
+    state.cognition["last_reflection_day"] = state.clock.day
     return {
         "cognition_focused_count": len(focused),
         "cognition_awakened_count": len(state.cognition.get("awakened_ids", ())),
@@ -355,6 +359,9 @@ class CognitionRuntime:
             "reason": item["decision_reason"],
             "reason_codes": list(item.get("reason_codes", ())),
             "rule_score": item.get("score", 0),
+            **({"daily_schedule": {phase: {key: slot.get(key) for key in
+                ("activity_id", "location_id", "decision_reason", "parameters")}
+                for phase, slot in item["daily_schedule"].items()}} if "daily_schedule" in item else {}),
         } for item in candidates[:self.policy.candidate_limit])
         return BoundedDecisionRequest(
             npc_id=actor_id,

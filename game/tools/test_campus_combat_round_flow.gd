@@ -83,6 +83,13 @@ func _run_flow() -> void:
 	var card_picker := phone.get("_combat_card_picker") as OptionButton
 	var target_picker := phone.get("_combat_card_target_picker") as OptionButton
 	var play_card := phone.get("_combat_play_card_action") as Button
+	for _frame in range(8):
+		await process_frame
+	assert(play_card.is_visible_in_tree())
+	assert(not deploy.is_visible_in_tree(), "deployment controls should hide after locking formation")
+	var combat_scroll: ScrollContainer = phone.get("_app_scroll")
+	assert(combat_scroll.get_h_scroll_bar().max_value <= combat_scroll.size.x + 1, "active combat horizontal overflow")
+	assert(not hand_detail.text.contains("signature") and not hand_detail.text.contains("knowledge"))
 	assert(not card_picker.disabled)
 	assert(not target_picker.disabled)
 	assert(not play_card.disabled)

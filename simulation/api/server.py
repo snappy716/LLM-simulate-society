@@ -198,7 +198,8 @@ class CampusKernelBridge:
         decision_policy = load_campus_decision_policy(
             registry, activity_definitions, graph
         )
-        base_decision_selector = make_cognition_decision_selector(
+        from simulation.systems.campus_daily_plans import make_daily_planner, daily_plans_invariant
+        prepare_daily_plans, base_decision_selector = make_daily_planner(
             self.cognition_runtime, graph, activity_definitions, decision_policy
         )
         def decision_selector(context, actor_id, schedule_plan, destination_occupancy):
@@ -217,7 +218,8 @@ class CampusKernelBridge:
                     for club_id in actor.get("club_ids", ())
                 )
             ):
-                return schedule_plan
+                return dict(schedule_plan, day=context.state.clock.day, phase=context.state.clock.phase,
+                            decision_source="schedule", candidate_count=1)
             return plan
         task_templates = load_surface_task_templates(registry)
         for task_template in task_templates.values():
@@ -263,8 +265,10 @@ class CampusKernelBridge:
             summary.update(prepare_npc_combat_supplies(context, graph, traverse_handler, inventory_handler))
             self.cognition_runtime.publish_status(context.state)
             summary.update(advance_cognition_phase(context, cognition_policy))
-            summary.update(advance_personal_goals(context))
             summary.update(advance_assistance_upkeep(context))
+            if context.state.cognition.get("daily_plans", {}).get("day") != context.state.clock.day:
+                summary.update(advance_personal_goals(context))
+                summary.update(prepare_daily_plans(context))
             return summary
 
         forum_phase_upkeep = make_surface_forum_phase_upkeep(
@@ -347,6 +351,7 @@ class CampusKernelBridge:
         self.kernel.add_event_projector(project_cognition_events)
         self.kernel.add_invariant(chronicle_invariant)
         self.kernel.add_invariant(cognition_invariant)
+        self.kernel.add_invariant(daily_plans_invariant)
         self.kernel.add_invariant(campus_interaction_invariant)
         self.kernel.add_invariant(campus_messaging_invariant)
         self.kernel.add_invariant(campus_proposal_invariant)
@@ -388,14 +393,14 @@ class CampusKernelBridge:
                         **review_campus_supply(context),
                         **advance_campus_interactions(
                             context, interaction_policy, intelligence_policy,
-                            self.cognition_runtime,
+                            self.cognition_runtime if context.state.clock.phase == "morning" else None,
                         ),
                         **advance_campus_phone_messages(
                             context, messaging_policy, intelligence_policy,
                         ),
                         **advance_npc_player_proposals(
                             context, interaction_policy, messaging_policy,
-                            self.cognition_runtime,
+                            self.cognition_runtime if context.state.clock.phase == "morning" else None,
                         ),
                         **advance_assistance_requests(context, messaging_policy, interaction_policy.pair_cooldown_phases),
                         **advance_assistance_deliveries(context, messaging_policy),

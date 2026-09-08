@@ -132,6 +132,9 @@ class CampusCognitionTests(unittest.TestCase):
         bridge = CampusKernelBridge(42)
         provider = LastLegalProvider()
         bridge.cognition_runtime.provider = provider
+        for _ in range(3):
+            self.assertTrue(command(bridge, "ADVANCE_PHASE")["ok"])
+        self.assertEqual([], provider.requests)
         result = command(bridge, "ADVANCE_PHASE")
         self.assertTrue(result["ok"])
         state = bridge.kernel.state
@@ -141,10 +144,10 @@ class CampusCognitionTests(unittest.TestCase):
         self.assertEqual(4, usage["calls"])
         self.assertEqual(4, usage["automated_calls"])
         self.assertEqual(0, usage["player_dialogue_calls"])
-        self.assertEqual(4, usage["phase_calls"]["afternoon"])
-        self.assertEqual(2, usage["purpose_phase_calls"]["afternoon:activity"])
-        self.assertEqual(1, usage["purpose_phase_calls"]["afternoon:interaction"])
-        self.assertEqual(1, usage["purpose_phase_calls"]["afternoon:interaction_dialogue"])
+        self.assertEqual(4, usage["phase_calls"]["morning"])
+        self.assertEqual(2, usage["purpose_phase_calls"]["morning:activity"])
+        self.assertEqual(1, usage["purpose_phase_calls"]["morning:interaction"])
+        self.assertEqual(1, usage["purpose_phase_calls"]["morning:interaction_dialogue"])
         self.assertEqual(312, usage["prompt_tokens"])
         self.assertEqual(74, usage["completion_tokens"])
         llm_decisions = [
@@ -176,6 +179,8 @@ class CampusCognitionTests(unittest.TestCase):
         bridge = CampusKernelBridge(8)
         provider = InvalidProvider()
         bridge.cognition_runtime.provider = provider
+        for _ in range(3):
+            self.assertTrue(command(bridge, "ADVANCE_PHASE")["ok"])
         result = command(bridge, "ADVANCE_PHASE")
         self.assertTrue(result["ok"])
         state = bridge.kernel.state

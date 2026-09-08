@@ -110,20 +110,21 @@ metadata/location_id = "psychology_center"
 [node name="Instructions" type="Label" parent="UI"]
 offset_left = 18.0
 offset_top = 16.0
-offset_right = 660.0
-offset_bottom = 84.0
+offset_right = 550.0
+offset_bottom = 55.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
-theme_override_font_sizes/font_size = 18
-text = "校园美术联调 · WASD 移动/走到边缘换区 · E 查看附近 NPC · R 随机人物模块\nM 校园地图/快速移动 · T 手机 · 左下角镜头缩放 · 画面上下边缘浏览"
+theme_override_font_sizes/font_size = 14
+text = "WASD 移动　E 人物　M 地图　T 校园终端"
+tooltip_text = "沿道路走到边缘进入相邻区域；楼梯和门口进入室内。\n画面上下边缘浏览；左下角切换镜头缩放。\n开发联调：R 随机人物模块（仅外观）。"
 
 [node name="CurrentMap" type="Label" parent="UI"]
 offset_left = 18.0
-offset_top = 88.0
+offset_top = 52.0
 offset_right = 590.0
-offset_bottom = 118.0
+offset_bottom = 82.0
 theme_override_colors/font_color = Color(0.78, 0.9, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 2

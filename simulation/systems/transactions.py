@@ -1,6 +1,8 @@
 """Atomic command execution for the new authoritative world state."""
 from __future__ import annotations
 
+import json
+
 import threading
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
@@ -109,6 +111,7 @@ class WorldKernel:
     ) -> None:
         state.require_valid()
         self._state = state.clone()
+        self._compact_legacy_results(self._state)
         self._rng = rng or DeterministicRngPool(state.master_seed)
         if self._rng.master_seed != state.master_seed:
             raise ValueError("world state and RNG master seeds differ")
@@ -137,6 +140,7 @@ class WorldKernel:
             if self._state.revision != expected_revision:
                 raise RevisionConflictError("world changed while loading checkpoint")
             candidate = state.clone()
+            self._compact_legacy_results(candidate)
             candidate.require_valid([error for invariant in self._invariants for error in invariant(candidate)])
             if candidate.master_seed != rng.master_seed:
                 raise ValueError("world state and RNG master seeds differ")
@@ -252,8 +256,18 @@ class WorldKernel:
         if record is not None:
             if record.get("fingerprint") != fingerprint:
                 raise DuplicateCommandError(f"command_id reused with different payload: {command_id}")
-            return CommandResult.from_dict(record["result"])
+            # Old checkpoints stored a nested mutable result. New records keep
+            # immutable JSON, so drafting a command does not recursively copy
+            # every event produced by every previous day. Replay is still exact.
+            payload = json.loads(record["result_json"]) if "result_json" in record else record["result"]
+            return CommandResult.from_dict(payload)
         return None
+
+    @staticmethod
+    def _compact_legacy_results(state: WorldState) -> None:
+        for record in state.processed_commands.values():
+            if "result_json" not in record and "result" in record:
+                record["result_json"] = json.dumps(record.pop("result"), ensure_ascii=False, separators=(",", ":"))
 
     @staticmethod
     def _remember_result(
@@ -263,7 +277,7 @@ class WorldKernel:
     ) -> None:
         state.processed_commands[result.command_id] = {
             "fingerprint": fingerprint,
-            "result": result.to_dict(),
+            "result_json": json.dumps(result.to_dict(), ensure_ascii=False, separators=(",", ":")),
         }
 
     @staticmethod

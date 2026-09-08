@@ -20,6 +20,11 @@ func _run() -> void:
 	var theme_path := String(ProjectSettings.get_setting("gui/theme/custom"))
 	var shared := load(theme_path) as Theme
 	assert(shared != null)
+	for font_kind in ["normal_font", "bold_font"]:
+		var font := shared.get_font(font_kind, "RichTextLabel")
+		var glyphs := "敌方阵型校园终端知识物品交易"
+		for index in glyphs.length():
+			assert(font.has_char(glyphs.unicode_at(index)), "missing CJK glyph in " + font_kind + ": " + glyphs[index])
 	change_scene_to_file("res://scenes/campus/campus_collab_test.tscn")
 	await process_frame
 	await process_frame
