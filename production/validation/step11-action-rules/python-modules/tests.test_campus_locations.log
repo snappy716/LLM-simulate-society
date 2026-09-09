@@ -1,0 +1,21 @@
+test_classrooms_and_dorm_rooms_exist_as_pooled_enterable_groups (tests.test_campus_locations.CampusLocationTests) ... ok
+test_fixed_route_minutes_are_deterministic (tests.test_campus_locations.CampusLocationTests) ... ok
+test_graph_projects_to_authoritative_world_state (tests.test_campus_locations.CampusLocationTests) ... ok
+test_large_map_has_regions_buildings_and_enterable_interiors (tests.test_campus_locations.CampusLocationTests) ... ok
+test_open_hours_and_access_tags_gate_entry_but_never_trap_actor (tests.test_campus_locations.CampusLocationTests) ... ok
+test_outdoor_regions_form_a_connected_walkable_map (tests.test_campus_locations.CampusLocationTests) ... ok
+test_region_roads_are_continuous_and_buildings_are_scene_entrances (tests.test_campus_locations.CampusLocationTests) ... ok
+test_actor_can_exit_after_location_closes (tests.test_campus_locations.CampusTraversalTests) ... ok
+test_campus_map_fast_travel_uses_graph_and_remains_free (tests.test_campus_locations.CampusTraversalTests) ... ok
+test_campus_map_rejects_interior_as_direct_destination (tests.test_campus_locations.CampusTraversalTests) ... ok
+test_closed_or_unauthorized_entry_does_not_commit (tests.test_campus_locations.CampusTraversalTests) ... ok
+test_crossing_road_keeps_outdoor_scene_continuous (tests.test_campus_locations.CampusTraversalTests) ... ok
+test_free_movement_does_not_consume_phase_time_and_remote_passage_is_rejected (tests.test_campus_locations.CampusTraversalTests) ... ok
+test_room_group_uses_reusable_interior_template (tests.test_campus_locations.CampusTraversalTests) ... ok
+test_stairs_entrance_requests_building_scene (tests.test_campus_locations.CampusTraversalTests) ... ok
+test_stale_phase_movement_is_rejected_without_commit (tests.test_campus_locations.CampusTraversalTests) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.255s
+
+OK

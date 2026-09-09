@@ -1,0 +1,117 @@
+{"index": 0, "day": null, "kind": "interaction", "seconds": 0.816, "error": null, "finish_reason": "stop"}
+unattended 1 {'day': 3, 'phase': 'afternoon', 'minute': 0}
+unattended 2 {'day': 3, 'phase': 'evening', 'minute': 0}
+unattended 3 {'day': 3, 'phase': 'late_night', 'minute': 0}
+unattended 4 {'day': 4, 'phase': 'morning', 'minute': 0}
+unattended 5 {'day': 4, 'phase': 'afternoon', 'minute': 0}
+unattended 6 {'day': 4, 'phase': 'evening', 'minute': 0}
+unattended 7 {'day': 4, 'phase': 'late_night', 'minute': 0}
+unattended 8 {'day': 5, 'phase': 'morning', 'minute': 0}
+unattended 1 {'day': 3, 'phase': 'afternoon', 'minute': 0}
+unattended 2 {'day': 3, 'phase': 'evening', 'minute': 0}
+unattended 3 {'day': 3, 'phase': 'late_night', 'minute': 0}
+{"index": 0, "day": 4, "kind": "plan", "seconds": 1.325, "error": null, "finish_reason": "stop"}
+{"index": 1, "day": 4, "kind": "plan", "seconds": 1.565, "error": null, "finish_reason": "stop"}
+{"index": 2, "day": 4, "kind": "plan", "seconds": 1.617, "error": null, "finish_reason": "stop"}
+{"index": 3, "day": 4, "kind": "plan", "seconds": 1.813, "error": null, "finish_reason": "stop"}
+{"index": 4, "day": 4, "kind": "plan", "seconds": 1.252, "error": null, "finish_reason": "stop"}
+{"index": 5, "day": 4, "kind": "plan", "seconds": 1.699, "error": null, "finish_reason": "stop"}
+{"index": 6, "day": 4, "kind": "plan", "seconds": 1.548, "error": null, "finish_reason": "stop"}
+{"index": 7, "day": 4, "kind": "plan", "seconds": 1.709, "error": null, "finish_reason": "stop"}
+{"index": 8, "day": 4, "kind": "plan", "seconds": 1.548, "error": null, "finish_reason": "stop"}
+{"index": 9, "day": 4, "kind": "plan", "seconds": 1.677, "error": null, "finish_reason": "stop"}
+{"index": 10, "day": 4, "kind": "plan", "seconds": 2.068, "error": null, "finish_reason": "stop"}
+{"index": 11, "day": 4, "kind": "plan", "seconds": 1.545, "error": null, "finish_reason": "stop"}
+{"index": 12, "day": 4, "kind": "plan", "seconds": 1.477, "error": null, "finish_reason": "stop"}
+{"index": 13, "day": 4, "kind": "plan", "seconds": 1.856, "error": null, "finish_reason": "stop"}
+{"index": 14, "day": 4, "kind": "plan", "seconds": 1.806, "error": null, "finish_reason": "stop"}
+{"index": 15, "day": 4, "kind": "plan", "seconds": 1.767, "error": null, "finish_reason": "stop"}
+{"index": 16, "day": 4, "kind": "plan", "seconds": 1.572, "error": null, "finish_reason": "stop"}
+{"index": 17, "day": 4, "kind": "plan", "seconds": 1.677, "error": null, "finish_reason": "stop"}
+{"index": 18, "day": 4, "kind": "plan", "seconds": 1.672, "error": null, "finish_reason": "stop"}
+{"index": 19, "day": 4, "kind": "plan", "seconds": 1.898, "error": null, "finish_reason": "stop"}
+{"index": 20, "day": 4, "kind": "dialogue", "seconds": 1.454, "error": null, "finish_reason": "stop"}
+{"index": 21, "day": 4, "kind": "dialogue", "seconds": 1.663, "error": null, "finish_reason": "stop"}
+{"index": 22, "day": 4, "kind": "dialogue", "seconds": 1.332, "error": null, "finish_reason": "stop"}
+unattended 4 {'day': 4, 'phase': 'morning', 'minute': 0}
+unattended 5 {'day': 4, 'phase': 'afternoon', 'minute': 0}
+unattended 6 {'day': 4, 'phase': 'evening', 'minute': 0}
+unattended 7 {'day': 4, 'phase': 'late_night', 'minute': 0}
+{"index": 23, "day": 5, "kind": "plan", "seconds": 1.417, "error": null, "finish_reason": "stop"}
+{"index": 24, "day": 5, "kind": "plan", "seconds": 1.489, "error": null, "finish_reason": "stop"}
+{"index": 25, "day": 5, "kind": "plan", "seconds": 1.772, "error": null, "finish_reason": "stop"}
+{"index": 26, "day": 5, "kind": "plan", "seconds": 1.351, "error": null, "finish_reason": "stop"}
+{"index": 27, "day": 5, "kind": "plan", "seconds": 1.972, "error": null, "finish_reason": "stop"}
+{"index": 28, "day": 5, "kind": "plan", "seconds": 1.942, "error": null, "finish_reason": "stop"}
+{"index": 29, "day": 5, "kind": "plan", "seconds": 1.638, "error": null, "finish_reason": "stop"}
+{"index": 30, "day": 5, "kind": "plan", "seconds": 1.243, "error": null, "finish_reason": "stop"}
+{"index": 31, "day": 5, "kind": "plan", "seconds": 1.707, "error": null, "finish_reason": "stop"}
+{"index": 32, "day": 5, "kind": "plan", "seconds": 1.592, "error": null, "finish_reason": "stop"}
+{"index": 33, "day": 5, "kind": "plan", "seconds": 1.582, "error": null, "finish_reason": "stop"}
+{"index": 34, "day": 5, "kind": "plan", "seconds": 1.695, "error": null, "finish_reason": "stop"}
+{"index": 35, "day": 5, "kind": "plan", "seconds": 1.684, "error": null, "finish_reason": "stop"}
+{"index": 36, "day": 5, "kind": "plan", "seconds": 1.598, "error": null, "finish_reason": "stop"}
+{"index": 37, "day": 5, "kind": "plan", "seconds": 1.759, "error": null, "finish_reason": "stop"}
+{"index": 38, "day": 5, "kind": "plan", "seconds": 1.716, "error": null, "finish_reason": "stop"}
+{"index": 39, "day": 5, "kind": "plan", "seconds": 1.331, "error": null, "finish_reason": "stop"}
+{"index": 40, "day": 5, "kind": "plan", "seconds": 1.91, "error": null, "finish_reason": "stop"}
+{"index": 41, "day": 5, "kind": "plan", "seconds": 1.751, "error": null, "finish_reason": "stop"}
+{"index": 42, "day": 5, "kind": "plan", "seconds": 1.343, "error": null, "finish_reason": "stop"}
+{"index": 43, "day": 5, "kind": "dialogue", "seconds": 1.158, "error": null, "finish_reason": "stop"}
+{"index": 44, "day": 5, "kind": "dialogue", "seconds": 1.174, "error": null, "finish_reason": "stop"}
+{"index": 45, "day": 5, "kind": "dialogue", "seconds": 1.238, "error": null, "finish_reason": "stop"}
+unattended 8 {'day': 5, 'phase': 'morning', 'minute': 0}
+participant 1 {'day': 3, 'phase': 'afternoon', 'minute': 0}
+participant 2 {'day': 3, 'phase': 'evening', 'minute': 0}
+participant 3 {'day': 3, 'phase': 'late_night', 'minute': 0}
+{"index": 0, "day": 4, "kind": "plan", "seconds": 2.213, "error": null, "finish_reason": "stop"}
+{"index": 1, "day": 4, "kind": "plan", "seconds": 1.514, "error": null, "finish_reason": "stop"}
+{"index": 2, "day": 4, "kind": "plan", "seconds": 1.396, "error": null, "finish_reason": "stop"}
+{"index": 3, "day": 4, "kind": "plan", "seconds": 1.521, "error": null, "finish_reason": "stop"}
+{"index": 4, "day": 4, "kind": "plan", "seconds": 1.433, "error": null, "finish_reason": "stop"}
+{"index": 5, "day": 4, "kind": "plan", "seconds": 1.342, "error": null, "finish_reason": "stop"}
+{"index": 6, "day": 4, "kind": "plan", "seconds": 1.306, "error": null, "finish_reason": "stop"}
+{"index": 7, "day": 4, "kind": "plan", "seconds": 1.582, "error": null, "finish_reason": "stop"}
+{"index": 8, "day": 4, "kind": "plan", "seconds": 1.286, "error": null, "finish_reason": "stop"}
+{"index": 9, "day": 4, "kind": "plan", "seconds": 1.452, "error": null, "finish_reason": "stop"}
+{"index": 10, "day": 4, "kind": "plan", "seconds": 1.622, "error": null, "finish_reason": "stop"}
+{"index": 11, "day": 4, "kind": "plan", "seconds": 1.518, "error": null, "finish_reason": "stop"}
+{"index": 12, "day": 4, "kind": "plan", "seconds": 1.166, "error": null, "finish_reason": "stop"}
+{"index": 13, "day": 4, "kind": "plan", "seconds": 1.476, "error": null, "finish_reason": "stop"}
+{"index": 14, "day": 4, "kind": "plan", "seconds": 1.642, "error": null, "finish_reason": "stop"}
+{"index": 15, "day": 4, "kind": "plan", "seconds": 1.579, "error": null, "finish_reason": "stop"}
+{"index": 16, "day": 4, "kind": "plan", "seconds": 1.563, "error": null, "finish_reason": "stop"}
+{"index": 17, "day": 4, "kind": "plan", "seconds": 1.944, "error": null, "finish_reason": "stop"}
+{"index": 18, "day": 4, "kind": "plan", "seconds": 1.817, "error": null, "finish_reason": "stop"}
+{"index": 19, "day": 4, "kind": "plan", "seconds": 1.87, "error": null, "finish_reason": "stop"}
+{"index": 20, "day": 4, "kind": "dialogue", "seconds": 1.516, "error": null, "finish_reason": "stop"}
+{"index": 21, "day": 4, "kind": "dialogue", "seconds": 1.201, "error": null, "finish_reason": "stop"}
+{"index": 22, "day": 4, "kind": "dialogue", "seconds": 1.235, "error": null, "finish_reason": "stop"}
+participant 4 {'day': 4, 'phase': 'morning', 'minute': 0}
+participant 5 {'day': 4, 'phase': 'afternoon', 'minute': 0}
+participant 6 {'day': 4, 'phase': 'evening', 'minute': 0}
+participant 7 {'day': 4, 'phase': 'late_night', 'minute': 0}
+{"index": 23, "day": 5, "kind": "plan", "seconds": 1.735, "error": null, "finish_reason": "stop"}
+{"index": 24, "day": 5, "kind": "plan", "seconds": 1.683, "error": null, "finish_reason": "stop"}
+{"index": 25, "day": 5, "kind": "plan", "seconds": 1.494, "error": null, "finish_reason": "stop"}
+{"index": 26, "day": 5, "kind": "plan", "seconds": 1.841, "error": null, "finish_reason": "stop"}
+{"index": 27, "day": 5, "kind": "plan", "seconds": 1.593, "error": null, "finish_reason": "stop"}
+{"index": 28, "day": 5, "kind": "plan", "seconds": 1.902, "error": null, "finish_reason": "stop"}
+{"index": 29, "day": 5, "kind": "plan", "seconds": 1.779, "error": null, "finish_reason": "stop"}
+{"index": 30, "day": 5, "kind": "plan", "seconds": 1.584, "error": null, "finish_reason": "stop"}
+{"index": 31, "day": 5, "kind": "plan", "seconds": 1.791, "error": null, "finish_reason": "stop"}
+{"index": 32, "day": 5, "kind": "plan", "seconds": 1.805, "error": null, "finish_reason": "stop"}
+{"index": 33, "day": 5, "kind": "plan", "seconds": 1.645, "error": null, "finish_reason": "stop"}
+{"index": 34, "day": 5, "kind": "plan", "seconds": 1.637, "error": null, "finish_reason": "stop"}
+{"index": 35, "day": 5, "kind": "plan", "seconds": 1.463, "error": null, "finish_reason": "stop"}
+{"index": 36, "day": 5, "kind": "plan", "seconds": 1.502, "error": null, "finish_reason": "stop"}
+{"index": 37, "day": 5, "kind": "plan", "seconds": 1.303, "error": null, "finish_reason": "stop"}
+{"index": 38, "day": 5, "kind": "plan", "seconds": 1.89, "error": null, "finish_reason": "stop"}
+{"index": 39, "day": 5, "kind": "plan", "seconds": 1.459, "error": null, "finish_reason": "stop"}
+{"index": 40, "day": 5, "kind": "plan", "seconds": 1.379, "error": null, "finish_reason": "stop"}
+{"index": 41, "day": 5, "kind": "plan", "seconds": 1.329, "error": null, "finish_reason": "stop"}
+{"index": 42, "day": 5, "kind": "plan", "seconds": 1.81, "error": null, "finish_reason": "stop"}
+{"index": 43, "day": 5, "kind": "dialogue", "seconds": 1.509, "error": null, "finish_reason": "stop"}
+{"index": 44, "day": 5, "kind": "dialogue", "seconds": 1.218, "error": null, "finish_reason": "stop"}
+participant 8 {'day': 5, 'phase': 'morning', 'minute': 0}
+LIVE_CAUSAL_COMPARISON_OK

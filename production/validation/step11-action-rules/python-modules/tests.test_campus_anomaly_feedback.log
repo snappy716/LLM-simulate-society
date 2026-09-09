@@ -1,0 +1,17 @@
+test_actual_retreat_keeps_costs_without_crediting_containment (tests.test_campus_anomaly_feedback.AnomalyFeedbackTests) ... ok
+test_dated_snapshot_forgery_rejected_and_disk_roundtrip (tests.test_campus_anomaly_feedback.AnomalyFeedbackTests) ... ok
+test_day_only_real_cost_does_not_become_night_success (tests.test_campus_anomaly_feedback.AnomalyFeedbackTests) ... ok
+test_fresh_disclosure_updates_experience_not_health_or_resources (tests.test_campus_anomaly_feedback.AnomalyFeedbackTests) ... ok
+test_guide_distinguishes_costs_and_does_not_promise_healing (tests.test_campus_anomaly_feedback.AnomalyFeedbackTests) ... ok
+test_mixed_route_only_counts_actual_support_and_resolved_site (tests.test_campus_anomaly_feedback.AnomalyFeedbackTests) ... ok
+test_night_finishes_only_after_real_day_support_already_resolved_core (tests.test_campus_anomaly_feedback.AnomalyFeedbackTests) ... ok
+test_night_only_does_not_claim_player_did_day_support (tests.test_campus_anomaly_feedback.AnomalyFeedbackTests) ... ok
+test_no_participation_does_not_take_credit_for_other_npcs (tests.test_campus_anomaly_feedback.AnomalyFeedbackTests) ... ok
+test_old_report_does_not_backfill_information_on_view (tests.test_campus_anomaly_feedback.AnomalyFeedbackTests) ... ok
+test_stale_report_stays_dated_after_actual_support_and_night (tests.test_campus_anomaly_feedback.AnomalyFeedbackTests) ... ok
+test_stranger_cannot_borrow_players_routes_or_private_reports (tests.test_campus_anomaly_feedback.AnomalyFeedbackTests) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 137.754s
+
+OK

@@ -33,6 +33,14 @@ class CampusDailyPlansTests(unittest.TestCase):
         self.assertEqual(len(day_requests), len({request.npc_id for request in day_requests}))
         for request in day_requests:
             self.assertEqual({"morning", "afternoon", "evening", "late_night"}, set(request.daily_options))
+            self.assertEqual(2, request.state["action_rules"]["clock"]["day"])
+            self.assertEqual(1, request.state["action_rules"]["phase_policy"]["morning"]["major_actions"])
+            self.assertEqual(8, len(request.state["action_rules"]["personality_scale"]["meanings"]))
+            for options in request.daily_options.values():
+                for option in options:
+                    self.assertIn("action_class", option)
+                    self.assertIn("major_action_cost", option)
+                    self.assertTrue(option["cost_rechecked_at_execution"])
         planned = deepcopy(bridge.kernel.state.cognition["daily_plans"])
         self.assertEqual(2, planned["day"])
         with tempfile.TemporaryDirectory() as directory:

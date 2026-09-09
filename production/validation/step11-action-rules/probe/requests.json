@@ -1,0 +1,37 @@
+[
+  {
+    "index": 0,
+    "started_at": "2026-09-09T09:30:18.771488+00:00",
+    "npc_id": null,
+    "day": null,
+    "phase": null,
+    "kind": "interaction",
+    "output_limit": 160,
+    "request": {
+      "test": "causal_connectivity"
+    },
+    "http_status": 200,
+    "actual_model": "deepseek-v4-flash",
+    "response_id": "1eb25160-b0e1-4beb-a98b-89118184d26f",
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 42,
+      "completion_tokens": 5,
+      "total_tokens": 47,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 42
+    },
+    "content_chars": 11,
+    "response": {
+      "ok": true,
+      "_usage": {
+        "prompt_tokens": 42,
+        "completion_tokens": 5
+      }
+    },
+    "seconds": 0.816
+  }
+]

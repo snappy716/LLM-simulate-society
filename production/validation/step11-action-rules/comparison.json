@@ -1,0 +1,1062 @@
+{
+  "provider_axis": {
+    "same_checkpoint_verified": true,
+    "case_id": "night-site:night:d02:0029:south_gate_lost_student",
+    "days": 2,
+    "axis": "provider",
+    "branches": {
+      "rule:unattended": {
+        "status": "easing",
+        "history": [
+          {
+            "day": 3,
+            "phase": "late_night",
+            "helper_id": "campus_student_087",
+            "claim_id": null,
+            "before": {
+              "shell": 30,
+              "core": 60,
+              "coherence": 60
+            },
+            "after": {
+              "shell": 0,
+              "core": 60,
+              "coherence": 40
+            },
+            "route": "night_containment",
+            "revision": 1,
+            "task_id": "night:d03:0041:ai_lab_false_signal",
+            "battle_id": "battle:000016"
+          },
+          {
+            "day": 4,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00001494",
+            "before": {
+              "shell": 0,
+              "core": 60,
+              "coherence": 40
+            },
+            "after": {
+              "shell": 0,
+              "core": 40,
+              "coherence": 20
+            },
+            "route": "day_support",
+            "revision": 2,
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 50,
+                  "closeness": 0,
+                  "respect": 0
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 58,
+                  "closeness": 4,
+                  "respect": 3
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 50,
+                  "closeness": 0,
+                  "respect": 0
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 52,
+                  "closeness": 3,
+                  "respect": 1
+                }
+              }
+            }
+          },
+          {
+            "day": 5,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00001815",
+            "before": {
+              "shell": 0,
+              "core": 40,
+              "coherence": 20
+            },
+            "after": {
+              "shell": 0,
+              "core": 20,
+              "coherence": 0
+            },
+            "route": "day_support",
+            "revision": 3,
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 58,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 66,
+                  "closeness": 8,
+                  "respect": 6
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 52,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 54,
+                  "closeness": 6,
+                  "respect": 2
+                }
+              }
+            }
+          }
+        ],
+        "heard_by_player": false,
+        "player_supports": 0,
+        "player_night_containments": 0,
+        "command_failures": {},
+        "events": {
+          "FORUM_TASK_CLAIMED": 48,
+          "FORUM_TASK_VIEWED": 397,
+          "CAMPUS_ITEM_ACTION_COMPLETED": 543,
+          "NPC_ROUTINE_ACTION_COMPLETED": 506,
+          "ACTOR_LOCATION_CHANGED": 6779,
+          "NPC_COMBAT_SUPPLY_PREPARED": 1,
+          "NPC_DECISION_MADE": 1594,
+          "CAMPUS_ACTIVITY_EFFECT_APPLIED": 1485,
+          "NPC_ACTIVITY_COMPLETED": 1594,
+          "FORUM_TASK_COMPLETED": 47,
+          "CAMPUS_GROWTH_COMPLETED": 19,
+          "NPC_PERSONAL_GOAL_PROGRESS": 19,
+          "CAMPUS_TRADE_OFFERED": 61,
+          "CAMPUS_TRADE_SETTLED": 61,
+          "NPC_INTERACTION_RESOLVED": 96,
+          "NPC_INFORMATION_SHARED": 30,
+          "PHONE_MESSAGE_SENT": 81,
+          "WORLD_PHASE_ADVANCED": 8,
+          "FORUM_TASK_PUBLISHED": 48,
+          "NIGHT_WORLD_ENTERED": 17,
+          "CLUB_ACTIVITY_ATTENDED": 25,
+          "PARTY_INVITATION_DECLINED": 19,
+          "BATTLE_PREPARATION_STARTED": 10,
+          "COMBAT_CHARACTER_DEPLOYED": 10,
+          "BATTLE_DEPLOYMENT_CONFIRMED": 10,
+          "NIGHT_COMBAT_ENTRY_ACCOUNTED": 10,
+          "COMBAT_ROUND_STARTED": 74,
+          "COMBAT_ENEMY_INTENTS": 74,
+          "COMBAT_CARD_PLAYED": 108,
+          "COMBAT_BASE_COMMAND_USED": 33,
+          "COMBAT_ENEMY_ACTION": 64,
+          "CAMPUS_SITUATION_CHANGED": 31,
+          "NIGHT_SITE_RESOLVED": 10,
+          "COMBAT_VICTORY": 10,
+          "NPC_NIGHT_TASK_EXECUTED": 10,
+          "CAMPUS_INVESTIGATION_COMPLETED": 6,
+          "FIELD_REPORT_SUBMITTED": 6,
+          "KNOWLEDGE_INSIGHT_USED": 1,
+          "CAMPUS_REST_RECOVERY": 6,
+          "COMBAT_ITEM_USED": 1,
+          "CAMPUS_ANOMALY_CONTAINED": 1,
+          "CAMPUS_SUPPLY_DELIVERED": 2,
+          "NIGHT_WORLD_AUTO_EXITED": 17,
+          "FORUM_TASK_EXPIRED": 24,
+          "CLUB_MEMBER_RECRUITED": 6,
+          "CAMPUS_WELFARE_REPORTED": 3,
+          "CAMPUS_ANOMALY_HEARD": 5,
+          "CAMPUS_ANOMALY_SUPPORTED": 2,
+          "CAMPUS_ANOMALY_MEETING_UPDATED": 7,
+          "NPC_SUPPORT_PREPARATION_STARTED": 1,
+          "NPC_PERSONAL_GOAL_CREATED": 12,
+          "NPC_DAILY_PLANS_PREPARED": 2,
+          "CAMPUS_SUPPLY_ORDERED": 2,
+          "NPC_STRANDED_IN_NIGHT": 1,
+          "NPC_SOCIAL_PROPOSAL_CREATED": 1,
+          "NIGHT_RESCUE_MISSED": 1,
+          "CAMPUS_ANOMALY_LINKED": 1,
+          "NPC_SUPPORT_FOLLOWUP_STARTED": 1
+        },
+        "api_calls": 0
+      },
+      "llm:unattended": {
+        "status": "easing",
+        "history": [
+          {
+            "day": 3,
+            "phase": "late_night",
+            "helper_id": "campus_student_087",
+            "claim_id": null,
+            "before": {
+              "shell": 30,
+              "core": 60,
+              "coherence": 60
+            },
+            "after": {
+              "shell": 0,
+              "core": 60,
+              "coherence": 40
+            },
+            "route": "night_containment",
+            "revision": 1,
+            "task_id": "night:d03:0041:ai_lab_false_signal",
+            "battle_id": "battle:000016"
+          },
+          {
+            "day": 4,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00001494",
+            "before": {
+              "shell": 0,
+              "core": 60,
+              "coherence": 40
+            },
+            "after": {
+              "shell": 0,
+              "core": 40,
+              "coherence": 20
+            },
+            "route": "day_support",
+            "revision": 2,
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 50,
+                  "closeness": 0,
+                  "respect": 0
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 58,
+                  "closeness": 4,
+                  "respect": 3
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 50,
+                  "closeness": 0,
+                  "respect": 0
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 52,
+                  "closeness": 3,
+                  "respect": 1
+                }
+              }
+            }
+          },
+          {
+            "day": 5,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00001812",
+            "before": {
+              "shell": 0,
+              "core": 40,
+              "coherence": 20
+            },
+            "after": {
+              "shell": 0,
+              "core": 20,
+              "coherence": 0
+            },
+            "route": "day_support",
+            "revision": 3,
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 58,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 66,
+                  "closeness": 8,
+                  "respect": 6
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 52,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 54,
+                  "closeness": 6,
+                  "respect": 2
+                }
+              }
+            }
+          }
+        ],
+        "heard_by_player": false,
+        "player_supports": 0,
+        "player_night_containments": 0,
+        "command_failures": {},
+        "events": {
+          "FORUM_TASK_CLAIMED": 48,
+          "FORUM_TASK_VIEWED": 397,
+          "CAMPUS_ITEM_ACTION_COMPLETED": 543,
+          "NPC_ROUTINE_ACTION_COMPLETED": 506,
+          "ACTOR_LOCATION_CHANGED": 6790,
+          "NPC_COMBAT_SUPPLY_PREPARED": 1,
+          "NPC_DECISION_MADE": 1594,
+          "CAMPUS_ACTIVITY_EFFECT_APPLIED": 1486,
+          "NPC_ACTIVITY_COMPLETED": 1594,
+          "FORUM_TASK_COMPLETED": 47,
+          "CAMPUS_GROWTH_COMPLETED": 18,
+          "NPC_PERSONAL_GOAL_PROGRESS": 18,
+          "CAMPUS_TRADE_OFFERED": 61,
+          "CAMPUS_TRADE_SETTLED": 61,
+          "NPC_INTERACTION_RESOLVED": 96,
+          "NPC_INFORMATION_SHARED": 34,
+          "PHONE_MESSAGE_SENT": 103,
+          "WORLD_PHASE_ADVANCED": 8,
+          "FORUM_TASK_PUBLISHED": 48,
+          "NIGHT_WORLD_ENTERED": 17,
+          "CLUB_ACTIVITY_ATTENDED": 25,
+          "PARTY_INVITATION_DECLINED": 19,
+          "BATTLE_PREPARATION_STARTED": 10,
+          "COMBAT_CHARACTER_DEPLOYED": 10,
+          "BATTLE_DEPLOYMENT_CONFIRMED": 10,
+          "NIGHT_COMBAT_ENTRY_ACCOUNTED": 10,
+          "COMBAT_ROUND_STARTED": 74,
+          "COMBAT_ENEMY_INTENTS": 74,
+          "COMBAT_CARD_PLAYED": 108,
+          "COMBAT_BASE_COMMAND_USED": 33,
+          "COMBAT_ENEMY_ACTION": 64,
+          "CAMPUS_SITUATION_CHANGED": 31,
+          "NIGHT_SITE_RESOLVED": 10,
+          "COMBAT_VICTORY": 10,
+          "NPC_NIGHT_TASK_EXECUTED": 10,
+          "CAMPUS_INVESTIGATION_COMPLETED": 6,
+          "FIELD_REPORT_SUBMITTED": 6,
+          "KNOWLEDGE_INSIGHT_USED": 1,
+          "CAMPUS_REST_RECOVERY": 6,
+          "COMBAT_ITEM_USED": 1,
+          "CAMPUS_ANOMALY_CONTAINED": 1,
+          "CAMPUS_SUPPLY_DELIVERED": 2,
+          "NIGHT_WORLD_AUTO_EXITED": 17,
+          "FORUM_TASK_EXPIRED": 24,
+          "CLUB_MEMBER_RECRUITED": 6,
+          "CAMPUS_WELFARE_REPORTED": 3,
+          "CAMPUS_ANOMALY_HEARD": 5,
+          "CAMPUS_ANOMALY_SUPPORTED": 2,
+          "CAMPUS_ANOMALY_MEETING_UPDATED": 7,
+          "NPC_SUPPORT_PREPARATION_STARTED": 1,
+          "NPC_PERSONAL_GOAL_CREATED": 12,
+          "NPC_SOCIAL_APPOINTMENT_REPLIED": 10,
+          "NPC_DAILY_PLANS_PREPARED": 2,
+          "CAMPUS_SUPPLY_ORDERED": 2,
+          "NPC_SOCIAL_PLAN_RESOLVED": 14,
+          "NPC_STRANDED_IN_NIGHT": 1,
+          "NPC_SOCIAL_PROPOSAL_CREATED": 1,
+          "NIGHT_RESCUE_MISSED": 1,
+          "CAMPUS_ANOMALY_LINKED": 1,
+          "NPC_SUPPORT_FOLLOWUP_STARTED": 1
+        },
+        "api_calls": 46
+      }
+    },
+    "scope": "Request and outcome evidence; player-perceived story quality is a separate judgement"
+  },
+  "player_axis": {
+    "same_checkpoint_verified": true,
+    "case_id": "night-site:night:d02:0029:south_gate_lost_student",
+    "days": 2,
+    "axis": "player",
+    "branches": {
+      "unattended": {
+        "status": "easing",
+        "history": [
+          {
+            "day": 3,
+            "phase": "late_night",
+            "helper_id": "campus_student_087",
+            "claim_id": null,
+            "before": {
+              "shell": 30,
+              "core": 60,
+              "coherence": 60
+            },
+            "after": {
+              "shell": 0,
+              "core": 60,
+              "coherence": 40
+            },
+            "route": "night_containment",
+            "revision": 1,
+            "task_id": "night:d03:0041:ai_lab_false_signal",
+            "battle_id": "battle:000016"
+          },
+          {
+            "day": 4,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00001494",
+            "before": {
+              "shell": 0,
+              "core": 60,
+              "coherence": 40
+            },
+            "after": {
+              "shell": 0,
+              "core": 40,
+              "coherence": 20
+            },
+            "route": "day_support",
+            "revision": 2,
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 50,
+                  "closeness": 0,
+                  "respect": 0
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 58,
+                  "closeness": 4,
+                  "respect": 3
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 50,
+                  "closeness": 0,
+                  "respect": 0
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 52,
+                  "closeness": 3,
+                  "respect": 1
+                }
+              }
+            }
+          },
+          {
+            "day": 5,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00001812",
+            "before": {
+              "shell": 0,
+              "core": 40,
+              "coherence": 20
+            },
+            "after": {
+              "shell": 0,
+              "core": 20,
+              "coherence": 0
+            },
+            "route": "day_support",
+            "revision": 3,
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 58,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 66,
+                  "closeness": 8,
+                  "respect": 6
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 52,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 54,
+                  "closeness": 6,
+                  "respect": 2
+                }
+              }
+            }
+          }
+        ],
+        "heard_by_player": false,
+        "player_supports": 0,
+        "player_night_containments": 0,
+        "command_failures": {},
+        "events": {
+          "FORUM_TASK_CLAIMED": 48,
+          "FORUM_TASK_VIEWED": 397,
+          "CAMPUS_ITEM_ACTION_COMPLETED": 543,
+          "NPC_ROUTINE_ACTION_COMPLETED": 506,
+          "ACTOR_LOCATION_CHANGED": 6790,
+          "NPC_COMBAT_SUPPLY_PREPARED": 1,
+          "NPC_DECISION_MADE": 1594,
+          "CAMPUS_ACTIVITY_EFFECT_APPLIED": 1486,
+          "NPC_ACTIVITY_COMPLETED": 1594,
+          "FORUM_TASK_COMPLETED": 47,
+          "CAMPUS_GROWTH_COMPLETED": 18,
+          "NPC_PERSONAL_GOAL_PROGRESS": 18,
+          "CAMPUS_TRADE_OFFERED": 61,
+          "CAMPUS_TRADE_SETTLED": 61,
+          "NPC_INTERACTION_RESOLVED": 96,
+          "NPC_INFORMATION_SHARED": 34,
+          "PHONE_MESSAGE_SENT": 103,
+          "WORLD_PHASE_ADVANCED": 8,
+          "FORUM_TASK_PUBLISHED": 48,
+          "NIGHT_WORLD_ENTERED": 17,
+          "CLUB_ACTIVITY_ATTENDED": 25,
+          "PARTY_INVITATION_DECLINED": 19,
+          "BATTLE_PREPARATION_STARTED": 10,
+          "COMBAT_CHARACTER_DEPLOYED": 10,
+          "BATTLE_DEPLOYMENT_CONFIRMED": 10,
+          "NIGHT_COMBAT_ENTRY_ACCOUNTED": 10,
+          "COMBAT_ROUND_STARTED": 74,
+          "COMBAT_ENEMY_INTENTS": 74,
+          "COMBAT_CARD_PLAYED": 108,
+          "COMBAT_BASE_COMMAND_USED": 33,
+          "COMBAT_ENEMY_ACTION": 64,
+          "CAMPUS_SITUATION_CHANGED": 31,
+          "NIGHT_SITE_RESOLVED": 10,
+          "COMBAT_VICTORY": 10,
+          "NPC_NIGHT_TASK_EXECUTED": 10,
+          "CAMPUS_INVESTIGATION_COMPLETED": 6,
+          "FIELD_REPORT_SUBMITTED": 6,
+          "KNOWLEDGE_INSIGHT_USED": 1,
+          "CAMPUS_REST_RECOVERY": 6,
+          "COMBAT_ITEM_USED": 1,
+          "CAMPUS_ANOMALY_CONTAINED": 1,
+          "CAMPUS_SUPPLY_DELIVERED": 2,
+          "NIGHT_WORLD_AUTO_EXITED": 17,
+          "FORUM_TASK_EXPIRED": 24,
+          "CLUB_MEMBER_RECRUITED": 6,
+          "CAMPUS_WELFARE_REPORTED": 3,
+          "CAMPUS_ANOMALY_HEARD": 5,
+          "CAMPUS_ANOMALY_SUPPORTED": 2,
+          "CAMPUS_ANOMALY_MEETING_UPDATED": 7,
+          "NPC_SUPPORT_PREPARATION_STARTED": 1,
+          "NPC_PERSONAL_GOAL_CREATED": 12,
+          "NPC_SOCIAL_APPOINTMENT_REPLIED": 10,
+          "NPC_DAILY_PLANS_PREPARED": 2,
+          "CAMPUS_SUPPLY_ORDERED": 2,
+          "NPC_SOCIAL_PLAN_RESOLVED": 14,
+          "NPC_STRANDED_IN_NIGHT": 1,
+          "NPC_SOCIAL_PROPOSAL_CREATED": 1,
+          "NIGHT_RESCUE_MISSED": 1,
+          "CAMPUS_ANOMALY_LINKED": 1,
+          "NPC_SUPPORT_FOLLOWUP_STARTED": 1
+        },
+        "api_calls": 46
+      },
+      "participant": {
+        "status": "easing",
+        "history": [
+          {
+            "day": 3,
+            "phase": "evening",
+            "helper_id": "player",
+            "claim_id": null,
+            "before": {
+              "shell": 30,
+              "core": 60,
+              "coherence": 60
+            },
+            "after": {
+              "shell": 0,
+              "core": 60,
+              "coherence": 40
+            },
+            "route": "night_containment",
+            "revision": 1,
+            "task_id": "night:d03:0041:ai_lab_false_signal",
+            "battle_id": "battle:000011"
+          },
+          {
+            "day": 4,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00001499",
+            "before": {
+              "shell": 0,
+              "core": 60,
+              "coherence": 40
+            },
+            "after": {
+              "shell": 0,
+              "core": 40,
+              "coherence": 20
+            },
+            "route": "day_support",
+            "revision": 2,
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 50,
+                  "closeness": 0,
+                  "respect": 0
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 58,
+                  "closeness": 4,
+                  "respect": 3
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 50,
+                  "closeness": 0,
+                  "respect": 0
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 52,
+                  "closeness": 3,
+                  "respect": 1
+                }
+              }
+            }
+          },
+          {
+            "day": 5,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00001824",
+            "before": {
+              "shell": 0,
+              "core": 40,
+              "coherence": 20
+            },
+            "after": {
+              "shell": 0,
+              "core": 20,
+              "coherence": 0
+            },
+            "route": "day_support",
+            "revision": 3,
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 58,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 66,
+                  "closeness": 8,
+                  "respect": 6
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 52,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 54,
+                  "closeness": 6,
+                  "respect": 2
+                }
+              }
+            }
+          }
+        ],
+        "heard_by_player": false,
+        "player_supports": 0,
+        "player_night_containments": 1,
+        "command_failures": {
+          "no_reported_episode": 43
+        },
+        "events": {
+          "ACTOR_LOCATION_CHANGED": 6827,
+          "FORUM_TASK_CLAIMED": 50,
+          "FORUM_TASK_VIEWED": 399,
+          "CAMPUS_ITEM_ACTION_COMPLETED": 543,
+          "NPC_ROUTINE_ACTION_COMPLETED": 506,
+          "NPC_COMBAT_SUPPLY_PREPARED": 1,
+          "NPC_DECISION_MADE": 1594,
+          "CAMPUS_ACTIVITY_EFFECT_APPLIED": 1488,
+          "NPC_ACTIVITY_COMPLETED": 1594,
+          "FORUM_TASK_COMPLETED": 49,
+          "CAMPUS_GROWTH_COMPLETED": 18,
+          "NPC_PERSONAL_GOAL_PROGRESS": 18,
+          "CAMPUS_TRADE_OFFERED": 61,
+          "CAMPUS_TRADE_SETTLED": 61,
+          "NPC_INTERACTION_RESOLVED": 96,
+          "NPC_INFORMATION_SHARED": 36,
+          "PHONE_MESSAGE_SENT": 91,
+          "WORLD_PHASE_ADVANCED": 8,
+          "FORUM_TASK_PUBLISHED": 48,
+          "NIGHT_WORLD_ENTERED": 19,
+          "CLUB_ACTIVITY_ATTENDED": 25,
+          "BATTLE_PREPARATION_STARTED": 11,
+          "COMBAT_CHARACTER_DEPLOYED": 11,
+          "BATTLE_DEPLOYMENT_CONFIRMED": 11,
+          "NIGHT_COMBAT_ENTRY_ACCOUNTED": 11,
+          "COMBAT_ROUND_STARTED": 69,
+          "COMBAT_ENEMY_INTENTS": 69,
+          "COMBAT_CARD_PLAYED": 102,
+          "COMBAT_BASE_COMMAND_USED": 30,
+          "COMBAT_ENEMY_ACTION": 58,
+          "CAMPUS_ANOMALY_CONTAINED": 1,
+          "CAMPUS_SITUATION_CHANGED": 30,
+          "NIGHT_SITE_RESOLVED": 11,
+          "COMBAT_VICTORY": 11,
+          "NIGHT_WORLD_EXITED": 2,
+          "PARTY_INVITATION_DECLINED": 19,
+          "NPC_NIGHT_TASK_EXECUTED": 9,
+          "CAMPUS_INVESTIGATION_COMPLETED": 7,
+          "FIELD_REPORT_SUBMITTED": 7,
+          "KNOWLEDGE_INSIGHT_USED": 1,
+          "CAMPUS_REST_RECOVERY": 8,
+          "COMBAT_ITEM_USED": 1,
+          "CAMPUS_SUPPLY_DELIVERED": 2,
+          "NIGHT_WORLD_AUTO_EXITED": 17,
+          "FORUM_TASK_EXPIRED": 22,
+          "CLUB_MEMBER_RECRUITED": 6,
+          "CAMPUS_WELFARE_REPORTED": 3,
+          "CAMPUS_ANOMALY_HEARD": 5,
+          "CAMPUS_ANOMALY_SUPPORTED": 2,
+          "CAMPUS_ANOMALY_MEETING_UPDATED": 7,
+          "NPC_SUPPORT_PREPARATION_STARTED": 1,
+          "NPC_PERSONAL_GOAL_CREATED": 12,
+          "NPC_SOCIAL_APPOINTMENT_REPLIED": 5,
+          "NPC_DAILY_PLANS_PREPARED": 2,
+          "CAMPUS_SUPPLY_ORDERED": 2,
+          "NPC_SOCIAL_PLAN_RESOLVED": 12,
+          "NPC_STRANDED_IN_NIGHT": 1,
+          "NIGHT_RESCUE_MISSED": 1,
+          "CAMPUS_ANOMALY_LINKED": 1,
+          "NPC_SUPPORT_FOLLOWUP_STARTED": 1
+        },
+        "api_calls": 45
+      }
+    },
+    "scope": "Request and outcome evidence; player-perceived story quality is a separate judgement"
+  },
+  "coverage": {
+    "rule-unattended": {
+      "observed_focused_slots": 160,
+      "observed_llm_planned_slots": 0,
+      "completed_llm_planned_slots": 0,
+      "matching_activity_and_location": 0,
+      "daily_usage": {
+        "3": {
+          "day": 3,
+          "calls": 0,
+          "estimated_tokens": 0,
+          "automated_calls": 0,
+          "automated_estimated_tokens": 0,
+          "player_dialogue_calls": 0,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "phase_calls": {},
+          "purpose_phase_calls": {},
+          "cache_hits": 0,
+          "fallbacks": 0,
+          "rejected_responses": 0,
+          "provider_errors": 0,
+          "budget_blocks": 0
+        },
+        "4": {
+          "day": 4,
+          "calls": 0,
+          "estimated_tokens": 0,
+          "automated_calls": 0,
+          "automated_estimated_tokens": 0,
+          "player_dialogue_calls": 0,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "phase_calls": {},
+          "purpose_phase_calls": {},
+          "cache_hits": 0,
+          "fallbacks": 0,
+          "rejected_responses": 0,
+          "provider_errors": 0,
+          "budget_blocks": 0
+        },
+        "5": {
+          "day": 5,
+          "calls": 0,
+          "estimated_tokens": 0,
+          "automated_calls": 0,
+          "automated_estimated_tokens": 0,
+          "player_dialogue_calls": 0,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "phase_calls": {},
+          "purpose_phase_calls": {},
+          "cache_hits": 0,
+          "fallbacks": 0,
+          "rejected_responses": 0,
+          "provider_errors": 0,
+          "budget_blocks": 0
+        }
+      },
+      "note": "Initial morning already happened under checkpoint plans; final morning only counts morning. Defeat intermediate phases without snapshots are not fabricated."
+    },
+    "llm-unattended": {
+      "observed_focused_slots": 160,
+      "observed_llm_planned_slots": 100,
+      "completed_llm_planned_slots": 100,
+      "matching_activity_and_location": 92,
+      "daily_usage": {
+        "3": {
+          "day": 3,
+          "calls": 0,
+          "estimated_tokens": 0,
+          "automated_calls": 0,
+          "automated_estimated_tokens": 0,
+          "player_dialogue_calls": 0,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "phase_calls": {},
+          "purpose_phase_calls": {},
+          "cache_hits": 0,
+          "fallbacks": 0,
+          "rejected_responses": 0,
+          "provider_errors": 0,
+          "budget_blocks": 0
+        },
+        "4": {
+          "day": 4,
+          "calls": 23,
+          "estimated_tokens": 70745,
+          "automated_calls": 23,
+          "automated_estimated_tokens": 70745,
+          "player_dialogue_calls": 0,
+          "prompt_tokens": 78728,
+          "completion_tokens": 2991,
+          "phase_calls": {
+            "morning": 23
+          },
+          "purpose_phase_calls": {
+            "morning:activity": 20,
+            "morning:interaction_dialogue": 3
+          },
+          "cache_hits": 0,
+          "fallbacks": 0,
+          "rejected_responses": 0,
+          "provider_errors": 0,
+          "budget_blocks": 0
+        },
+        "5": {
+          "day": 5,
+          "calls": 23,
+          "estimated_tokens": 71062,
+          "automated_calls": 23,
+          "automated_estimated_tokens": 71062,
+          "player_dialogue_calls": 0,
+          "prompt_tokens": 79287,
+          "completion_tokens": 3063,
+          "phase_calls": {
+            "morning": 23
+          },
+          "purpose_phase_calls": {
+            "morning:activity": 20,
+            "morning:interaction_dialogue": 3
+          },
+          "cache_hits": 0,
+          "fallbacks": 0,
+          "rejected_responses": 0,
+          "provider_errors": 0,
+          "budget_blocks": 0
+        }
+      },
+      "note": "Initial morning already happened under checkpoint plans; final morning only counts morning. Defeat intermediate phases without snapshots are not fabricated."
+    },
+    "llm-participant": {
+      "observed_focused_slots": 160,
+      "observed_llm_planned_slots": 100,
+      "completed_llm_planned_slots": 100,
+      "matching_activity_and_location": 93,
+      "daily_usage": {
+        "3": {
+          "day": 3,
+          "calls": 0,
+          "estimated_tokens": 0,
+          "automated_calls": 0,
+          "automated_estimated_tokens": 0,
+          "player_dialogue_calls": 0,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "phase_calls": {},
+          "purpose_phase_calls": {},
+          "cache_hits": 0,
+          "fallbacks": 0,
+          "rejected_responses": 0,
+          "provider_errors": 0,
+          "budget_blocks": 0
+        },
+        "4": {
+          "day": 4,
+          "calls": 23,
+          "estimated_tokens": 70768,
+          "automated_calls": 23,
+          "automated_estimated_tokens": 70768,
+          "player_dialogue_calls": 0,
+          "prompt_tokens": 78733,
+          "completion_tokens": 2927,
+          "phase_calls": {
+            "morning": 23
+          },
+          "purpose_phase_calls": {
+            "morning:activity": 20,
+            "morning:interaction_dialogue": 3
+          },
+          "cache_hits": 0,
+          "fallbacks": 0,
+          "rejected_responses": 0,
+          "provider_errors": 0,
+          "budget_blocks": 0
+        },
+        "5": {
+          "day": 5,
+          "calls": 22,
+          "estimated_tokens": 70382,
+          "automated_calls": 22,
+          "automated_estimated_tokens": 70382,
+          "player_dialogue_calls": 0,
+          "prompt_tokens": 78099,
+          "completion_tokens": 2947,
+          "phase_calls": {
+            "morning": 22
+          },
+          "purpose_phase_calls": {
+            "morning:activity": 20,
+            "morning:interaction_dialogue": 2
+          },
+          "cache_hits": 0,
+          "fallbacks": 0,
+          "rejected_responses": 0,
+          "provider_errors": 0,
+          "budget_blocks": 0
+        }
+      },
+      "note": "Initial morning already happened under checkpoint plans; final morning only counts morning. Defeat intermediate phases without snapshots are not fabricated."
+    }
+  }
+}

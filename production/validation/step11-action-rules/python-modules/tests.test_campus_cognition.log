@@ -1,0 +1,13 @@
+test_committed_event_becomes_target_subjective_memory_not_public_chronicle_dump (tests.test_campus_cognition.CampusCognitionTests) ... ok
+test_fake_provider_uses_only_legal_candidates_and_obeys_phase_budget (tests.test_campus_cognition.CampusCognitionTests) ... ok
+test_generic_openai_compatible_provider_and_legacy_aliases_are_supported (tests.test_campus_cognition.CampusCognitionTests) ... ok
+test_initial_slots_and_public_view_are_bounded_and_sanitized (tests.test_campus_cognition.CampusCognitionTests) ... ok
+test_invalid_or_unavailable_provider_falls_back_without_blocking_world (tests.test_campus_cognition.CampusCognitionTests) ... ok
+test_player_friends_are_additional_and_seventh_is_allowed (tests.test_campus_cognition.CampusCognitionTests) ... ok
+test_provider_secret_is_not_serialized_into_checkpoint (tests.test_campus_cognition.CampusCognitionTests) ... ok
+test_versioned_policy_does_not_contain_personal_provider_presets (tests.test_campus_cognition.CampusCognitionTests) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 15.989s
+
+OK

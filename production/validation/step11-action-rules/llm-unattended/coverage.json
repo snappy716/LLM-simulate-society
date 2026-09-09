@@ -1,0 +1,70 @@
+{
+  "observed_focused_slots": 160,
+  "observed_llm_planned_slots": 100,
+  "completed_llm_planned_slots": 100,
+  "matching_activity_and_location": 92,
+  "daily_usage": {
+    "3": {
+      "day": 3,
+      "calls": 0,
+      "estimated_tokens": 0,
+      "automated_calls": 0,
+      "automated_estimated_tokens": 0,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "phase_calls": {},
+      "purpose_phase_calls": {},
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    },
+    "4": {
+      "day": 4,
+      "calls": 23,
+      "estimated_tokens": 70745,
+      "automated_calls": 23,
+      "automated_estimated_tokens": 70745,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 78728,
+      "completion_tokens": 2991,
+      "phase_calls": {
+        "morning": 23
+      },
+      "purpose_phase_calls": {
+        "morning:activity": 20,
+        "morning:interaction_dialogue": 3
+      },
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    },
+    "5": {
+      "day": 5,
+      "calls": 23,
+      "estimated_tokens": 71062,
+      "automated_calls": 23,
+      "automated_estimated_tokens": 71062,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 79287,
+      "completion_tokens": 3063,
+      "phase_calls": {
+        "morning": 23
+      },
+      "purpose_phase_calls": {
+        "morning:activity": 20,
+        "morning:interaction_dialogue": 3
+      },
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    }
+  },
+  "note": "Initial morning already happened under checkpoint plans; final morning only counts morning. Defeat intermediate phases without snapshots are not fabricated."
+}

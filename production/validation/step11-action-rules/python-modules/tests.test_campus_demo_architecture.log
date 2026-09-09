@@ -1,0 +1,23 @@
+test_action_economy_is_coarse_and_only_major_actions_are_limited (tests.test_campus_demo_architecture.CampusContentTests) ... ok
+test_eight_colleges_have_four_common_skills_and_three_specializations (tests.test_campus_demo_architecture.CampusContentTests) ... ok
+test_enemy_archetypes_are_unique (tests.test_campus_demo_architecture.CampusContentTests) ... ok
+test_population_and_story_content_match_demo_scope (tests.test_campus_demo_architecture.CampusContentTests) ... ok
+test_twelve_core_clubs_have_unique_skills (tests.test_campus_demo_architecture.CampusContentTests) ... ok
+test_attribute_and_personality_ranges_are_enforced (tests.test_campus_demo_architecture.CampusDomainTests) ... ok
+test_awakened_profile_must_be_focused (tests.test_campus_demo_architecture.CampusDomainTests) ... ok
+test_base_attributes_and_derived_stats_follow_design_formulas (tests.test_campus_demo_architecture.CampusDomainTests) ... ok
+test_moral_conflict_is_not_erased_by_personality (tests.test_campus_demo_architecture.DecisionScoringTests) ... ok
+test_risk_tolerance_changes_risky_action_score (tests.test_campus_demo_architecture.DecisionScoringTests) ... ok
+test_awakened_slots_are_permanent_and_dynamic_slots_are_ranked (tests.test_campus_demo_architecture.FocusAndCalendarTests) ... ok
+test_demo_calendar_has_four_contiguous_seven_day_stages (tests.test_campus_demo_architecture.FocusAndCalendarTests) ... ok
+test_focus_slot_limit_is_enforced (tests.test_campus_demo_architecture.FocusAndCalendarTests) ... ok
+test_abandon_can_release_lock_for_another_actor (tests.test_campus_demo_architecture.TaskBoardTests) ... ok
+test_expiration_preserves_result_as_terminal_state (tests.test_campus_demo_architecture.TaskBoardTests) ... ok
+test_first_valid_claim_wins_atomically (tests.test_campus_demo_architecture.TaskBoardTests) ... ok
+test_public_copies_cannot_mutate_board (tests.test_campus_demo_architecture.TaskBoardTests) ... ok
+test_views_and_consideration_do_not_steal_or_invalidate_lock (tests.test_campus_demo_architecture.TaskBoardTests) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.006s
+
+OK

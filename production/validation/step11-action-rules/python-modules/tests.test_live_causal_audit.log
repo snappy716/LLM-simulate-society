@@ -1,0 +1,12 @@
+test_automatic_defeat_overnight_allows_actual_dawn_requests (tests.test_live_causal_audit.LiveCausalAuditTests) ... ok
+test_budget_is_shared_and_ledger_contains_no_credentials (tests.test_live_causal_audit.LiveCausalAuditTests) ... {"index": 0, "day": null, "kind": "interaction", "seconds": 0.001, "error": null, "finish_reason": "stop"}
+ok
+test_coverage_does_not_count_future_slots_or_stale_activity (tests.test_live_causal_audit.LiveCausalAuditTests) ... ok
+test_empty_live_ledger_is_not_success (tests.test_live_causal_audit.LiveCausalAuditTests) ... ok
+test_intraday_failed_and_unattributed_requests_are_rejected (tests.test_live_causal_audit.LiveCausalAuditTests) ... ok
+test_reported_token_stop_and_unknown_usage_remain_explicit (tests.test_live_causal_audit.LiveCausalAuditTests) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.008s
+
+OK

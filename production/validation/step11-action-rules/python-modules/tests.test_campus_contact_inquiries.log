@@ -1,0 +1,16 @@
+test_actual_contact_resumption_withdraws_without_reward_or_penalty (tests.test_campus_contact_inquiries.ContactInquiryTests) ... ok
+test_attention_excludes_subject_and_releases_stale_self_claim (tests.test_campus_contact_inquiries.ContactInquiryTests) ... ok
+test_checkpoint_preserves_contact_source_and_report (tests.test_campus_contact_inquiries.ContactInquiryTests) ... ok
+test_incapacitated_npc_does_not_browse_or_claim (tests.test_campus_contact_inquiries.ContactInquiryTests) ... ok
+test_npc_executor_follows_real_path_and_uses_same_report_gate (tests.test_campus_contact_inquiries.ContactInquiryTests) ... ok
+test_physical_absence_is_dated_evidence_not_missing_and_costs_once (tests.test_campus_contact_inquiries.ContactInquiryTests) ... ok
+test_real_source_required_and_public_post_hides_target (tests.test_campus_contact_inquiries.ContactInquiryTests) ... ok
+test_repeated_actual_npc_attempt_can_publish_on_social_pulse (tests.test_campus_contact_inquiries.ContactInquiryTests) ... ok
+test_repeated_request_dedup_and_follow_up_only_other_public_point (tests.test_campus_contact_inquiries.ContactInquiryTests) ... ok
+test_self_certification_and_text_only_completion_blocked (tests.test_campus_contact_inquiries.ContactInquiryTests) ... ok
+test_visible_unresponsive_person_is_seen_without_healing_or_phone_reply (tests.test_campus_contact_inquiries.ContactInquiryTests) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 148.421s
+
+OK

@@ -1,0 +1,15 @@
+test_campus_boot_content_does_not_need_any_town_document (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_checksum_is_verified_before_migration (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_failed_migration_does_not_replace_live_world (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_generic_world_with_known_version_is_not_converted_to_campus (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_historical_content_split_does_not_upgrade_to_new_combat_semantics (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_migration_only_changes_content_identity_not_saved_resources (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_save_store_returns_migration_then_resave_keeps_original_backup (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_source_and_target_manifests_match_frozen_versions (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_unknown_source_or_missing_or_changed_manifest_is_rejected (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_unknown_target_version_is_not_silently_accepted (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 23.885s
+
+OK

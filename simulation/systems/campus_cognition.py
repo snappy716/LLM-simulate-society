@@ -98,6 +98,8 @@ def bind_cognition_identity(state, request):
     identity = {**request.identity, "npc_id": request.npc_id,
                 "display_name": actor.get("display_name", request.npc_id)}
     local = dict(request.state)
+    from simulation.cognition.action_rules import action_rule_context
+    local["action_rules"] = action_rule_context(state, request.npc_id)
     if isinstance(request, BoundedDecisionRequest):
         # Dated, actually read publications, never live unseen regional state.
         local["own_read_regional_notices"] = [dict(row) for row in sorted(
@@ -449,6 +451,7 @@ class CognitionRuntime:
         }
 
     def _request(self, state: WorldState, actor_id: str, candidates: Sequence[Mapping[str, Any]]) -> BoundedDecisionRequest:
+        from simulation.cognition.action_rules import candidate_cost
         from simulation.systems.campus_goals import own_goal_context
         from simulation.systems.campus_assistance import own_assistance_context
         actor = state.population[actor_id]
@@ -461,6 +464,7 @@ class CognitionRuntime:
             "reason": item["decision_reason"],
             "reason_codes": list(item.get("reason_codes", ())),
             "rule_score": item.get("score", 0),
+            **candidate_cost(item),
             **({"daily_schedule": {phase: {key: slot.get(key) for key in
                 ("activity_id", "location_id", "decision_reason", "parameters")}
                 for phase, slot in item["daily_schedule"].items()}} if "daily_schedule" in item else {}),
@@ -623,10 +627,12 @@ class CognitionRuntime:
         if actor_id not in state.cognition.get("focused_ids", ()) or not self.provider.configured:
             return None
         request = self._request(state, actor_id, [])
+        from simulation.cognition.action_rules import candidate_cost
         public_options = {phase: tuple({
             "candidate_id": f"{phase}:{index}", "activity_id": item["activity_id"],
             "location_id": item["location_id"], "reason": item.get("decision_reason", ""),
             "parameters": deepcopy(item.get("parameters", {})),
+            **candidate_cost(item),
         } for index, item in enumerate(candidates[:self.policy.candidate_limit])) for phase, candidates in options.items()}
         public_social = tuple({**social, "compatible_daily_choices": [item["candidate_id"]
             for item in public_options[social["phase"]] if item["location_id"] == social["location_id"]]}

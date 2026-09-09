@@ -1,0 +1,9 @@
+test_long_echo_rejected_without_retry_or_clock_change (tests.test_cognition_identity.IdentityTests) ... ok
+test_overnight_identity_has_authoritative_names (tests.test_cognition_identity.IdentityTests) ... ok
+test_player_dialogue_knows_current_names_and_only_own_routine (tests.test_cognition_identity.IdentityTests) ... ok
+test_secret_night_activity_is_not_exposed_as_public_routine (tests.test_cognition_identity.IdentityTests) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 10.687s
+
+OK

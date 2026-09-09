@@ -1,0 +1,9 @@
+test_phase_interactions_emit_bounded_information_events (tests.test_campus_intelligence.CampusIntelligenceTests) ... ok
+test_secret_claim_needs_a_strong_relationship (tests.test_campus_intelligence.CampusIntelligenceTests) ... ok
+test_share_copies_a_source_tagged_subjective_belief (tests.test_campus_intelligence.CampusIntelligenceTests) ... ok
+test_unknown_claim_cannot_be_shared (tests.test_campus_intelligence.CampusIntelligenceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 34.197s
+
+OK
