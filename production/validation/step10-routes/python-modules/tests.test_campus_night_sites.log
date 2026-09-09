@@ -1,0 +1,19 @@
+test_blocked_escort_preserves_victory_without_reward_and_can_retry_once (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_captive_cannot_move_shop_join_or_take_other_job (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_capture_checkpoint_preserves_target_and_dawn_releases_without_reward (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_frozen_previous_content_migrates_without_inventing_sites (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_invalid_revision_and_client_fabrication_leave_world_unchanged (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_invariant_rejects_fabricated_completion_or_moved_captive (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_no_combat_no_site_success_no_reward (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_npc_completes_actual_objectives_without_player (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_publication_has_actual_sites_and_no_unavailable_rescue_target (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_real_fight_changes_facility_and_reduces_local_exposure (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_real_rescue_uses_passages_and_releases_actual_victim (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_replacement_must_pay_own_action_and_cannot_respawn_guard (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_retry_command_replay_does_not_duplicate_reward_or_escort (tests.test_campus_night_sites.NightSitesTests) ... ok
+test_wrong_location_and_layer_cannot_resolve_remote_site (tests.test_campus_night_sites.NightSitesTests) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 261.879s
+
+OK

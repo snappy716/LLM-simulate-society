@@ -1,0 +1,10 @@
+test_abandon_reopens_task_but_records_social_cost (tests.test_campus_social.CampusSocialConsequenceTests) ... ok
+test_clubs_install_members_and_private_reputation_ledgers (tests.test_campus_social.CampusSocialConsequenceTests) ... ok
+test_completed_parent_guarantees_single_run_follow_up_next_morning (tests.test_campus_social.CampusSocialConsequenceTests) ... ok
+test_completed_task_atomically_changes_issuer_relation_and_club_reputation (tests.test_campus_social.CampusSocialConsequenceTests) ... ok
+test_npc_task_completions_also_leave_social_history (tests.test_campus_social.CampusSocialConsequenceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 33.660s
+
+OK

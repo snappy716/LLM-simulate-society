@@ -1,0 +1,12 @@
+test_active_preparation_blocks_exit_task_settlement_and_party_changes (tests.test_campus_combat_deployment.CampusCombatDeploymentTests) ... ok
+test_character_cards_read_real_actor_stats_and_contract_fields (tests.test_campus_combat_deployment.CampusCombatDeploymentTests) ... ok
+test_daylight_interrupts_unfinished_preparation_before_night_exit (tests.test_campus_combat_deployment.CampusCombatDeploymentTests) ... ok
+test_fear_injury_pollution_other_task_and_moral_boundaries_block_npcs (tests.test_campus_combat_deployment.CampusCombatDeploymentTests) ... ok
+test_incapacitation_removes_character_and_invalidates_bound_hand_cards (tests.test_campus_combat_deployment.CampusCombatDeploymentTests) ... ok
+test_setup_reposition_is_free_and_confirmation_closes_reserves (tests.test_campus_combat_deployment.CampusCombatDeploymentTests) ... ok
+test_three_people_deploy_free_with_two_per_row_limit_and_player_required (tests.test_campus_combat_deployment.CampusCombatDeploymentTests) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 65.230s
+
+OK

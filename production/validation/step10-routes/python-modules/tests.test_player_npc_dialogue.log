@@ -1,0 +1,8 @@
+test_face_to_face_dialogue_is_free_and_only_first_chat_applies_consequences (tests.test_player_npc_dialogue.PlayerNpcDialogueTests) ... ok
+test_focused_npc_chat_has_no_llm_count_limit_even_when_automation_is_exhausted (tests.test_player_npc_dialogue.PlayerNpcDialogueTests) ... ok
+test_remote_dialogue_is_rejected_without_commit (tests.test_player_npc_dialogue.PlayerNpcDialogueTests) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 3.857s
+
+OK

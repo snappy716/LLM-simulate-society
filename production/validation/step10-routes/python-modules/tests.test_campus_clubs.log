@@ -1,0 +1,14 @@
+test_all_clubs_install_a_leader_memberships_and_resource_ledger (tests.test_campus_clubs.CampusClubRuntimeTests) ... ok
+test_club_view_and_membership_expose_contract_fields (tests.test_campus_clubs.CampusClubRuntimeTests) ... ok
+test_clubs_autonomously_recruit_and_write_a_chronicle (tests.test_campus_clubs.CampusClubRuntimeTests) ... ok
+test_daily_upkeep_tracks_absence_and_resource_cost (tests.test_campus_clubs.CampusClubRuntimeTests) ... ok
+test_explicit_activity_obeys_each_clubs_weekly_slots (tests.test_campus_clubs.CampusClubRuntimeTests) ... ok
+test_leader_can_atomically_transfer_role_to_a_core_member (tests.test_campus_clubs.CampusClubRuntimeTests) ... ok
+test_player_can_join_more_than_two_clubs_without_a_hard_cap (tests.test_campus_clubs.CampusClubRuntimeTests) ... ok
+test_player_joins_and_club_activity_atomically_settles_attendance (tests.test_campus_clubs.CampusClubRuntimeTests) ... ok
+test_team_tactic_requires_two_members_and_spends_shared_resources (tests.test_campus_clubs.CampusClubRuntimeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 38.162s
+
+OK

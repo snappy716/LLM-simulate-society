@@ -1,0 +1,26 @@
+test_backup_retains_previous_slot_and_can_restore_it (tests.test_campus_saves.CampusSaveTests) ... ok
+test_battle_task_locks_cards_and_next_draw_survive_load (tests.test_campus_saves.CampusSaveTests) ... ok
+test_confirmation_and_slot_token_are_required (tests.test_campus_saves.CampusSaveTests) ... ok
+test_content_mismatch_not_silently_reinitialized (tests.test_campus_saves.CampusSaveTests) ... ok
+test_corrupt_current_preserves_world_and_good_backup (tests.test_campus_saves.CampusSaveTests) ... ok
+test_cross_instance_store_lock_and_slot_conflict (tests.test_campus_saves.CampusSaveTests) ... ok
+test_failed_disk_write_preserves_prior_file (tests.test_campus_saves.CampusSaveTests) ... ok
+test_full_runtime_invariants_checked_before_restore (tests.test_campus_saves.CampusSaveTests) ... ok
+test_http_route_lists_saves_and_returns_rejection_not_server_error (tests.test_campus_saves.CampusSaveTests) ... ok
+test_known_missing_policy_migrates_without_changing_assets_or_original_file (tests.test_campus_saves.CampusSaveTests) ... ok
+test_missing_old_campus_resources_rejected_not_regenerated (tests.test_campus_saves.CampusSaveTests) ... ok
+test_no_path_traversal_unknown_fields_or_symlinks (tests.test_campus_saves.CampusSaveTests) ... ok
+test_pending_supply_and_phase_continuation_remain_exact_after_load (tests.test_campus_saves.CampusSaveTests) ... ok
+test_rng_clone_failure_cannot_partially_replace_world (tests.test_campus_saves.CampusSaveTests) ... ok
+test_rng_restart_and_api_secret_not_in_save (tests.test_campus_saves.CampusSaveTests) ... ok
+test_save_load_restores_wallet_inventory_and_free_action_budget (tests.test_campus_saves.CampusSaveTests) ... ok
+test_saved_map_is_allowlisted_and_does_not_mutate_live_world (tests.test_campus_saves.CampusSaveTests) ... ok
+test_saved_processed_purchase_cannot_charge_twice (tests.test_campus_saves.CampusSaveTests) ... ok
+test_stale_future_command_cannot_apply_after_load (tests.test_campus_saves.CampusSaveTests) ... ok
+test_stale_world_revision_rejected_without_io_mutation (tests.test_campus_saves.CampusSaveTests) ... ok
+test_three_empty_slots_and_no_world_mutation (tests.test_campus_saves.CampusSaveTests) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 78.776s
+
+OK

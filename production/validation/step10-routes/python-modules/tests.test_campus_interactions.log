@@ -1,0 +1,8 @@
+test_pair_cooldown_and_seeded_trace_are_deterministic (tests.test_campus_interactions.CampusInteractionIntegrationTests) ... ok
+test_phase_creates_colocated_atomic_interactions_memories_and_logs (tests.test_campus_interactions.CampusInteractionIntegrationTests) ... ok
+test_support_hook_can_be_revisited_and_resolved (tests.test_campus_interactions.CampusInteractionIntegrationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 42.234s
+
+OK

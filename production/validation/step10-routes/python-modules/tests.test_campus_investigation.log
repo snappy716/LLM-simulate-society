@@ -1,0 +1,23 @@
+test_asking_only_reveals_known_related_disclosable_information (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_colocated_observer_cannot_read_private_npc_hypothesis_through_chronicle (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_corrupt_nested_investigation_records_fail_validation_without_crashing (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_hypothesis_never_becomes_truth_or_leaks_to_npc (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_item_event_source_is_owned_and_reprojection_is_idempotent (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_notes_require_real_notebook_and_preserve_original_belief (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_npc_uses_same_source_and_independent_action_budget (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_observation_uses_real_notice_without_time_or_action_cost (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_offsite_target_refused_and_unknown_personal_notes_hidden (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_privacy_blocks_specific_and_autonomous_disclosure (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_private_interactions_do_not_create_public_traces (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_read_projection_does_not_mutate_state_and_accepts_empty_additive_ledger (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_save_load_keeps_sources_notes_hypotheses_and_privacy (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_search_inspects_real_dropped_stock_and_spends_only_one_major_action (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_search_no_evidence_or_no_budget_never_spends_or_reveals (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_share_preserves_source_and_pair_cooldown (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_surface_search_does_not_reveal_night_ground (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+test_unknown_evidence_invalid_boolean_and_forged_links_are_atomic (tests.test_campus_investigation.CampusInvestigationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 25.536s
+
+OK

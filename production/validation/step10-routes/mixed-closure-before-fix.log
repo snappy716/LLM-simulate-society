@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_anomaly_feedback.py", line 200, in test_night_finishes_only_after_real_day_support_already_resolved_core
+    win_afterimage(bridge, task["task_id"])
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_anomaly_combat.py", line 47, in win_afterimage
+    return fixture.battle()  # Real deployments, cards and enemy turns. No injected win.
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_night_sites.py", line 103, in battle
+    issue(action, params)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_night_sites.py", line 92, in issue
+    result = self.act(action, {"battle_id": bid, "expected_battle_revision": current["revision"], **(params or {})})
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_night_sites.py", line 42, in act
+    return self.bridge.execute({"command_id": f"site-test:{self.counter}:{state.revision}:{action}",
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/server.py", line 584, in execute
+    result = self.kernel.execute(command)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/transactions.py", line 231, in execute
+    draft_state.require_valid(invariant_errors)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/domain/world_state.py", line 129, in require_valid
+    raise ValueError("invalid world state: " + "; ".join(errors))
+ValueError: invalid world state: invalid anomaly state

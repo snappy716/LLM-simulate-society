@@ -100,6 +100,7 @@ def _support_problem(state, case, listener):
 
 def anomaly_view(state, viewer="player"):
     from simulation.systems.campus_relationship_anchors import anchor_view
+    from simulation.systems.campus_anomaly_feedback import route_feedback
     rows = []
     for case in state.situations.get("campus_anomalies", {}).get("cases", {}).values():
         report = case["reports"].get(viewer)
@@ -109,6 +110,7 @@ def anomaly_view(state, viewer="player"):
         problem = ("fresh_report_required", "这是过去的本人陈述；请重新确认近况，不据此推断当前状态。") if stale else _support_problem(state, case, viewer)
         rows.append({"npc_id": case["actor_id"], "case_id": case["case_id"], "topic_id": case["topic_id"],
             "report": dict(report), "can_support": problem is None, **anchor_view(state, case, viewer),
+            "route_feedback": route_feedback(state, case, viewer),
             "support_hint": problem[1] if problem else "本人同意后，共同做现实锚定活动；双方各消耗一次主要行动，不推进时段。"})
     return rows
 
@@ -145,7 +147,7 @@ def make_anomaly_handler():
             if report and (report["day"], report["phase"], report["revision"]) == (state.clock.day, state.clock.phase, case["revision"]):
                 return TransactionOutcome(True, True, "already_heard", report["summary"], payload={"report": report})
             summary = ("那次月相经历已经能够与眼前生活区分开，我愿意继续正常生活。" if case["status"] == "resolved"
-                else "旧现场的残像已经被切断，但那段经历仍困扰着我；外壳消失不等于我的心结已解开。" if case["history"] and case["history"][-1]["route"] == "night_containment"
+                else "反复出现的外在影像已经安静下来，但那段经历仍困扰着我；影像减弱不等于我的心结已解开。" if case["history"] and case["history"][-1]["route"] == "night_containment"
                 else "一起核对日常经历让我更能区分月相残留与眼前生活，但还需要时间巩固。" if case["status"] == "easing"
                 else "脱离那次月相现场后，有些影像仍会重复出现。我愿意先讲自己的体验，不希望被贴上诊断标签。")
             claim = create_campus_claim(state, subject_id=target, predicate="voluntary_moon_experience", object_id=target,
@@ -156,6 +158,8 @@ def make_anomaly_handler():
                 source_actor_id=target, upstream_source_actor_id=target, transmission_count=1)
             report = {"day": state.clock.day, "phase": state.clock.phase, "revision": case["revision"],
                 "summary": summary, "claim_id": claim["claim_id"]}
+            from simulation.systems.campus_anomaly_feedback import experience_at
+            report["experience"] = experience_at(case, case["revision"])
             case["reports"][actor] = report
             context.emit("CAMPUS_ANOMALY_HEARD", summary, actor_ids=[target], target_ids=[actor], visibility="private",
                 knowledge_tags=["anomaly", "evidence"], payload={"claim_id": claim["claim_id"]})
@@ -318,6 +322,9 @@ def anomalies_invariant(state):
                     or case["status"] != ("resolved" if not any(expected.values()) else "easing" if case["history"] else "unsettled")):
                 return ["invalid anomaly state"]
             for listener, report in case["reports"].items():
+                from simulation.systems.campus_anomaly_feedback import experience_valid
+                if not experience_valid(case, report):
+                    return ["invalid dated anomaly experience"]
                 claim = state.knowledge["claims"][report["claim_id"]]
                 source = claim["source_context"]
                 if (listener not in state.population or listener == case["actor_id"] or claim["subject_id"] != case["actor_id"]

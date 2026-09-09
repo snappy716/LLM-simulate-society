@@ -24,6 +24,7 @@ var _anchor_confirm: Button
 var _anchor_use: Button
 var _anchor_feedback: Label
 var _anomaly_feedback: Label
+var _anomaly_route_feedback: Label
 var _anomaly_case: Dictionary = {}
 var _anomaly_pending := ""
 var _meeting_options: OptionButton
@@ -293,6 +294,9 @@ func _build_ui() -> void:
 	_anomaly_feedback = Label.new()
 	_anomaly_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_anomaly_feedback)
+	_anomaly_route_feedback = Label.new()
+	_anomaly_route_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(_anomaly_route_feedback)
 	_anchor_options = OptionButton.new()
 	_anchor_options.clip_text = true
 	column.add_child(_anchor_options)
@@ -631,10 +635,19 @@ func _on_plan_completed(success: bool, result: Dictionary) -> void:
 func _refresh_anomaly() -> void:
 	_anomaly_case = {}
 	_anomaly_feedback.text = ""
+	_anomaly_route_feedback.text = ""
 	for row in SimulationBridge.campus_snapshot.get("social", {}).get("anomalies", []):
 		if row.get("npc_id", "") == _selected_profile.get("npc_id", ""):
 			_anomaly_case = row
 			_anomaly_feedback.text = "本人第 %d 天的陈述：%s\n%s" % [int(row.report.day), row.report.summary, row.support_hint]
+			var feedback: Dictionary = row.get("route_feedback", {})
+			if not feedback.is_empty():
+				var lines: PackedStringArray = ["经历与处理记录", feedback.statement, "你的参与：" + String(feedback.own_path), feedback.scope_note]
+				for record in feedback.get("own_records", []):
+					lines.append(String(record.text))
+				for guide in feedback.get("route_guide", []):
+					lines.append(String(guide.label) + "：" + String(guide.note))
+				_anomaly_route_feedback.text = "\n".join(lines)
 	_anomaly_ask.disabled = not _anomaly_pending.is_empty()
 	_anomaly_support.visible = not _anomaly_case.is_empty()
 	_anomaly_support.disabled = not _anomaly_pending.is_empty() or not bool(_anomaly_case.get("can_support", false))

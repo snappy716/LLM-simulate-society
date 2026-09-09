@@ -1,0 +1,21 @@
+test_accepted_material_help_waits_then_real_delivery_resumes_case_plan (tests.test_campus_goals.CampusGoalTests) ... ok
+test_actual_no_player_phase_execution_progresses_persistent_goals (tests.test_campus_goals.CampusGoalTests) ... ok
+test_actual_purchase_conserves_stock_and_money_without_major_cost (tests.test_campus_goals.CampusGoalTests) ... ok
+test_checkpoint_preserves_plans_and_malformed_ledgers_are_rejected (tests.test_campus_goals.CampusGoalTests) ... ok
+test_completed_goals_do_not_repeat_or_claim_full_mastery (tests.test_campus_goals.CampusGoalTests) ... ok
+test_disclosed_report_does_not_make_private_goal_events_visible (tests.test_campus_goals.CampusGoalTests) ... ok
+test_disclosure_is_free_dated_and_does_not_reveal_secret_topic_or_live_plan (tests.test_campus_goals.CampusGoalTests) ... ok
+test_existing_task_night_layer_and_spent_budget_defer_plan (tests.test_campus_goals.CampusGoalTests) ... ok
+test_goals_start_only_from_owned_actual_cases_and_are_not_duplicated (tests.test_campus_goals.CampusGoalTests) ... ok
+test_guarded_npc_can_decline_and_remote_or_layer_mismatch_is_atomic (tests.test_campus_goals.CampusGoalTests) ... ok
+test_llm_sees_only_own_goals_and_keeps_server_owned_parameters (tests.test_campus_goals.CampusGoalTests) ... ok
+test_missing_material_creates_real_purchase_step_then_replans_to_reflection (tests.test_campus_goals.CampusGoalTests) ... ok
+test_missing_money_uses_existing_paid_work_and_never_credits_free_money (tests.test_campus_goals.CampusGoalTests) ... ok
+test_out_of_stock_and_capacity_block_then_resume_without_dropping_goal (tests.test_campus_goals.CampusGoalTests) ... ok
+test_protected_duty_and_emergency_do_not_erase_goal (tests.test_campus_goals.CampusGoalTests) ... ok
+test_read_step_is_legal_and_common_handler_charges_own_action (tests.test_campus_goals.CampusGoalTests) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 88.548s
+
+OK

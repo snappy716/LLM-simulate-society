@@ -78,9 +78,10 @@ def finish_afterimage(context, task, battle):
         "task_id": task["task_id"], "battle_id": battle["battle_id"]}
     if not night_receipt_valid(state, case, receipt):
         raise ValueError("afterimage resolution lacks actual source-bound victory")
-    case.update(receipt["after"], revision=receipt["revision"], status="easing")
+    case.update(receipt["after"], revision=receipt["revision"],
+        status="resolved" if not any(receipt["after"].values()) else "easing")
     case["history"].append(receipt)
-    context.emit("CAMPUS_ANOMALY_CONTAINED", "旧现场的残留外壳已实际切断；相关人物的心结仍需其本人参与解决。",
+    context.emit("CAMPUS_ANOMALY_CONTAINED", "旧现场的残留外壳已实际切断；人物体验是否稳定仍须重新听取本人陈述，封控不能替代本人参与。",
         actor_ids=[task["assignee_id"]], target_ids=[case["actor_id"]], visibility="private",
         knowledge_tags=["night", "anomaly"], payload={"case_id": case["case_id"], "task_id": task["task_id"], "battle_id": battle["battle_id"]})
 

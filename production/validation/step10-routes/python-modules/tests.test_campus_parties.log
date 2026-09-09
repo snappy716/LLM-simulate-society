@@ -1,0 +1,12 @@
+test_decline_is_recorded_and_same_day_repeat_has_a_cooldown (tests.test_campus_parties.CampusPartyRuntimeTests) ... ok
+test_expired_commitment_can_be_reconsidered_by_npc (tests.test_campus_parties.CampusPartyRuntimeTests) ... ok
+test_invitation_acceptance_creates_commitment_relationships_and_chronicle (tests.test_campus_parties.CampusPartyRuntimeTests) ... ok
+test_player_party_is_installed_with_derived_stability_and_candidates (tests.test_campus_parties.CampusPartyRuntimeTests) ... ok
+test_relationship_and_personality_change_invitation_score (tests.test_campus_parties.CampusPartyRuntimeTests) ... ok
+test_relationship_skill_contributes_to_party_stability_preview (tests.test_campus_parties.CampusPartyRuntimeTests) ... ok
+test_three_person_limit_is_atomic_and_leader_can_dismiss (tests.test_campus_parties.CampusPartyRuntimeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 7.868s
+
+OK

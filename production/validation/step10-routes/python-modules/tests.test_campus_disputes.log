@@ -1,0 +1,14 @@
+test_new_confrontation_invalidates_old_statements_and_checkpoint (tests.test_campus_disputes.DisputeTests) ... ok
+test_no_remote_interview_without_contacts_or_colocation (tests.test_campus_disputes.DisputeTests) ... ok
+test_npc_help_and_mediation_use_same_handler_without_player (tests.test_campus_disputes.DisputeTests) ... ok
+test_only_actual_unresolved_confrontation_creates_private_case (tests.test_campus_disputes.DisputeTests) ... ok
+test_overnight_context_contains_only_own_disputes_not_dialogue_leak (tests.test_campus_disputes.DisputeTests) ... ok
+test_parameters_and_integral_godot_version (tests.test_campus_disputes.DisputeTests) ... ok
+test_refusal_does_not_leak_other_party_and_changed_consent_has_no_effect (tests.test_campus_disputes.DisputeTests) ... ok
+test_settlement_cannot_be_farmed_or_reopened_by_same_source (tests.test_campus_disputes.DisputeTests) ... ok
+test_two_statements_required_free_mediation_reduces_conflict_no_rewards (tests.test_campus_disputes.DisputeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 13.136s
+
+OK

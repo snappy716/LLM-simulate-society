@@ -1,0 +1,11 @@
+test_callers_receive_defensive_copies (tests.test_content_registry.ContentRegistryTests) ... ok
+test_content_version_is_reproducible_and_manifest_is_portable (tests.test_content_registry.ContentRegistryTests) ... ok
+test_default_registry_loads_one_canonical_view (tests.test_content_registry.ContentRegistryTests) ... ok
+test_duplicate_identifier_is_rejected (tests.test_content_registry.ContentRegistryTests) ... ok
+test_paths_cannot_escape_content_root (tests.test_content_registry.ContentRegistryTests) ... ok
+test_unknown_cross_reference_is_rejected (tests.test_content_registry.ContentRegistryTests) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.210s
+
+OK

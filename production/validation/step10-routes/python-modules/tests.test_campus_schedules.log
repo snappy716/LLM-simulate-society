@@ -1,0 +1,11 @@
+test_all_configured_templates_exist_and_cover_every_phase (tests.test_campus_schedules.CampusScheduleTests) ... ok
+test_capacity_overflow_uses_legal_fallback_instead_of_overbooking (tests.test_campus_schedules.CampusScheduleTests) ... ok
+test_every_actor_gets_repeating_seven_day_schedule (tests.test_campus_schedules.CampusScheduleTests) ... ok
+test_generated_schedule_is_deterministic_for_same_seed (tests.test_campus_schedules.CampusScheduleTests) ... ok
+test_planned_direct_occupancy_never_exceeds_location_capacity (tests.test_campus_schedules.CampusScheduleTests) ... ok
+test_player_plan_changes_by_phase_without_moving_or_spending_actions (tests.test_campus_schedules.CampusScheduleTests) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 1.751s
+
+OK

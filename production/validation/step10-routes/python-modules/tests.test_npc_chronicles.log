@@ -1,0 +1,16 @@
+test_phase_execution_populates_logs_without_embedding_them_in_snapshot (tests.test_npc_chronicles.CampusChronicleIntegrationTests) ... ok
+test_deep_validation_catches_historical_entry_corruption (tests.test_npc_chronicles.ChronicleDomainTests) ... ok
+test_entry_rejects_unknown_category_and_invalid_importance (tests.test_npc_chronicles.ChronicleDomainTests) ... ok
+test_world_state_round_trip_preserves_chronicles (tests.test_npc_chronicles.ChronicleDomainTests) ... ok
+test_event_sink_failure_rolls_back_state_event_sequence_and_chronicle (tests.test_npc_chronicles.ChronicleProjectionTests) ... ok
+test_intentions_and_global_clock_events_do_not_enter_personal_history (tests.test_npc_chronicles.ChronicleProjectionTests) ... ok
+test_movement_effect_and_completion_become_one_activity_entry (tests.test_npc_chronicles.ChronicleProjectionTests) ... ok
+test_projector_runs_before_invariants (tests.test_npc_chronicles.ChronicleProjectionTests) ... ok
+test_colocated_player_gets_reliable_witness_record (tests.test_npc_chronicles.ChronicleVisibilityAndPagingTests) ... ok
+test_pages_are_newest_first_and_cursor_is_bound_to_query (tests.test_npc_chronicles.ChronicleVisibilityAndPagingTests) ... ok
+test_public_campus_routine_is_reported_but_secret_event_is_hidden (tests.test_npc_chronicles.ChronicleVisibilityAndPagingTests) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 2.932s
+
+OK

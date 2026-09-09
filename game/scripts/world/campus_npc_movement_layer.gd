@@ -19,6 +19,7 @@ var _active_routes := 0
 var _scene_route_points: Dictionary = {}
 var _current_map_entry: Dictionary = {}
 var _visible_actors: Dictionary = {}
+var _player_location_id := ""
 
 
 func _ready() -> void:
@@ -36,6 +37,7 @@ func _ready() -> void:
 func _on_snapshot_updated(snapshot: Dictionary) -> void:
 	_places = snapshot.get("places", {})
 	_population = snapshot.get("population", {})
+	_player_location_id = String(snapshot.get("player", {}).get("current_location_id", ""))
 	if _active_routes == 0:
 		call_deferred("_refresh_residents")
 
@@ -206,7 +208,7 @@ func _refresh_residents() -> void:
 		return
 	var desired_ids: Array[String] = []
 	var actor_ids: Array = _population.keys()
-	actor_ids.sort()
+	actor_ids.sort_custom(_resident_precedes)
 	for actor_id_value in actor_ids:
 		var actor_id := String(actor_id_value)
 		if actor_id == "player":
@@ -244,6 +246,18 @@ func _refresh_residents() -> void:
 			)
 		actor.set_move_direction(Vector2.ZERO)
 	last_replayed_count = visible_resident_count()
+
+
+func _resident_precedes(left: Variant, right: Variant) -> bool:
+	var a: Dictionary = _population.get(String(left), {})
+	var b: Dictionary = _population.get(String(right), {})
+	var a_here := not _player_location_id.is_empty() and String(a.get("current_location_id", "")) == _player_location_id
+	var b_here := not _player_location_id.is_empty() and String(b.get("current_location_id", "")) == _player_location_id
+	if a_here != b_here:
+		return a_here
+	if a_here and bool(a.get("is_phone_contact", false)) != bool(b.get("is_phone_contact", false)):
+		return bool(a.get("is_phone_contact", false))
+	return String(left) < String(right)
 
 
 func _create_visible_npc(actor_id: String, data: Dictionary) -> Node:
