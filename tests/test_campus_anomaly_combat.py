@@ -84,9 +84,17 @@ class AnomalyCombatTests(unittest.TestCase):
         claim_afterimage(self.bridge, self.task_id)
         person = deepcopy(self.state.population[self.target])
         exposure = site_exposure(self.state, "player")
+        before_case = deepcopy(self.case)
         bid = win_afterimage(self.bridge, self.task_id)
         self.assertEqual("victory", self.state.battles[bid]["result"])
-        self.assertEqual((0, 60, 40, "easing"), tuple(self.case[k] for k in ("shell", "core", "coherence", "status")))
+        # Autonomous friends may already have supported this person during the
+        # fixture's real daytime advance. Night combat must preserve that actual
+        # starting core, not assume nobody else acted before the player's fight.
+        self.assertEqual((0, before_case["core"], max(0, before_case["coherence"] - 20), "easing"),
+            tuple(self.case[k] for k in ("shell", "core", "coherence", "status")))
+        self.assertEqual(before_case["history"], self.case["history"][:-1])
+        self.assertEqual(before_case["revision"] + 1, self.case["revision"])
+        self.assertEqual("night_containment", self.case["history"][-1]["route"])
         self.assertEqual(person, self.state.population[self.target])
         self.assertEqual("completed", self.state.tasks[self.task_id]["state"])
         self.assertLess(site_exposure(self.state, "player"), exposure)

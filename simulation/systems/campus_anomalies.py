@@ -197,17 +197,22 @@ def advance_anomaly_support(context):
     if state.clock.phase not in {"morning", "afternoon"}:
         return {"anomaly_supports": 0}
     handler, count = make_anomaly_handler(), 0
+    from simulation.systems.campus_schedules import current_schedule_slot
     for case in cases:
         target = case["actor_id"]
-        if case["status"] == "resolved" or case["last_support_day"] == state.clock.day or not _available(state, target):
+        if target == "player" or case["status"] == "resolved" or case["last_support_day"] == state.clock.day or not _available(state, target):
             continue
+        if current_schedule_slot(state, target).get("priority", 0) >= 90:
+            continue  # A chance encounter cannot override a class or duty.
         # Subject chooses an existing trusted, knowledgeable contact actually
         # present. No teleportation, invented contacts, or automatic player action.
         from simulation.systems.campus_anomaly_meetings import reserved_meeting
         if reserved_meeting(state, target):
             continue  # Reserved partners travel before the shared action settles.
         helpers = [who for who in state.population if who not in {"player", target} and _available(state, who) and not reserved_meeting(state, who)
+            and current_schedule_slot(state, who).get("priority", 0) < 90
             and are_phone_contacts(state, target, who) and _consents(state, target, who, 50)
+            and _consents(state, who, target, 35)
             and state.population[who]["current_location_id"] == state.population[target]["current_location_id"]
             and mastery_by_topic(state, who).get(case["topic_id"], 0) >= 20]
         helpers.sort(key=lambda who: (-state.relationships.get(target, {}).get(who, {}).get("trust", 0), who))
@@ -223,6 +228,12 @@ def advance_anomaly_support(context):
                 count += 1
                 break
     return {"anomaly_supports": count}
+
+
+def supported_this_phase(state, actor):
+    return any(r["route"] == "day_support" and (r["day"], r["phase"]) == (state.clock.day, state.clock.phase)
+        and actor in (case["actor_id"], r["helper_id"]) for case in state.situations.get("campus_anomalies", {}).get("cases", {}).values()
+        for r in case["history"])
 
 
 def anomalies_invariant(state):

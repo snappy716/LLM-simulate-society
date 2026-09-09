@@ -81,13 +81,17 @@ class AnomalyTests(unittest.TestCase):
 
     def test_listening_is_free_private_source_bound_and_idempotent(self):
         before = deepcopy((self.state.clock, self.state.population, self.state.action_economy))
+        helper_before = deepcopy(anomaly_view(self.state, self.helper))
         result = self.ask()
         self.assertTrue(result.success, result.code)
         self.assertEqual(before, (self.state.clock, self.state.population, self.state.action_economy))
         row = anomaly_view(self.state)[0]
         for secret in ("shell", "core", "coherence", "source_task_id", "status"):
             self.assertNotIn(secret, row)
-        self.assertEqual([], anomaly_view(self.state, self.helper))
+        # The helper may already have heard a separate voluntary request at dawn;
+        # the player's new private statement must not leak into that knowledge.
+        self.assertEqual(helper_before, anomaly_view(self.state, self.helper))
+        self.assertNotIn(row["report"]["claim_id"], self.state.knowledge["beliefs_by_actor"][self.helper])
         self.assertEqual("already_heard", self.ask().code)
         self.assertEqual([], anomalies_invariant(self.state))
 
@@ -160,6 +164,13 @@ class AnomalyTests(unittest.TestCase):
 
     def test_npc_same_handler_and_cost_without_player_participation(self):
         _topic_progress(_actor_growth(self.state, self.helper), self.case["topic_id"])["theory"] = 20
+        # Explicit free-slot boundary, after verifying that auto-support never
+        # displaces a protected class. The original fixture is a weekday dawn.
+        weekly = str((self.state.clock.day - 1) % 7)
+        self.state.population[self.target]["weekly_schedule"][weekly][self.state.clock.phase]["priority"] = 95
+        self.assertEqual(0, advance_anomaly_support(self.context())["anomaly_supports"])
+        for who in (self.target, self.helper):
+            self.state.population[who]["weekly_schedule"][weekly][self.state.clock.phase]["priority"] = 20
         before = deepcopy(self.state.population["player"])
         result = advance_anomaly_support(self.context())
         self.assertEqual(1, result["anomaly_supports"])

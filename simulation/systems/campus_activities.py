@@ -84,6 +84,16 @@ def make_scheduled_npc_phase_executor(
             actor = context.state.population.get(actor_id)
             if not isinstance(actor, dict):
                 continue
+            from simulation.systems.campus_anomalies import supported_this_phase
+            if supported_this_phase(context.state, actor_id):
+                plan = {"activity_id": "SUPPORT_ANOMALY", "action_class": "major", "location_id": actor["current_location_id"],
+                    "day": context.state.clock.day, "phase": context.state.clock.phase, "candidate_count": 1,
+                    "decision_source": "rule", "decision_reason": "consented_support_completed"}
+                actor["current_decision"] = plan
+                actor["current_activity"] = _activity_record(context.state, plan, status="completed", route_step_count=0)
+                summary["major_activity_count"] += 1
+                summary["planned_actor_count"] += 1
+                continue  # The shared action already paid; never execute another major.
             from simulation.systems.campus_night_sites import captive_site, rescued_this_phase
             if captive_site(context.state, actor_id) or rescued_this_phase(context.state, actor_id):
                 # A just-escorted victim does not immediately abandon the safe

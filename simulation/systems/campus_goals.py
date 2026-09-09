@@ -1,7 +1,7 @@
 """Persistent, evidence-bound NPC intentions; executable steps remain shared actions.
 
-First slice: digest a personally experienced anomaly. No invented case, shop stock,
-money or LLM-written executable program. Cooperation expands this same ledger later.
+Typed goals digest personally experienced cases or prepare for a friend's actual
+request. No invented case, shop stock, money or LLM-written executable program.
 """
 from copy import deepcopy
 
@@ -11,10 +11,11 @@ from simulation.systems.campus_vitals import actor_layer, battle_locked
 from simulation.systems.campus_departures import active_departure
 from simulation.systems.transactions import TransactionOutcome
 
-STEPS = {"read", "prepare_notebook", "earn_money", "reflect", "complete"}
+STEPS = {"read", "prepare_notebook", "earn_money", "reflect", "complete", "arrange_support", "await_support", "support_closed"}
 STATES = {"active", "blocked", "completed"}
 STEP_TEXT = {"read": "阅读相关讲义", "prepare_notebook": "准备随身笔记本",
-             "earn_money": "通过校内服务筹备费用", "reflect": "整理亲历案例", "complete": "完成本轮研习"}
+             "earn_money": "通过校内服务筹备费用", "reflect": "整理亲历案例", "complete": "完成本轮研习",
+             "arrange_support": "下次晨间确认对方近况和可用时段", "await_support": "按已确认的支持预约赴约", "support_closed": "结束本轮支持准备"}
 EXPECTED_STEP_FAILURES = {"study_unavailable", "component_complete", "notebook_required",
                           "reflection_requires_case", "activity_wrong_phase", "activity_location_closed"}
 
@@ -49,6 +50,13 @@ def _update(state, goal, step, status, reason=""):
     return changed
 
 
+def goal_step(state, actor_id, goal):
+    if goal.get("kind") == "support_preparation":
+        from simulation.systems.campus_support_preparation import preparation_step
+        return preparation_step(state, actor_id, goal)
+    return _actual_step(state, actor_id, goal["topic_id"])
+
+
 def advance_personal_goals(context):
     state, created = context.state, 0
     # Only actors with actual recorded cases acquire these goals. No omniscient seeding.
@@ -81,7 +89,9 @@ def advance_personal_goals(context):
 def own_goal_context(state, actor_id):
     """Internal cognition context; never serialize the full ledger to the world view."""
     goals = state.cognition.get("long_term_plans", {}).get("actors", {}).get(actor_id, {})
-    return [{key: deepcopy(goal[key]) for key in ("goal_id", "topic_id", "step", "status", "blocked_reason")}
+    return [{**{key: deepcopy(goal[key]) for key in ("goal_id", "topic_id", "step", "status", "blocked_reason")},
+             **({"kind": goal["kind"], "subject_id": goal["subject_id"], "basis": "received_voluntary_friend_request"}
+                if goal.get("kind") == "support_preparation" else {})}
             for goal in goals.values() if goal["status"] != "completed"][:2]
 
 
@@ -107,10 +117,18 @@ def goal_candidates(context, actor_id, schedule_plan, graph, occupancy, policy, 
     active = sorted((g for g in goals.values() if g["status"] != "completed"),
                     key=lambda g: (g["created_tick"], g["goal_id"]))[:2]
     for index, goal in enumerate(active):
-        step = _actual_step(state, actor_id, goal["topic_id"])
-        if step == "complete":
+        step = goal_step(state, actor_id, goal)
+        if step in {"complete", "support_closed"}:
             _update(state, goal, step, "completed")
             continue
+        if goal.get("kind") == "support_preparation":
+            from simulation.systems.campus_anomalies import _consents
+            if not _consents(state, actor_id, goal["subject_id"], 35):
+                _update(state, goal, step, "blocked", "目前不愿继续提供支持，保留已经学到的知识。")
+                continue
+        if step in {"arrange_support", "await_support"}:
+            _update(state, goal, step, "active")
+            continue  # Reconsider at dawn, execute confirmed meetings elsewhere.
         if reason:
             _update(state, goal, step, "blocked", reason)
             continue
@@ -164,7 +182,7 @@ def goal_candidates(context, actor_id, schedule_plan, graph, occupancy, policy, 
             "activity_id": action, "action_class": action_class, "location_id": route.destination_id,
             "parameters": params, "personal_goal_id": goal["goal_id"], "priority": 70,
             "decision_source": "rule", "decision_reason": "persistent_personal_goal",
-            "reason_codes": ["personal_case", "continuity", "legal_next_step"],
+            "reason_codes": ["friend_request" if goal.get("kind") == "support_preparation" else "personal_case", "continuity", "legal_next_step"],
             "scheduled_activity_id": schedule_plan.get("activity_id", ""),
             "scheduled_location_id": schedule_plan.get("location_id", ""),
             "candidate_count": 1, "score": round(score, 3), "score_jitter": 0.0,
@@ -178,8 +196,8 @@ def record_goal_outcome(context, actor_id, plan, outcome):
     if goal is None:
         return
     goal.update(attempts=goal["attempts"] + 1, last_action=plan["activity_id"], last_result=outcome.code)
-    step = _actual_step(context.state, actor_id, goal["topic_id"])
-    status = "completed" if step == "complete" else ("active" if outcome.success else "blocked")
+    step = goal_step(context.state, actor_id, goal)
+    status = "completed" if step in {"complete", "support_closed"} else ("active" if outcome.success else "blocked")
     _update(context.state, goal, step, status, "" if outcome.success else outcome.message)
     context.emit("NPC_PERSONAL_GOAL_PROGRESS", "研习计划取得实际进展。" if outcome.success else "研习计划受阻，下一时段重新核对条件。",
                  actor_ids=[actor_id], visibility="private", knowledge_tags=["goal", "discovery"],
@@ -216,7 +234,8 @@ def make_ask_plan_handler():
             message = "最近有些自己的安排，暂时不太想细说。"
         elif goals:
             stage = goals[0]["step"]
-            message = "最近想把一些亲身经历整理清楚。下一步打算%s。" % STEP_TEXT[stage]
+            reason = "最近想先弄懂一位朋友自愿讲述的经历，再考虑怎么帮忙。" if goals[0].get("kind") == "support_preparation" else "最近想把一些亲身经历整理清楚。"
+            message = reason + "下一步打算%s。" % STEP_TEXT[stage]
         else:
             message = "暂时没有另外的研习安排，先处理手头的课程和生活。"
         agenda = state.cognition.get("daily_plans", {})
@@ -253,16 +272,26 @@ def personal_goals_invariant(state):
     try:
         if ledger["schema_version"] != 1 or not isinstance(ledger["actors"], dict) or not isinstance(ledger["disclosures"], dict):
             return ["invalid personal goals ledger"]
+        if "support_review_day" in ledger and (type(ledger["support_review_day"]) is not int or not 1 <= ledger["support_review_day"] <= state.clock.day):
+            return ["invalid support preparation review day"]
         for actor_id, goals in ledger["actors"].items():
-            if actor_id == "player" or actor_id not in state.population or not isinstance(goals, dict) or len(goals) > len(CHAPTER_NAMES):
+            episode_count = len(state.situations.get("campus_anomalies", {}).get("cases", {}))
+            if actor_id == "player" or actor_id not in state.population or not isinstance(goals, dict) or len(goals) > len(CHAPTER_NAMES) + episode_count:
                 errors.append("invalid personal goal owner/count")
                 continue
             cases = state.knowledge.get("growth", {}).get("actors", {}).get(actor_id, {}).get("case_records", {})
             for goal_id, goal in goals.items():
-                if (goal_id != goal["goal_id"] or goal_id != "understand:" + goal["topic_id"]
+                support = goal.get("kind") == "support_preparation"
+                if (goal_id != goal["goal_id"] or (not support and goal_id != "understand:" + goal["topic_id"])
                         or goal["topic_id"] not in CHAPTER_NAMES or goal["step"] not in STEPS or goal["status"] not in STATES):
                     errors.append("invalid personal goal identity/state")
-                if (not isinstance(goal["source_ids"], list) or not goal["source_ids"]
+                if not support and goal["step"] in {"arrange_support", "await_support", "support_closed"}:
+                    errors.append("personal case goal has support-only step")
+                if support:
+                    from simulation.systems.campus_support_preparation import source_valid
+                    if not source_valid(state, actor_id, goal):
+                        errors.append("support preparation lacks requested voluntary source")
+                elif (not isinstance(goal["source_ids"], list) or not goal["source_ids"]
                         or any(not isinstance(key, str) or cases.get(key, {}).get("topic_id") != goal["topic_id"] for key in goal["source_ids"])):
                     errors.append("personal goal lacks owned case source")
                 if any(type(goal[key]) is not int or goal[key] < 0 for key in ("created_tick", "checked_tick", "attempts")):
@@ -280,7 +309,7 @@ def personal_goals_invariant(state):
                             errors.append("invalid personal goal history entry")
                 if any(not isinstance(goal[key], str) for key in ("blocked_reason", "last_action", "last_result")):
                     errors.append("invalid personal goal text")
-                if goal["status"] == "completed" and _actual_step(state, actor_id, goal["topic_id"]) != "complete":
+                if goal["status"] == "completed" and goal_step(state, actor_id, goal) not in {"complete", "support_closed"}:
                     errors.append("personal goal falsely completed")
         for viewer_id, reports in ledger["disclosures"].items():
             if viewer_id not in state.population or not isinstance(reports, dict):

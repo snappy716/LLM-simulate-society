@@ -277,6 +277,8 @@ class CampusKernelBridge:
             summary.update(advance_welfare(context, messaging_policy))
             from simulation.systems.campus_anomalies import advance_anomaly_support
             summary.update(advance_anomaly_support(context))
+            from simulation.systems.campus_support_preparation import advance_support_preparations
+            summary.update(advance_support_preparations(context, graph, messaging_policy))
             from simulation.systems.campus_anomaly_meetings import advance_meetings
             summary.update(advance_meetings(context, graph, messaging_policy))
             if context.state.cognition.get("daily_plans", {}).get("day") != context.state.clock.day:

@@ -1,0 +1,1189 @@
+{
+  "seed": 7,
+  "days": 7,
+  "phases": [
+    {
+      "day": 1,
+      "phase": "afternoon",
+      "pressure": {},
+      "shortages": {},
+      "disputes": {},
+      "welfare": {},
+      "anomalies": {},
+      "anomaly_supports": 0,
+      "anomaly_containments": 0,
+      "anomaly_meetings": {},
+      "support_preparations": {},
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 10,
+      "regional_choices": 0,
+      "regional_notice_readers": 0,
+      "model_calls_today": 0
+    },
+    {
+      "day": 1,
+      "phase": "evening",
+      "pressure": {},
+      "shortages": {
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "unconfirmed": 1
+      },
+      "anomalies": {},
+      "anomaly_supports": 0,
+      "anomaly_containments": 0,
+      "anomaly_meetings": {},
+      "support_preparations": {},
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 11,
+      "regional_choices": 0,
+      "regional_notice_readers": 8,
+      "model_calls_today": 0
+    },
+    {
+      "day": 1,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 0,
+        "research_innovation_region": 0,
+        "west_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "unconfirmed": 1
+      },
+      "anomalies": {},
+      "anomaly_supports": 0,
+      "anomaly_containments": 0,
+      "anomaly_meetings": {},
+      "support_preparations": {},
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 19,
+      "regional_choices": 0,
+      "regional_notice_readers": 8,
+      "model_calls_today": 0
+    },
+    {
+      "day": 2,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 0,
+        "west_dorm_region": 2,
+        "south_gate_region": 2,
+        "service_logistics_region": 2,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "needs_care": 1
+      },
+      "anomalies": {
+        "unsettled": 1
+      },
+      "anomaly_supports": 0,
+      "anomaly_containments": 0,
+      "anomaly_meetings": {
+        "declined": 1
+      },
+      "support_preparations": {
+        "arrange_support": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 19,
+      "regional_choices": 0,
+      "regional_notice_readers": 8,
+      "model_calls_today": 0
+    },
+    {
+      "day": 2,
+      "phase": "afternoon",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 0,
+        "west_dorm_region": 2,
+        "south_gate_region": 2,
+        "service_logistics_region": 2,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "needs_care": 1
+      },
+      "anomalies": {
+        "unsettled": 1
+      },
+      "anomaly_supports": 0,
+      "anomaly_containments": 0,
+      "anomaly_meetings": {
+        "declined": 1
+      },
+      "support_preparations": {
+        "arrange_support": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 32,
+      "regional_choices": 0,
+      "regional_notice_readers": 8,
+      "model_calls_today": 0
+    },
+    {
+      "day": 2,
+      "phase": "evening",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 0,
+        "west_dorm_region": 2,
+        "south_gate_region": 2,
+        "service_logistics_region": 2,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "needs_care": 1,
+        "unconfirmed": 1
+      },
+      "anomalies": {
+        "unsettled": 1
+      },
+      "anomaly_supports": 0,
+      "anomaly_containments": 0,
+      "anomaly_meetings": {
+        "declined": 1
+      },
+      "support_preparations": {
+        "arrange_support": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 34,
+      "regional_choices": 0,
+      "regional_notice_readers": 15,
+      "model_calls_today": 0
+    },
+    {
+      "day": 2,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 0,
+        "west_dorm_region": 0,
+        "south_gate_region": 0,
+        "service_logistics_region": 2,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "needs_care": 1,
+        "unconfirmed": 1
+      },
+      "anomalies": {
+        "easing": 1
+      },
+      "anomaly_supports": 0,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 1
+      },
+      "support_preparations": {
+        "arrange_support": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 44,
+      "regional_choices": 6,
+      "regional_notice_readers": 15,
+      "model_calls_today": 0
+    },
+    {
+      "day": 3,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 3,
+        "research_innovation_region": 2,
+        "west_dorm_region": 0,
+        "south_gate_region": 0,
+        "service_logistics_region": 1,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "resolved": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 2
+      },
+      "anomalies": {
+        "easing": 1,
+        "unsettled": 1
+      },
+      "anomaly_supports": 0,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 2,
+        "confirmed": 1
+      },
+      "support_preparations": {
+        "await_support": 1,
+        "arrange_support": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 44,
+      "regional_choices": 6,
+      "regional_notice_readers": 15,
+      "model_calls_today": 0
+    },
+    {
+      "day": 3,
+      "phase": "afternoon",
+      "pressure": {
+        "sports_health_region": 3,
+        "research_innovation_region": 2,
+        "west_dorm_region": 0,
+        "south_gate_region": 0,
+        "service_logistics_region": 1,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "resolved": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 2
+      },
+      "anomalies": {
+        "easing": 1,
+        "unsettled": 1
+      },
+      "anomaly_supports": 1,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 2,
+        "completed": 1
+      },
+      "support_preparations": {
+        "await_support": 1,
+        "arrange_support": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 59,
+      "regional_choices": 6,
+      "regional_notice_readers": 15,
+      "model_calls_today": 0
+    },
+    {
+      "day": 3,
+      "phase": "evening",
+      "pressure": {
+        "sports_health_region": 3,
+        "research_innovation_region": 2,
+        "west_dorm_region": 0,
+        "south_gate_region": 0,
+        "service_logistics_region": 1,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "resolved": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 2,
+        "unconfirmed": 1
+      },
+      "anomalies": {
+        "easing": 1,
+        "unsettled": 1
+      },
+      "anomaly_supports": 1,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 2,
+        "completed": 1
+      },
+      "support_preparations": {
+        "await_support": 1,
+        "arrange_support": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 59,
+      "regional_choices": 6,
+      "regional_notice_readers": 16,
+      "model_calls_today": 0
+    },
+    {
+      "day": 3,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 3,
+        "research_innovation_region": 2,
+        "west_dorm_region": 0,
+        "south_gate_region": 0,
+        "service_logistics_region": 1,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "resolved": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 2,
+        "unconfirmed": 1
+      },
+      "anomalies": {
+        "easing": 1,
+        "unsettled": 1
+      },
+      "anomaly_supports": 1,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 2,
+        "completed": 1
+      },
+      "support_preparations": {
+        "await_support": 1,
+        "arrange_support": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 64,
+      "regional_choices": 6,
+      "regional_notice_readers": 16,
+      "model_calls_today": 0
+    },
+    {
+      "day": 4,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 3,
+        "west_dorm_region": 2,
+        "south_gate_region": 2,
+        "service_logistics_region": 2,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 2,
+        "needs_care": 1
+      },
+      "anomalies": {
+        "easing": 1,
+        "unsettled": 2
+      },
+      "anomaly_supports": 1,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 4,
+        "completed": 1,
+        "confirmed": 1
+      },
+      "support_preparations": {
+        "complete": 1,
+        "await_support": 1,
+        "arrange_support": 1,
+        "read": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 64,
+      "regional_choices": 6,
+      "regional_notice_readers": 16,
+      "model_calls_today": 0
+    },
+    {
+      "day": 4,
+      "phase": "afternoon",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 3,
+        "west_dorm_region": 2,
+        "south_gate_region": 2,
+        "service_logistics_region": 2,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 2,
+        "needs_care": 1
+      },
+      "anomalies": {
+        "easing": 2,
+        "unsettled": 1
+      },
+      "anomaly_supports": 2,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 4,
+        "completed": 2
+      },
+      "support_preparations": {
+        "complete": 1,
+        "await_support": 1,
+        "arrange_support": 1,
+        "read": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 79,
+      "regional_choices": 6,
+      "regional_notice_readers": 16,
+      "model_calls_today": 0
+    },
+    {
+      "day": 4,
+      "phase": "evening",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 3,
+        "west_dorm_region": 2,
+        "south_gate_region": 2,
+        "service_logistics_region": 2,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 2,
+        "needs_care": 1,
+        "unconfirmed": 1
+      },
+      "anomalies": {
+        "easing": 2,
+        "unsettled": 1
+      },
+      "anomaly_supports": 2,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 4,
+        "completed": 2
+      },
+      "support_preparations": {
+        "complete": 1,
+        "await_support": 1,
+        "arrange_support": 2
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 80,
+      "regional_choices": 6,
+      "regional_notice_readers": 17,
+      "model_calls_today": 0
+    },
+    {
+      "day": 4,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 0,
+        "research_innovation_region": 0,
+        "west_dorm_region": 2,
+        "south_gate_region": 2,
+        "service_logistics_region": 0,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 2,
+        "needs_care": 1,
+        "unconfirmed": 1
+      },
+      "anomalies": {
+        "easing": 2,
+        "unsettled": 1
+      },
+      "anomaly_supports": 2,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 4,
+        "completed": 2
+      },
+      "support_preparations": {
+        "complete": 1,
+        "await_support": 1,
+        "arrange_support": 2
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 88,
+      "regional_choices": 11,
+      "regional_notice_readers": 17,
+      "model_calls_today": 0
+    },
+    {
+      "day": 5,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 0,
+        "research_innovation_region": 2,
+        "west_dorm_region": 1,
+        "south_gate_region": 3,
+        "service_logistics_region": 2,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "shortage": 1,
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 3,
+        "needs_care": 1
+      },
+      "anomalies": {
+        "easing": 2,
+        "unsettled": 2
+      },
+      "anomaly_supports": 2,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 6,
+        "completed": 2,
+        "confirmed": 2
+      },
+      "support_preparations": {
+        "complete": 2,
+        "await_support": 2,
+        "arrange_support": 1,
+        "read": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 88,
+      "regional_choices": 11,
+      "regional_notice_readers": 17,
+      "model_calls_today": 0
+    },
+    {
+      "day": 5,
+      "phase": "afternoon",
+      "pressure": {
+        "sports_health_region": 0,
+        "research_innovation_region": 2,
+        "west_dorm_region": 1,
+        "south_gate_region": 3,
+        "service_logistics_region": 2,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "shortage": 1,
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 3,
+        "needs_care": 1
+      },
+      "anomalies": {
+        "easing": 3,
+        "unsettled": 1
+      },
+      "anomaly_supports": 4,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 6,
+        "completed": 4
+      },
+      "support_preparations": {
+        "complete": 2,
+        "await_support": 2,
+        "arrange_support": 1,
+        "read": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 104,
+      "regional_choices": 11,
+      "regional_notice_readers": 17,
+      "model_calls_today": 0
+    },
+    {
+      "day": 5,
+      "phase": "evening",
+      "pressure": {
+        "sports_health_region": 0,
+        "research_innovation_region": 2,
+        "west_dorm_region": 1,
+        "south_gate_region": 3,
+        "service_logistics_region": 2,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "shortage": 1,
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 3,
+        "needs_care": 1,
+        "unconfirmed": 1
+      },
+      "anomalies": {
+        "easing": 3,
+        "unsettled": 1
+      },
+      "anomaly_supports": 4,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 6,
+        "completed": 4
+      },
+      "support_preparations": {
+        "complete": 2,
+        "await_support": 2,
+        "arrange_support": 2
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 105,
+      "regional_choices": 11,
+      "regional_notice_readers": 17,
+      "model_calls_today": 0
+    },
+    {
+      "day": 5,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 0,
+        "research_innovation_region": 2,
+        "west_dorm_region": 0,
+        "south_gate_region": 3,
+        "service_logistics_region": 0,
+        "east_dorm_region": 0
+      },
+      "shortages": {
+        "shortage": 1,
+        "watch": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 3,
+        "needs_care": 1,
+        "unconfirmed": 1
+      },
+      "anomalies": {
+        "easing": 3,
+        "unsettled": 1
+      },
+      "anomaly_supports": 4,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 6,
+        "completed": 4
+      },
+      "support_preparations": {
+        "complete": 2,
+        "await_support": 2,
+        "arrange_support": 2
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 114,
+      "regional_choices": 17,
+      "regional_notice_readers": 17,
+      "model_calls_today": 0
+    },
+    {
+      "day": 6,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 3,
+        "west_dorm_region": 2,
+        "south_gate_region": 4,
+        "service_logistics_region": 2,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4,
+        "needs_care": 1
+      },
+      "anomalies": {
+        "easing": 3,
+        "unsettled": 2
+      },
+      "anomaly_supports": 4,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 8,
+        "completed": 4,
+        "confirmed": 3
+      },
+      "support_preparations": {
+        "complete": 4,
+        "await_support": 2
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 114,
+      "regional_choices": 17,
+      "regional_notice_readers": 17,
+      "model_calls_today": 0
+    },
+    {
+      "day": 6,
+      "phase": "afternoon",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 3,
+        "west_dorm_region": 2,
+        "south_gate_region": 4,
+        "service_logistics_region": 2,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4,
+        "needs_care": 1
+      },
+      "anomalies": {
+        "resolved": 1,
+        "easing": 3,
+        "unsettled": 1
+      },
+      "anomaly_supports": 7,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 8,
+        "completed": 7
+      },
+      "support_preparations": {
+        "complete": 4,
+        "await_support": 2
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 130,
+      "regional_choices": 17,
+      "regional_notice_readers": 17,
+      "model_calls_today": 0
+    },
+    {
+      "day": 6,
+      "phase": "evening",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 3,
+        "west_dorm_region": 2,
+        "south_gate_region": 4,
+        "service_logistics_region": 2,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4,
+        "needs_care": 1
+      },
+      "anomalies": {
+        "resolved": 1,
+        "easing": 3,
+        "unsettled": 1
+      },
+      "anomaly_supports": 7,
+      "anomaly_containments": 1,
+      "anomaly_meetings": {
+        "declined": 8,
+        "completed": 7
+      },
+      "support_preparations": {
+        "complete": 4,
+        "await_support": 2
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 130,
+      "regional_choices": 17,
+      "regional_notice_readers": 18,
+      "model_calls_today": 0
+    },
+    {
+      "day": 6,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 0,
+        "research_innovation_region": 0,
+        "west_dorm_region": 0,
+        "south_gate_region": 0,
+        "service_logistics_region": 0,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "watch": 2
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 4,
+        "needs_care": 1
+      },
+      "anomalies": {
+        "resolved": 1,
+        "easing": 4
+      },
+      "anomaly_supports": 7,
+      "anomaly_containments": 3,
+      "anomaly_meetings": {
+        "declined": 8,
+        "completed": 7
+      },
+      "support_preparations": {
+        "complete": 4,
+        "await_support": 2
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 140,
+      "regional_choices": 25,
+      "regional_notice_readers": 18,
+      "model_calls_today": 0
+    },
+    {
+      "day": 7,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 2,
+        "west_dorm_region": 0,
+        "south_gate_region": 0,
+        "service_logistics_region": 2,
+        "east_dorm_region": 1
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 5
+      },
+      "anomalies": {
+        "resolved": 1,
+        "easing": 4
+      },
+      "anomaly_supports": 7,
+      "anomaly_containments": 3,
+      "anomaly_meetings": {
+        "declined": 11,
+        "completed": 7,
+        "confirmed": 1
+      },
+      "support_preparations": {
+        "complete": 6,
+        "arrange_support": 2
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 140,
+      "regional_choices": 25,
+      "regional_notice_readers": 18,
+      "model_calls_today": 0
+    },
+    {
+      "day": 7,
+      "phase": "afternoon",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 2,
+        "west_dorm_region": 0,
+        "south_gate_region": 0,
+        "service_logistics_region": 2,
+        "east_dorm_region": 1
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 5
+      },
+      "anomalies": {
+        "resolved": 2,
+        "easing": 3
+      },
+      "anomaly_supports": 8,
+      "anomaly_containments": 3,
+      "anomaly_meetings": {
+        "declined": 11,
+        "completed": 8
+      },
+      "support_preparations": {
+        "complete": 6,
+        "arrange_support": 2
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 157,
+      "regional_choices": 25,
+      "regional_notice_readers": 18,
+      "model_calls_today": 0
+    },
+    {
+      "day": 7,
+      "phase": "evening",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 2,
+        "west_dorm_region": 0,
+        "south_gate_region": 0,
+        "service_logistics_region": 2,
+        "east_dorm_region": 1
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 5
+      },
+      "anomalies": {
+        "resolved": 2,
+        "easing": 3
+      },
+      "anomaly_supports": 8,
+      "anomaly_containments": 3,
+      "anomaly_meetings": {
+        "declined": 11,
+        "completed": 8
+      },
+      "support_preparations": {
+        "complete": 6,
+        "arrange_support": 2
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 157,
+      "regional_choices": 25,
+      "regional_notice_readers": 18,
+      "model_calls_today": 0
+    },
+    {
+      "day": 7,
+      "phase": "late_night",
+      "pressure": {
+        "sports_health_region": 2,
+        "research_innovation_region": 0,
+        "west_dorm_region": 0,
+        "south_gate_region": 0,
+        "service_logistics_region": 2,
+        "east_dorm_region": 1
+      },
+      "shortages": {
+        "watch": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 5
+      },
+      "anomalies": {
+        "resolved": 2,
+        "easing": 3
+      },
+      "anomaly_supports": 8,
+      "anomaly_containments": 3,
+      "anomaly_meetings": {
+        "declined": 11,
+        "completed": 8
+      },
+      "support_preparations": {
+        "complete": 6,
+        "arrange_support": 2
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 163,
+      "regional_choices": 26,
+      "regional_notice_readers": 18,
+      "model_calls_today": 0
+    },
+    {
+      "day": 8,
+      "phase": "morning",
+      "pressure": {
+        "sports_health_region": 3,
+        "research_innovation_region": 2,
+        "west_dorm_region": 0,
+        "south_gate_region": 2,
+        "service_logistics_region": 3,
+        "east_dorm_region": 2
+      },
+      "shortages": {
+        "shortage": 1,
+        "resolved": 1
+      },
+      "disputes": {},
+      "welfare": {
+        "recovered": 5
+      },
+      "anomalies": {
+        "resolved": 2,
+        "easing": 3
+      },
+      "anomaly_supports": 9,
+      "anomaly_containments": 3,
+      "anomaly_meetings": {
+        "declined": 11,
+        "completed": 8,
+        "confirmed": 2
+      },
+      "support_preparations": {
+        "complete": 7,
+        "await_support": 1
+      },
+      "contact_gaps": {},
+      "contact_inquiries": {},
+      "inquiry_evidence_choices": 0,
+      "completed_tasks": 163,
+      "regional_choices": 26,
+      "regional_notice_readers": 18,
+      "model_calls_today": 0
+    }
+  ],
+  "events": {
+    "FORUM_TASK_VIEWED": 1213,
+    "FORUM_TASK_CLAIMED": 166,
+    "CAMPUS_ITEM_ACTION_COMPLETED": 2114,
+    "NPC_ROUTINE_ACTION_COMPLETED": 1792,
+    "ACTOR_LOCATION_CHANGED": 22719,
+    "NPC_COMBAT_SUPPLY_PREPARED": 22,
+    "NPC_DAILY_PLANS_PREPARED": 8,
+    "NPC_DECISION_MADE": 5586,
+    "CAMPUS_ACTIVITY_EFFECT_APPLIED": 4985,
+    "NPC_ACTIVITY_COMPLETED": 5586,
+    "FORUM_TASK_COMPLETED": 163,
+    "CAMPUS_TRADE_OFFERED": 164,
+    "CAMPUS_TRADE_SETTLED": 164,
+    "NPC_INTERACTION_RESOLVED": 311,
+    "WORLD_PHASE_ADVANCED": 28,
+    "FORUM_TASK_PUBLISHED": 168,
+    "NPC_STRANDED_IN_NIGHT": 5,
+    "NIGHT_WORLD_ENTERED": 65,
+    "CLUB_ACTIVITY_ATTENDED": 83,
+    "CAMPUS_SITUATION_CHANGED": 120,
+    "CAMPUS_SUPPLY_ORDERED": 10,
+    "NPC_INFORMATION_SHARED": 133,
+    "PHONE_MESSAGE_SENT": 280,
+    "NPC_SOCIAL_PROPOSAL_CREATED": 8,
+    "PARTY_INVITATION_DECLINED": 70,
+    "PARTY_MEMBER_COMMITTED": 2,
+    "PARTY_DEPARTURE_RESERVED": 2,
+    "NPC_EXPEDITION_UPDATED": 6,
+    "CAMPUS_INVESTIGATION_COMPLETED": 22,
+    "FIELD_REPORT_SUBMITTED": 22,
+    "NPC_DEPARTURE_WAITING": 2,
+    "BATTLE_PREPARATION_STARTED": 34,
+    "COMBAT_CHARACTER_DEPLOYED": 36,
+    "BATTLE_DEPLOYMENT_CONFIRMED": 34,
+    "NIGHT_COMBAT_ENTRY_ACCOUNTED": 34,
+    "COMBAT_ROUND_STARTED": 165,
+    "COMBAT_ENEMY_INTENTS": 165,
+    "COMBAT_CARD_PLAYED": 248,
+    "COMBAT_BASE_COMMAND_USED": 128,
+    "COMBAT_ENEMY_ACTION": 131,
+    "NIGHT_SITE_RESOLVED": 34,
+    "COMBAT_VICTORY": 34,
+    "NPC_NIGHT_TASK_EXECUTED": 34,
+    "CAMPUS_SUPPLY_DELIVERED": 9,
+    "NIGHT_RESCUE_MISSED": 4,
+    "NIGHT_WORLD_AUTO_EXITED": 65,
+    "FORUM_TASK_EXPIRED": 84,
+    "CLUB_MEMBER_RECRUITED": 33,
+    "CAMPUS_WELFARE_REPORTED": 9,
+    "CAMPUS_ANOMALY_LINKED": 5,
+    "CAMPUS_ANOMALY_MEETING_UPDATED": 50,
+    "CAMPUS_ANOMALY_HEARD": 25,
+    "NPC_SUPPORT_PREPARATION_STARTED": 8,
+    "NPC_PERSONAL_GOAL_CREATED": 46,
+    "CAMPUS_GROWTH_COMPLETED": 82,
+    "NPC_PERSONAL_GOAL_PROGRESS": 82,
+    "CAMPUS_ANOMALY_CONTAINED": 3,
+    "CAMPUS_REST_RECOVERY": 18,
+    "CAMPUS_ANOMALY_SUPPORTED": 9,
+    "COMBAT_ITEM_USED": 2,
+    "KNOWLEDGE_INSIGHT_USED": 3
+  },
+  "site_outcomes": {
+    "expired": 56,
+    "resolved": 34
+  },
+  "npc_resolved_sites": 34,
+  "player_participation": false,
+  "api_calls": 0
+}

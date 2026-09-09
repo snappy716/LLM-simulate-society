@@ -79,12 +79,13 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, 
             if (chosen.get("activity_id"), chosen.get("location_id")) != (schedule.get("activity_id"), schedule.get("location_id")):
                 chosen = dict(schedule)
         if chosen.get("personal_goal_id"):
-            from simulation.systems.campus_goals import _actual_step
+            from simulation.systems.campus_goals import goal_step
             from simulation.systems.campus_vitals import actor_layer
             from simulation.systems.campus_departures import active_departure
             topic = chosen.get("parameters", {}).get("topic_id")
+            goal = state.cognition.get("long_term_plans", {}).get("actors", {}).get(actor_id, {}).get(chosen["personal_goal_id"])
             if (actor_layer(state, actor_id) != "surface" or active_departure(state, actor_id)
-                    or (topic and not str(chosen.get("candidate_id", "")).endswith(":" + _actual_step(state, actor_id, topic)))):
+                    or not goal or (topic and not str(chosen.get("candidate_id", "")).endswith(":" + goal_step(state, actor_id, goal)))):
                 chosen = dict(schedule)
         destination = chosen.get("location_id", "")
         if (not _has_capacity(graph, occupancy, destination)

@@ -159,6 +159,8 @@ def make_meeting_handler(graph, policy):
         if recipient != "player":
             if mastery_by_topic(state, helper).get(case["topic_id"], 0) < 20 or (recipient == helper and not _consents(state, helper, subject, 35)):
                 _close(context, row, "declined", "我目前的理解或意愿不足以承担这次支持，先不约了。", policy, recipient)
+                from simulation.systems.campus_support_preparation import start_preparation
+                start_preparation(context, row, policy)
             else:
                 row.update(status="confirmed", revision=1)
                 _notify(context, row, recipient, "好，按这个时间地点见面；到场再确认近况与意愿。", policy)
@@ -180,6 +182,8 @@ def advance_meetings(context, graph, policy, *, ending=False):
             problem = slot_problem(state, case, row["helper_id"], row["day"], row["phase"], row["location_id"], graph, row["meeting_id"])
             if case["status"] == "resolved" or not _consents(state, row["subject_id"], row["helper_id"], 50):
                 problem = "当前已不需要活动，或本人不愿继续。"
+            if row["helper_id"] != "player" and not _consents(state, row["helper_id"], row["subject_id"], 35):
+                problem = "帮助者目前不愿继续参与，需要重新沟通。"
             if problem:
                 _close(context, row, "cancelled", "预约条件变化，取消本次见面：" + problem, policy)
     if ending or state.clock.phase != "morning":
