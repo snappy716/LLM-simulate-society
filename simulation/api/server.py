@@ -377,6 +377,8 @@ class CampusKernelBridge:
         for action_id in ANOMALY_ACTIONS:
             self.kernel.register_handler(action_id, anomaly_handler)
         self.kernel.add_invariant(anomalies_invariant)
+        from simulation.systems.campus_anomaly_combat import afterimage_invariant
+        self.kernel.add_invariant(afterimage_invariant)
         self.kernel.add_invariant(personal_goals_invariant)
         for action_id in ASSISTANCE_ACTIONS:
             self.kernel.register_handler(action_id, assistance_handler)

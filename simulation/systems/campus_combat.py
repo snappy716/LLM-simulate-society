@@ -283,6 +283,10 @@ def combat_preparation_assessment(
     task = _task_for_preparation(state, actor_id, task_id)
     if task is None:
         return {"allowed": False, "reason": "owned_night_task_required"}
+    from simulation.systems.campus_anomaly_combat import case_for_task
+    anomaly = case_for_task(state, task)
+    if anomaly and anomaly["shell"] <= 0:
+        return {"allowed": False, "reason": "site_threat_cleared"}
     from simulation.systems.campus_night_sites import site_for_task
     site = site_for_task(state, task)
     if site and site["status"] == "suppressed":
@@ -419,6 +423,8 @@ def _new_battle(
     if not isinstance(archetype, dict):
         raise ValueError(f"night task references unknown combat enemy: {archetype_id}")
     enemy = _build_enemy_unit(battle_id, archetype)
+    from simulation.systems.campus_anomaly_combat import prepare_afterimage_enemy
+    anomaly_origin = prepare_afterimage_enemy(state, task, enemy)
     enemy_id = str(enemy["enemy_instance_id"])
     card_ids_by_actor = {
         card["actor_id"]: list(card["command_card_ids"])
@@ -426,6 +432,7 @@ def _new_battle(
     }
     night_states = state.situations["night_world"]["actor_states"]
     battle = {
+        **({"anomaly_origin": anomaly_origin} if anomaly_origin else {}),
         "battle_id": battle_id,
         "revision": 1,
         "phase": "setup",
@@ -1699,6 +1706,8 @@ def campus_combat_view(
                 **deepcopy(assessment),
             })
     active_view = deepcopy(active) if isinstance(active, dict) else None
+    if isinstance(active_view, dict):
+        active_view.pop("anomaly_origin", None)  # Do not publish a person's private episode.
     if isinstance(active_view, dict) and active_view.get("phase") == "player_turn":
         if not active_view.get("enemy_intents"):
             active_view["enemy_intents"] = plan_enemy_intents(active_view)

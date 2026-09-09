@@ -177,9 +177,15 @@ def _publish_night_tasks(
     now = phase_index(state.clock.day, state.clock.phase)
     from simulation.systems.campus_situations import regional_pressure, weighted_night_templates
     weighted_templates = weighted_night_templates(state, templates)
-    for _ in range(policy.daily_night_task_count):
+    from simulation.systems.campus_anomaly_combat import pending_afterimages, afterimage_template
+    afterimages = pending_afterimages(state)
+    for index in range(policy.daily_night_task_count):
         template_id = rng.choice(weighted_templates)
         template = templates[template_id]
+        anomaly = afterimages[index] if index < len(afterimages) else None
+        if anomaly:
+            template = afterimage_template(state, anomaly, templates)
+            template_id = template["id"]
         from simulation.systems.campus_night_sites import rescue_candidates, create_night_site
         victim_id = None
         if template.get("site_profile", {}).get("kind") == "rescue":
@@ -237,6 +243,8 @@ def _publish_night_tasks(
             create_field_site(context, task, template["field_profile"])
         if "site_profile" in template:
             create_night_site(context, task, template["site_profile"], victim_id)
+        if anomaly:
+            task["anomaly_case_id"] = anomaly["case_id"]
         pressure = regional_pressure(state, task["scene_id"])
         if pressure:
             task["origin_situation_id"] = "regional-pressure:" + task["execution_region_id"]

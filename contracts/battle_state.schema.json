@@ -12,6 +12,17 @@
     "known_weaknesses", "enemy_intents", "card_instances", "result", "consequences"
   ],
   "properties": {
+    "anomaly_origin": {
+      "description": "Server-only source receipt, omitted from player battle projections.",
+      "type": "object", "additionalProperties": false,
+      "required": ["case_id", "case_revision", "shell", "max_health"],
+      "properties": {
+        "case_id": {"type": "string", "minLength": 1},
+        "case_revision": {"type": "integer", "minimum": 0},
+        "shell": {"type": "integer", "minimum": 1, "maximum": 30},
+        "max_health": {"type": "integer", "minimum": 1}
+      }
+    },
     "battle_id": {"type": "string", "minLength": 1},
     "revision": {"type": "integer", "minimum": 1},
     "phase": {"enum": ["setup", "ready", "player_turn", "enemy_turn", "round_end", "resolved"]},

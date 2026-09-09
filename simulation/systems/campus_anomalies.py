@@ -135,6 +135,7 @@ def make_anomaly_handler():
             if report and (report["day"], report["phase"], report["revision"]) == (state.clock.day, state.clock.phase, case["revision"]):
                 return TransactionOutcome(True, True, "already_heard", report["summary"], payload={"report": report})
             summary = ("那次月相经历已经能够与眼前生活区分开，我愿意继续正常生活。" if case["status"] == "resolved"
+                else "旧现场的残像已经被切断，但那段经历仍困扰着我；外壳消失不等于我的心结已解开。" if case["history"] and case["history"][-1]["route"] == "night_containment"
                 else "一起核对日常经历让我更能区分月相残留与眼前生活，但还需要时间巩固。" if case["status"] == "easing"
                 else "脱离那次月相现场后，有些影像仍会重复出现。我愿意先讲自己的体验，不希望被贴上诊断标签。")
             claim = create_campus_claim(state, subject_id=target, predicate="voluntary_moon_experience", object_id=target,
@@ -235,6 +236,16 @@ def anomalies_invariant(state):
                 active.add(case["actor_id"])
             expected, last_day = dict(INITIAL), 0
             for revision, receipt in enumerate(case["history"], 1):
+                if receipt.get("route") == "night_containment":
+                    from simulation.systems.campus_anomaly_combat import night_receipt_valid
+                    if (receipt["revision"] != revision or receipt["before"] != expected or expected["shell"] <= 0
+                            or not case["created_day"] <= receipt["day"] <= state.clock.day
+                            or receipt["phase"] not in {"evening", "late_night"} or not night_receipt_valid(state, case, receipt)):
+                        return ["invalid anomaly containment receipt"]
+                    expected = {**expected, "shell": 0, "coherence": max(0, expected["coherence"] - 20)}
+                    if receipt["after"] != expected:
+                        return ["invalid anomaly containment effect"]
+                    continue
                 claim = state.knowledge["claims"][receipt["claim_id"]]
                 if (receipt["revision"] != revision or receipt["before"] != expected or receipt["route"] != "day_support"
                         or not last_day < receipt["day"] <= state.clock.day or receipt["phase"] not in {"morning", "afternoon"}
@@ -249,7 +260,7 @@ def anomalies_invariant(state):
                 last_day = receipt["day"]
             if (case["revision"] != len(case["history"]) or case["last_support_day"] != last_day
                     or any(type(case[name]) is not int or case[name] != value for name, value in expected.items())
-                    or case["status"] != ("resolved" if not any(expected.values()) else "easing" if last_day else "unsettled")):
+                    or case["status"] != ("resolved" if not any(expected.values()) else "easing" if case["history"] else "unsettled")):
                 return ["invalid anomaly state"]
             for listener, report in case["reports"].items():
                 claim = state.knowledge["claims"][report["claim_id"]]

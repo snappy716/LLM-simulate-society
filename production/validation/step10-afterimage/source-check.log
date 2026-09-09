@@ -1,0 +1,6 @@
+test_checkpoint_preserves_linkage_and_rejects_wrong_projection (tests.test_campus_anomaly_combat.AnomalyCombatTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 30.986s
+
+OK

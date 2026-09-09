@@ -1352,6 +1352,9 @@ func _refresh_forum_detail() -> void:
 		if inquiry.get("decision_basis") is Dictionary:
 			_forum_detail.text += "\n选择依据：%s" % inquiry.decision_basis.get("summary", "")
 	var night_site: Dictionary = task.get("night_site", {})
+	var afterimage: Dictionary = task.get("afterimage", {})
+	if not afterimage.is_empty():
+		_forum_detail.text += "\n\n[b]月相残像 · 不是人物本身[/b]\n%s\n%s" % [afterimage.get("rule_note", ""), afterimage.get("outcome", "")]
 	if not night_site.is_empty():
 		_forum_detail.text += "\n\n[b]实际现场 · %s[/b]\n%s\n%s" % [night_site.get("label", ""), night_site.get("status", ""), night_site.get("rule_note", "")]
 		if not String(night_site.get("victim_name", "")).is_empty():

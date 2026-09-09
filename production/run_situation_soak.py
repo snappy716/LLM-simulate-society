@@ -30,7 +30,8 @@ def main():
             "disputes": dict(Counter(v["status"] for v in state.situations.get("campus_disputes", {}).get("cases", {}).values())),
             "welfare": dict(Counter(v["status"] for v in state.situations.get("campus_welfare", {}).get("cases", {}).values())),
             "anomalies": dict(Counter(v["status"] for v in state.situations.get("campus_anomalies", {}).get("cases", {}).values())),
-            "anomaly_supports": sum(len(v["history"]) for v in state.situations.get("campus_anomalies", {}).get("cases", {}).values()),
+            "anomaly_supports": sum(sum(r["route"] == "day_support" for r in v["history"]) for v in state.situations.get("campus_anomalies", {}).get("cases", {}).values()),
+            "anomaly_containments": sum(sum(r["route"] == "night_containment" for r in v["history"]) for v in state.situations.get("campus_anomalies", {}).get("cases", {}).values()),
             "contact_gaps": dict(Counter(v["status"] for v in state.cognition["messaging"].get("contact_gaps", {}).values())),
             "contact_inquiries": dict(Counter(v["status"] for v in state.situations.get("contact_inquiries", {}).get("cases", {}).values())),
             "inquiry_evidence_choices": sum(v.get("decision_basis", {}).get("kind") == "known_evidence"

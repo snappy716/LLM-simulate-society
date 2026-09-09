@@ -189,6 +189,8 @@ def make_site_resolution_handler(graph, action_policy):
             "day": state.clock.day, "phase": state.clock.phase, "destination_id": site["safe_location_id"] or site["location_id"],
             "passage_ids": [step.passage_id for step in routes[actor_id].steps] if victim_id else [], "major_action_cost": cost}
         site.update(status="resolved", revision=site["revision"] + 1, receipt=receipt)
+        from simulation.systems.campus_anomaly_combat import finish_afterimage
+        finish_afterimage(context, task, battle)
         from simulation.systems.campus_situations import advance_campus_situations
         advance_campus_situations(context)
         from simulation.systems.campus_tasks import complete_assigned_task
