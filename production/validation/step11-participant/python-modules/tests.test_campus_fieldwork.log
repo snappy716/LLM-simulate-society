@@ -1,0 +1,18 @@
+test_actual_npc_traversal_search_and_completion_without_player (tests.test_campus_fieldwork.FieldworkTests) ... ok
+test_combat_or_free_activity_cannot_complete_a_recon_contract (tests.test_campus_fieldwork.FieldworkTests) ... ok
+test_content_migration_preserves_existing_contracts_and_rejects_fake_manifest (tests.test_campus_fieldwork.FieldworkTests) ... ok
+test_duplicate_report_command_replays_without_second_reward (tests.test_campus_fieldwork.FieldworkTests) ... ok
+test_invalid_site_and_forged_report_fail_invariant (tests.test_campus_fieldwork.FieldworkTests) ... ok
+test_no_budget_no_readings_and_no_reward (tests.test_campus_fieldwork.FieldworkTests) ... ok
+test_notice_cannot_replace_physical_evidence_and_fake_report_is_atomic (tests.test_campus_fieldwork.FieldworkTests) ... ok
+test_physical_values_and_npc_evidence_are_not_in_public_snapshot (tests.test_campus_fieldwork.FieldworkTests) ... ok
+test_real_search_then_report_costs_one_action_and_preserves_clock (tests.test_campus_fieldwork.FieldworkTests) ... ok
+test_report_duplicate_and_disk_checkpoint_preserve_reads_and_reward (tests.test_campus_fieldwork.FieldworkTests) ... ok
+test_report_requires_current_integer_task_revision (tests.test_campus_fieldwork.FieldworkTests) ... ok
+test_shared_rumor_requires_independent_verification (tests.test_campus_fieldwork.FieldworkTests) ... ok
+test_wrong_site_and_wrong_layer_do_not_reveal_records (tests.test_campus_fieldwork.FieldworkTests) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 105.436s
+
+OK

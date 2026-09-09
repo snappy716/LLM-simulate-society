@@ -1,0 +1,35 @@
+test_clock_validator_accounts_for_automatic_defeat_without_fake_frames (tests.test_causal_comparison.CausalComparisonTests) ... ok
+test_commands_after_restore_do_not_reuse_bootstrap_ids (tests.test_causal_comparison.CausalComparisonTests) ... ok
+test_complete_one_day_comparison_and_tampering_rejection (tests.test_causal_comparison.CausalComparisonTests) ... unattended 1 {'day': 3, 'phase': 'afternoon', 'minute': 0}
+unattended 2 {'day': 3, 'phase': 'evening', 'minute': 0}
+unattended 3 {'day': 3, 'phase': 'late_night', 'minute': 0}
+unattended 4 {'day': 4, 'phase': 'morning', 'minute': 0}
+explorer 1 {'day': 3, 'phase': 'afternoon', 'minute': 0}
+explorer 2 {'day': 3, 'phase': 'evening', 'minute': 0}
+explorer 3 {'day': 3, 'phase': 'late_night', 'minute': 0}
+explorer 4 {'day': 4, 'phase': 'morning', 'minute': 0}
+ok
+test_due_appointment_precedes_exploration_and_study (tests.test_causal_comparison.CausalComparisonTests) ... ok
+test_explorer_cannot_target_remote_noncontact_from_population_projection (tests.test_causal_comparison.CausalComparisonTests) ... ok
+test_late_night_rest_uses_own_home_and_formal_action (tests.test_causal_comparison.CausalComparisonTests) ... ok
+test_natural_start_uses_only_successful_phase_actions (tests.test_causal_comparison.CausalComparisonTests) ... ok
+test_participant_observes_present_people_before_walking_away (tests.test_causal_comparison.CausalComparisonTests) ... ok
+test_participant_uses_real_cards_and_public_task_without_hidden_case_target (tests.test_causal_comparison.CausalComparisonTests) ... unattended 1 {'day': 3, 'phase': 'afternoon', 'minute': 0}
+unattended 2 {'day': 3, 'phase': 'evening', 'minute': 0}
+unattended 3 {'day': 3, 'phase': 'late_night', 'minute': 0}
+unattended 4 {'day': 4, 'phase': 'morning', 'minute': 0}
+participant 1 {'day': 3, 'phase': 'afternoon', 'minute': 0}
+participant 2 {'day': 3, 'phase': 'evening', 'minute': 0}
+participant 3 {'day': 3, 'phase': 'late_night', 'minute': 0}
+participant 4 {'day': 4, 'phase': 'morning', 'minute': 0}
+ok
+test_restores_identical_world_and_rng_without_changing_source (tests.test_causal_comparison.CausalComparisonTests) ... ok
+test_sample_is_read_only_and_separates_private_case_from_player_views (tests.test_causal_comparison.CausalComparisonTests) ... ok
+test_sampling_detects_accidental_mutation (tests.test_causal_comparison.CausalComparisonTests) ... ok
+test_source_manifest_excludes_private_design_and_handoff (tests.test_causal_comparison.CausalComparisonTests) ... ok
+test_visibility_obeys_colocation_contacts_and_cap (tests.test_causal_comparison.CausalComparisonTests) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 217.406s
+
+OK

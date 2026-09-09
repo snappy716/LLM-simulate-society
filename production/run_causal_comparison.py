@@ -16,9 +16,13 @@ import subprocess
 
 from simulation.actions.commands import SimulationCommand
 from simulation.api.server import CampusKernelBridge
-from simulation.persistence.kernel_checkpoint import build_kernel_checkpoint
+from simulation.persistence.kernel_checkpoint import build_kernel_checkpoint, load_kernel_checkpoint
 
 WALK = ("library_reading_hall", "mirror_lake_square", "student_center", "south_gate")
+
+
+def clock_tick(clock):
+    return (clock["day"] - 1) * 4 + ("morning", "afternoon", "evening", "late_night").index(clock["phase"])
 
 
 def digest(value):
@@ -156,8 +160,8 @@ def sample(bridge, cid):
 
 
 def run_branch(checkpoint, cid, days, mode, output=None):
-    if mode not in {"unattended", "explorer"} or not 1 <= days <= 7:
-        raise ValueError("Expected unattended/explorer and 1..7 days")
+    if mode not in {"unattended", "explorer", "participant"} or not 1 <= days <= 7:
+        raise ValueError("Expected unattended/explorer/participant and 1..7 days")
     initial, rng = checkpoint
     bridge = CampusKernelBridge(initial.master_seed)
     bridge.cognition_runtime.configure_rule()
@@ -165,26 +169,39 @@ def run_branch(checkpoint, cid, days, mode, output=None):
     restored_digest = world_digest(bridge)
     session = AuditSession(bridge)
     frames = [sample(bridge, cid)]
-    for index in range(days * 4):
+    start_tick = clock_tick(frames[0]["clock"])
+    if mode == "participant" and frames[0]["clock"]["phase"] != "morning":
+        raise ValueError("Participant audit starts at morning to bound automatic defeat overnight")
+    while clock_tick(bridge.snapshot()["clock"]) < start_tick + days * 4:
+        previous_tick = clock_tick(bridge.snapshot()["clock"])
+        index = previous_tick - start_tick
         if mode == "explorer":
             explore(session, index)
-        result = session.act("ADVANCE_PHASE")
-        if not result.success:
-            raise RuntimeError(f"Phase {index}: {result.code}")
+        elif mode == "participant":
+            from production.causal_player_policy import participate
+            participate(session, index)
+        if clock_tick(bridge.snapshot()["clock"]) == previous_tick:
+            result = session.act("ADVANCE_PHASE")
+            if not result.success:
+                raise RuntimeError(f"Phase {index}: {result.code}")
         frames.append(sample(bridge, cid))
+        frames[-1]["sample_after_command"] = session.commands[-1]["command"]["command_id"]
         if frames[-1]["calls_today"]:
             raise RuntimeError("Offline audit unexpectedly used a model")
+        elapsed_phases = clock_tick(frames[-1]["clock"]) - start_tick
         if output:
-            write(output / f"{mode}-progress.json", {"completed_phases": index + 1, "clock": frames[-1]["clock"]})
-        print(mode, index + 1, frames[-1]["clock"], flush=True)
+            write(output / f"{mode}-progress.json", {"completed_phases": elapsed_phases, "clock": frames[-1]["clock"]})
+        print(mode, elapsed_phases, frames[-1]["clock"], flush=True)
     final = frames[-1]["auditor_only"]["case"]
     result = {"mode": mode, "days": days, "start_digest": restored_digest,
         "source_digest": digest(build_kernel_checkpoint(initial, rng)), "case_id": cid,
-        "player_policy": "none" if mode == "unattended" else "daytime_local_and_contacts_no_hidden_target",
+        "player_policy": {"unattended": "none", "explorer": "daytime_local_and_contacts_no_hidden_target",
+            "participant": "observe_first_disclosed_appointments_public_night_tasks_real_cards"}[mode],
         "frames": frames, "commands": session.commands, "events": session.events, "notes": session.notes,
         "summary": {"status": final["status"], "history": final["history"],
             "heard_by_player": "player" in final["reports"],
-            "player_supports": sum(r.get("helper_id") == "player" for r in final["history"]),
+            "player_supports": sum(r["route"] == "day_support" and r.get("helper_id") == "player" for r in final["history"]),
+            "player_night_containments": sum(r["route"] == "night_containment" and r.get("helper_id") == "player" for r in final["history"]),
             "command_failures": dict(Counter(c["result"]["code"] for c in session.commands if not c["result"]["success"])),
             "events": dict(Counter(e["event_type"] for e in session.events)), "api_calls": 0}}
     if output:
@@ -193,30 +210,37 @@ def run_branch(checkpoint, cid, days, mode, output=None):
 
 
 def compare(left, right):
-    if (left["mode"], right["mode"]) != ("unattended", "explorer"):
-        raise ValueError("Expected distinct unattended and explorer branches")
+    if left["mode"] != "unattended" or right["mode"] not in {"explorer", "participant"}:
+        raise ValueError("Expected distinct unattended and player branches")
     if left["start_digest"] != right["start_digest"] or left["source_digest"] != right["source_digest"] or left["case_id"] != right["case_id"]:
         raise ValueError("Branches did not begin at the same event/checkpoint")
-    if left["days"] != right["days"] or any(len(r["frames"]) != r["days"] * 4 + 1 for r in (left, right)):
+    if left["days"] != right["days"]:
         raise ValueError("Incomplete or unequal observation periods")
-    phases = ("morning", "afternoon", "evening", "late_night")
     for branch in (left, right):
-        ticks = [(f["clock"]["day"] - 1) * 4 + phases.index(f["clock"]["phase"]) for f in branch["frames"]]
+        ticks = [clock_tick(f["clock"]) for f in branch["frames"]]
         advances = [r for r in branch["commands"] if r["command"]["action_id"] == "ADVANCE_PHASE"]
-        if (ticks != list(range(ticks[0], ticks[0] + branch["days"] * 4 + 1))
-                or len(advances) != branch["days"] * 4 or not all(r["result"]["success"] for r in advances)
-                or any(f["calls_today"] for f in branch["frames"])):
-            raise ValueError("Incomplete formal phase progression or unexpected API use")
         if branch["mode"] == "unattended" and len(advances) != len(branch["commands"]):
             raise ValueError("Unattended branch contains player intervention")
+        transitions = [e for e in branch["events"] if e["event_type"] == "WORLD_PHASE_ADVANCED"]
+        expected = list(range(ticks[0] + 1, ticks[0] + branch["days"] * 4 + 1))
+        ends = [clock_tick(e["payload"]) for e in transitions]
+        starts = [clock_tick({"day": e["payload"]["previous_day"], "phase": e["payload"]["previous_phase"]}) for e in transitions]
+        groups = {}
+        for event, end in zip(transitions, ends): groups[event["command_id"]] = end
+        successful = {r["command"]["command_id"] for r in branch["commands"] if r["result"]["success"]}
+        if (ends != expected or starts != [tick - 1 for tick in expected] or not set(groups) <= successful
+                or ticks[1:] != list(groups.values())
+                or [f["sample_after_command"] for f in branch["frames"][1:]] != list(groups)
+                or not all(r["result"]["success"] for r in advances) or any(f["calls_today"] for f in branch["frames"])):
+            raise ValueError("Incomplete formal phase progression or unexpected API use")
     return {"same_checkpoint_verified": True, "case_id": left["case_id"], "days": left["days"],
         "branches": {r["mode"]: r["summary"] for r in (left, right)},
-        "scope": "Offline day-helper comparison; night-player and real LLM branches still required"}
+        "scope": "Offline comparison; real LLM and player-perceived story quality still require acceptance"}
 
 
 def code_manifest():
     root = Path(__file__).resolve().parents[1]
-    paths = [Path(__file__).resolve()]
+    paths = [Path(__file__).resolve(), root / "production/causal_player_policy.py"]
     for folder, extension in (("simulation", "*.py"), ("content", "*.json"),
                               ("contracts", "*.json"), ("game/scripts", "*.gd")):
         paths.extend((root / folder).rglob(extension))
@@ -229,18 +253,26 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--days", type=int, default=7, choices=range(1, 8))
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--checkpoint", type=Path, help="Reuse an actual earlier audit checkpoint")
+    parser.add_argument("--player-policy", choices=("explorer", "participant"), default="explorer")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
-    checkpoint, cid, bootstrap = natural_start(args.seed)
+    if args.checkpoint:
+        loaded = load_kernel_checkpoint(args.checkpoint)
+        checkpoint, bootstrap = (loaded.state, loaded.rng), []
+        cid = next(iter(loaded.state.situations["campus_anomalies"]["cases"]))
+    else:
+        checkpoint, cid, bootstrap = natural_start(args.seed)
     write(args.output / "initial-checkpoint.json", build_kernel_checkpoint(*checkpoint))
     write(args.output / "bootstrap-commands.json", bootstrap)
     revision = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
-    write(args.output / "configuration.json", {"seed": args.seed, "days": args.days, "code_commit": revision,
+    write(args.output / "configuration.json", {"seed": checkpoint[0].master_seed, "days": args.days, "code_commit": revision,
+        "checkpoint_reused": bool(args.checkpoint), "player_policy": args.player_policy,
         "source_files": code_manifest(),
         "content_version": checkpoint[0].content_version, "start_clock": asdict(checkpoint[0].clock),
         "bootstrap_only_advance_commands": True, "injected_conditions": [], "api": "disabled"})
     left = run_branch(checkpoint, cid, args.days, "unattended", args.output)
-    right = run_branch(checkpoint, cid, args.days, "explorer", args.output)
+    right = run_branch(checkpoint, cid, args.days, args.player_policy, args.output)
     write(args.output / "comparison.json", compare(left, right))
     print("CAUSAL_COMPARISON_OK", flush=True)
 

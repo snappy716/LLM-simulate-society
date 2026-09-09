@@ -1,0 +1,9 @@
+test_initial_surface_board_is_public_but_private_scheduling_does_not_leak (tests.test_campus_forum_tasks.CampusForumTaskTests) ... ok
+test_npc_views_claims_and_completions_are_gradual_and_deterministic (tests.test_campus_forum_tasks.CampusForumTaskTests) ... ok
+test_player_can_complete_in_current_art_region_before_room_scene_exists (tests.test_campus_forum_tasks.CampusForumTaskTests) ... ok
+test_player_view_claim_conflict_and_complete_at_location (tests.test_campus_forum_tasks.CampusForumTaskTests) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 43.201s
+
+OK

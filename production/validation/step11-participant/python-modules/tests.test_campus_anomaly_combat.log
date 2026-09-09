@@ -1,0 +1,13 @@
+test_actual_card_victory_clears_shell_not_person_or_core_and_no_duplicate (tests.test_campus_anomaly_combat.AnomalyCombatTests) ... ok
+test_checkpoint_preserves_linkage_and_rejects_wrong_projection (tests.test_campus_anomaly_combat.AnomalyCombatTests) ... ok
+test_day_support_weakens_actual_enemy_without_exposing_case (tests.test_campus_anomaly_combat.AnomalyCombatTests) ... ok
+test_no_victory_cannot_fake_site_completion (tests.test_campus_anomaly_combat.AnomalyCombatTests) ... ok
+test_npc_uses_common_owned_task_and_real_combat (tests.test_campus_anomaly_combat.AnomalyCombatTests) ... ok
+test_real_source_anonymous_publication_within_twenty_not_live_npc_tracking (tests.test_campus_anomaly_combat.AnomalyCombatTests) ... ok
+test_unhandled_expiry_keeps_person_case_and_allows_new_night (tests.test_campus_anomaly_combat.AnomalyCombatTests) ... ok
+test_wrong_case_cannot_borrow_another_victory (tests.test_campus_anomaly_combat.AnomalyCombatTests) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 78.723s
+
+OK

@@ -1,0 +1,8 @@
+test_compact_cache_is_detached_and_legacy_cache_replays (tests.test_campus_daily_plans.CampusDailyPlansTests) ... ok
+test_intraday_runs_without_model_and_morning_selects_full_day (tests.test_campus_daily_plans.CampusDailyPlansTests) ... ok
+test_legacy_missing_plan_bootstraps_offline_and_bad_plan_is_rejected (tests.test_campus_daily_plans.CampusDailyPlansTests) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 16.077s
+
+OK

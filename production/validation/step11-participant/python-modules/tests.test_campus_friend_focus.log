@@ -1,0 +1,10 @@
+test_base_npc_cannot_be_double_counted_and_friends_are_not_reranked_out (tests.test_campus_friend_focus.FriendFocusTests) ... ok
+test_legacy_save_preserves_awakened_memories_rng_and_existing_day_plan (tests.test_campus_friend_focus.FriendFocusTests) ... ok
+test_one_request_composes_different_slots_and_rejects_missing_or_foreign_ids (tests.test_campus_friend_focus.FriendFocusTests) ... ok
+test_ordinary_npc_can_chat_many_times_without_becoming_deep (tests.test_campus_friend_focus.FriendFocusTests) ... ok
+test_relationship_threshold_is_authoritative_and_free (tests.test_campus_friend_focus.FriendFocusTests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 24.607s
+
+OK

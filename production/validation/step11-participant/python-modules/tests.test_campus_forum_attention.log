@@ -1,0 +1,15 @@
+test_checkpoint_restores_pending_consideration_and_rng (tests.test_campus_forum_attention.ForumAttentionTests) ... ok
+test_duplicate_pulse_replays_without_new_attention (tests.test_campus_forum_attention.ForumAttentionTests) ... ok
+test_invalid_pending_record_is_rejected (tests.test_campus_forum_attention.ForumAttentionTests) ... ok
+test_npc_can_claim_before_player_and_stale_claim_is_rejected (tests.test_campus_forum_attention.ForumAttentionTests) ... ok
+test_phase_changes_flush_work_without_a_running_godot_client (tests.test_campus_forum_attention.ForumAttentionTests) ... ok
+test_player_can_claim_while_npc_is_considering_without_being_overwritten (tests.test_campus_forum_attention.ForumAttentionTests) ... ok
+test_private_attention_records_are_not_exposed_by_snapshot (tests.test_campus_forum_attention.ForumAttentionTests) ... ok
+test_protected_duties_do_not_browse_or_claim (tests.test_campus_forum_attention.ForumAttentionTests) ... ok
+test_same_phase_shows_views_then_consideration_then_staggered_claims (tests.test_campus_forum_attention.ForumAttentionTests) ... ok
+test_stale_clock_and_targeted_requests_do_not_mutate_world (tests.test_campus_forum_attention.ForumAttentionTests) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 26.203s
+
+OK

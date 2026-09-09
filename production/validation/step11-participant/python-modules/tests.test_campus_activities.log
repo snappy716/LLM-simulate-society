@@ -1,0 +1,8 @@
+test_late_night_rest_is_free_but_still_changes_real_locations (tests.test_campus_activities.CampusActivityExecutionTests) ... ok
+test_phase_start_moves_every_npc_to_plan_and_executes_major_activity (tests.test_campus_activities.CampusActivityExecutionTests) ... ok
+test_route_events_form_a_contiguous_path_for_each_moving_npc (tests.test_campus_activities.CampusActivityExecutionTests) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 23.812s
+
+OK

@@ -2,10 +2,12 @@
 from copy import deepcopy
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
 
 from production.run_causal_comparison import (AuditSession, natural_start, sample,
     world_digest, visible_people, explore, run_branch, compare, code_manifest)
 from simulation.api.server import CampusKernelBridge
+from production.causal_player_policy import daytime, participate
 
 
 class CausalComparisonTests(unittest.TestCase):
@@ -102,6 +104,82 @@ class CausalComparisonTests(unittest.TestCase):
         self.assertIn("production/run_causal_comparison.py", manifest)
         self.assertIn("simulation/api/server.py", manifest)
         self.assertFalse(any(path.startswith("design/") or "STEP_08_HANDOFF" in path for path in manifest))
+
+    def test_participant_observes_present_people_before_walking_away(self):
+        calls = []
+        view = {"clock": {"day": 3, "phase": "morning"}, "player": {"current_location_id": "here"},
+            "population": {"present": {"current_location_id": "here"}, "remote": {"current_location_id": "elsewhere"}},
+            "messaging": {"contacts": []}, "social": {"anomalies": [], "anomaly_meetings": []}, "growth": {"topics": []}}
+        session = SimpleNamespace(bridge=SimpleNamespace(snapshot=lambda: deepcopy(view)),
+            act=lambda action, params: (calls.append((action, params)) or SimpleNamespace(success=False)),
+            travel=lambda destination: calls.append(("travel", destination)))
+        with patch("production.causal_player_policy.support_here", return_value=False):
+            daytime(session, 0)
+        self.assertEqual("ASK_ANOMALY_EXPERIENCE", calls[0][0])
+        self.assertEqual({"npc_id": "present"}, calls[0][1])
+        self.assertFalse(any(params == {"npc_id": "remote"} for _, params in calls))
+
+    def test_due_appointment_precedes_exploration_and_study(self):
+        calls = []
+        view = {"clock": {"day": 3, "phase": "morning"}, "social": {"anomaly_meetings": [
+            {"status": "confirmed", "day": 3, "phase": "morning", "location_id": "agreed_place"}]}}
+        session = SimpleNamespace(bridge=SimpleNamespace(snapshot=lambda: deepcopy(view)),
+            travel=lambda place: calls.append(place))
+        with patch("production.causal_player_policy.support_here", return_value=False) as support:
+            daytime(session, 0)
+        self.assertEqual(["agreed_place"], calls)
+        support.assert_called_once_with(session)
+
+    def test_late_night_rest_uses_own_home_and_formal_action(self):
+        calls = []
+        view = {"clock": {"phase": "late_night"}, "night_world": {"current_layer": "surface"},
+            "player": {"home_location_id": "my_home", "can_rest_recover": True,
+                "vitals": {"health": 10, "max_health": 20, "focus": 20, "max_focus": 20}}}
+        before = deepcopy(view)
+        session = SimpleNamespace(bridge=SimpleNamespace(snapshot=lambda: deepcopy(view)),
+            travel=lambda place: calls.append(("travel", place)), act=lambda action: calls.append((action, {})))
+        participate(session, 3)
+        self.assertEqual([("travel", "my_home"), ("REST", {})], calls)
+        self.assertEqual(before, view)
+
+    def test_clock_validator_accounts_for_automatic_defeat_without_fake_frames(self):
+        # Synthetic validator input only, never injected into a game world.
+        phases = ("morning", "afternoon", "evening", "late_night")
+        def clock(tick): return {"day": tick // 4 + 1, "phase": phases[tick % 4]}
+        def branch(mode, ids):
+            events = [{"event_type": "WORLD_PHASE_ADVANCED", "command_id": cid,
+                "payload": {**clock(i + 1), "previous_day": clock(i)["day"], "previous_phase": clock(i)["phase"]}}
+                for i, cid in enumerate(ids)]
+            groups = {cid: i + 1 for i, cid in enumerate(ids)}
+            return {"mode": mode, "days": 1, "source_digest": "same", "start_digest": "same", "case_id": "same",
+                "frames": [{"clock": clock(0), "calls_today": 0}] + [{"clock": clock(tick), "calls_today": 0,
+                    "sample_after_command": cid} for cid, tick in groups.items()],
+                "events": events, "summary": {}, "commands": [{"command": {"command_id": cid,
+                    "action_id": "END_COMBAT_ROUND" if cid == "defeat" else "ADVANCE_PHASE"}, "result": {"success": True}}
+                    for cid in groups]}
+        left = branch("unattended", ["a", "b", "c", "d"])
+        right = branch("participant", ["a", "b", "defeat", "defeat"])
+        self.assertTrue(compare(left, right)["same_checkpoint_verified"])
+        broken = deepcopy(right)
+        broken["events"].pop()
+        with self.assertRaises(ValueError): compare(left, broken)
+        broken = deepcopy(right)
+        broken["frames"].insert(-1, {"clock": clock(3), "calls_today": 0, "sample_after_command": "defeat"})
+        with self.assertRaises(ValueError): compare(left, broken)
+
+    def test_participant_uses_real_cards_and_public_task_without_hidden_case_target(self):
+        with patch("urllib.request.urlopen", side_effect=AssertionError("No API in offline test")):
+            left = run_branch(self.checkpoint, self.cid, 1, "unattended")
+            right = run_branch(self.checkpoint, self.cid, 1, "participant")
+        self.assertTrue(compare(left, right)["same_checkpoint_verified"])
+        successful = [r["command"]["action_id"] for r in right["commands"] if r["result"]["success"]]
+        self.assertIn("START_CARD_COMBAT", successful)
+        self.assertIn("PLAY_COMBAT_CARD", successful)
+        self.assertIn("VIEW_FORUM_TASK", successful)
+        self.assertEqual(0, right["summary"]["api_calls"])
+        self.assertEqual(sum(r["route"] == "day_support" and r["helper_id"] == "player"
+            for r in right["summary"]["history"]), right["summary"]["player_supports"])
+        self.assertGreater(right["summary"]["player_night_containments"], 0)
 
 
 if __name__ == "__main__": unittest.main()

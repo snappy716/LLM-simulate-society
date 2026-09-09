@@ -1,0 +1,17 @@
+test_cancel_releases_hold_without_changing_budget (tests.test_campus_departures.CampusDepartureTests) ... ok
+test_current_spent_action_is_not_refunded (tests.test_campus_departures.CampusDepartureTests) ... ok
+test_disband_releases_all_reservations_and_old_records_remain_valid (tests.test_campus_departures.CampusDepartureTests) ... ok
+test_existing_task_and_low_willingness_block_booking (tests.test_campus_departures.CampusDepartureTests) ... ok
+test_invalid_and_conflicting_appointments_do_not_replace_existing (tests.test_campus_departures.CampusDepartureTests) ... ok
+test_nonleader_cannot_replace_or_cancel_appointment (tests.test_campus_departures.CampusDepartureTests) ... ok
+test_paid_marker_and_reservations_survive_disk_save_then_reset_after_retreat (tests.test_campus_departures.CampusDepartureTests) ... ok
+test_real_three_person_departure_charges_every_deployed_actor (tests.test_campus_departures.CampusDepartureTests) ... ok
+test_reservation_holds_npc_budget_only_in_appointed_phase (tests.test_campus_departures.CampusDepartureTests) ... ok
+test_reserved_player_action_cannot_be_spent_by_other_major_activity (tests.test_campus_departures.CampusDepartureTests) ... ok
+test_second_real_battle_same_phase_starts_with_zero_remaining_actions (tests.test_campus_departures.CampusDepartureTests) ... ok
+test_spent_actor_rejects_entry_without_changing_budget_or_formation (tests.test_campus_departures.CampusDepartureTests) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 78.199s
+
+OK
