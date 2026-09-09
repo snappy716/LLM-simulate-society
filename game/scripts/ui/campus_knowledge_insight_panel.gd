@@ -10,7 +10,7 @@ var _options: Array = []
 
 func _init() -> void:
 	var label := Label.new()
-	label.text = "知识洞察区 · 不占共享手牌"
+	label.text = "知识与证据洞察 · 不占共享手牌"
 	add_child(label)
 	picker = OptionButton.new()
 	picker.fit_to_longest_item = false
@@ -51,5 +51,8 @@ func _details() -> void:
 	var option: Dictionary = _options[picker.selected]
 	use_button.disabled = not option.playable
 	use_button.text = "%s · %d指令" % [option.name, int(option.command_cost)]
+	if option.tactic == "ground":
+		hint.text = "理解 %d/100 ＋本人确认的共同经历。阻止对应残像下一次攻击；同一目标全队每战一次，不解决当事人的心结。%s" % [int(option.mastery), "此项已使用。" if option.used else ("指令、参战或打断状态不满足。" if not option.playable else "")]
+		return
 	var descriptions := {"observe": "读取目标当前真实位置、速度和污染强度。", "expose": "标记真实弱点；本战命中该弱点额外增伤15%。", "interrupt": "阻止目标下一次攻击，不解除其后续威胁。"}
 	hint.text = "理解 %d/100。%s 每角色对每目标每项洞察每战一次。%s" % [int(option.mastery), descriptions.get(option.tactic, ""), "此项已使用。" if option.used else ("指令或状态不满足。" if not option.playable else "")]

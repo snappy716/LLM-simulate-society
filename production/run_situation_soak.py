@@ -32,6 +32,7 @@ def main():
             "anomalies": dict(Counter(v["status"] for v in state.situations.get("campus_anomalies", {}).get("cases", {}).values())),
             "confirmed_anchors": sum(len(c.get("anchors", {})) for c in state.situations.get("campus_anomalies", {}).get("cases", {}).values()),
             "anchor_supports": sum(bool(r.get("anchor_id")) for c in state.situations.get("campus_anomalies", {}).get("cases", {}).values() for r in c["history"]),
+            "evidence_battle_insights": sum(len(b.get("evidence_insight_receipts", [])) for b in state.battles.values()),
             "anomaly_supports": sum(sum(r["route"] == "day_support" for r in v["history"]) for v in state.situations.get("campus_anomalies", {}).get("cases", {}).values()),
             "anomaly_containments": sum(sum(r["route"] == "night_containment" for r in v["history"]) for v in state.situations.get("campus_anomalies", {}).get("cases", {}).values()),
             "anomaly_meetings": dict(Counter(r["status"] for r in state.situations.get("anomaly_meetings", {}).get("records", {}).values())),

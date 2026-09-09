@@ -1708,6 +1708,7 @@ def campus_combat_view(
     active_view = deepcopy(active) if isinstance(active, dict) else None
     if isinstance(active_view, dict):
         active_view.pop("anomaly_origin", None)  # Do not publish a person's private episode.
+        active_view.pop("evidence_insight_receipts", None)
     if isinstance(active_view, dict) and active_view.get("phase") == "player_turn":
         if not active_view.get("enemy_intents"):
             active_view["enemy_intents"] = plan_enemy_intents(active_view)
@@ -1753,7 +1754,7 @@ def campus_combat_view(
             "items": combat_item_options(state, active_view, viewer_id),
         }
         from simulation.systems.campus_knowledge_insight import knowledge_insight_options
-        active_view["action_options"]["insights"] = knowledge_insight_options(state, active_view, viewer_id)
+        active_view["action_options"]["insights"] = knowledge_insight_options(state, active, viewer_id)
     return {
         "enabled": True,
         "can_prepare": bool(general.get("allowed", False)),
@@ -1843,6 +1844,9 @@ def campus_combat_invariant(state: WorldState) -> Iterable[str]:
             if (not isinstance(mastery, dict) or any(topic not in (enemy_archetypes if isinstance(enemy_archetypes, dict) else {}) or type(value) is not int or not 0 <= value <= 100 for topic, value in mastery.items())):
                 errors.append(f"battle {battle_id} has invalid knowledge mastery")
         insight_used = battle.get("knowledge_insight_used", [])
+        from simulation.systems.campus_evidence_insight import receipts_valid
+        if not receipts_valid(state, battle):
+            errors.append(f"battle {battle_id} has invalid evidence insight receipt")
         if (not isinstance(insight_used, list) or any(not isinstance(value, str) for value in insight_used)
                 or len(set(insight_used)) != len(insight_used)):
             errors.append(f"battle {battle_id} has invalid insight usage")

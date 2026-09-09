@@ -1,0 +1,16 @@
+test_corrupt_intent_or_rescue_is_rejected_by_runtime_invariants (tests.test_campus_enemy_turns.CampusEnemyTurnTests) ... ok
+test_defeat_fails_task_and_advances_world_to_full_recovery_next_morning (tests.test_campus_enemy_turns.CampusEnemyTurnTests) ... ok
+test_disruption_weakens_one_attack_then_is_removed (tests.test_campus_enemy_turns.CampusEnemyTurnTests) ... ok
+test_guard_absorbs_damage_and_expires_after_enemy_turn (tests.test_campus_enemy_turns.CampusEnemyTurnTests) ... ok
+test_intent_is_visible_and_damage_persists_in_world (tests.test_campus_enemy_turns.CampusEnemyTurnTests) ... ok
+test_old_active_save_projects_intents_without_mutating_and_can_continue (tests.test_campus_enemy_turns.CampusEnemyTurnTests) ... ok
+test_pending_rescue_hook_does_not_itself_fast_forward_global_clock (tests.test_campus_enemy_turns.CampusEnemyTurnTests) ... ok
+test_reposition_out_of_announced_row_causes_miss_without_retarget (tests.test_campus_enemy_turns.CampusEnemyTurnTests) ... ok
+test_save_restore_replays_same_enemy_result (tests.test_campus_enemy_turns.CampusEnemyTurnTests) ... ok
+test_stale_round_request_does_not_damage_twice (tests.test_campus_enemy_turns.CampusEnemyTurnTests) ... ok
+test_three_person_defeat_exhausts_downed_cards_then_recovers_whole_party (tests.test_campus_enemy_turns.CampusEnemyTurnTests) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 71.025s
+
+OK

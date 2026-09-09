@@ -24,10 +24,12 @@ def knowledge_insight_options(state, battle, viewer_id):
                     "target_name": enemy["display_name"], "tactic": tactic, "name": name, "mastery": level,
                     "command_cost": cost, "used": used,
                     "playable": battle.get("phase") == "player_turn" and not used
+                        and battle["health"].get(actor_id, 0) > 0
                         and battle["command_points"].get(card["team_id"], 0) >= cost
                         and not (tactic == "interrupt" and "knowledge_interrupted" in enemy["statuses"]),
                 })
-    return result
+    from simulation.systems.campus_evidence_insight import options
+    return result + options(state, battle, viewer_id)
 
 
 def use_knowledge_insight(context, command, battle):
@@ -41,7 +43,12 @@ def use_knowledge_insight(context, command, battle):
     enemy = battle["enemy_units"][target]
     battle["command_points"][card["team_id"]] -= option["command_cost"]
     battle.setdefault("knowledge_insight_used", []).append(f"{source}:{target}:{tactic}")
-    if tactic == "interrupt":
+    if tactic == "ground":
+        from simulation.systems.campus_evidence_insight import record_use
+        record_use(context.state, battle, source, target)
+        enemy["statuses"].append("knowledge_interrupted")
+        message = "以本人确认的共同经历和所学知识识破这处残像，阻止它下一次攻击；只争取战术机会，不改变当事人的心结或替其恢复。"
+    elif tactic == "interrupt":
         enemy["statuses"].append("knowledge_interrupted")
         message = "已识别异常重复模式，阻止该敌人下一次攻击（每名角色对该目标每战一次）。"
     elif tactic == "expose":

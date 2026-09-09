@@ -1,0 +1,23 @@
+test_bandage_can_treat_colocated_npc_not_remote (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_bandage_heals_persistent_health_and_consumes_exactly_one (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_checkpoint_preserves_and_validates_vitals (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_combat_heal_changes_persistent_state_and_projection (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_every_actor_has_full_initial_resources (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_failed_transaction_rolls_back_healing_inventory_and_budget (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_field_skill_insufficient_focus_and_remote_target_rollback (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_field_skill_requires_real_ability_and_focus (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_full_health_does_not_consume_medicine (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_missing_skill_does_not_cost_focus (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_new_encounters_keep_health_focus_and_victory_does_not_heal (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_night_rest_and_return_do_not_heal (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_no_major_budget_does_not_restore (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_npc_rest_uses_same_full_recovery_and_major_budget (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_preparation_cancel_does_not_restore (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_rest_outside_home_does_not_heal (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_surface_home_rest_fully_recovers_hp_and_focus_once_budget (tests.test_campus_vitals.CampusVitalsTests) ... ok
+test_vital_projection_drift_is_rejected (tests.test_campus_vitals.CampusVitalsTests) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 29.308s
+
+OK

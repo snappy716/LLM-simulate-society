@@ -1,0 +1,28 @@
+test_accepted_notebook_promise_prevents_duplicate_autonomous_shopping (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_accepted_promise_cannot_take_last_personal_or_professional_tool (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_autonomous_phase_execution_physically_fulfills_npc_promise (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_backpack_gift_also_fulfills_without_pressing_special_delivery_button (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_checkpoint_preserves_pending_assistance_and_false_receipt_is_invalid (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_doctor_keeps_last_bandage_even_after_accepting_help (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_expired_assent_changes_trust_and_does_not_create_delivery (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_helper_plan_buys_a_spare_not_their_last_reserved_copy (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_malformed_assistance_containers_are_rejected (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_meeting_candidates_use_agreed_venue_not_omniscient_remote_tracking (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_no_need_or_unknown_target_is_rejected (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_npc_assent_creates_no_goods_or_money_and_no_major_cost (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_npc_can_decline_due_to_financial_pressure_or_suspicion (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_npc_can_initiate_without_player_and_shared_pair_cooldown_is_recorded (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_other_route_solving_need_cancels_not_fulfills_promise (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_phone_contact_allows_request_not_remote_delivery (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_physical_delivery_conserves_goods_and_awards_trust_only_once (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_player_is_never_auto_accepted_and_can_explicitly_decline (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_purchased_for_commitment_can_be_delivered_but_normal_flip_is_locked (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_same_need_is_atomically_locked_to_one_unresolved_request (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_spent_major_action_does_not_block_free_delivery_and_player_is_not_controlled (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_view_shows_only_participated_promises_and_read_has_no_side_effects (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+test_wrong_helper_or_malformed_response_is_atomic (tests.test_campus_assistance.CampusAssistanceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 20.972s
+
+OK

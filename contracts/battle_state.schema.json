@@ -12,6 +12,22 @@
     "known_weaknesses", "enemy_intents", "card_instances", "result", "consequences"
   ],
   "properties": {
+    "evidence_insight_receipts": {
+      "description": "Server-only evidence provenance. Never included in public battle projections.",
+      "type": "array", "maxItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["source_actor_id", "target_id", "case_id", "anchor_id", "claim_id", "report_claim_id", "mastery", "round", "day", "phase", "command_cost"],
+        "properties": {
+          "source_actor_id": {"type": "string"}, "target_id": {"type": "string"},
+          "case_id": {"type": "string"}, "anchor_id": {"type": "string"},
+          "claim_id": {"type": "string"}, "report_claim_id": {"type": "string"},
+          "mastery": {"type": "integer", "minimum": 40, "maximum": 100},
+          "round": {"type": "integer", "minimum": 1}, "day": {"type": "integer", "minimum": 1},
+          "phase": {"enum": ["evening", "late_night"]}, "command_cost": {"const": 1}
+        }
+      }
+    },
     "anomaly_origin": {
       "description": "Server-only source receipt, omitted from player battle projections.",
       "type": "object", "additionalProperties": false,

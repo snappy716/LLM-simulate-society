@@ -62,8 +62,8 @@ def choose_combat_action(state, battle, leader_id, round_policy):
                 candidates.append((85, "USE_COMBAT_ITEM", option["source_actor_id"] + option["item_id"] + target,
                     {"source_actor_id": option["source_actor_id"], "item_id": option["item_id"], "target_id": target}))
     for option in options.get("insights", []):
-        if option["playable"] and option["tactic"] in {"interrupt", "expose"}:
-            candidates.append((55 if option["tactic"] == "expose" else 40, "USE_KNOWLEDGE_INSIGHT",
+        if option["playable"] and option["tactic"] in {"interrupt", "expose", "ground"}:
+            candidates.append(({"expose": 55, "interrupt": 40, "ground": 65}[option["tactic"]], "USE_KNOWLEDGE_INSIGHT",
                 option["source_actor_id"] + option["target_id"] + option["tactic"],
                 {key: option[key] for key in ("source_actor_id", "target_id", "tactic")}))
     if not candidates:
