@@ -4,18 +4,22 @@
   "type": "object",
   "required": ["action_id", "parameters"],
   "properties": {
-    "action_id": {"enum": ["ASK_ANOMALY_EXPERIENCE", "SUPPORT_ANOMALY"]},
+    "action_id": {"enum": ["ASK_ANOMALY_EXPERIENCE", "SUPPORT_ANOMALY", "CONFIRM_RELATIONSHIP_ANCHOR"]},
     "parameters": {
       "type": "object", "required": ["npc_id"],
       "properties": {
         "npc_id": {"type": "string", "minLength": 1},
         "case_id": {"type": "string", "minLength": 1},
-        "expected_case_revision": {"type": "integer", "minimum": 0}
+        "expected_case_revision": {"type": "integer", "minimum": 0},
+        "source_id": {"type": "string", "minLength": 1},
+        "anchor_id": {"type": "string", "minLength": 1}
       },
       "additionalProperties": false
     }
   },
-  "allOf": [{"if": {"properties": {"action_id": {"const": "SUPPORT_ANOMALY"}}},
-    "then": {"properties": {"parameters": {"required": ["case_id", "expected_case_revision"]}}}}],
+  "allOf": [{"if": {"properties": {"action_id": {"enum": ["SUPPORT_ANOMALY", "CONFIRM_RELATIONSHIP_ANCHOR"]}}},
+    "then": {"properties": {"parameters": {"required": ["case_id", "expected_case_revision"]}}}},
+    {"if": {"properties": {"action_id": {"const": "CONFIRM_RELATIONSHIP_ANCHOR"}}},
+    "then": {"properties": {"parameters": {"required": ["source_id"]}}}}],
   "additionalProperties": false
 }

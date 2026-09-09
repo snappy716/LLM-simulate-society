@@ -238,8 +238,9 @@ def settle_meetings(context, policy):
         cmd = SimulationCommand(f"meeting-support:{row['meeting_id']}", row["helper_id"], "ASK_ANOMALY_EXPERIENCE", state.revision,
             parameters={"npc_id": row["subject_id"]}, issued_day=state.clock.day, issued_phase=state.clock.phase, source="rule")
         heard = handler(context, cmd)
-        result = handler(context, replace(cmd, action_id="SUPPORT_ANOMALY", parameters={"npc_id": row["subject_id"],
-            "case_id": row["case_id"], "expected_case_revision": case["revision"]})) if heard.success else heard
+        from simulation.systems.campus_relationship_anchors import automatic_support_parameters
+        result = handler(context, replace(cmd, action_id="SUPPORT_ANOMALY",
+            parameters=automatic_support_parameters(context, case, row["helper_id"]))) if heard.success else heard
         if not result.success:
             _close(context, row, "cancelled", "到场后未能开展支持：" + result.message, policy)
         else:

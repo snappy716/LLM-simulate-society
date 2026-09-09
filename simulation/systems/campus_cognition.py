@@ -111,9 +111,13 @@ def bind_cognition_identity(state, request):
         from simulation.systems.campus_anomalies import anomaly_view
         from simulation.systems.campus_anomaly_meetings import meetings_view
         local["own_support_appointments"] = meetings_view(state, request.npc_id)[-6:]
+        known_experiences = anomaly_view(state, request.npc_id)[-6:]
         local["own_moon_experience_reports"] = [{"npc_id": row["npc_id"], "topic_id": row["topic_id"],
             "day": row["report"]["day"], "phase": row["report"]["phase"], "summary": row["report"]["summary"]}
-            for row in anomaly_view(state, request.npc_id)[-6:]]
+            for row in known_experiences]
+        local["own_confirmed_relationship_anchors"] = [{"npc_id": row["npc_id"],
+            **{key: row["confirmed_anchor"][key] for key in ("day", "phase", "summary")}}
+            for row in known_experiences if row["confirmed_anchor"]]
         local["own_contact_leads"] = [{"target_id": gap["target_id"], "leads": known_contact_leads(state, request.npc_id, gap["target_id"])[:4]}
             for gap in local["own_contact_concerns"]]
         local["own_open_disputes"] = [{"case_id": c["case_id"], "status": c["status"],

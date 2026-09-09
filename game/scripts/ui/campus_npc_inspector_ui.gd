@@ -19,6 +19,10 @@ var _welfare_feedback: Label
 var _welfare_pending := ""
 var _anomaly_ask: Button
 var _anomaly_support: Button
+var _anchor_options: OptionButton
+var _anchor_confirm: Button
+var _anchor_use: Button
+var _anchor_feedback: Label
 var _anomaly_feedback: Label
 var _anomaly_case: Dictionary = {}
 var _anomaly_pending := ""
@@ -289,6 +293,20 @@ func _build_ui() -> void:
 	_anomaly_feedback = Label.new()
 	_anomaly_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_anomaly_feedback)
+	_anchor_options = OptionButton.new()
+	_anchor_options.clip_text = true
+	column.add_child(_anchor_options)
+	_anchor_confirm = Button.new()
+	_anchor_confirm.text = "询问本人是否认可共同经历（免费，可拒绝）"
+	_anchor_confirm.pressed.connect(func(): _send_anchor(false))
+	column.add_child(_anchor_confirm)
+	_anchor_use = Button.new()
+	_anchor_use.text = "结合共同经历深入支持（双方各一次主要行动）"
+	_anchor_use.pressed.connect(func(): _send_anchor(true))
+	column.add_child(_anchor_use)
+	_anchor_feedback = Label.new()
+	_anchor_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(_anchor_feedback)
 	_meeting_status = Label.new()
 	_meeting_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_meeting_status)
@@ -620,6 +638,18 @@ func _refresh_anomaly() -> void:
 	_anomaly_ask.disabled = not _anomaly_pending.is_empty()
 	_anomaly_support.visible = not _anomaly_case.is_empty()
 	_anomaly_support.disabled = not _anomaly_pending.is_empty() or not bool(_anomaly_case.get("can_support", false))
+	_anchor_options.clear()
+	for choice in _anomaly_case.get("anchor_options", []):
+		_anchor_options.add_item(String(choice.label))
+		_anchor_options.set_item_metadata(_anchor_options.item_count - 1, choice.source_id)
+	var has_case := not _anomaly_case.is_empty()
+	_anchor_options.visible = has_case and _anchor_options.item_count > 0
+	_anchor_confirm.visible = _anchor_options.visible
+	_anchor_confirm.disabled = not _anomaly_pending.is_empty()
+	_anchor_use.visible = has_case and not _anomaly_case.get("confirmed_anchor", {}).is_empty()
+	_anchor_use.disabled = _anomaly_support.disabled or not bool(_anomaly_case.get("can_use_anchor", false))
+	_anchor_feedback.visible = has_case
+	_anchor_feedback.text = String(_anomaly_case.get("confirmed_anchor", {}).get("summary", "")) + "\n" + String(_anomaly_case.get("anchor_hint", ""))
 	_refresh_meeting()
 
 
@@ -675,6 +705,20 @@ func _send_anomaly(support: bool) -> void:
 	_anomaly_ask.disabled = true
 	_anomaly_support.disabled = true
 	SimulationBridge.operate_campus_investigation("SUPPORT_ANOMALY" if support else "ASK_ANOMALY_EXPERIENCE", parameters)
+
+
+func _send_anchor(use: bool) -> void:
+	if not _anomaly_pending.is_empty() or not _welfare_pending.is_empty() or not _dispute_pending.is_empty() or _anomaly_case.is_empty(): return
+	if use and _anchor_use.disabled: return
+	if not use and _anchor_options.selected < 0: return
+	_anomaly_pending = String(_selected_profile.npc_id)
+	var parameters := {"npc_id": _anomaly_pending, "case_id": _anomaly_case.case_id, "expected_case_revision": _anomaly_case.report.revision}
+	if use:
+		parameters["anchor_id"] = _anomaly_case.confirmed_anchor.anchor_id
+	else:
+		parameters["source_id"] = _anchor_options.get_item_metadata(_anchor_options.selected)
+	_refresh_anomaly()
+	SimulationBridge.operate_campus_investigation("SUPPORT_ANOMALY" if use else "CONFIRM_RELATIONSHIP_ANCHOR", parameters)
 
 
 func _on_anomaly_completed(_success: bool, result: Dictionary) -> void:

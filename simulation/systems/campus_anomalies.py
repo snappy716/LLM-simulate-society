@@ -20,7 +20,7 @@ from simulation.systems.campus_vitals import actor_layer, battle_locked
 from simulation.systems.time import consume_major_action
 from simulation.systems.transactions import TransactionOutcome
 
-ANOMALY_ACTIONS = ("ASK_ANOMALY_EXPERIENCE", "SUPPORT_ANOMALY")
+ANOMALY_ACTIONS = ("ASK_ANOMALY_EXPERIENCE", "SUPPORT_ANOMALY", "CONFIRM_RELATIONSHIP_ANCHOR")
 INITIAL = {"shell": 30, "core": 60, "coherence": 60}
 SUPPORT_DELTA = {"shell": 10, "core": 20, "coherence": 20}
 
@@ -99,6 +99,7 @@ def _support_problem(state, case, listener):
 
 
 def anomaly_view(state, viewer="player"):
+    from simulation.systems.campus_relationship_anchors import anchor_view
     rows = []
     for case in state.situations.get("campus_anomalies", {}).get("cases", {}).values():
         report = case["reports"].get(viewer)
@@ -107,7 +108,7 @@ def anomaly_view(state, viewer="player"):
         stale = (report["day"], report["phase"], report["revision"]) != (state.clock.day, state.clock.phase, case["revision"])
         problem = ("fresh_report_required", "这是过去的本人陈述；请重新确认近况，不据此推断当前状态。") if stale else _support_problem(state, case, viewer)
         rows.append({"npc_id": case["actor_id"], "case_id": case["case_id"], "topic_id": case["topic_id"],
-            "report": dict(report), "can_support": problem is None,
+            "report": dict(report), "can_support": problem is None, **anchor_view(state, case, viewer),
             "support_hint": problem[1] if problem else "本人同意后，共同做现实锚定活动；双方各消耗一次主要行动，不推进时段。"})
     return rows
 
@@ -155,20 +156,28 @@ def make_anomaly_handler():
             context.emit("CAMPUS_ANOMALY_HEARD", summary, actor_ids=[target], target_ids=[actor], visibility="private",
                 knowledge_tags=["anomaly", "evidence"], payload={"claim_id": claim["claim_id"]})
             return TransactionOutcome(True, True, "experience_heard", summary, commit=True, payload={"report": report})
-        if command.action_id != "SUPPORT_ANOMALY":
+        if command.action_id not in {"SUPPORT_ANOMALY", "CONFIRM_RELATIONSHIP_ANCHOR"}:
             return fail("unsupported_anomaly_action", "不支持这项行动。")
         if (params.get("case_id") != case["case_id"] or type(params.get("expected_case_revision")) not in {int, float}
                 or params["expected_case_revision"] != case["revision"]):
             return fail("case_revision_conflict", "这段经历已有新的进展，请重新了解本人情况。")
+        from simulation.systems.campus_relationship_anchors import confirm_anchor, use_problem, ANCHOR_DELTA
+        if command.action_id == "CONFIRM_RELATIONSHIP_ANCHOR":
+            return confirm_anchor(context, command, case)
         problem = _support_problem(state, case, actor)
         if problem:
             return fail(*problem)
+        anchor_id = params.get("anchor_id")
+        if "anchor_id" in params:
+            problem = use_problem(state, case, actor, anchor_id)
+            if problem:
+                return fail(*problem)
         policy = build_action_economy_policy([{"id": key, **value} for key, value in state.action_economy["policy"]["phases"].items()])
         for who in (actor, target):
             cost = consume_major_action(state, policy, replace(command, actor_id=who))
             assert cost.success, cost.code  # Every rejection was checked before either cost.
         before = {key: case[key] for key in INITIAL}
-        for key, amount in SUPPORT_DELTA.items():
+        for key, amount in (ANCHOR_DELTA if anchor_id else SUPPORT_DELTA).items():
             case[key] = max(0, case[key] - amount)
         case["revision"] += 1
         case["last_support_day"] = state.clock.day
@@ -177,11 +186,15 @@ def make_anomaly_handler():
             "location_id": state.population[actor]["current_location_id"],
             "claim_id": case["reports"][actor]["claim_id"], "before": before,
             "after": {key: case[key] for key in INITIAL}, "route": "day_support", "revision": case["revision"]}
+        if anchor_id:
+            receipt["anchor_id"] = anchor_id
         case["history"].append(receipt)
         from simulation.systems.campus_anomaly_meetings import complete_meeting
         complete_meeting(context, case, actor)
         # This addresses fictional afterimages, not hit points or clinical illness.
         message = "双方完成了一次现实锚定：核对本人愿意提供的经历并共同联系眼前生活。月相残留有所缓和；不是临床治疗，也未恢复生命或专注。"
+        if anchor_id:
+            message = "双方结合本人陈述、真实共同经历和所学知识完成证据洞察，对心结的支持更深入；不保证一次恢复，也不恢复生命或专注。"
         if case["status"] == "resolved":
             message = "经过持续的现实锚定，这次月相残留已稳定。没有强行战斗，也没有将普通情绪诊断为疾病。"
         context.emit("CAMPUS_ANOMALY_SUPPORTED", message, actor_ids=[actor, target], visibility="private",
@@ -222,8 +235,8 @@ def advance_anomaly_support(context):
                 issued_day=state.clock.day, issued_phase=state.clock.phase, source="rule")
             if not handler(context, command).success:
                 continue
-            result = handler(context, replace(command, action_id="SUPPORT_ANOMALY", parameters={"npc_id": target,
-                "case_id": case["case_id"], "expected_case_revision": case["revision"]}))
+            from simulation.systems.campus_relationship_anchors import automatic_support_parameters
+            result = handler(context, replace(command, action_id="SUPPORT_ANOMALY", parameters=automatic_support_parameters(context, case, helper)))
             if result.success:
                 count += 1
                 break
@@ -245,6 +258,9 @@ def anomalies_invariant(state):
             return ["invalid anomaly schema"]
         active = set()
         for key, case in ledger["cases"].items():
+            from simulation.systems.campus_relationship_anchors import anchors_valid, receipt_anchor_valid, ANCHOR_DELTA
+            if not anchors_valid(state, case):
+                return ["invalid relationship anchor source"]
             site = state.situations["night_sites"]["sites"][key]
             if (case["case_id"] != key or case["actor_id"] != site["victim_id"] or case["source_task_id"] != site["task_id"]
                     or site["status"] not in {"resolved", "expired"} or not 1 <= case["created_day"] <= state.clock.day
@@ -256,7 +272,7 @@ def anomalies_invariant(state):
                 if case["actor_id"] in active:
                     return ["duplicate active anomaly"]
                 active.add(case["actor_id"])
-            expected, last_day = dict(INITIAL), 0
+            expected, last_day, anchor_used = dict(INITIAL), 0, False
             for revision, receipt in enumerate(case["history"], 1):
                 if receipt.get("route") == "night_containment":
                     from simulation.systems.campus_anomaly_combat import night_receipt_valid
@@ -276,7 +292,12 @@ def anomalies_invariant(state):
                         or (claim["source_context"]["day"], claim["source_context"]["phase"]) != (receipt["day"], receipt["phase"])
                         or receipt["claim_id"] not in state.knowledge["beliefs_by_actor"][receipt["helper_id"]]):
                     return ["invalid anomaly support receipt"]
-                expected = {name: max(0, value - SUPPORT_DELTA[name]) for name, value in expected.items()}
+                delta = SUPPORT_DELTA
+                if "anchor_id" in receipt:
+                    if anchor_used or not receipt_anchor_valid(case, receipt):
+                        return ["invalid anchor support receipt"]
+                    anchor_used, delta = True, ANCHOR_DELTA
+                expected = {name: max(0, value - delta[name]) for name, value in expected.items()}
                 if receipt["after"] != expected:
                     return ["invalid anomaly support effect"]
                 last_day = receipt["day"]
