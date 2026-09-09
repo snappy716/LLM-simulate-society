@@ -1,0 +1,18 @@
+test_named_streams_are_reproducible_and_independent (tests.test_world_kernel.DeterministicRngPoolTests) ... ok
+test_snapshot_round_trip_continues_same_sequence (tests.test_world_kernel.DeterministicRngPoolTests) ... ok
+test_commits_state_event_and_rng_exactly_once (tests.test_world_kernel.WorldKernelTests) ... ok
+test_committed_block_event_can_be_unperformed_failure (tests.test_world_kernel.WorldKernelTests) ... ok
+test_cross_phase_transaction_preserves_each_event_occurrence_time (tests.test_world_kernel.WorldKernelTests) ... ok
+test_event_sink_failure_prevents_commit (tests.test_world_kernel.WorldKernelTests) ... ok
+test_handler_exception_rolls_back_state_and_rng (tests.test_world_kernel.WorldKernelTests) ... ok
+test_invariant_failure_rolls_back_transaction (tests.test_world_kernel.WorldKernelTests) ... ok
+test_non_committing_outcome_discards_draft_mutations (tests.test_world_kernel.WorldKernelTests) ... ok
+test_project_view_returns_a_defensive_small_projection (tests.test_world_kernel.WorldKernelTests) ... ok
+test_reusing_command_id_with_different_payload_is_rejected (tests.test_world_kernel.WorldKernelTests) ... ok
+test_stale_world_revision_is_rejected_before_handler (tests.test_world_kernel.WorldKernelTests) ... ok
+test_state_property_is_a_defensive_copy (tests.test_world_kernel.WorldKernelTests) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.003s
+
+OK

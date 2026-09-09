@@ -1,0 +1,9 @@
+test_bad_social_ids_and_target_tampering_are_rejected (tests.test_campus_social_planning.SocialPlanningTests) ... ok
+test_known_people_only_and_coherent_locations (tests.test_campus_social_planning.SocialPlanningTests) ... ok
+test_plans_execute_with_receipts_no_daytime_model_calls_and_roundtrip (tests.test_campus_social_planning.SocialPlanningTests) ... ok
+test_unmet_intention_never_teleports_and_has_one_receipt (tests.test_campus_social_planning.SocialPlanningTests) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 48.576s
+
+OK

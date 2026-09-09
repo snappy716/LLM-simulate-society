@@ -56,6 +56,7 @@ func _run() -> void:
 	assert(after.action_economy.player.major_remaining == initial.action_economy.player.major_remaining - 1)
 	assert(inspector.get("_anomaly_support").disabled)
 	assert(inspector.get("_anomaly_feedback").text.contains("现实锚定"))
+	assert(inspector.get("_anomaly_feedback").text.contains("信任增加"))
 	inspector.get("_anomaly_ask").pressed.emit()
 	var refreshed: Array = await bridge.campus_investigation_operation_completed
 	assert(refreshed[0])

@@ -94,33 +94,43 @@ def advance_support_preparations(context, graph, policy):
     if ledger.get("support_review_day") == state.clock.day:
         return {}
     ledger["support_review_day"] = state.clock.day
-    from simulation.systems.campus_goals import _update
+    from simulation.systems.campus_goals import _update, goal_step
+    from simulation.systems.campus_support_followup import seed_followups
+    created = seed_followups(context, policy)
     from simulation.systems.campus_anomaly_meetings import records, options, make_meeting_handler
     handler = make_meeting_handler(graph, policy)
     for helper, goals in ledger.get("actors", {}).items():
         for goal in goals.values():
-            if goal.get("kind") != KIND or goal["status"] == "completed":
+            if goal.get("kind") not in {KIND, "support_followup"} or goal["status"] == "completed":
                 continue
-            step = preparation_step(state, helper, goal)
+            followup = goal.get("kind") == "support_followup"
+            step = goal_step(state, helper, goal)
             if step in {"complete", "support_closed"}:
-                _update(state, goal, step, "completed", "已实际支持过一次。" if step == "complete" else "本人已告知稳定，不再重复准备。")
+                _update(state, goal, step, "completed", "已实际支持过一次。" if step == "complete" else "已确认本次经历稳定，不再重复准备。")
                 continue
             if not _consents(state, helper, goal["subject_id"], 35):
                 _update(state, goal, step, "blocked", "目前不愿继续提供支持，保留已经学到的知识。")
                 continue
-            if step != "arrange_support":
+            if step != "arrange_support" and not followup:
                 _update(state, goal, step, "active")
                 continue
             case = state.situations["campus_anomalies"]["cases"][goal["case_id"]]
             # Reconfirm privately; no inference from unseen case changes.
             cmd = SimulationCommand(f"support-review:{helper}:{goal['goal_id']}:{state.clock.day}", helper, "ASK_ANOMALY_EXPERIENCE", state.revision,
-                parameters={"npc_id": goal["subject_id"]}, issued_day=state.clock.day, issued_phase=state.clock.phase, source="rule")
+                parameters={"npc_id": goal["subject_id"], "case_id": goal["case_id"]}, issued_day=state.clock.day, issued_phase=state.clock.phase, source="rule")
             heard = make_anomaly_handler()(context, cmd)
             if not heard.success:
-                _update(state, goal, step, "blocked", heard.message)
+                if followup:
+                    goal["review_failed_day"] = state.clock.day
+                _update(state, goal, "check_in" if followup else step, "blocked", heard.message)
                 continue
-            if preparation_step(state, helper, goal) == "support_closed":
+            goal.pop("review_failed_day", None)
+            step = goal_step(state, helper, goal)
+            if step == "support_closed":
                 _update(state, goal, "support_closed", "completed", "本人已告知稳定，不再重复准备。")
+                continue
+            if step != "arrange_support":
+                _update(state, goal, step, "active")
                 continue
             if any(r["case_id"] == case["case_id"] and r["status"] in {"pending", "confirmed"} for r in records(state).values()):
                 _update(state, goal, step, "blocked", "本人已有支持安排，等待下次确认，不抢占约定。")
@@ -131,5 +141,5 @@ def advance_support_preparations(context, graph, policy):
                 continue
             outcome = handler(context, replace(cmd, action_id="PROPOSE_ANOMALY_MEETING", parameters={"case_id": case["case_id"],
                 "helper_id": helper, **{key: choices[0][key] for key in ("day", "phase", "location_id")}}))
-            _update(state, goal, preparation_step(state, helper, goal), "active" if outcome.success else "blocked", "" if outcome.success else outcome.message)
-    return {}
+            _update(state, goal, goal_step(state, helper, goal), "active" if outcome.success else "blocked", "" if outcome.success else outcome.message)
+    return {"support_followups_created": created}

@@ -11,11 +11,11 @@ from simulation.systems.campus_vitals import actor_layer, battle_locked
 from simulation.systems.campus_departures import active_departure
 from simulation.systems.transactions import TransactionOutcome
 
-STEPS = {"read", "prepare_notebook", "earn_money", "reflect", "complete", "arrange_support", "await_support", "support_closed"}
+STEPS = {"read", "prepare_notebook", "earn_money", "reflect", "complete", "arrange_support", "await_support", "support_closed", "check_in"}
 STATES = {"active", "blocked", "completed"}
 STEP_TEXT = {"read": "阅读相关讲义", "prepare_notebook": "准备随身笔记本",
              "earn_money": "通过校内服务筹备费用", "reflect": "整理亲历案例", "complete": "完成本轮研习",
-             "arrange_support": "下次晨间确认对方近况和可用时段", "await_support": "按已确认的支持预约赴约", "support_closed": "结束本轮支持准备"}
+             "arrange_support": "下次晨间确认对方近况和可用时段", "await_support": "按已确认的支持预约赴约", "support_closed": "结束本轮支持准备", "check_in": "下次晨间先确认朋友的近况与意愿"}
 EXPECTED_STEP_FAILURES = {"study_unavailable", "component_complete", "notebook_required",
                           "reflection_requires_case", "activity_wrong_phase", "activity_location_closed"}
 
@@ -51,6 +51,9 @@ def _update(state, goal, step, status, reason=""):
 
 
 def goal_step(state, actor_id, goal):
+    if goal.get("kind") == "support_followup":
+        from simulation.systems.campus_support_followup import followup_step
+        return followup_step(state, actor_id, goal)
     if goal.get("kind") == "support_preparation":
         from simulation.systems.campus_support_preparation import preparation_step
         return preparation_step(state, actor_id, goal)
@@ -90,8 +93,9 @@ def own_goal_context(state, actor_id):
     """Internal cognition context; never serialize the full ledger to the world view."""
     goals = state.cognition.get("long_term_plans", {}).get("actors", {}).get(actor_id, {})
     return [{**{key: deepcopy(goal[key]) for key in ("goal_id", "topic_id", "step", "status", "blocked_reason")},
-             **({"kind": goal["kind"], "subject_id": goal["subject_id"], "basis": "received_voluntary_friend_request"}
-                if goal.get("kind") == "support_preparation" else {})}
+             **({"kind": goal["kind"], "subject_id": goal["subject_id"],
+                 "basis": "actual_shared_support" if goal.get("kind") == "support_followup" else "received_voluntary_friend_request"}
+                if goal.get("kind") in {"support_preparation", "support_followup"} else {})}
             for goal in goals.values() if goal["status"] != "completed"][:2]
 
 
@@ -121,11 +125,14 @@ def goal_candidates(context, actor_id, schedule_plan, graph, occupancy, policy, 
         if step in {"complete", "support_closed"}:
             _update(state, goal, step, "completed")
             continue
-        if goal.get("kind") == "support_preparation":
+        if goal.get("kind") in {"support_preparation", "support_followup"}:
             from simulation.systems.campus_anomalies import _consents
             if not _consents(state, actor_id, goal["subject_id"], 35):
                 _update(state, goal, step, "blocked", "目前不愿继续提供支持，保留已经学到的知识。")
                 continue
+        if step == "check_in":
+            _update(state, goal, step, "blocked", goal["blocked_reason"] or "下次晨间先确认朋友的近况与意愿。")
+            continue
         if step in {"arrange_support", "await_support"}:
             _update(state, goal, step, "active")
             continue  # Reconsider at dawn, execute confirmed meetings elsewhere.
@@ -182,7 +189,7 @@ def goal_candidates(context, actor_id, schedule_plan, graph, occupancy, policy, 
             "activity_id": action, "action_class": action_class, "location_id": route.destination_id,
             "parameters": params, "personal_goal_id": goal["goal_id"], "priority": 70,
             "decision_source": "rule", "decision_reason": "persistent_personal_goal",
-            "reason_codes": ["friend_request" if goal.get("kind") == "support_preparation" else "personal_case", "continuity", "legal_next_step"],
+            "reason_codes": ["support_followup" if goal.get("kind") == "support_followup" else "friend_request" if goal.get("kind") == "support_preparation" else "personal_case", "continuity", "legal_next_step"],
             "scheduled_activity_id": schedule_plan.get("activity_id", ""),
             "scheduled_location_id": schedule_plan.get("location_id", ""),
             "candidate_count": 1, "score": round(score, 3), "score_jitter": 0.0,
@@ -235,6 +242,8 @@ def make_ask_plan_handler():
         elif goals:
             stage = goals[0]["step"]
             reason = "最近想先弄懂一位朋友自愿讲述的经历，再考虑怎么帮忙。" if goals[0].get("kind") == "support_preparation" else "最近想把一些亲身经历整理清楚。"
+            if goals[0].get("kind") == "support_followup":
+                reason = "上次和朋友一起处理过的经历，还想继续学习，并确认对方是否需要再见面。"
             message = reason + "下一步打算%s。" % STEP_TEXT[stage]
         else:
             message = "暂时没有另外的研习安排，先处理手头的课程和生活。"
@@ -276,18 +285,24 @@ def personal_goals_invariant(state):
             return ["invalid support preparation review day"]
         for actor_id, goals in ledger["actors"].items():
             episode_count = len(state.situations.get("campus_anomalies", {}).get("cases", {}))
-            if actor_id == "player" or actor_id not in state.population or not isinstance(goals, dict) or len(goals) > len(CHAPTER_NAMES) + episode_count:
+            if actor_id == "player" or actor_id not in state.population or not isinstance(goals, dict) or len(goals) > len(CHAPTER_NAMES) + episode_count * 2:
                 errors.append("invalid personal goal owner/count")
                 continue
             cases = state.knowledge.get("growth", {}).get("actors", {}).get(actor_id, {}).get("case_records", {})
             for goal_id, goal in goals.items():
-                support = goal.get("kind") == "support_preparation"
+                support = goal.get("kind") in {"support_preparation", "support_followup"}
                 if (goal_id != goal["goal_id"] or (not support and goal_id != "understand:" + goal["topic_id"])
                         or goal["topic_id"] not in CHAPTER_NAMES or goal["step"] not in STEPS or goal["status"] not in STATES):
                     errors.append("invalid personal goal identity/state")
-                if not support and goal["step"] in {"arrange_support", "await_support", "support_closed"}:
+                if not support and goal["step"] in {"arrange_support", "await_support", "support_closed", "check_in"}:
                     errors.append("personal case goal has support-only step")
-                if support:
+                if goal.get("kind") == "support_followup":
+                    from simulation.systems.campus_support_followup import source_valid
+                    if not source_valid(state, actor_id, goal):
+                        errors.append("support followup lacks actual shared source")
+                    if "review_failed_day" in goal and (type(goal["review_failed_day"]) is not int or not 1 <= goal["review_failed_day"] <= state.clock.day):
+                        errors.append("invalid support followup review day")
+                elif support:
                     from simulation.systems.campus_support_preparation import source_valid
                     if not source_valid(state, actor_id, goal):
                         errors.append("support preparation lacks requested voluntary source")

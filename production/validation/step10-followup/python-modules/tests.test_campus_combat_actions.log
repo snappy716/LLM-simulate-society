@@ -1,0 +1,12 @@
+test_final_damage_resolves_battle_and_completes_the_locked_task (tests.test_campus_combat_actions.CampusCombatActionTests) ... ok
+test_insufficient_points_rejects_before_card_or_effect_mutation (tests.test_campus_combat_actions.CampusCombatActionTests) ... ok
+test_invalid_target_rejects_without_mutating_battle (tests.test_campus_combat_actions.CampusCombatActionTests) ... ok
+test_night_task_builds_contract_valid_enemy_in_its_configured_row (tests.test_campus_combat_actions.CampusCombatActionTests) ... ok
+test_observe_reveals_weakness_and_base_command_is_once_per_actor_each_round (tests.test_campus_combat_actions.CampusCombatActionTests) ... ok
+test_play_card_spends_shared_points_moves_card_and_applies_damage_atomically (tests.test_campus_combat_actions.CampusCombatActionTests) ... ok
+test_support_effects_use_the_same_pipeline_and_respect_maximums (tests.test_campus_combat_actions.CampusCombatActionTests) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 60.736s
+
+OK

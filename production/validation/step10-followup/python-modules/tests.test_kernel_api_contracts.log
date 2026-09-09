@@ -1,0 +1,10 @@
+test_campus_view_exposes_navigation_without_internal_command_history (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_command_parser_accepts_complete_strict_payload (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_command_parser_enforces_phase_and_unique_targets (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_command_parser_rejects_unknown_and_missing_fields (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_result_and_status_views_are_stable_read_only_shapes (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+OK

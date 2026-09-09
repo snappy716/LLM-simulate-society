@@ -136,6 +136,10 @@ def make_anomaly_handler():
         if not cases:
             return fail("no_reported_episode", "目前没有可以确认的月相经历；普通压力和沉默不代表异常。")
         case = cases[-1]
+        if command.action_id == "ASK_ANOMALY_EXPERIENCE" and "case_id" in params:
+            case = next((entry for entry in cases if entry["case_id"] == params["case_id"]), None)
+            if case is None:
+                return fail("unknown_personal_episode", "只能向本人确认其实际发生过的经历。")
         if command.action_id == "ASK_ANOMALY_EXPERIENCE":
             report = case["reports"].get(actor)
             if report and (report["day"], report["phase"], report["revision"]) == (state.clock.day, state.clock.phase, case["revision"]):
@@ -188,6 +192,8 @@ def make_anomaly_handler():
             "after": {key: case[key] for key in INITIAL}, "route": "day_support", "revision": case["revision"]}
         if anchor_id:
             receipt["anchor_id"] = anchor_id
+        from simulation.systems.campus_support_followup import apply_relationships
+        receipt["relationship_changes"] = apply_relationships(state, target, actor)
         case["history"].append(receipt)
         from simulation.systems.campus_anomaly_meetings import complete_meeting
         complete_meeting(context, case, actor)
@@ -197,8 +203,11 @@ def make_anomaly_handler():
             message = "双方结合本人陈述、真实共同经历和所学知识完成证据洞察，对心结的支持更深入；不保证一次恢复，也不恢复生命或专注。"
         if case["status"] == "resolved":
             message = "经过持续的现实锚定，这次月相残留已稳定。没有强行战斗，也没有将普通情绪诊断为疾病。"
+        gains = receipt["relationship_changes"]["subject"]["applied"]
+        message += f" 本次真实共同经历让对方对帮助者的信任增加 {gains['trust']}、亲近增加 {gains['closeness']}；不产生服从义务。"
         context.emit("CAMPUS_ANOMALY_SUPPORTED", message, actor_ids=[actor, target], visibility="private",
-            knowledge_tags=["anomaly", "support"], payload={"case_id": case["case_id"], "route": "day_support", "major_action_cost_each": 1})
+            knowledge_tags=["anomaly", "support", "relationship"], payload={"case_id": case["case_id"], "route": "day_support", "major_action_cost_each": 1,
+                "relationship_changes": receipt["relationship_changes"]})
         return TransactionOutcome(True, True, "anomaly_supported", message, commit=True)
     return handle
 
@@ -285,6 +294,9 @@ def anomalies_invariant(state):
                         return ["invalid anomaly containment effect"]
                     continue
                 claim = state.knowledge["claims"][receipt["claim_id"]]
+                from simulation.systems.campus_support_followup import relationship_receipt_valid
+                if not relationship_receipt_valid(case, receipt):
+                    return ["invalid support relationship receipt"]
                 if (receipt["revision"] != revision or receipt["before"] != expected or receipt["route"] != "day_support"
                         or not last_day < receipt["day"] <= state.clock.day or receipt["phase"] not in {"morning", "afternoon"}
                         or claim["subject_id"] != case["actor_id"] or claim["predicate"] != "voluntary_moon_experience"

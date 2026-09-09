@@ -1,0 +1,12 @@
+test_content_blueprint_gives_biochemistry_real_purification (tests.test_campus_combat_pollution.CampusCombatPollutionTests) ... ok
+test_enemy_intent_and_unit_expose_data_driven_pollution_threat (tests.test_campus_combat_pollution.CampusCombatPollutionTests) ... ok
+test_full_guard_prevents_both_damage_and_contact_pollution (tests.test_campus_combat_pollution.CampusCombatPollutionTests) ... ok
+test_high_pollution_adds_readable_damage_risk (tests.test_campus_combat_pollution.CampusCombatPollutionTests) ... ok
+test_malformed_status_and_pollution_are_rejected_without_crashing_validator (tests.test_campus_combat_pollution.CampusCombatPollutionTests) ... ok
+test_purification_effect_reduces_persistent_pollution_and_stage (tests.test_campus_combat_pollution.CampusCombatPollutionTests) ... ok
+test_unblocked_hit_persists_pollution_and_enters_visible_stage (tests.test_campus_combat_pollution.CampusCombatPollutionTests) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 72.441s
+
+OK

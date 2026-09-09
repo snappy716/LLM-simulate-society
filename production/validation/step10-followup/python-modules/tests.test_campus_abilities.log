@@ -1,0 +1,11 @@
+test_ability_installation_is_seed_stable_and_snapshot_is_public (tests.test_campus_abilities.CampusAbilityTests) ... ok
+test_combat_contracts_use_actor_bound_cards_instead_of_legacy_skill_commands (tests.test_campus_abilities.CampusAbilityTests) ... ok
+test_eight_colleges_define_56_valid_surface_and_card_abilities (tests.test_campus_abilities.CampusAbilityTests) ... ok
+test_every_college_actor_gets_four_common_one_specialization_and_five_cards (tests.test_campus_abilities.CampusAbilityTests) ... ok
+test_player_starts_with_psychology_specialization_and_card_pool (tests.test_campus_abilities.CampusAbilityTests) ... ok
+test_surface_check_uses_best_plus_half_second_with_cap (tests.test_campus_abilities.CampusAbilityTests) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.135s
+
+OK

@@ -1,0 +1,11 @@
+test_focused_contact_uses_bounded_llm_wording_and_discloses_only_allowed_fact (tests.test_campus_messaging.CampusMessagingIntegrationTests) ... ok
+test_npcs_exchange_remote_messages_with_pair_cooldown (tests.test_campus_messaging.CampusMessagingIntegrationTests) ... ok
+test_player_can_message_remote_npc_for_free_and_records_reply (tests.test_campus_messaging.CampusMessagingIntegrationTests) ... ok
+test_player_dialogue_is_not_limited_by_autonomous_budget (tests.test_campus_messaging.CampusMessagingIntegrationTests) ... ok
+test_player_discovers_contacts_in_person_without_a_limit (tests.test_campus_messaging.CampusMessagingIntegrationTests) ... ok
+test_thread_read_state_and_validation_are_atomic (tests.test_campus_messaging.CampusMessagingIntegrationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 23.850s
+
+OK

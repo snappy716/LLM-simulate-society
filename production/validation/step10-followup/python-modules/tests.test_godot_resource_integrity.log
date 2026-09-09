@@ -1,0 +1,9 @@
+test_campus_art_and_reusable_character_components_remain (tests.test_godot_resource_integrity.GodotResourceIntegrityTests) ... ok
+test_client_only_exposes_campus_actions (tests.test_godot_resource_integrity.GodotResourceIntegrityTests) ... ok
+test_literal_resource_references_resolve (tests.test_godot_resource_integrity.GodotResourceIntegrityTests) ... ok
+test_retired_town_resources_are_absent (tests.test_godot_resource_integrity.GodotResourceIntegrityTests) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.022s
+
+OK

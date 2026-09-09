@@ -1,0 +1,22 @@
+test_checkpoint_preserves_paid_order_and_does_not_recharge (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_closed_shop_cannot_order_or_receive (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_corrupt_account_import_or_order_index_rejected (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_install_does_not_create_goods_or_spend_money (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_invalid_policy_rejected (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_invariant_failure_rolls_back_delivery (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_invariant_failure_rolls_back_order_cash_and_events (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_next_day_delivers_once_without_resetting_existing_stock (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_no_funds_no_debt_no_fake_order (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_order_transfers_only_shop_cash_not_player_cash_or_stock (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_partial_affordable_order_preserves_shop_cash_reserve (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_public_projection_has_stock_eta_not_internal_supplier_account (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_reinstall_rejected_without_resetting_ledger (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_replayed_order_and_delivery_are_idempotent (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_same_day_and_in_transit_do_not_double_order (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_supply_pause_after_payment_keeps_paid_order_and_recovers_once (tests.test_campus_supply.CampusSupplyTests) ... ok
+test_supply_pause_before_order_does_not_charge (tests.test_campus_supply.CampusSupplyTests) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 19.807s
+
+OK

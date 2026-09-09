@@ -37,6 +37,8 @@ def main():
             "anomaly_meetings": dict(Counter(r["status"] for r in state.situations.get("anomaly_meetings", {}).get("records", {}).values())),
             "support_preparations": dict(Counter(g["step"] for goals in state.cognition.get("long_term_plans", {}).get("actors", {}).values()
                 for g in goals.values() if g.get("kind") == "support_preparation")),
+            "support_followups": dict(Counter(g["step"] for goals in state.cognition.get("long_term_plans", {}).get("actors", {}).values()
+                for g in goals.values() if g.get("kind") == "support_followup")),
             "contact_gaps": dict(Counter(v["status"] for v in state.cognition["messaging"].get("contact_gaps", {}).values())),
             "contact_inquiries": dict(Counter(v["status"] for v in state.situations.get("contact_inquiries", {}).get("cases", {}).values())),
             "inquiry_evidence_choices": sum(v.get("decision_basis", {}).get("kind") == "known_evidence"
