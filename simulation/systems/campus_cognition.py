@@ -107,6 +107,9 @@ def bind_cognition_identity(state, request):
             "attempted_phases": gap["distinct_phases"]}
             for gap in state.cognition.get("messaging", {}).get("contact_gaps", {}).values()
             if gap["sender_id"] == request.npc_id and gap["status"] == "awaiting"][-6:]
+        from simulation.systems.campus_contact_leads import known_contact_leads
+        local["own_contact_leads"] = [{"target_id": gap["target_id"], "leads": known_contact_leads(state, request.npc_id, gap["target_id"])[:4]}
+            for gap in local["own_contact_concerns"]]
         local["own_open_disputes"] = [{"case_id": c["case_id"], "status": c["status"],
             "reason": (c.get("source_refs") or [{}])[-1].get("summary", "尚未说清的分歧"),
             "other_id": next(n for n in c["parties"] if n != request.npc_id)}

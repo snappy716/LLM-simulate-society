@@ -27,6 +27,7 @@ var _home: Control
 var _combat_pending := false
 var _contact_check_picker: OptionButton
 var _contact_check_button: Button
+var _contact_check_target_id := ""
 var _message_pending := ""
 var _message_pending_target := ""
 var _message_sent_text := ""
@@ -404,6 +405,7 @@ func _build_message_page() -> VBoxContainer:
 	root.add_child(composer)
 	var check_row := HBoxContainer.new()
 	_contact_check_picker = OptionButton.new()
+	_contact_check_picker.item_selected.connect(func(_index): _refresh_message_thread())
 	_contact_check_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	check_row.add_child(_contact_check_picker)
 	_contact_check_button = Button.new()
@@ -957,16 +959,29 @@ func _refresh_message_thread() -> void:
 	var messaging: Dictionary = SimulationBridge.campus_snapshot.get("messaging", {})
 	var threads: Dictionary = messaging.get("threads", {})
 	var thread: Dictionary = threads.get(_selected_message_contact_id, {})
-	var selected_point := _contact_check_picker.selected
+	var selected_point := ""
+	if _contact_check_target_id == _selected_message_contact_id and _contact_check_picker.selected >= 0:
+		selected_point = String(_contact_check_picker.get_item_metadata(_contact_check_picker.selected))
+	_contact_check_target_id = _selected_message_contact_id
+	var check_options: Array = messaging.get("check_options_by_contact", {}).get(_selected_message_contact_id, messaging.get("check_points", []))
 	_contact_check_picker.clear()
-	for point in messaging.get("check_points", []):
-		_contact_check_picker.add_item(String(point.get("name", "公共会面点")))
+	for point in check_options:
+		var point_label := String(point.get("name", "公共会面点"))
+		if point.get("lead") is Dictionary: point_label += " · 有已知记录"
+		if not bool(point.get("open_now", true)): point_label += " · 待开放"
+		_contact_check_picker.add_item(point_label)
 		_contact_check_picker.set_item_metadata(_contact_check_picker.item_count - 1, point.get("location_id", ""))
-	if selected_point >= 0 and selected_point < _contact_check_picker.item_count:
-		_contact_check_picker.select(selected_point)
+		if point.get("location_id", "") == selected_point:
+			_contact_check_picker.select(_contact_check_picker.item_count - 1)
 	_contact_check_button.disabled = String(thread.get("contact_status", {}).get("status", "")) != "awaiting" or not _message_pending.is_empty()
 	_contact_check_button.tooltip_text = "基于本人未回应记录，请人在所选公共地点留意；不代表确认失踪。"
 	var lines: Array[String] = []
+	if _contact_check_picker.selected >= 0 and _contact_check_picker.selected < check_options.size():
+		var option: Dictionary = check_options[_contact_check_picker.selected]
+		_contact_check_button.disabled = _contact_check_button.disabled or not bool(option.get("available", true))
+		lines.append("[color=#91a4bc]寻访选择依据：%s[/color]" % option.get("basis", "公开会面点，不代表对方位置。"))
+		if not bool(option.get("available", true)):
+			lines.append("[color=#91a4bc]本次联系经历已有待处理/已见到的寻访，或此点已核对。[/color]")
 	var contact_status: Dictionary = thread.get("contact_status", {})
 	match String(contact_status.get("status", "")):
 		"awaiting":
@@ -1334,6 +1349,8 @@ func _refresh_forum_detail() -> void:
 	if not inquiry.is_empty():
 		var inquiry_status: String = {"open": "待实地核对", "observed": "已在指定点见到", "not_observed": "此次实地未见", "expired": "委托到期", "withdrawn": "联系恢复，已撤回"}.get(String(inquiry.get("status", "")), "待确认")
 		_forum_detail.text += "\n\n[b]公共地点寻访[/b]\n%s\n状态：%s\n%s\n%s" % [inquiry.get("rule_note", ""), inquiry_status, inquiry.get("target_name", "承接后可查看具体对象"), inquiry.get("report", {}).get("summary", "") if inquiry.get("report") is Dictionary else ""]
+		if inquiry.get("decision_basis") is Dictionary:
+			_forum_detail.text += "\n选择依据：%s" % inquiry.decision_basis.get("summary", "")
 	var night_site: Dictionary = task.get("night_site", {})
 	if not night_site.is_empty():
 		_forum_detail.text += "\n\n[b]实际现场 · %s[/b]\n%s\n%s" % [night_site.get("label", ""), night_site.get("status", ""), night_site.get("rule_note", "")]

@@ -1,0 +1,5 @@
+GODOT_CHECK_LOGS /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-1dg6s3ej
+PASS contact_leads: CAMPUS_CONTACT_LEADS_FLOW_OK actual_work_evidence permitted_share personal_basis public_points real_phone_request dated_not_live no_action_cost no_api explicit_incapacity
+PASS inquiry: CAMPUS_INQUIRY_FLOW_OK actual_phone_publish actual_forum_claim private_target physical_report real_action_cost no_fake_missing explicit_incident no_api
+PASS phone_layout: CAMPUS_PHONE_LAYOUT_OK fifteen_apps three_sizes fixed_navigation readable_forms searchable_catalog keyboard_reachability no_action_cost
+GODOT_CHECKS_OK 3 flows

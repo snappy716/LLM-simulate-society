@@ -10,7 +10,7 @@
   "allOf": [
     {"if": {"properties": {"action_id": {"const": "REQUEST_CONTACT_CHECK"}}},
      "then": {"properties": {"parameters": {"type": "object", "required": ["target_id"],
-       "properties": {"target_id": {"type": "string", "minLength": 1}, "location_id": {"enum": ["south_gate", "campus_security_office"]}},
+       "properties": {"target_id": {"type": "string", "minLength": 1}, "location_id": {"enum": ["south_gate", "campus_security_office", "library_reading_hall", "canteen_dining_hall"]}},
        "additionalProperties": false}}}},
     {"if": {"properties": {"action_id": {"const": "CHECK_CONTACT_LOCATION"}}},
      "then": {"properties": {"parameters": {"type": "object", "required": ["task_id", "expected_task_revision"],

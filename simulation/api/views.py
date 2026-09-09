@@ -13,6 +13,7 @@ from simulation.systems.campus_growth import growth_view
 from simulation.systems.campus_assistance import assistance_view
 from simulation.systems.campus_fieldwork import fieldwork_view
 from simulation.systems.campus_contact_inquiries import contact_inquiry_view, CHECK_POINTS
+from simulation.systems.campus_contact_leads import contact_check_options
 from simulation.systems.campus_night_sites import site_view
 from simulation.systems.campus_vitals import recovery_skills, rest_recovery_allowed, recovery_options
 from simulation.systems.campus_schedules import current_schedule_slot
@@ -562,6 +563,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         "cognition": cognition_status,
         "messaging": {
             "check_points": [{"location_id": n, "name": state.places[n]["name"]} for n in CHECK_POINTS if n in state.places],
+            "check_options_by_contact": {c["actor_id"]: contact_check_options(state, "player", c["actor_id"]) for c in message_contacts},
             "contacts": message_contacts,
             "threads": player_threads,
             "unread_total": sum(

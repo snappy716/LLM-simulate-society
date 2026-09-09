@@ -305,6 +305,8 @@ class CampusKernelBridge:
                 social_attention(context)
         self.kernel = WorldKernel(state, rng=rng_pool)
         self.kernel.add_invariant(contact_inquiries_invariant)
+        from simulation.systems.campus_contact_leads import contact_leads_invariant
+        self.kernel.add_invariant(contact_leads_invariant)
         self.kernel.register_handler("REQUEST_CONTACT_CHECK", contact_handler)
         self.kernel.register_handler("CHECK_CONTACT_LOCATION", contact_handler)
         self.kernel.add_invariant(campus_vitals_invariant)

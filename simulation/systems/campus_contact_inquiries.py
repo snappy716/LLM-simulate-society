@@ -9,7 +9,7 @@ from simulation.systems.campus_vitals import actor_layer
 from simulation.systems.campus_intelligence import create_campus_claim
 
 
-CHECK_POINTS = ("south_gate", "campus_security_office")
+from simulation.systems.campus_contact_leads import CHECK_POINTS, contact_check_options, inquiry_basis
 CONTACT_ACTIONS = {"REQUEST_CONTACT_CHECK", "CHECK_CONTACT_LOCATION"}
 
 
@@ -75,11 +75,12 @@ def make_contact_inquiry_handler(economy_policy, messaging_policy):
                 "episode_tick": gap["first_tick"], "source_message_id": gap["message_id"], "location_id": location,
                 "status": "open", "report": None, "created_day": state.clock.day,
                 "previous_case_id": previous["case_id"] if previous else None,
+                "decision_basis": inquiry_basis(state, actor_id, target, location),
                 "source_claim_id": previous["report"]["claim_id"] if previous else None}
             task = {"task_id": task_id, "template_id": "contact_check", "forum": "surface", "world_layer": "surface",
                 "issuer_id": actor_id, "title": "公共会面点寻访", "description": "发布者尚未联系上一位联系人，请在指定公共地点留意；不是已确认失踪。具体对象仅向承接者提供。",
                 "objective": "实际到达指定地点，核对是否见到联系人并提交带时地的观察。", "action_id": "CHECK_CONTACT_LOCATION",
-                "activity_id": "PERSONAL_ACTIVITY", "allowed_phases": ["morning", "afternoon", "evening", "late_night"],
+                "activity_id": "PERSONAL_ACTIVITY", "allowed_phases": list(state.places[location]["open_phases"]),
                 "scene_id": location, "execution_region_id": state.places[location].get("region_id") or location,
                 "created_day": state.clock.day, "expires_day": state.clock.day + 1, "state": "open", "assignee_id": None,
                 "lock_revision": 0, "viewer_ids": [], "considering_ids": [], "helper_ids": [], "required_skill_ids": [],
@@ -93,6 +94,8 @@ def make_contact_inquiry_handler(economy_policy, messaging_policy):
             ledger["cases"][case_id] = case
             if previous:
                 task["origin_summary"] = "上一份实地报告未见到联系人，发布者请求核对另一个公共会面点；仍未确认失踪。"
+            if case["decision_basis"]["kind"] == "known_evidence":
+                task["origin_summary"] += " 发布者参考了本人掌握的地点记录，具体线索不公开。"
             state.tasks[task_id] = task
             state.forums["surface"]["published_total"] += 1
             context.emit("CONTACT_INQUIRY_PUBLISHED", "发布者因真实未回应联系发布了一项公共地点寻访。", actor_ids=[actor_id],
@@ -175,7 +178,10 @@ def advance_contact_inquiries(context, handler):
         if sender == "player" or gap["status"] != "awaiting" or gap["distinct_phases"] < 2:
             continue
         # A repeated real contact concern, never the secret list of captives.
-        for location in CHECK_POINTS:
+        for option in contact_check_options(state, sender, gap["receiver_id"]):
+            if not option["available"]:
+                continue
+            location = option["location_id"]
             outcome = handler(context, SimulationCommand(f"inquiry-auto:{sender}:{location}:{state.revision}", sender, "REQUEST_CONTACT_CHECK", state.revision,
                 parameters={"target_id": gap["receiver_id"], "location_id": location}, issued_day=state.clock.day,
                 issued_phase=state.clock.phase, source="rule"))
@@ -192,6 +198,8 @@ def contact_inquiry_view(state, viewer, task):
     view = {"status": case["status"], "rule_note": "公共地点实地核对消耗 1 次主要行动，无金钱奖励；未见不等于失踪。"}
     if viewer in {case["issuer_id"], task.get("assignee_id")}:
         view.update(target_name=state.population[case["target_id"]]["display_name"], report=deepcopy(case["report"]))
+    if viewer == case["issuer_id"]:
+        view["decision_basis"] = deepcopy(case.get("decision_basis"))
     return view
 
 
