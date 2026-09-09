@@ -109,6 +109,8 @@ def bind_cognition_identity(state, request):
             if gap["sender_id"] == request.npc_id and gap["status"] == "awaiting"][-6:]
         from simulation.systems.campus_contact_leads import known_contact_leads
         from simulation.systems.campus_anomalies import anomaly_view
+        from simulation.systems.campus_anomaly_meetings import meetings_view
+        local["own_support_appointments"] = meetings_view(state, request.npc_id)[-6:]
         local["own_moon_experience_reports"] = [{"npc_id": row["npc_id"], "topic_id": row["topic_id"],
             "day": row["report"]["day"], "phase": row["report"]["phase"], "summary": row["report"]["summary"]}
             for row in anomaly_view(state, request.npc_id)[-6:]]

@@ -127,6 +127,7 @@ var _incoming_proposal_picker: OptionButton
 var _incoming_proposal_accept: Button
 var _incoming_proposal_decline: Button
 var _selected_message_contact_id := ""
+var _support_appointment_panel: VBoxContainer
 
 
 func _ready() -> void:
@@ -380,6 +381,8 @@ func _build_message_page() -> VBoxContainer:
 	_message_contact_picker = OptionButton.new()
 	_message_contact_picker.item_selected.connect(_select_message_contact)
 	root.add_child(_message_contact_picker)
+	_support_appointment_panel = preload("res://scripts/ui/campus_support_appointment_panel.gd").new()
+	root.add_child(_support_appointment_panel)
 	_message_log = RichTextLabel.new()
 	_message_log.bbcode_enabled = true
 	_message_log.fit_content = false
@@ -956,6 +959,7 @@ func _on_social_proposal_response_completed(
 
 
 func _refresh_message_thread() -> void:
+	_support_appointment_panel.call("refresh_contact", _selected_message_contact_id)
 	var messaging: Dictionary = SimulationBridge.campus_snapshot.get("messaging", {})
 	var threads: Dictionary = messaging.get("threads", {})
 	var thread: Dictionary = threads.get(_selected_message_contact_id, {})

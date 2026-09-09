@@ -143,6 +143,7 @@ class CampusKernelBridge:
         self.registry = registry
         self.operation_lock = threading.RLock()
         graph = load_campus_location_graph(registry)
+        self.location_graph = graph
         rng_pool = DeterministicRngPool(master_seed)
         state = WorldState(content_version=registry.content_version, master_seed=master_seed)
         install_campus_places(state, graph)
@@ -203,6 +204,10 @@ class CampusKernelBridge:
             self.cognition_runtime, graph, activity_definitions, decision_policy, interaction_policy, messaging_policy
         )
         def decision_selector(context, actor_id, schedule_plan, destination_occupancy):
+            from simulation.systems.campus_anomaly_meetings import meeting_plan
+            appointment = meeting_plan(context.state, actor_id)
+            if appointment:
+                return appointment
             plan = base_decision_selector(
                 context, actor_id, schedule_plan, destination_occupancy
             )
@@ -272,6 +277,8 @@ class CampusKernelBridge:
             summary.update(advance_welfare(context, messaging_policy))
             from simulation.systems.campus_anomalies import advance_anomaly_support
             summary.update(advance_anomaly_support(context))
+            from simulation.systems.campus_anomaly_meetings import advance_meetings
+            summary.update(advance_meetings(context, graph, messaging_policy))
             if context.state.cognition.get("daily_plans", {}).get("day") != context.state.clock.day:
                 summary.update(advance_personal_goals(context))
                 summary.update(prepare_daily_plans(context))
@@ -301,6 +308,8 @@ class CampusKernelBridge:
                     summary[key] = summary.get(key, 0) + value
             return summary
         def finish_phase_attention(context):
+            from simulation.systems.campus_anomaly_meetings import advance_meetings
+            advance_meetings(context, graph, messaging_policy, ending=True)
             # Offline/headless worlds also resolve pending consideration. These
             # are simulation work steps, not extra minutes or player actions.
             for _ in range(12):
@@ -324,6 +333,9 @@ class CampusKernelBridge:
         for action_id in TRADE_ACTIONS:
             self.kernel.register_handler(action_id, make_campus_trade_handler())
         def scheduled_activity_handler(context, command):
+            if command.action_id == "WAIT_ANOMALY_MEETING":
+                from simulation.systems.transactions import TransactionOutcome
+                return TransactionOutcome(True, True, "appointment_arrived", "已沿道路到达约定地点，预留行动等候；尚未完成支持。")
             task = context.state.tasks.get(command.parameters.get("forum_task_id", ""), {})
             if task.get("resolution_kind") == "contact_inquiry":
                 from dataclasses import replace
@@ -377,6 +389,11 @@ class CampusKernelBridge:
         for action_id in ANOMALY_ACTIONS:
             self.kernel.register_handler(action_id, anomaly_handler)
         self.kernel.add_invariant(anomalies_invariant)
+        from simulation.systems.campus_anomaly_meetings import ACTIONS as MEETING_ACTIONS, make_meeting_handler, meetings_invariant, settle_meetings
+        meeting_handler = make_meeting_handler(graph, messaging_policy)
+        for action_id in MEETING_ACTIONS:
+            self.kernel.register_handler(action_id, meeting_handler)
+        self.kernel.add_invariant(meetings_invariant)
         from simulation.systems.campus_anomaly_combat import afterimage_invariant
         self.kernel.add_invariant(afterimage_invariant)
         self.kernel.add_invariant(personal_goals_invariant)
@@ -430,6 +447,7 @@ class CampusKernelBridge:
                     decision_selector,
                     complete_assigned_task,
                     lambda context: {
+                        **settle_meetings(context, messaging_policy),
                         **advance_campus_trade(context),
                         **review_campus_supply(context),
                         **advance_campus_interactions(
@@ -552,7 +570,7 @@ class CampusKernelBridge:
         raise ValueError(f"unsupported provider: {provider}")
 
     def snapshot(self) -> dict:
-        view = self.kernel.project_view(campus_world_view)
+        view = self.kernel.project_view(lambda state: campus_world_view(state, graph=self.location_graph))
         view["cognition"]["provider"] = self.cognition_runtime.public_status()
         view["cognition"]["overnight_timeout_seconds"] = max(180, int((2 * view["cognition"]["focused_count"] + 24)
             * self.cognition_runtime.public_status()["timeout_seconds"] + 60))

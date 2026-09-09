@@ -1,0 +1,4 @@
+GODOT_CHECK_LOGS /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-0vup8ius
+PASS meetings_phone: CAMPUS_MEETINGS_PHONE_FLOW_OK actual_incoming_request no_auto_accept phone_accept_cancel no_major_cost no_api
+PASS phone_layout: CAMPUS_PHONE_LAYOUT_OK fifteen_apps three_sizes fixed_navigation readable_forms searchable_catalog keyboard_reachability no_action_cost
+GODOT_CHECKS_OK 2 flows

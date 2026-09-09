@@ -22,6 +22,10 @@ def coordinate_daily_social(context, plans, messaging_policy):
     if previous.get("day") == state.clock.day:
         return
     records, reserved = {}, set()
+    from simulation.systems.campus_anomaly_meetings import records as support_records
+    for row in support_records(state).values():
+        if row["status"] == "confirmed" and row["day"] == state.clock.day:
+            reserved.update((who, row["phase"]) for who in (row["subject_id"], row["helper_id"]))
     invitations = [(actor_id, social) for actor_id, slots in plans.items()
                    for slot in slots.values() if (social := slot.get("social_intent"))]
     # Rotate deterministic tie-breaking by day, not permanent actor-ID priority.

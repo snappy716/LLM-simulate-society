@@ -387,6 +387,9 @@ def advance_campus_trade(context):
 def make_procurement_selector(base_selector, graph, protected_priority):
     def select(context, actor_id, schedule_plan, occupancy):
         state, actor = context.state, context.state.population[actor_id]
+        from simulation.systems.campus_anomaly_meetings import reserved_meeting
+        if reserved_meeting(state, actor_id):
+            return base_selector(context, actor_id, schedule_plan, occupancy)
         if (int(schedule_plan.get("priority", 0)) >= protected_priority or actor.get("active_forum_task_id")
                 or _layer(state, actor_id) != "surface" or _busy(state, actor_id)):
             return base_selector(context, actor_id, schedule_plan, occupancy)

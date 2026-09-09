@@ -79,6 +79,11 @@ def _support_problem(state, case, listener):
     if mastery_by_topic(state, listener).get(case["topic_id"], 0) < 20:
         return "knowledge_required", "需要先将对应现象的理解提升至 20；可通过阅读和实际案例学习。"
     for who in (listener, subject):
+        from simulation.systems.campus_anomaly_meetings import reserved_meeting
+        meeting = reserved_meeting(state, who)
+        if meeting and (meeting["case_id"] != case["case_id"] or meeting["helper_id"] != listener
+                or location != meeting["location_id"]):
+            return "major_action_reserved", "有人已为其他支持预约预留行动，请按约赴会或先取消。"
         if active_departure(state, who) or state.population[who].get("active_forum_task_id"):
             return "participant_committed", "有人已有委托或出击承诺，请先处理原有安排。"
         if state.action_economy["actors"][who]["major_remaining"] <= 0:
@@ -169,9 +174,12 @@ def make_anomaly_handler():
         case["last_support_day"] = state.clock.day
         case["status"] = "resolved" if all(case[key] == 0 for key in INITIAL) else "easing"
         receipt = {"day": state.clock.day, "phase": state.clock.phase, "helper_id": actor,
+            "location_id": state.population[actor]["current_location_id"],
             "claim_id": case["reports"][actor]["claim_id"], "before": before,
             "after": {key: case[key] for key in INITIAL}, "route": "day_support", "revision": case["revision"]}
         case["history"].append(receipt)
+        from simulation.systems.campus_anomaly_meetings import complete_meeting
+        complete_meeting(context, case, actor)
         # This addresses fictional afterimages, not hit points or clinical illness.
         message = "双方完成了一次现实锚定：核对本人愿意提供的经历并共同联系眼前生活。月相残留有所缓和；不是临床治疗，也未恢复生命或专注。"
         if case["status"] == "resolved":
@@ -195,7 +203,10 @@ def advance_anomaly_support(context):
             continue
         # Subject chooses an existing trusted, knowledgeable contact actually
         # present. No teleportation, invented contacts, or automatic player action.
-        helpers = [who for who in state.population if who not in {"player", target} and _available(state, who)
+        from simulation.systems.campus_anomaly_meetings import reserved_meeting
+        if reserved_meeting(state, target):
+            continue  # Reserved partners travel before the shared action settles.
+        helpers = [who for who in state.population if who not in {"player", target} and _available(state, who) and not reserved_meeting(state, who)
             and are_phone_contacts(state, target, who) and _consents(state, target, who, 50)
             and state.population[who]["current_location_id"] == state.population[target]["current_location_id"]
             and mastery_by_topic(state, who).get(case["topic_id"], 0) >= 20]

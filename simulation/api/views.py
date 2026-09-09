@@ -182,7 +182,7 @@ def kernel_status_view(state: WorldState, *, busy: bool = False) -> Dict[str, An
     }
 
 
-def campus_world_view(state: WorldState) -> Dict[str, Any]:
+def campus_world_view(state: WorldState, *, graph=None) -> Dict[str, Any]:
     """Project only the campus data Godot needs for movement and population UI."""
     state.require_valid()
     player = deepcopy(state.population.get("player", {}))
@@ -489,6 +489,12 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     from simulation.systems.campus_disputes import dispute_view
     from simulation.systems.campus_welfare import welfare_view
     from simulation.systems.campus_anomalies import anomaly_view
+    from simulation.systems.campus_anomaly_meetings import meetings_view, options as meeting_options, records as meeting_records
+    anomalies = anomaly_view(state)
+    for row in anomalies:
+        case = state.situations["campus_anomalies"]["cases"][row["case_id"]]
+        row["meeting_options"] = (meeting_options(state, case, "player", graph) if graph and
+            not any(r["case_id"] == row["case_id"] and r["status"] in {"pending", "confirmed"} for r in meeting_records(state).values()) else [])
     public_forums.setdefault("surface", {})["situations"] = notices["surface"]
     night_forum["situations"] = notices["night"]
     night_forum["access_state"] = (
@@ -540,7 +546,8 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         "social": {
             "disputes": dispute_view(state),
             "welfare": welfare_view(state),
-            "anomalies": anomaly_view(state),
+            "anomalies": anomalies,
+            "anomaly_meetings": meetings_view(state),
             "player_relationships": player_relationships,
             "player_organizations": player_organizations,
             "player_proposals": deepcopy(

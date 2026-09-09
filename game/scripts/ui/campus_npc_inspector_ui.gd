@@ -22,6 +22,12 @@ var _anomaly_support: Button
 var _anomaly_feedback: Label
 var _anomaly_case: Dictionary = {}
 var _anomaly_pending := ""
+var _meeting_options: OptionButton
+var _meeting_propose: Button
+var _meeting_accept: Button
+var _meeting_cancel: Button
+var _meeting_status: Label
+var _meeting: Dictionary = {}
 
 const COLLEGE_NAMES := {
 	"math_physics": "数理学院",
@@ -283,6 +289,24 @@ func _build_ui() -> void:
 	_anomaly_feedback = Label.new()
 	_anomaly_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_anomaly_feedback)
+	_meeting_status = Label.new()
+	_meeting_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(_meeting_status)
+	_meeting_options = OptionButton.new()
+	_meeting_options.clip_text = true
+	column.add_child(_meeting_options)
+	_meeting_propose = Button.new()
+	_meeting_propose.text = "预约白天支持（手机留约，不立即消耗行动）"
+	_meeting_propose.pressed.connect(func(): _send_meeting("PROPOSE_ANOMALY_MEETING"))
+	column.add_child(_meeting_propose)
+	_meeting_accept = Button.new()
+	_meeting_accept.text = "同意预约（届时保留一次主要行动）"
+	_meeting_accept.pressed.connect(func(): _send_meeting("ACCEPT_ANOMALY_MEETING"))
+	column.add_child(_meeting_accept)
+	_meeting_cancel = Button.new()
+	_meeting_cancel.text = "婉拒 / 取消这次预约"
+	_meeting_cancel.pressed.connect(func(): _send_meeting("CANCEL_ANOMALY_MEETING"))
+	column.add_child(_meeting_cancel)
 	var dialogue_label := Label.new()
 	dialogue_label.text = "当面交谈（免费，可继续追问）"
 	dialogue_label.add_theme_color_override("font_color", Color("8fb7d6"))
@@ -596,6 +620,48 @@ func _refresh_anomaly() -> void:
 	_anomaly_ask.disabled = not _anomaly_pending.is_empty()
 	_anomaly_support.visible = not _anomaly_case.is_empty()
 	_anomaly_support.disabled = not _anomaly_pending.is_empty() or not bool(_anomaly_case.get("can_support", false))
+	_refresh_meeting()
+
+
+func _refresh_meeting() -> void:
+	_meeting = {}
+	_meeting_options.clear()
+	for choice in _anomaly_case.get("meeting_options", []):
+		_meeting_options.add_item(String(choice.label))
+		_meeting_options.set_item_metadata(_meeting_options.item_count - 1, choice)
+	for row in SimulationBridge.campus_snapshot.get("social", {}).get("anomaly_meetings", []):
+		if row.subject_id == _selected_profile.get("npc_id", ""):
+			_meeting = row
+	var active: bool = _meeting.get("status", "") in ["pending", "confirmed"]
+	var busy := not _anomaly_pending.is_empty()
+	_meeting_options.visible = not active and _meeting_options.item_count > 0
+	_meeting_propose.visible = _meeting_options.visible
+	_meeting_propose.disabled = busy
+	_meeting_accept.visible = _meeting.get("status", "") == "pending" and _meeting.get("proposer_id", "") != "player"
+	_meeting_cancel.visible = active
+	_meeting_accept.disabled = busy
+	_meeting_cancel.disabled = busy
+	_meeting_status.text = ""
+	if not _meeting.is_empty():
+		var labels := {"pending": "等待回复", "confirmed": "双方已确认", "completed": "实际支持已完成", "missed": "未完成赴约", "declined": "已婉拒", "cancelled": "已取消"}
+		var place: Dictionary = SimulationBridge.campus_snapshot.get("places", {}).get(_meeting.location_id, {})
+		_meeting_status.text = "支持预约 · %s\n第 %d 天%s · %s\n%s\n需实际到场，并重新听取本人体验；预约不等于已完成支持。" % [labels.get(_meeting.status, ""), int(_meeting.day), "上午" if _meeting.phase == "morning" else "下午", place.get("name", _meeting.location_id), _meeting.reason]
+
+
+func _send_meeting(action: String) -> void:
+	if not _anomaly_pending.is_empty() or not _welfare_pending.is_empty() or not _dispute_pending.is_empty(): return
+	var parameters: Dictionary
+	if action == "PROPOSE_ANOMALY_MEETING":
+		if _anomaly_case.is_empty() or _meeting_options.selected < 0: return
+		parameters = (_meeting_options.get_item_metadata(_meeting_options.selected) as Dictionary).duplicate()
+		parameters.erase("label")
+		parameters["case_id"] = _anomaly_case.case_id
+	else:
+		if _meeting.is_empty(): return
+		parameters = {"meeting_id": _meeting.meeting_id, "expected_revision": _meeting.revision}
+	_anomaly_pending = String(_selected_profile.get("npc_id", ""))
+	_refresh_meeting()
+	SimulationBridge.operate_campus_investigation(action, parameters)
 
 
 func _send_anomaly(support: bool) -> void:

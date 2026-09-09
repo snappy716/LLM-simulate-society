@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Private consented daytime support appointment",
+  "type": "object",
+  "required": ["action_id", "parameters"],
+  "properties": {
+    "action_id": {"enum": ["PROPOSE_ANOMALY_MEETING", "ACCEPT_ANOMALY_MEETING", "CANCEL_ANOMALY_MEETING"]},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "case_id": {"type": "string", "minLength": 1},
+        "helper_id": {"type": "string", "minLength": 1},
+        "day": {"type": "integer", "minimum": 1},
+        "phase": {"enum": ["morning", "afternoon"]},
+        "location_id": {"enum": ["mirror_lake_square", "library_reading_hall"]},
+        "meeting_id": {"type": "string", "minLength": 1},
+        "expected_revision": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [{
+    "if": {"properties": {"action_id": {"const": "PROPOSE_ANOMALY_MEETING"}}},
+    "then": {"properties": {"parameters": {"required": ["case_id", "day", "phase", "location_id"]}}},
+    "else": {"properties": {"parameters": {"required": ["meeting_id", "expected_revision"]}}}
+  }],
+  "additionalProperties": false
+}

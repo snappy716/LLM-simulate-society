@@ -862,7 +862,9 @@ def make_forum_task_handler(activity_handler, contact_handler=None):
                 if command.source != "rule":
                     return TransactionOutcome(False, False, "npc_control_required", "不能替其他角色接取任务。")
                 from simulation.systems.campus_schedules import current_schedule_slot
+                from simulation.systems.campus_anomaly_meetings import reserved_meeting
                 if (has_upcoming_departure(context.state, command.actor_id)
+                        or reserved_meeting(context.state, command.actor_id, upcoming=True)
                         or recovering_from_defeat(context.state, command.actor_id)
                         or current_schedule_slot(context.state, command.actor_id).get("priority", 0) >= 90):
                     return TransactionOutcome(False, False, "npc_commitment_conflict", "当前职责或承诺不允许接取。")

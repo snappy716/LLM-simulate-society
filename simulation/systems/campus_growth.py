@@ -73,6 +73,9 @@ def study_assessment(state, actor_id):
         return False, "此处当前未开放。"
     if active_departure(state, actor_id):
         return False, "主要行动已为出击预留，请先处理出击预约。"
+    from simulation.systems.campus_anomaly_meetings import reserved_meeting
+    if reserved_meeting(state, actor_id):
+        return False, "主要行动已为支持预约预留，请先赴约或取消。"
     if state.action_economy.get("actors", {}).get(actor_id, {}).get("major_remaining", 0) <= 0:
         return False, "本时段没有剩余主要行动。"
     return True, "阅读或反思消耗一次主要行动；不自动推进时段。"
