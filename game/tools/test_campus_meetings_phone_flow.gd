@@ -30,11 +30,16 @@ func _run() -> void:
 	assert(accepted[0], JSON.stringify(accepted[1]))
 	assert(panel.get("detail").text.contains("双方已确认"))
 	assert(not panel.get("accept_button").visible)
+	phone.call("_open_app", "agenda", "日程与约定")
+	assert(phone.get("_agenda_root").get("detail").text.contains("已确认的支持约定"))
+	phone.call("_open_app", "messages", "手机消息")
 	while bridge.call("is_campus_busy"): await create_timer(0.05).timeout
 	panel.get("cancel_button").pressed.emit()
 	var cancelled: Array = await bridge.campus_investigation_operation_completed
 	assert(cancelled[0])
 	assert(not panel.visible)
+	phone.call("_open_app", "agenda", "日程与约定")
+	assert(not phone.get("_agenda_root").get("detail").text.contains("已确认的支持约定"))
 	var after: Dictionary = bridge.get("campus_snapshot")
 	assert(initial.clock == after.clock and initial.action_economy == after.action_economy)
 	print("CAMPUS_MEETINGS_PHONE_FLOW_OK actual_incoming_request no_auto_accept phone_accept_cancel no_major_cost no_api")

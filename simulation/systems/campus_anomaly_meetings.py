@@ -47,17 +47,11 @@ def slot_problem(state, case, helper, day, phase, location, graph, ignore=None):
             return "有人已有课程、工作或未完成委托，不能覆盖原有承诺。"
         if not _available(state, actor) or max(person.get("needs", {}).get(k, 0) for k in ("rest", "food", "safety")) >= 90:
             return "有人需要先处理当前安全或基本生活需求。"
-        if any(r["status"] == "confirmed" and r["meeting_id"] != ignore and actor in (r["subject_id"], r["helper_id"])
-                and (r["day"], r["phase"]) == (day, phase) for r in records(state).values()):
-            return "这个时段已有支持预约。"
-        social = state.cognition.get("social_coordination", {})
-        if social.get("day") == day and any(r["status"] == "confirmed" and r["phase"] == phase
-                and actor in (sender, r["target_id"]) for sender, r in social.get("actors", {}).items()):
-            return "这个时段已经约好与其他人见面。"
-        for party in state.parties.values():
-            dep = party.get("members", {}).get(actor, {}).get("departure", {})
-            if (dep.get("day"), dep.get("phase")) == (day, phase):
-                return "这个时段已有出击预约。"
+        from simulation.systems.campus_commitments import commitments_at
+        conflicts = commitments_at(state, actor, day, phase, ignore=("support", ignore))
+        if conflicts:
+            return {"support": "这个时段已有支持预约。", "social": "这个时段已经约好与其他人见面。",
+                "departure": "这个时段已有出击预约。"}[conflicts[0]["kind"]]
         if (day, phase) == (state.clock.day, state.clock.phase) and state.action_economy["actors"][actor]["major_remaining"] < 1:
             return "当前时段有人没有剩余主要行动，请约其他时段。"
         if (state.places[location].get("open_phases") and phase not in state.places[location]["open_phases"]):

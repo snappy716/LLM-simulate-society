@@ -1,0 +1,3 @@
+GODOT_CHECK_LOGS /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-hnjb9hgj
+PASS phone_layout: CAMPUS_PHONE_LAYOUT_OK sixteen_apps three_sizes fixed_navigation readable_forms searchable_catalog keyboard_reachability no_action_cost
+GODOT_CHECKS_OK 1 flows

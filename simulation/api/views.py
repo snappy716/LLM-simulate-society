@@ -10,6 +10,7 @@ from simulation.domain.world_state import WorldState
 from simulation.systems.campus_inventory import campus_inventory_view
 from simulation.systems.campus_investigation import investigation_view
 from simulation.systems.campus_growth import growth_view
+from simulation.systems.campus_commitments import agenda_view
 from simulation.systems.campus_assistance import assistance_view
 from simulation.systems.campus_fieldwork import fieldwork_view
 from simulation.systems.campus_contact_inquiries import contact_inquiry_view, CHECK_POINTS
@@ -515,6 +516,7 @@ def campus_world_view(state: WorldState, *, graph=None) -> Dict[str, Any]:
         "economy": campus_inventory_view(state),
         "investigation": investigation_view(state),
         "growth": growth_view(state),
+        "agenda": agenda_view(state),
         "assistance": assistance_view(state),
         "places": deepcopy(state.places),
         "passages": deepcopy(state.metadata.get("campus_passages", {})),

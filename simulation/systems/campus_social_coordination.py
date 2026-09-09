@@ -10,7 +10,7 @@ PHASE_LABELS = {"morning": "上午", "afternoon": "下午", "evening": "晚上",
 REASONS = {
     "compatible": "好，可以到时见面聊聊；具体事情见面再说。",
     "schedule_conflict": "那个时段我另有安排，这次先不约了。",
-    "reserved": "那个时段已有见面安排，不再重复约了。",
+    "reserved": "那个时段已有约定，不能再答应无法兼顾的见面。",
     "unwilling": "最近不太想约见面，这次先不了。",
     "urgent": "我得先处理手头的要紧事，这次先不约了。",
 }
@@ -22,10 +22,9 @@ def coordinate_daily_social(context, plans, messaging_policy):
     if previous.get("day") == state.clock.day:
         return
     records, reserved = {}, set()
-    from simulation.systems.campus_anomaly_meetings import records as support_records
-    for row in support_records(state).values():
-        if row["status"] == "confirmed" and row["day"] == state.clock.day:
-            reserved.update((who, row["phase"]) for who in (row["subject_id"], row["helper_id"]))
+    from simulation.systems.campus_commitments import commitments_for
+    for who in plans:
+        reserved.update((who, row["phase"]) for row in commitments_for(state, who) if row["day"] == state.clock.day)
     invitations = [(actor_id, social) for actor_id, slots in plans.items()
                    for slot in slots.values() if (social := slot.get("social_intent"))]
     # Rotate deterministic tie-breaking by day, not permanent actor-ID priority.

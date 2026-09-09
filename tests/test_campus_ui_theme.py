@@ -45,8 +45,8 @@ class CampusThemeTests(unittest.TestCase):
         catalog = (ROOT / "game/scripts/ui/campus_phone_catalog.gd").read_text()
         phone = (ROOT / "game/scripts/ui/campus_phone_ui.gd").read_text()
         ids = re.findall(r'"id": "([^"]+)"', catalog)
-        self.assertEqual(len(ids), 15)
-        self.assertEqual(len(set(ids)), 15)
+        self.assertEqual(len(ids), 16)
+        self.assertEqual(len(set(ids)), 16)
         apps = phone.split("const APPS := [", 1)[1].split("\n]", 1)[0]
         self.assertEqual(set(ids), set(re.findall(r'"id": "([^"]+)"', apps)))
         directory = ROOT / "game/assets/ui/kenney_game_icons"

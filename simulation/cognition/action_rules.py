@@ -33,11 +33,12 @@ TRAIT_MEANINGS = {
 def action_rule_context(state, actor_id):
     """Read-only; budget numbers come from the authoritative runtime aggregate.
 
-    Only a boolean for this actor's current reservation is exposed. In
-    particular, dialogue gets no private appointment, case or other actor IDs.
+    Exposes only this actor's reserved slots and current budget. Dialogue gets
+    no private appointment, case, location or other actor IDs from this block.
     """
     from simulation.systems.campus_departures import active_departure
     from simulation.systems.campus_anomaly_meetings import reserved_meeting
+    from simulation.systems.campus_commitments import commitments_for
 
     budget = state.action_economy.get("actors", {}).get(actor_id, {})
     current = (budget.get("day"), budget.get("phase")) == (state.clock.day, state.clock.phase)
@@ -46,6 +47,8 @@ def action_rule_context(state, actor_id):
         "common": dict(COMMON_RULES),
         "clock": {"day": state.clock.day, "phase": state.clock.phase},
         "daily_planning": "只在跨日规划输入 day 所指的这一天，不额外加一天；日内执行并复核已选安排。",
+        "own_confirmed_slots": [{key: row[key] for key in ("kind", "day", "phase", "major_action_cost")}
+            for row in commitments_for(state, actor_id)],
         "phase_policy": deepcopy(state.action_economy.get("policy", {}).get("phases", {})),
         "own_current_budget": {
             "day": state.clock.day, "phase": state.clock.phase,

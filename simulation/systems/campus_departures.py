@@ -39,6 +39,10 @@ def assess_departure(state, party, day: Any, phase: Any, policy) -> dict:
         reason = ""
         current = day == state.clock.day and phase == state.clock.phase
         budget = state.action_economy.get("actors", {}).get(actor_id, {})
+        from simulation.systems.campus_commitments import commitments_at
+        own_party_id = party.get("party_id")
+        if commitments_at(state, actor_id, day, phase, ignore=("departure", own_party_id)):
+            reason = "appointment_commitment"
         if current and not budget.get("night_combat_paid", False) and int(budget.get("major_remaining", 0)) < 1:
             reason = "major_action_exhausted"
         if actor_id != party["leader_id"]:
@@ -66,7 +70,7 @@ def handle_departure(context, command, party, policy):
         names = "、".join(context.state.population[item["actor_id"]].get("display_name", item["actor_id"])
                          for item in assessment["blocked"])
         return TransactionOutcome(False, False, assessment["code"],
-                                  "无法预约：" + (names + "存在日程、任务、行动余额或意愿冲突。" if names else "请选当前或未来的晚间/深夜。"),
+                                  "无法预约：" + (names + "存在已确认约定、日程、任务、行动余额或意愿冲突。" if names else "请选当前或未来的晚间/深夜。"),
                                   payload=assessment)
     for member in party["members"].values():
         if cancel:
