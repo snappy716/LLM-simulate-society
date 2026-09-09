@@ -1,0 +1,17 @@
+test_in_person_party_proposal_uses_real_party_commitment (tests.test_campus_proposals.CampusProposalTests) ... ok
+test_incoming_proposal_schema_and_snapshot_are_explicit (tests.test_campus_proposals.CampusProposalTests) ... ok
+test_npc_task_request_waits_for_player_then_commits_atomically (tests.test_campus_proposals.CampusProposalTests) ... ok
+test_pending_request_expires_and_cannot_be_answered_late (tests.test_campus_proposals.CampusProposalTests) ... ok
+test_phone_meet_up_is_explicit_free_and_persisted_in_thread (tests.test_campus_proposals.CampusProposalTests) ... ok
+test_phone_requires_contact_and_face_to_face_requires_shared_scene (tests.test_campus_proposals.CampusProposalTests) ... ok
+test_player_can_decline_without_applying_requested_task_or_hook (tests.test_campus_proposals.CampusProposalTests) ... ok
+test_player_proposal_llm_only_words_the_verified_outcome_without_background_budget (tests.test_campus_proposals.CampusProposalTests) ... ok
+test_remote_contact_request_and_player_reply_share_the_phone_thread (tests.test_campus_proposals.CampusProposalTests) ... ok
+test_same_proposal_type_has_one_phase_cooldown (tests.test_campus_proposals.CampusProposalTests) ... ok
+test_task_help_acceptance_links_the_owned_task_to_a_real_commitment (tests.test_campus_proposals.CampusProposalTests) ... ok
+test_task_help_requires_a_player_owned_task (tests.test_campus_proposals.CampusProposalTests) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 33.829s
+
+OK

@@ -1,0 +1,9 @@
+test_expired_task_is_not_reopened_after_retreat (tests.test_campus_retreats.CampusRetreatTests) ... ok
+test_pursuit_defeat_uses_existing_overnight_rescue (tests.test_campus_retreats.CampusRetreatTests) ... ok
+test_survivors_take_pursuit_damage_and_reopen_unexpired_task (tests.test_campus_retreats.CampusRetreatTests) ... ok
+test_wrong_phase_rejects_retreat_without_partial_mutation (tests.test_campus_retreats.CampusRetreatTests) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 45.595s
+
+OK

@@ -1,0 +1,14 @@
+test_actual_phase_executes_battles_without_player_or_free_victory (tests.test_campus_autonomous_combat.AutonomousCombatTests) ... ok
+test_duplicate_command_and_checkpoint_do_not_duplicate_rewards (tests.test_campus_autonomous_combat.AutonomousCombatTests) ... ok
+test_forced_defeat_rescues_npc_without_advancing_clock_or_healing_player (tests.test_campus_autonomous_combat.AutonomousCombatTests) ... ok
+test_player_party_cannot_be_taken_over (tests.test_campus_autonomous_combat.AutonomousCombatTests) ... ok
+test_real_resources_action_cost_no_player_mutation_and_receipt (tests.test_campus_autonomous_combat.AutonomousCombatTests) ... ok
+test_same_legal_command_sequence_has_identical_battle_and_resource_math (tests.test_campus_autonomous_combat.AutonomousCombatTests) ... ok
+test_second_battle_in_same_phase_does_not_charge_again (tests.test_campus_autonomous_combat.AutonomousCombatTests) ... ok
+test_spent_action_location_and_source_refuse_without_side_effects (tests.test_campus_autonomous_combat.AutonomousCombatTests) ... ok
+test_wrong_place_and_forged_receipt_cannot_be_used (tests.test_campus_autonomous_combat.AutonomousCombatTests) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 63.862s
+
+OK

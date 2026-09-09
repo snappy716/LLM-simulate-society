@@ -1,0 +1,8 @@
+test_daily_integration_limits_hooks_and_exposes_safe_origin_text (tests.test_campus_emergent_tasks.CampusEmergentTaskTests) ... ok
+test_real_need_publishes_a_bounded_task_and_completion_relaxes_it (tests.test_campus_emergent_tasks.CampusEmergentTaskTests) ... ok
+test_unresolved_promise_becomes_a_preferred_but_competitive_task (tests.test_campus_emergent_tasks.CampusEmergentTaskTests) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 7.879s
+
+OK

@@ -1,0 +1,11 @@
+test_actual_shared_record_ranks_point_not_live_target_location (tests.test_campus_contact_leads.ContactLeadTests) ... ok
+test_fallback_is_not_a_location_fact_and_private_rooms_never_candidates (tests.test_campus_contact_leads.ContactLeadTests) ... ok
+test_library_or_canteen_check_requires_real_arrival_and_one_action (tests.test_campus_contact_leads.ContactLeadTests) ... ok
+test_npc_two_real_attempts_choose_known_point_and_preserve_next_day_context (tests.test_campus_contact_leads.ContactLeadTests) ... ok
+test_real_request_retains_private_source_and_opening_hours (tests.test_campus_contact_leads.ContactLeadTests) ... ok
+test_stale_distorted_low_confidence_and_hidden_layer_records_not_recommended (tests.test_campus_contact_leads.ContactLeadTests) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 21.634s
+
+OK

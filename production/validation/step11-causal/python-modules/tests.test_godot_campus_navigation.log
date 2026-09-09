@@ -1,0 +1,31 @@
+test_bridge_exposes_authoritative_phase_advance (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_bridge_port_is_configurable_without_changing_windows_default (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_campus_scene_keeps_authoritative_npcs_visible_and_inspectable (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_club_app_exposes_membership_resources_and_activity_actions (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_collaboration_scene_reuses_current_modular_characters_and_camera (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_course_app_exposes_college_abilities_and_future_card_pool (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_debug_scenes_reuse_player_camera_without_duplicate_child (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_forum_detail_explains_dynamic_task_origin_without_hidden_need_values (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_forum_detail_exposes_relationship_and_club_consequences (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_forum_ui_exposes_separate_surface_and_discovered_night_channels (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_graybox_exposes_coarse_phase_and_major_action_debug_ui (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_latest_art_maps_form_one_reciprocal_walkable_network (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_library_and_sports_npcs_are_not_projected_on_other_maps (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_map_ui_uses_authoritative_free_travel_and_scene_mounts_all_prototypes (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_maps_match_the_reviewed_new_delivery (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_navigation_camera_looks_ahead_toward_boundary_traffic (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_navigation_graybox_keeps_outdoors_continuous_and_reuses_lobby (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_npc_inspector_loads_private_paginated_chronicle_on_demand (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_party_app_exposes_invitation_commitment_and_stability (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_phase_changes_replay_visible_npc_routes_without_status_text (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_phone_messages_have_contact_thread_input_and_free_command_bridge (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_player_is_identifiable_by_transition_triggers (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_project_starts_campus_and_keeps_stable_user_storage_name (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_retired_city_blueprint_tool_is_not_a_campus_dependency (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_reusable_trigger_and_anchor_scenes_exist (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+test_seven_latest_collaboration_maps_are_catalogued_with_real_dimensions (tests.test_godot_campus_navigation.GodotCampusNavigationSourceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 0.043s
+
+OK

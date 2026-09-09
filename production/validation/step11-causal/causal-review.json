@@ -1,0 +1,5307 @@
+{
+  "comparison": {
+    "same_checkpoint_verified": true,
+    "case_id": "night-site:night:d02:0029:south_gate_lost_student",
+    "days": 7,
+    "branches": {
+      "unattended": {
+        "status": "resolved",
+        "history": [
+          {
+            "day": 3,
+            "phase": "late_night",
+            "helper_id": "campus_student_087",
+            "claim_id": null,
+            "before": {
+              "shell": 30,
+              "core": 60,
+              "coherence": 60
+            },
+            "after": {
+              "shell": 0,
+              "core": 60,
+              "coherence": 40
+            },
+            "route": "night_containment",
+            "revision": 1,
+            "task_id": "night:d03:0041:ai_lab_false_signal",
+            "battle_id": "battle:000016"
+          },
+          {
+            "day": 4,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00001494",
+            "before": {
+              "shell": 0,
+              "core": 60,
+              "coherence": 40
+            },
+            "after": {
+              "shell": 0,
+              "core": 40,
+              "coherence": 20
+            },
+            "route": "day_support",
+            "revision": 2,
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 50,
+                  "closeness": 0,
+                  "respect": 0
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 58,
+                  "closeness": 4,
+                  "respect": 3
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 50,
+                  "closeness": 0,
+                  "respect": 0
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 52,
+                  "closeness": 3,
+                  "respect": 1
+                }
+              }
+            }
+          },
+          {
+            "day": 5,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00001815",
+            "before": {
+              "shell": 0,
+              "core": 40,
+              "coherence": 20
+            },
+            "after": {
+              "shell": 0,
+              "core": 20,
+              "coherence": 0
+            },
+            "route": "day_support",
+            "revision": 3,
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 58,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 66,
+                  "closeness": 8,
+                  "respect": 6
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 52,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 54,
+                  "closeness": 6,
+                  "respect": 2
+                }
+              }
+            }
+          },
+          {
+            "day": 6,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00002153",
+            "before": {
+              "shell": 0,
+              "core": 20,
+              "coherence": 0
+            },
+            "after": {
+              "shell": 0,
+              "core": 0,
+              "coherence": 0
+            },
+            "route": "day_support",
+            "revision": 4,
+            "anchor_id": "anchor:night-site:night:d02:0029:south_gate_lost_student:campus_student_058",
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 66,
+                  "closeness": 8,
+                  "respect": 6
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 74,
+                  "closeness": 12,
+                  "respect": 9
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 54,
+                  "closeness": 6,
+                  "respect": 2
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 56,
+                  "closeness": 9,
+                  "respect": 3
+                }
+              }
+            }
+          }
+        ],
+        "heard_by_player": false,
+        "player_supports": 0,
+        "command_failures": {},
+        "events": {
+          "FORUM_TASK_CLAIMED": 167,
+          "FORUM_TASK_VIEWED": 1349,
+          "CAMPUS_ITEM_ACTION_COMPLETED": 1989,
+          "NPC_ROUTINE_ACTION_COMPLETED": 1830,
+          "ACTOR_LOCATION_CHANGED": 22978,
+          "NPC_COMBAT_SUPPLY_PREPARED": 5,
+          "NPC_DECISION_MADE": 5583,
+          "CAMPUS_ACTIVITY_EFFECT_APPLIED": 5034,
+          "NPC_ACTIVITY_COMPLETED": 5583,
+          "FORUM_TASK_COMPLETED": 161,
+          "CAMPUS_GROWTH_COMPLETED": 88,
+          "NPC_PERSONAL_GOAL_PROGRESS": 88,
+          "CAMPUS_TRADE_OFFERED": 170,
+          "CAMPUS_TRADE_SETTLED": 170,
+          "NPC_INTERACTION_RESOLVED": 336,
+          "NPC_INFORMATION_SHARED": 130,
+          "PHONE_MESSAGE_SENT": 300,
+          "WORLD_PHASE_ADVANCED": 28,
+          "FORUM_TASK_PUBLISHED": 168,
+          "NIGHT_WORLD_ENTERED": 64,
+          "CLUB_ACTIVITY_ATTENDED": 92,
+          "PARTY_INVITATION_DECLINED": 70,
+          "BATTLE_PREPARATION_STARTED": 32,
+          "COMBAT_CHARACTER_DEPLOYED": 32,
+          "BATTLE_DEPLOYMENT_CONFIRMED": 32,
+          "NIGHT_COMBAT_ENTRY_ACCOUNTED": 32,
+          "COMBAT_ROUND_STARTED": 206,
+          "COMBAT_ENEMY_INTENTS": 206,
+          "COMBAT_CARD_PLAYED": 297,
+          "COMBAT_BASE_COMMAND_USED": 69,
+          "COMBAT_ENEMY_ACTION": 177,
+          "CAMPUS_SITUATION_CHANGED": 128,
+          "NIGHT_SITE_RESOLVED": 29,
+          "COMBAT_VICTORY": 29,
+          "NPC_NIGHT_TASK_EXECUTED": 32,
+          "CAMPUS_INVESTIGATION_COMPLETED": 21,
+          "FIELD_REPORT_SUBMITTED": 21,
+          "KNOWLEDGE_INSIGHT_USED": 15,
+          "CAMPUS_REST_RECOVERY": 49,
+          "COMBAT_ITEM_USED": 2,
+          "CAMPUS_ANOMALY_CONTAINED": 2,
+          "CAMPUS_SUPPLY_DELIVERED": 9,
+          "NIGHT_WORLD_AUTO_EXITED": 61,
+          "FORUM_TASK_EXPIRED": 90,
+          "CLUB_MEMBER_RECRUITED": 10,
+          "CAMPUS_WELFARE_REPORTED": 10,
+          "CAMPUS_ANOMALY_HEARD": 24,
+          "CAMPUS_ANOMALY_SUPPORTED": 7,
+          "CAMPUS_ANOMALY_MEETING_UPDATED": 39,
+          "NPC_SUPPORT_PREPARATION_STARTED": 4,
+          "NPC_PERSONAL_GOAL_CREATED": 33,
+          "NPC_DAILY_PLANS_PREPARED": 7,
+          "CAMPUS_SUPPLY_ORDERED": 9,
+          "NPC_STRANDED_IN_NIGHT": 5,
+          "NPC_SOCIAL_PROPOSAL_CREATED": 9,
+          "NIGHT_RESCUE_MISSED": 3,
+          "CAMPUS_ANOMALY_LINKED": 5,
+          "NPC_SUPPORT_FOLLOWUP_STARTED": 3,
+          "CAMPUS_RELATIONSHIP_ANCHOR_CONFIRMED": 1,
+          "COMBAT_PARTY_RETREATED": 2,
+          "CLUB_MEMBER_PROMOTED": 1,
+          "COMBAT_CHARACTER_INCAPACITATED": 1,
+          "COMBAT_DEFEAT_RESCUE": 1,
+          "COMBAT_OVERNIGHT_RECOVERY": 1,
+          "CAMPUS_DISPUTE_OPENED": 1
+        },
+        "api_calls": 0
+      },
+      "explorer": {
+        "status": "resolved",
+        "history": [
+          {
+            "day": 3,
+            "phase": "late_night",
+            "helper_id": "campus_student_087",
+            "claim_id": null,
+            "before": {
+              "shell": 30,
+              "core": 60,
+              "coherence": 60
+            },
+            "after": {
+              "shell": 0,
+              "core": 60,
+              "coherence": 40
+            },
+            "route": "night_containment",
+            "revision": 1,
+            "task_id": "night:d03:0041:ai_lab_false_signal",
+            "battle_id": "battle:000016"
+          },
+          {
+            "day": 4,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00001494",
+            "before": {
+              "shell": 0,
+              "core": 60,
+              "coherence": 40
+            },
+            "after": {
+              "shell": 0,
+              "core": 40,
+              "coherence": 20
+            },
+            "route": "day_support",
+            "revision": 2,
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 50,
+                  "closeness": 0,
+                  "respect": 0
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 58,
+                  "closeness": 4,
+                  "respect": 3
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 50,
+                  "closeness": 0,
+                  "respect": 0
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 52,
+                  "closeness": 3,
+                  "respect": 1
+                }
+              }
+            }
+          },
+          {
+            "day": 5,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00001815",
+            "before": {
+              "shell": 0,
+              "core": 40,
+              "coherence": 20
+            },
+            "after": {
+              "shell": 0,
+              "core": 20,
+              "coherence": 0
+            },
+            "route": "day_support",
+            "revision": 3,
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 58,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 66,
+                  "closeness": 8,
+                  "respect": 6
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 52,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 54,
+                  "closeness": 6,
+                  "respect": 2
+                }
+              }
+            }
+          },
+          {
+            "day": 6,
+            "phase": "morning",
+            "helper_id": "campus_student_058",
+            "location_id": "west_dorm_room_pool",
+            "claim_id": "claim:00002153",
+            "before": {
+              "shell": 0,
+              "core": 20,
+              "coherence": 0
+            },
+            "after": {
+              "shell": 0,
+              "core": 0,
+              "coherence": 0
+            },
+            "route": "day_support",
+            "revision": 4,
+            "anchor_id": "anchor:night-site:night:d02:0029:south_gate_lost_student:campus_student_058",
+            "relationship_changes": {
+              "subject": {
+                "owner_id": "campus_student_066",
+                "target_id": "campus_student_058",
+                "before": {
+                  "trust": 66,
+                  "closeness": 8,
+                  "respect": 6
+                },
+                "applied": {
+                  "trust": 8,
+                  "closeness": 4,
+                  "respect": 3
+                },
+                "after": {
+                  "trust": 74,
+                  "closeness": 12,
+                  "respect": 9
+                }
+              },
+              "helper": {
+                "owner_id": "campus_student_058",
+                "target_id": "campus_student_066",
+                "before": {
+                  "trust": 54,
+                  "closeness": 6,
+                  "respect": 2
+                },
+                "applied": {
+                  "trust": 2,
+                  "closeness": 3,
+                  "respect": 1
+                },
+                "after": {
+                  "trust": 56,
+                  "closeness": 9,
+                  "respect": 3
+                }
+              }
+            }
+          }
+        ],
+        "heard_by_player": false,
+        "player_supports": 0,
+        "command_failures": {
+          "no_reported_episode": 41
+        },
+        "events": {
+          "ACTOR_LOCATION_CHANGED": 23015,
+          "FORUM_TASK_CLAIMED": 167,
+          "FORUM_TASK_VIEWED": 1349,
+          "CAMPUS_ITEM_ACTION_COMPLETED": 1989,
+          "NPC_ROUTINE_ACTION_COMPLETED": 1830,
+          "NPC_COMBAT_SUPPLY_PREPARED": 5,
+          "NPC_DECISION_MADE": 5583,
+          "CAMPUS_ACTIVITY_EFFECT_APPLIED": 5034,
+          "NPC_ACTIVITY_COMPLETED": 5583,
+          "FORUM_TASK_COMPLETED": 161,
+          "CAMPUS_GROWTH_COMPLETED": 90,
+          "NPC_PERSONAL_GOAL_PROGRESS": 88,
+          "CAMPUS_TRADE_OFFERED": 170,
+          "CAMPUS_TRADE_SETTLED": 170,
+          "NPC_INTERACTION_RESOLVED": 336,
+          "NPC_INFORMATION_SHARED": 130,
+          "PHONE_MESSAGE_SENT": 301,
+          "WORLD_PHASE_ADVANCED": 28,
+          "FORUM_TASK_PUBLISHED": 168,
+          "NIGHT_WORLD_ENTERED": 64,
+          "CLUB_ACTIVITY_ATTENDED": 92,
+          "PARTY_INVITATION_DECLINED": 70,
+          "BATTLE_PREPARATION_STARTED": 32,
+          "COMBAT_CHARACTER_DEPLOYED": 32,
+          "BATTLE_DEPLOYMENT_CONFIRMED": 32,
+          "NIGHT_COMBAT_ENTRY_ACCOUNTED": 32,
+          "COMBAT_ROUND_STARTED": 206,
+          "COMBAT_ENEMY_INTENTS": 206,
+          "COMBAT_CARD_PLAYED": 297,
+          "COMBAT_BASE_COMMAND_USED": 69,
+          "COMBAT_ENEMY_ACTION": 177,
+          "CAMPUS_SITUATION_CHANGED": 128,
+          "NIGHT_SITE_RESOLVED": 29,
+          "COMBAT_VICTORY": 29,
+          "NPC_NIGHT_TASK_EXECUTED": 32,
+          "CAMPUS_INVESTIGATION_COMPLETED": 21,
+          "FIELD_REPORT_SUBMITTED": 21,
+          "KNOWLEDGE_INSIGHT_USED": 15,
+          "CAMPUS_REST_RECOVERY": 49,
+          "COMBAT_ITEM_USED": 2,
+          "CAMPUS_ANOMALY_CONTAINED": 2,
+          "CAMPUS_SUPPLY_DELIVERED": 9,
+          "NIGHT_WORLD_AUTO_EXITED": 61,
+          "FORUM_TASK_EXPIRED": 90,
+          "CLUB_MEMBER_RECRUITED": 10,
+          "CAMPUS_WELFARE_REPORTED": 10,
+          "CAMPUS_ANOMALY_HEARD": 25,
+          "CAMPUS_ANOMALY_SUPPORTED": 7,
+          "CAMPUS_ANOMALY_MEETING_UPDATED": 39,
+          "NPC_SUPPORT_PREPARATION_STARTED": 4,
+          "NPC_PERSONAL_GOAL_CREATED": 33,
+          "NPC_DAILY_PLANS_PREPARED": 7,
+          "CAMPUS_SUPPLY_ORDERED": 9,
+          "NPC_SOCIAL_PROPOSAL_CREATED": 12,
+          "NPC_STRANDED_IN_NIGHT": 5,
+          "NIGHT_RESCUE_MISSED": 3,
+          "CAMPUS_ANOMALY_LINKED": 5,
+          "NPC_SUPPORT_FOLLOWUP_STARTED": 3,
+          "CAMPUS_RELATIONSHIP_ANCHOR_CONFIRMED": 1,
+          "COMBAT_PARTY_RETREATED": 2,
+          "CLUB_MEMBER_PROMOTED": 1,
+          "COMBAT_CHARACTER_INCAPACITATED": 1,
+          "COMBAT_DEFEAT_RESCUE": 1,
+          "COMBAT_OVERNIGHT_RECOVERY": 1,
+          "CAMPUS_DISPUTE_OPENED": 1
+        },
+        "api_calls": 0
+      }
+    },
+    "scope": "Offline day-helper comparison; night-player and real LLM branches still required"
+  },
+  "branches": {
+    "unattended": {
+      "subject": "campus_student_066",
+      "name": "吴修远",
+      "commands": {
+        "ADVANCE_PHASE": 28
+      },
+      "non_advance_results": [],
+      "frames": [
+        {
+          "clock": {
+            "day": 3,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "unsettled",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 40,
+            "anomalies": {
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000013157:campus_student_066",
+              "day": 3,
+              "phase": "morning",
+              "display_summary": "吴修远购买了 1 件医用绷带。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000013158:campus_student_066",
+              "day": 3,
+              "phase": "morning",
+              "display_summary": "在校园医院药房完成了BUY_ITEM。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000007758:campus_student_066",
+              "day": 2,
+              "phase": "afternoon",
+              "display_summary": "吴修远 完成了《南门新生报到引导》。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000007759:campus_student_066",
+              "day": 2,
+              "phase": "afternoon",
+              "display_summary": "在南门完成了CAMPUS_SERVICE_SHIFT。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000006881:campus_student_066",
+              "day": 2,
+              "phase": "afternoon",
+              "display_summary": "吴修远使用了 1 件全麦面包。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000006743:campus_student_066",
+              "day": 2,
+              "phase": "morning",
+              "display_summary": "吴修远接下了《南门新生报到引导》。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000006093:campus_student_066",
+              "day": 2,
+              "phase": "morning",
+              "display_summary": "吴修远购买了 5 件全麦面包。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000006094:campus_student_066",
+              "day": 2,
+              "phase": "morning",
+              "display_summary": "在超市卖场完成了BUY_ITEM。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000005019:campus_student_066",
+              "day": 2,
+              "phase": "morning",
+              "display_summary": "吴修远 自主加入了 话剧社。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000003033:campus_student_066",
+              "day": 1,
+              "phase": "late_night",
+              "display_summary": "吴修远使用了 1 件全麦面包。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000002343:campus_student_066",
+              "day": 1,
+              "phase": "evening",
+              "display_summary": "在社团活动室组完成了CLUB_OR_SELF_STUDY。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000000864:campus_student_066",
+              "day": 1,
+              "phase": "afternoon",
+              "display_summary": "在人文心理研讨室组完成了COURSEWORK。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 3,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "unsettled",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 54,
+            "anomalies": {
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000014800:campus_student_066",
+              "day": 3,
+              "phase": "afternoon",
+              "display_summary": "在人文心理研讨室组完成了COURSEWORK。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000013976:campus_student_066",
+              "day": 3,
+              "phase": "afternoon",
+              "display_summary": "吴修远使用了 1 件全麦面包。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 3,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "unsettled",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 55,
+            "anomalies": {
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000016327:campus_student_066",
+              "day": 3,
+              "phase": "evening",
+              "display_summary": "在社团活动室组完成了CLUB_OR_SELF_STUDY。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 3,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [
+            {
+              "day": 3,
+              "phase": "late_night",
+              "helper_id": "campus_student_087",
+              "claim_id": null,
+              "before": {
+                "shell": 30,
+                "core": 60,
+                "coherence": 60
+              },
+              "after": {
+                "shell": 0,
+                "core": 60,
+                "coherence": 40
+              },
+              "route": "night_containment",
+              "revision": 1,
+              "task_id": "night:d03:0041:ai_lab_false_signal",
+              "battle_id": "battle:000016"
+            }
+          ],
+          "world_counts": {
+            "completed_tasks": 65,
+            "anomalies": {
+              "easing": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 4,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [
+            {
+              "day": 4,
+              "phase": "morning",
+              "helper_id": "campus_student_058",
+              "location_id": "west_dorm_room_pool",
+              "claim_id": "claim:00001494",
+              "before": {
+                "shell": 0,
+                "core": 60,
+                "coherence": 40
+              },
+              "after": {
+                "shell": 0,
+                "core": 40,
+                "coherence": 20
+              },
+              "route": "day_support",
+              "revision": 2,
+              "relationship_changes": {
+                "subject": {
+                  "owner_id": "campus_student_066",
+                  "target_id": "campus_student_058",
+                  "before": {
+                    "trust": 50,
+                    "closeness": 0,
+                    "respect": 0
+                  },
+                  "applied": {
+                    "trust": 8,
+                    "closeness": 4,
+                    "respect": 3
+                  },
+                  "after": {
+                    "trust": 58,
+                    "closeness": 4,
+                    "respect": 3
+                  }
+                },
+                "helper": {
+                  "owner_id": "campus_student_058",
+                  "target_id": "campus_student_066",
+                  "before": {
+                    "trust": 50,
+                    "closeness": 0,
+                    "respect": 0
+                  },
+                  "applied": {
+                    "trust": 2,
+                    "closeness": 3,
+                    "respect": 1
+                  },
+                  "after": {
+                    "trust": 52,
+                    "closeness": 3,
+                    "respect": 1
+                  }
+                }
+              }
+            }
+          ],
+          "world_counts": {
+            "completed_tasks": 65,
+            "anomalies": {
+              "easing": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000019160:campus_student_066",
+              "day": 4,
+              "phase": "morning",
+              "display_summary": "吴修远使用了 1 件全麦面包。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 4,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 80,
+            "anomalies": {
+              "easing": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000021909:campus_student_066",
+              "day": 4,
+              "phase": "afternoon",
+              "display_summary": "在人文心理研讨室组完成了COURSEWORK。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 4,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 81,
+            "anomalies": {
+              "easing": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000023540:campus_student_066",
+              "day": 4,
+              "phase": "evening",
+              "display_summary": "在图书馆阅览大厅完成了SELF_STUDY。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000022478:campus_student_066",
+              "day": 4,
+              "phase": "evening",
+              "display_summary": "吴修远使用了 1 件全麦面包。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 4,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 87,
+            "anomalies": {
+              "easing": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 5,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [
+            {
+              "day": 5,
+              "phase": "morning",
+              "helper_id": "campus_student_058",
+              "location_id": "west_dorm_room_pool",
+              "claim_id": "claim:00001815",
+              "before": {
+                "shell": 0,
+                "core": 40,
+                "coherence": 20
+              },
+              "after": {
+                "shell": 0,
+                "core": 20,
+                "coherence": 0
+              },
+              "route": "day_support",
+              "revision": 3,
+              "relationship_changes": {
+                "subject": {
+                  "owner_id": "campus_student_066",
+                  "target_id": "campus_student_058",
+                  "before": {
+                    "trust": 58,
+                    "closeness": 4,
+                    "respect": 3
+                  },
+                  "applied": {
+                    "trust": 8,
+                    "closeness": 4,
+                    "respect": 3
+                  },
+                  "after": {
+                    "trust": 66,
+                    "closeness": 8,
+                    "respect": 6
+                  }
+                },
+                "helper": {
+                  "owner_id": "campus_student_058",
+                  "target_id": "campus_student_066",
+                  "before": {
+                    "trust": 52,
+                    "closeness": 3,
+                    "respect": 1
+                  },
+                  "applied": {
+                    "trust": 2,
+                    "closeness": 3,
+                    "respect": 1
+                  },
+                  "after": {
+                    "trust": 54,
+                    "closeness": 6,
+                    "respect": 2
+                  }
+                }
+              }
+            }
+          ],
+          "world_counts": {
+            "completed_tasks": 87,
+            "anomalies": {
+              "easing": 1,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "read",
+                "status": "active"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 5,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 102,
+            "anomalies": {
+              "easing": 1,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000028834:campus_student_066",
+              "day": 5,
+              "phase": "afternoon",
+              "display_summary": "在镜湖广场完成了WAIT_ANOMALY_MEETING。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000027986:campus_student_066",
+              "day": 5,
+              "phase": "afternoon",
+              "display_summary": "吴修远使用了 1 件全麦面包。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "arrange_support",
+                "status": "active"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 5,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 103,
+            "anomalies": {
+              "easing": 1,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000030418:campus_student_066",
+              "day": 5,
+              "phase": "evening",
+              "display_summary": "吴修远购买了 3 件食堂套餐。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000030419:campus_student_066",
+              "day": 5,
+              "phase": "evening",
+              "display_summary": "在食堂就餐大厅完成了BUY_ITEM。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "arrange_support",
+                "status": "active"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 5,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 109,
+            "anomalies": {
+              "easing": 1,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "arrange_support",
+                "status": "active"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 6,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [
+            {
+              "day": 6,
+              "phase": "morning",
+              "helper_id": "campus_student_058",
+              "location_id": "west_dorm_room_pool",
+              "claim_id": "claim:00002153",
+              "before": {
+                "shell": 0,
+                "core": 20,
+                "coherence": 0
+              },
+              "after": {
+                "shell": 0,
+                "core": 0,
+                "coherence": 0
+              },
+              "route": "day_support",
+              "revision": 4,
+              "anchor_id": "anchor:night-site:night:d02:0029:south_gate_lost_student:campus_student_058",
+              "relationship_changes": {
+                "subject": {
+                  "owner_id": "campus_student_066",
+                  "target_id": "campus_student_058",
+                  "before": {
+                    "trust": 66,
+                    "closeness": 8,
+                    "respect": 6
+                  },
+                  "applied": {
+                    "trust": 8,
+                    "closeness": 4,
+                    "respect": 3
+                  },
+                  "after": {
+                    "trust": 74,
+                    "closeness": 12,
+                    "respect": 9
+                  }
+                },
+                "helper": {
+                  "owner_id": "campus_student_058",
+                  "target_id": "campus_student_066",
+                  "before": {
+                    "trust": 54,
+                    "closeness": 6,
+                    "respect": 2
+                  },
+                  "applied": {
+                    "trust": 2,
+                    "closeness": 3,
+                    "respect": 1
+                  },
+                  "after": {
+                    "trust": 56,
+                    "closeness": 9,
+                    "respect": 3
+                  }
+                }
+              }
+            }
+          ],
+          "world_counts": {
+            "completed_tasks": 109,
+            "anomalies": {
+              "resolved": 1,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 6,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 125,
+            "anomalies": {
+              "resolved": 1,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000035697:campus_student_066",
+              "day": 6,
+              "phase": "afternoon",
+              "display_summary": "在社团活动室组完成了CLUB_OR_PERSONAL_ACTIVITY。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000034793:campus_student_066",
+              "day": 6,
+              "phase": "afternoon",
+              "display_summary": "吴修远使用了 1 件食堂套餐。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 6,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 126,
+            "anomalies": {
+              "resolved": 1,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000037023:campus_student_066",
+              "day": 6,
+              "phase": "evening",
+              "display_summary": "在图书馆阅览大厅完成了SELF_STUDY。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 6,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 134,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 1,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 7,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 134,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 1,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000040463:campus_student_066",
+              "day": 7,
+              "phase": "morning",
+              "display_summary": "在图书馆阅览大厅完成了SELF_STUDY。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 7,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 148,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000042123:campus_student_066",
+              "day": 7,
+              "phase": "afternoon",
+              "display_summary": "在社团活动室组完成了CLUB_OR_PERSONAL_ACTIVITY。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 7,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 149,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000043529:campus_student_066",
+              "day": 7,
+              "phase": "evening",
+              "display_summary": "在图书馆阅览大厅完成了SELF_STUDY。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000042681:campus_student_066",
+              "day": 7,
+              "phase": "evening",
+              "display_summary": "吴修远使用了 1 件食堂套餐。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 7,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 155,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 8,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 155,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000047091:campus_student_066",
+              "day": 8,
+              "phase": "morning",
+              "display_summary": "在人文心理普通教室组完成了ATTEND_CLASS。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 8,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 170,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000048698:campus_student_066",
+              "day": 8,
+              "phase": "afternoon",
+              "display_summary": "在人文心理研讨室组完成了COURSEWORK。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 8,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 171,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000050353:campus_student_066",
+              "day": 8,
+              "phase": "evening",
+              "display_summary": "在社团活动室组完成了CLUB_OR_SELF_STUDY。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 8,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 179,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000051082:campus_student_066",
+              "day": 8,
+              "phase": "late_night",
+              "display_summary": "吴修远使用了 1 件食堂套餐。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 9,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 179,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000054309:campus_student_066",
+              "day": 9,
+              "phase": "morning",
+              "display_summary": "在人文心理普通教室组完成了ATTEND_CLASS。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 9,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 194,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000055873:campus_student_066",
+              "day": 9,
+              "phase": "afternoon",
+              "display_summary": "在人文心理研讨室组完成了COURSEWORK。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 9,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 195,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000057555:campus_student_066",
+              "day": 9,
+              "phase": "evening",
+              "display_summary": "在社团活动室组完成了CLUB_OR_SELF_STUDY。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 9,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 201,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000058204:campus_student_066",
+              "day": 9,
+              "phase": "late_night",
+              "display_summary": "吴修远使用了 1 件食堂套餐。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 10,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 201,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 3
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000061297:campus_student_066",
+              "day": 10,
+              "phase": "morning",
+              "display_summary": "在人文心理普通教室组完成了ATTEND_CLASS。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        }
+      ]
+    },
+    "explorer": {
+      "subject": "campus_student_066",
+      "name": "吴修远",
+      "commands": {
+        "TRAVERSE_LOCATION_PASSAGE": 37,
+        "ASK_ANOMALY_EXPERIENCE": 43,
+        "ADVANCE_PHASE": 28,
+        "READ_KNOWLEDGE": 2
+      },
+      "non_advance_results": [
+        {
+          "command": {
+            "command_id": "causal:10:0",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "road_gate_to_student_life"
+            },
+            "expected_world_revision": 10,
+            "issued_day": 3,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 11
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:11:1",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "road_student_life_to_central"
+            },
+            "expected_world_revision": 11,
+            "issued_day": 3,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 12
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:12:2",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:university_library"
+            },
+            "expected_world_revision": 12,
+            "issued_day": 3,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 13
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:13:3",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:library_reading_hall"
+            },
+            "expected_world_revision": 13,
+            "issued_day": 3,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 14
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:14:4",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_007"
+            },
+            "expected_world_revision": 14,
+            "issued_day": 3,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 14
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:14:5",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_010"
+            },
+            "expected_world_revision": 14,
+            "issued_day": 3,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 14
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:14:6",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_038"
+            },
+            "expected_world_revision": 14,
+            "issued_day": 3,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 14
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:15:8",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:library_reading_hall"
+            },
+            "expected_world_revision": 15,
+            "issued_day": 3,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 16
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:16:9",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:university_library"
+            },
+            "expected_world_revision": 16,
+            "issued_day": 3,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 17
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:17:10",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:mirror_lake_square"
+            },
+            "expected_world_revision": 17,
+            "issued_day": 3,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 18
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:18:11",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_028"
+            },
+            "expected_world_revision": 18,
+            "issued_day": 3,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 18
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:18:12",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_001"
+            },
+            "expected_world_revision": 18,
+            "issued_day": 3,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 18
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:18:13",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_003"
+            },
+            "expected_world_revision": 18,
+            "issued_day": 3,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 18
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:21:17",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_028"
+            },
+            "expected_world_revision": 21,
+            "issued_day": 4,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 21
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:21:18",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_001"
+            },
+            "expected_world_revision": 21,
+            "issued_day": 4,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 21
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:21:19",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_012"
+            },
+            "expected_world_revision": 21,
+            "issued_day": 4,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 21
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:22:21",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:mirror_lake_square"
+            },
+            "expected_world_revision": 22,
+            "issued_day": 4,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 23
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:23:22",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "road_student_life_to_central"
+            },
+            "expected_world_revision": 23,
+            "issued_day": 4,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 24
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:24:23",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:student_center"
+            },
+            "expected_world_revision": 24,
+            "issued_day": 4,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 25
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:25:24",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_047"
+            },
+            "expected_world_revision": 25,
+            "issued_day": 4,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 25
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:25:25",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_028"
+            },
+            "expected_world_revision": 25,
+            "issued_day": 4,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 25
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:25:26",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_001"
+            },
+            "expected_world_revision": 25,
+            "issued_day": 4,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 25
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:28:30",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_047"
+            },
+            "expected_world_revision": 28,
+            "issued_day": 5,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 28
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:28:31",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_028"
+            },
+            "expected_world_revision": 28,
+            "issued_day": 5,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 28
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:28:32",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_001"
+            },
+            "expected_world_revision": 28,
+            "issued_day": 5,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 28
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:29:34",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:student_center"
+            },
+            "expected_world_revision": 29,
+            "issued_day": 5,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 30
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:30:35",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "road_gate_to_student_life"
+            },
+            "expected_world_revision": 30,
+            "issued_day": 5,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 31
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:31:36",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:south_gate"
+            },
+            "expected_world_revision": 31,
+            "issued_day": 5,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 32
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:32:37",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_001"
+            },
+            "expected_world_revision": 32,
+            "issued_day": 5,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 32
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:32:38",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_013"
+            },
+            "expected_world_revision": 32,
+            "issued_day": 5,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 32
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:32:39",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_047"
+            },
+            "expected_world_revision": 32,
+            "issued_day": 5,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 32
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:35:43",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_047"
+            },
+            "expected_world_revision": 35,
+            "issued_day": 6,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 35
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:35:44",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_028"
+            },
+            "expected_world_revision": 35,
+            "issued_day": 6,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 35
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:35:45",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_001"
+            },
+            "expected_world_revision": 35,
+            "issued_day": 6,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 35
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:36:47",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:south_gate"
+            },
+            "expected_world_revision": 36,
+            "issued_day": 6,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 37
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:37:48",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "road_gate_to_student_life"
+            },
+            "expected_world_revision": 37,
+            "issued_day": 6,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 38
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:38:49",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "road_student_life_to_central"
+            },
+            "expected_world_revision": 38,
+            "issued_day": 6,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 39
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:39:50",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:university_library"
+            },
+            "expected_world_revision": 39,
+            "issued_day": 6,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 40
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:40:51",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:library_reading_hall"
+            },
+            "expected_world_revision": 40,
+            "issued_day": 6,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 41
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:41:52",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_059"
+            },
+            "expected_world_revision": 41,
+            "issued_day": 6,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 41
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:41:53",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_046"
+            },
+            "expected_world_revision": 41,
+            "issued_day": 6,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 41
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:41:54",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_087"
+            },
+            "expected_world_revision": 41,
+            "issued_day": 6,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 41
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:44:58",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_036"
+            },
+            "expected_world_revision": 44,
+            "issued_day": 7,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 44
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:44:59",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_037"
+            },
+            "expected_world_revision": 44,
+            "issued_day": 7,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 44
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:44:60",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_038"
+            },
+            "expected_world_revision": 44,
+            "issued_day": 7,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 44
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:45:62",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:library_reading_hall"
+            },
+            "expected_world_revision": 45,
+            "issued_day": 7,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 46
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:46:63",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:university_library"
+            },
+            "expected_world_revision": 46,
+            "issued_day": 7,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 47
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:47:64",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:mirror_lake_square"
+            },
+            "expected_world_revision": 47,
+            "issued_day": 7,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 48
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:48:65",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_013"
+            },
+            "expected_world_revision": 48,
+            "issued_day": 7,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "experience_heard",
+            "message": "一起核对日常经历让我更能区分月相残留与眼前生活，但还需要时间巩固。",
+            "world_revision": 49
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:49:66",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_017"
+            },
+            "expected_world_revision": 49,
+            "issued_day": 7,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 49
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:49:67",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_018"
+            },
+            "expected_world_revision": 49,
+            "issued_day": 7,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 49
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:49:68",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_013",
+              "case_id": "night-site:night:d05:0082:south_gate_lost_student"
+            },
+            "expected_world_revision": 49,
+            "issued_day": 7,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "already_heard",
+            "message": "一起核对日常经历让我更能区分月相残留与眼前生活，但还需要时间巩固。",
+            "world_revision": 49
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:49:69",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:mirror_lake_square"
+            },
+            "expected_world_revision": 49,
+            "issued_day": 7,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 50
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:50:70",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:university_library"
+            },
+            "expected_world_revision": 50,
+            "issued_day": 7,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 51
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:51:71",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:library_reading_hall"
+            },
+            "expected_world_revision": 51,
+            "issued_day": 7,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 52
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:52:72",
+            "actor_id": "player",
+            "action_id": "READ_KNOWLEDGE",
+            "target_ids": [],
+            "parameters": {
+              "topic_id": "sleepwalking_shell"
+            },
+            "expected_world_revision": 52,
+            "issued_day": 7,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "理论阅读 +20；当前理解度 20 / 100。",
+            "world_revision": 53
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:56:76",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:library_reading_hall"
+            },
+            "expected_world_revision": 56,
+            "issued_day": 8,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 57
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:57:77",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:university_library"
+            },
+            "expected_world_revision": 57,
+            "issued_day": 8,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 58
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:58:78",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:mirror_lake_square"
+            },
+            "expected_world_revision": 58,
+            "issued_day": 8,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 59
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:59:79",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_012"
+            },
+            "expected_world_revision": 59,
+            "issued_day": 8,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 59
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:59:80",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_014"
+            },
+            "expected_world_revision": 59,
+            "issued_day": 8,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 59
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:59:81",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_051"
+            },
+            "expected_world_revision": 59,
+            "issued_day": 8,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 59
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:59:82",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:mirror_lake_square"
+            },
+            "expected_world_revision": 59,
+            "issued_day": 8,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 60
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:60:83",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:university_library"
+            },
+            "expected_world_revision": 60,
+            "issued_day": 8,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 61
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:61:84",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:library_reading_hall"
+            },
+            "expected_world_revision": 61,
+            "issued_day": 8,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 62
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:62:85",
+            "actor_id": "player",
+            "action_id": "READ_KNOWLEDGE",
+            "target_ids": [],
+            "parameters": {
+              "topic_id": "sleepwalking_shell"
+            },
+            "expected_world_revision": 62,
+            "issued_day": 8,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "理论阅读 +20；当前理解度 40 / 100。",
+            "world_revision": 63
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:64:87",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:library_reading_hall"
+            },
+            "expected_world_revision": 64,
+            "issued_day": 8,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 65
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:65:88",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:university_library"
+            },
+            "expected_world_revision": 65,
+            "issued_day": 8,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 66
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:66:89",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "road_student_life_to_central"
+            },
+            "expected_world_revision": 66,
+            "issued_day": 8,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 67
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:67:90",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:student_center"
+            },
+            "expected_world_revision": 67,
+            "issued_day": 8,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 68
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:68:91",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_047"
+            },
+            "expected_world_revision": 68,
+            "issued_day": 8,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 68
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:68:92",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_028"
+            },
+            "expected_world_revision": 68,
+            "issued_day": 8,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 68
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:68:93",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_001"
+            },
+            "expected_world_revision": 68,
+            "issued_day": 8,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 68
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:71:97",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_047"
+            },
+            "expected_world_revision": 71,
+            "issued_day": 9,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 71
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:71:98",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_028"
+            },
+            "expected_world_revision": 71,
+            "issued_day": 9,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 71
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:71:99",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_001"
+            },
+            "expected_world_revision": 71,
+            "issued_day": 9,
+            "issued_phase": "morning",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 71
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:72:101",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:student_center"
+            },
+            "expected_world_revision": 72,
+            "issued_day": 9,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 73
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:73:102",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "road_gate_to_student_life"
+            },
+            "expected_world_revision": 73,
+            "issued_day": 9,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 74
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:74:103",
+            "actor_id": "player",
+            "action_id": "TRAVERSE_LOCATION_PASSAGE",
+            "target_ids": [],
+            "parameters": {
+              "passage_id": "parent:south_gate"
+            },
+            "expected_world_revision": 74,
+            "issued_day": 9,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": true,
+            "code": "success",
+            "message": "地点切换完成。",
+            "world_revision": 75
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:75:104",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_staff_001"
+            },
+            "expected_world_revision": 75,
+            "issued_day": 9,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 75
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:75:105",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_111"
+            },
+            "expected_world_revision": 75,
+            "issued_day": 9,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 75
+          }
+        },
+        {
+          "command": {
+            "command_id": "causal:75:106",
+            "actor_id": "player",
+            "action_id": "ASK_ANOMALY_EXPERIENCE",
+            "target_ids": [],
+            "parameters": {
+              "npc_id": "campus_student_047"
+            },
+            "expected_world_revision": 75,
+            "issued_day": 9,
+            "issued_phase": "afternoon",
+            "issued_minute": 0,
+            "source": "player"
+          },
+          "result": {
+            "success": false,
+            "code": "no_reported_episode",
+            "message": "目前没有可以确认的月相经历；普通压力和沉默不代表异常。",
+            "world_revision": 75
+          }
+        }
+      ],
+      "frames": [
+        {
+          "clock": {
+            "day": 3,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "unsettled",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 40,
+            "anomalies": {
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000013157:campus_student_066",
+              "day": 3,
+              "phase": "morning",
+              "display_summary": "吴修远购买了 1 件医用绷带。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000013158:campus_student_066",
+              "day": 3,
+              "phase": "morning",
+              "display_summary": "在校园医院药房完成了BUY_ITEM。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000007758:campus_student_066",
+              "day": 2,
+              "phase": "afternoon",
+              "display_summary": "吴修远 完成了《南门新生报到引导》。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000007759:campus_student_066",
+              "day": 2,
+              "phase": "afternoon",
+              "display_summary": "在南门完成了CAMPUS_SERVICE_SHIFT。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000006881:campus_student_066",
+              "day": 2,
+              "phase": "afternoon",
+              "display_summary": "吴修远使用了 1 件全麦面包。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000006743:campus_student_066",
+              "day": 2,
+              "phase": "morning",
+              "display_summary": "吴修远接下了《南门新生报到引导》。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000006093:campus_student_066",
+              "day": 2,
+              "phase": "morning",
+              "display_summary": "吴修远购买了 5 件全麦面包。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000006094:campus_student_066",
+              "day": 2,
+              "phase": "morning",
+              "display_summary": "在超市卖场完成了BUY_ITEM。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000005019:campus_student_066",
+              "day": 2,
+              "phase": "morning",
+              "display_summary": "吴修远 自主加入了 话剧社。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000003033:campus_student_066",
+              "day": 1,
+              "phase": "late_night",
+              "display_summary": "吴修远使用了 1 件全麦面包。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000002343:campus_student_066",
+              "day": 1,
+              "phase": "evening",
+              "display_summary": "在社团活动室组完成了CLUB_OR_SELF_STUDY。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000000864:campus_student_066",
+              "day": 1,
+              "phase": "afternoon",
+              "display_summary": "在人文心理研讨室组完成了COURSEWORK。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 3,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "unsettled",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 54,
+            "anomalies": {
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000014804:campus_student_066",
+              "day": 3,
+              "phase": "afternoon",
+              "display_summary": "在人文心理研讨室组完成了COURSEWORK。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000013980:campus_student_066",
+              "day": 3,
+              "phase": "afternoon",
+              "display_summary": "吴修远使用了 1 件全麦面包。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 3,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "unsettled",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 55,
+            "anomalies": {
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000016334:campus_student_066",
+              "day": 3,
+              "phase": "evening",
+              "display_summary": "在社团活动室组完成了CLUB_OR_SELF_STUDY。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 3,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [
+            {
+              "day": 3,
+              "phase": "late_night",
+              "helper_id": "campus_student_087",
+              "claim_id": null,
+              "before": {
+                "shell": 30,
+                "core": 60,
+                "coherence": 60
+              },
+              "after": {
+                "shell": 0,
+                "core": 60,
+                "coherence": 40
+              },
+              "route": "night_containment",
+              "revision": 1,
+              "task_id": "night:d03:0041:ai_lab_false_signal",
+              "battle_id": "battle:000016"
+            }
+          ],
+          "world_counts": {
+            "completed_tasks": 65,
+            "anomalies": {
+              "easing": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 4,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [
+            {
+              "day": 4,
+              "phase": "morning",
+              "helper_id": "campus_student_058",
+              "location_id": "west_dorm_room_pool",
+              "claim_id": "claim:00001494",
+              "before": {
+                "shell": 0,
+                "core": 60,
+                "coherence": 40
+              },
+              "after": {
+                "shell": 0,
+                "core": 40,
+                "coherence": 20
+              },
+              "route": "day_support",
+              "revision": 2,
+              "relationship_changes": {
+                "subject": {
+                  "owner_id": "campus_student_066",
+                  "target_id": "campus_student_058",
+                  "before": {
+                    "trust": 50,
+                    "closeness": 0,
+                    "respect": 0
+                  },
+                  "applied": {
+                    "trust": 8,
+                    "closeness": 4,
+                    "respect": 3
+                  },
+                  "after": {
+                    "trust": 58,
+                    "closeness": 4,
+                    "respect": 3
+                  }
+                },
+                "helper": {
+                  "owner_id": "campus_student_058",
+                  "target_id": "campus_student_066",
+                  "before": {
+                    "trust": 50,
+                    "closeness": 0,
+                    "respect": 0
+                  },
+                  "applied": {
+                    "trust": 2,
+                    "closeness": 3,
+                    "respect": 1
+                  },
+                  "after": {
+                    "trust": 52,
+                    "closeness": 3,
+                    "respect": 1
+                  }
+                }
+              }
+            }
+          ],
+          "world_counts": {
+            "completed_tasks": 65,
+            "anomalies": {
+              "easing": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000019167:campus_student_066",
+              "day": 4,
+              "phase": "morning",
+              "display_summary": "吴修远使用了 1 件全麦面包。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 4,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 80,
+            "anomalies": {
+              "easing": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000021917:campus_student_066",
+              "day": 4,
+              "phase": "afternoon",
+              "display_summary": "在人文心理研讨室组完成了COURSEWORK。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 4,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 81,
+            "anomalies": {
+              "easing": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000023551:campus_student_066",
+              "day": 4,
+              "phase": "evening",
+              "display_summary": "在图书馆阅览大厅完成了SELF_STUDY。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000022489:campus_student_066",
+              "day": 4,
+              "phase": "evening",
+              "display_summary": "吴修远使用了 1 件全麦面包。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 4,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 87,
+            "anomalies": {
+              "easing": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 5,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [
+            {
+              "day": 5,
+              "phase": "morning",
+              "helper_id": "campus_student_058",
+              "location_id": "west_dorm_room_pool",
+              "claim_id": "claim:00001815",
+              "before": {
+                "shell": 0,
+                "core": 40,
+                "coherence": 20
+              },
+              "after": {
+                "shell": 0,
+                "core": 20,
+                "coherence": 0
+              },
+              "route": "day_support",
+              "revision": 3,
+              "relationship_changes": {
+                "subject": {
+                  "owner_id": "campus_student_066",
+                  "target_id": "campus_student_058",
+                  "before": {
+                    "trust": 58,
+                    "closeness": 4,
+                    "respect": 3
+                  },
+                  "applied": {
+                    "trust": 8,
+                    "closeness": 4,
+                    "respect": 3
+                  },
+                  "after": {
+                    "trust": 66,
+                    "closeness": 8,
+                    "respect": 6
+                  }
+                },
+                "helper": {
+                  "owner_id": "campus_student_058",
+                  "target_id": "campus_student_066",
+                  "before": {
+                    "trust": 52,
+                    "closeness": 3,
+                    "respect": 1
+                  },
+                  "applied": {
+                    "trust": 2,
+                    "closeness": 3,
+                    "respect": 1
+                  },
+                  "after": {
+                    "trust": 54,
+                    "closeness": 6,
+                    "respect": 2
+                  }
+                }
+              }
+            }
+          ],
+          "world_counts": {
+            "completed_tasks": 87,
+            "anomalies": {
+              "easing": 1,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "read",
+                "status": "active"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 5,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 102,
+            "anomalies": {
+              "easing": 1,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000028845:campus_student_066",
+              "day": 5,
+              "phase": "afternoon",
+              "display_summary": "在镜湖广场完成了WAIT_ANOMALY_MEETING。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000027997:campus_student_066",
+              "day": 5,
+              "phase": "afternoon",
+              "display_summary": "吴修远使用了 1 件全麦面包。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "arrange_support",
+                "status": "active"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 5,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 103,
+            "anomalies": {
+              "easing": 1,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000030432:campus_student_066",
+              "day": 5,
+              "phase": "evening",
+              "display_summary": "吴修远购买了 3 件食堂套餐。",
+              "visibility": "public"
+            },
+            {
+              "entry_id": "chron:evt:0000030433:campus_student_066",
+              "day": 5,
+              "phase": "evening",
+              "display_summary": "在食堂就餐大厅完成了BUY_ITEM。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "arrange_support",
+                "status": "active"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 5,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "easing",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 109,
+            "anomalies": {
+              "easing": 1,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "arrange_support",
+                "status": "active"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 6,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [
+            {
+              "day": 6,
+              "phase": "morning",
+              "helper_id": "campus_student_058",
+              "location_id": "west_dorm_room_pool",
+              "claim_id": "claim:00002153",
+              "before": {
+                "shell": 0,
+                "core": 20,
+                "coherence": 0
+              },
+              "after": {
+                "shell": 0,
+                "core": 0,
+                "coherence": 0
+              },
+              "route": "day_support",
+              "revision": 4,
+              "anchor_id": "anchor:night-site:night:d02:0029:south_gate_lost_student:campus_student_058",
+              "relationship_changes": {
+                "subject": {
+                  "owner_id": "campus_student_066",
+                  "target_id": "campus_student_058",
+                  "before": {
+                    "trust": 66,
+                    "closeness": 8,
+                    "respect": 6
+                  },
+                  "applied": {
+                    "trust": 8,
+                    "closeness": 4,
+                    "respect": 3
+                  },
+                  "after": {
+                    "trust": 74,
+                    "closeness": 12,
+                    "respect": 9
+                  }
+                },
+                "helper": {
+                  "owner_id": "campus_student_058",
+                  "target_id": "campus_student_066",
+                  "before": {
+                    "trust": 54,
+                    "closeness": 6,
+                    "respect": 2
+                  },
+                  "applied": {
+                    "trust": 2,
+                    "closeness": 3,
+                    "respect": 1
+                  },
+                  "after": {
+                    "trust": 56,
+                    "closeness": 9,
+                    "respect": 3
+                  }
+                }
+              }
+            }
+          ],
+          "world_counts": {
+            "completed_tasks": 109,
+            "anomalies": {
+              "resolved": 1,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 6,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 125,
+            "anomalies": {
+              "resolved": 1,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000035711:campus_student_066",
+              "day": 6,
+              "phase": "afternoon",
+              "display_summary": "在社团活动室组完成了CLUB_OR_PERSONAL_ACTIVITY。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000034807:campus_student_066",
+              "day": 6,
+              "phase": "afternoon",
+              "display_summary": "吴修远使用了 1 件食堂套餐。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 6,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 126,
+            "anomalies": {
+              "resolved": 1,
+              "unsettled": 2
+            }
+          },
+          "subject_local": true,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000037042:campus_student_066",
+              "day": 6,
+              "phase": "evening",
+              "display_summary": "在图书馆阅览大厅完成了SELF_STUDY。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 6,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 134,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 1,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 7,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 134,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 1,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000040482:campus_student_066",
+              "day": 7,
+              "phase": "morning",
+              "display_summary": "在图书馆阅览大厅完成了SELF_STUDY。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 7,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 148,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000042142:campus_student_066",
+              "day": 7,
+              "phase": "afternoon",
+              "display_summary": "在社团活动室组完成了CLUB_OR_PERSONAL_ACTIVITY。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 7,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 149,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [
+            "night-site:night:d05:0082:south_gate_lost_student"
+          ],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000043556:campus_student_066",
+              "day": 7,
+              "phase": "evening",
+              "display_summary": "在图书馆阅览大厅完成了SELF_STUDY。",
+              "visibility": "observable"
+            },
+            {
+              "entry_id": "chron:evt:0000042708:campus_student_066",
+              "day": 7,
+              "phase": "evening",
+              "display_summary": "吴修远使用了 1 件食堂套餐。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 7,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 155,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [
+            "night-site:night:d05:0082:south_gate_lost_student"
+          ],
+          "new_available_chronicle_entries": [],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 8,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 155,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [
+            "night-site:night:d05:0082:south_gate_lost_student"
+          ],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000047118:campus_student_066",
+              "day": 8,
+              "phase": "morning",
+              "display_summary": "在人文心理普通教室组完成了ATTEND_CLASS。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 8,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 170,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [
+            "night-site:night:d05:0082:south_gate_lost_student"
+          ],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000048733:campus_student_066",
+              "day": 8,
+              "phase": "afternoon",
+              "display_summary": "在人文心理研讨室组完成了COURSEWORK。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 8,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 171,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [
+            "night-site:night:d05:0082:south_gate_lost_student"
+          ],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000050393:campus_student_066",
+              "day": 8,
+              "phase": "evening",
+              "display_summary": "在社团活动室组完成了CLUB_OR_SELF_STUDY。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 8,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 179,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 1
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [
+            "night-site:night:d05:0082:south_gate_lost_student"
+          ],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000051123:campus_student_066",
+              "day": 8,
+              "phase": "late_night",
+              "display_summary": "吴修远使用了 1 件食堂套餐。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 9,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 179,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [
+            "night-site:night:d05:0082:south_gate_lost_student"
+          ],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000054350:campus_student_066",
+              "day": 9,
+              "phase": "morning",
+              "display_summary": "在人文心理普通教室组完成了ATTEND_CLASS。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 9,
+            "phase": "afternoon",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 194,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [
+            "night-site:night:d05:0082:south_gate_lost_student"
+          ],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000055914:campus_student_066",
+              "day": 9,
+              "phase": "afternoon",
+              "display_summary": "在人文心理研讨室组完成了COURSEWORK。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 9,
+            "phase": "evening",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 195,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [
+            "night-site:night:d05:0082:south_gate_lost_student"
+          ],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000057599:campus_student_066",
+              "day": 9,
+              "phase": "evening",
+              "display_summary": "在社团活动室组完成了CLUB_OR_SELF_STUDY。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 9,
+            "phase": "late_night",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 201,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 2
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [
+            "night-site:night:d05:0082:south_gate_lost_student"
+          ],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000058248:campus_student_066",
+              "day": 9,
+              "phase": "late_night",
+              "display_summary": "吴修远使用了 1 件食堂套餐。",
+              "visibility": "public"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        },
+        {
+          "clock": {
+            "day": 10,
+            "phase": "morning",
+            "minute": 0
+          },
+          "case_status": "resolved",
+          "case_history_added": [],
+          "world_counts": {
+            "completed_tasks": 201,
+            "anomalies": {
+              "resolved": 1,
+              "easing": 2,
+              "unsettled": 3
+            }
+          },
+          "subject_local": false,
+          "subject_contact": false,
+          "known_cases": [
+            "night-site:night:d05:0082:south_gate_lost_student"
+          ],
+          "new_available_chronicle_entries": [
+            {
+              "entry_id": "chron:evt:0000061341:campus_student_066",
+              "day": 10,
+              "phase": "morning",
+              "display_summary": "在人文心理普通教室组完成了ATTEND_CLASS。",
+              "visibility": "observable"
+            }
+          ],
+          "related_goal_steps": {
+            "campus_student_058": {
+              "support:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_preparation",
+                "step": "complete",
+                "status": "completed"
+              },
+              "followup:night-site:night:d02:0029:south_gate_lost_student": {
+                "kind": "support_followup",
+                "step": "support_closed",
+                "status": "completed"
+              }
+            },
+            "campus_student_066": {}
+          }
+        }
+      ]
+    }
+  }
+}
