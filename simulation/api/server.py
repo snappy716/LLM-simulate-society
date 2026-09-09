@@ -270,6 +270,8 @@ class CampusKernelBridge:
             summary.update(advance_assistance_upkeep(context))
             from simulation.systems.campus_welfare import advance_welfare
             summary.update(advance_welfare(context, messaging_policy))
+            from simulation.systems.campus_anomalies import advance_anomaly_support
+            summary.update(advance_anomaly_support(context))
             if context.state.cognition.get("daily_plans", {}).get("day") != context.state.clock.day:
                 summary.update(advance_personal_goals(context))
                 summary.update(prepare_daily_plans(context))
@@ -370,6 +372,11 @@ class CampusKernelBridge:
         from simulation.systems.campus_welfare import make_welfare_handler, welfare_invariant
         self.kernel.register_handler("CHECK_NPC_WELFARE", make_welfare_handler(messaging_policy))
         self.kernel.add_invariant(welfare_invariant)
+        from simulation.systems.campus_anomalies import ANOMALY_ACTIONS, make_anomaly_handler, anomalies_invariant
+        anomaly_handler = make_anomaly_handler()
+        for action_id in ANOMALY_ACTIONS:
+            self.kernel.register_handler(action_id, anomaly_handler)
+        self.kernel.add_invariant(anomalies_invariant)
         self.kernel.add_invariant(personal_goals_invariant)
         for action_id in ASSISTANCE_ACTIONS:
             self.kernel.register_handler(action_id, assistance_handler)

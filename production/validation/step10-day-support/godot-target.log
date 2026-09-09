@@ -1,0 +1,5 @@
+GODOT_CHECK_LOGS /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-7qjwzyuf
+PASS anomaly: CAMPUS_ANOMALY_FLOW_OK actual_npc_ui voluntary_private_evidence free_listen real_support_cost duplicate_guard no_time_advance explicit_fixture no_api
+PASS inspector_layout: CAMPUS_INSPECTOR_LAYOUT_OK real_npc three_sizes scroll keyboard fixed_close reset
+PASS welfare: CAMPUS_WELFARE_FLOW_OK actual_npc_button true_injury no_healing free evidence privacy idempotent explicit_fixture no_api
+GODOT_CHECKS_OK 3 flows

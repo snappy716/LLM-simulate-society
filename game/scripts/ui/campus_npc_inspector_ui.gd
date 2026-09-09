@@ -17,6 +17,11 @@ var _dispute_review: Button
 var _welfare_button: Button
 var _welfare_feedback: Label
 var _welfare_pending := ""
+var _anomaly_ask: Button
+var _anomaly_support: Button
+var _anomaly_feedback: Label
+var _anomaly_case: Dictionary = {}
+var _anomaly_pending := ""
 
 const COLLEGE_NAMES := {
 	"math_physics": "数理学院",
@@ -112,6 +117,7 @@ func _ready() -> void:
 	SimulationBridge.campus_goal_operation_completed.connect(_on_plan_completed)
 	SimulationBridge.campus_investigation_operation_completed.connect(_on_dispute_completed)
 	SimulationBridge.campus_investigation_operation_completed.connect(_on_welfare_completed)
+	SimulationBridge.campus_investigation_operation_completed.connect(_on_anomaly_completed)
 	SimulationBridge.campus_social_proposal_completed.connect(_on_social_proposal_completed)
 	SimulationBridge.campus_social_proposal_response_completed.connect(_on_incoming_proposal_response_completed)
 
@@ -265,6 +271,18 @@ func _build_ui() -> void:
 	_welfare_feedback = Label.new()
 	_welfare_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_welfare_feedback)
+	_anomaly_ask = Button.new()
+	_anomaly_ask.text = "听取本人月相体验（免费，可拒绝）"
+	_anomaly_ask.pressed.connect(func(): _send_anomaly(false))
+	column.add_child(_anomaly_ask)
+	_anomaly_support = Button.new()
+	_anomaly_support.text = "共同做现实锚定（双方各一次主要行动）"
+	_anomaly_support.pressed.connect(func(): _send_anomaly(true))
+	_anomaly_support.visible = false
+	column.add_child(_anomaly_support)
+	_anomaly_feedback = Label.new()
+	_anomaly_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(_anomaly_feedback)
 	var dialogue_label := Label.new()
 	dialogue_label.text = "当面交谈（免费，可继续追问）"
 	dialogue_label.add_theme_color_override("font_color", Color("8fb7d6"))
@@ -379,6 +397,7 @@ func _show_npc(npc: Node) -> void:
 	_dispute_review.visible = false
 	_welfare_button.disabled = not _welfare_pending.is_empty()
 	_welfare_feedback.text = ""
+	_refresh_anomaly()
 	for report in SimulationBridge.campus_snapshot.get("social", {}).get("welfare", []):
 		if report.get("npc_id", "") == _selected_profile.get("npc_id", ""):
 			_welfare_feedback.text = "第 %d 天的近况：%s" % [int(report.day), report.summary]
@@ -567,7 +586,42 @@ func _on_plan_completed(success: bool, result: Dictionary) -> void:
 			_details.text = _public_profile_text(_selected_profile)
 
 
+func _refresh_anomaly() -> void:
+	_anomaly_case = {}
+	_anomaly_feedback.text = ""
+	for row in SimulationBridge.campus_snapshot.get("social", {}).get("anomalies", []):
+		if row.get("npc_id", "") == _selected_profile.get("npc_id", ""):
+			_anomaly_case = row
+			_anomaly_feedback.text = "本人第 %d 天的陈述：%s\n%s" % [int(row.report.day), row.report.summary, row.support_hint]
+	_anomaly_ask.disabled = not _anomaly_pending.is_empty()
+	_anomaly_support.visible = not _anomaly_case.is_empty()
+	_anomaly_support.disabled = not _anomaly_pending.is_empty() or not bool(_anomaly_case.get("can_support", false))
+
+
+func _send_anomaly(support: bool) -> void:
+	if not _anomaly_pending.is_empty() or not _welfare_pending.is_empty() or not _dispute_pending.is_empty() or _selected_profile.is_empty(): return
+	if support and (_anomaly_case.is_empty() or not bool(_anomaly_case.get("can_support", false))): return
+	_anomaly_pending = String(_selected_profile.npc_id)
+	var parameters := {"npc_id": _anomaly_pending}
+	if support:
+		parameters["case_id"] = _anomaly_case.case_id
+		parameters["expected_case_revision"] = _anomaly_case.report.revision
+	_anomaly_ask.disabled = true
+	_anomaly_support.disabled = true
+	SimulationBridge.operate_campus_investigation("SUPPORT_ANOMALY" if support else "ASK_ANOMALY_EXPERIENCE", parameters)
+
+
+func _on_anomaly_completed(_success: bool, result: Dictionary) -> void:
+	if _anomaly_pending.is_empty(): return
+	var target := _anomaly_pending
+	_anomaly_pending = ""
+	_refresh_anomaly()
+	if target != String(_selected_profile.get("npc_id", "")): return
+	_anomaly_feedback.text = String(result.get("result", {}).get("message", result.get("error", "尚未确认本人体验。"))) + "\n" + _anomaly_feedback.text
+
+
 func _check_welfare() -> void:
+	if not _anomaly_pending.is_empty(): return
 	if not _welfare_pending.is_empty() or not _dispute_pending.is_empty() or _selected_profile.is_empty(): return
 	_welfare_pending = String(_selected_profile.npc_id)
 	_welfare_button.disabled = true
@@ -602,6 +656,7 @@ func _mediate_dispute() -> void:
 
 
 func _send_dispute(action: String, parameters: Dictionary) -> void:
+	if not _anomaly_pending.is_empty(): return
 	if not _dispute_pending.is_empty() or not _welfare_pending.is_empty(): return
 	_dispute_pending = String(_selected_profile.get("npc_id", ""))
 	_dispute_ask.disabled = true

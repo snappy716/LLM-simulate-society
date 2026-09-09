@@ -35,6 +35,6 @@
 1. 持续纠纷底座及第四批正式接单后逾期来源、公开记录核对已验收，见 `CAMPUS_DISPUTES.md`、`CAMPUS_COMMITMENT_FOLLOW_UP.md`。自然样本暂无纠纷，更丰富的目标冲突、声誉与后续任务仍待补，拒绝不自动等于仇恨。
 2. 受影响人物的脱困后回访、私有本人陈述和实际物资请求已在第三批验收，见 `CAMPUS_WELFARE_AFTERMATH.md`；第五批补齐手机真实联系，第六批补齐公共地点寻访、实地私有报告、报告驱动的下一个地点委托与恢复联系撤回，见 `CAMPUS_CONTACT_AVAILABILITY.md`、`CAMPUS_CONTACT_INQUIRIES.md`。完整失踪案推理/多方目击仍未完成，不虚构人物或一次聊天就治愈。
 3. 第七批已将已读风险公告纳入任务评分和私有次日规划，第八批接入已有真实地点记录驱动后续公共点选择，见 `CAMPUS_CONTACT_LEADS.md`。更多类型的多人调查案件不由有限选点机制代替。
-4. 第八批两种子 28 天已执行通过，无压力触顶，任务/现场/供需结果见 `../production/STEP_09_CONTACT_LEADS_ACCEPTANCE.md`。下一项收束审计，核对进入第 10 步多解法的条件；第 11 步玩家/无玩家/LLM 对照和第 12 步生活内容仍未完成。
+4. 第八批两种子 28 天已执行通过，无压力触顶，任务/现场/供需结果见 `../production/STEP_09_CONTACT_LEADS_ACCEPTANCE.md`。后续收束审计已确认基础机制可作为第 10 步前置条件，见 `STEP_09_CLOSURE_AUDIT.md`。第 10 步开始真实人物月相残留与白天支持，见 `CAMPUS_ANOMALY_SUPPORT.md`；第 11 步玩家/无玩家/LLM 对照、自然故事质量和第 12 步生活内容仍未完成。
 
 当前数值是第一版有界规则，不宣称已完成平衡或长线故事涌现验收。

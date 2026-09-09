@@ -486,6 +486,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
     notices = situation_forum_view(state, night_forum["enabled"])
     from simulation.systems.campus_disputes import dispute_view
     from simulation.systems.campus_welfare import welfare_view
+    from simulation.systems.campus_anomalies import anomaly_view
     public_forums.setdefault("surface", {})["situations"] = notices["surface"]
     night_forum["situations"] = notices["night"]
     night_forum["access_state"] = (
@@ -537,6 +538,7 @@ def campus_world_view(state: WorldState) -> Dict[str, Any]:
         "social": {
             "disputes": dispute_view(state),
             "welfare": welfare_view(state),
+            "anomalies": anomaly_view(state),
             "player_relationships": player_relationships,
             "player_organizations": player_organizations,
             "player_proposals": deepcopy(

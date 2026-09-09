@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Voluntary moon experience and consented daytime support",
+  "type": "object",
+  "required": ["action_id", "parameters"],
+  "properties": {
+    "action_id": {"enum": ["ASK_ANOMALY_EXPERIENCE", "SUPPORT_ANOMALY"]},
+    "parameters": {
+      "type": "object", "required": ["npc_id"],
+      "properties": {
+        "npc_id": {"type": "string", "minLength": 1},
+        "case_id": {"type": "string", "minLength": 1},
+        "expected_case_revision": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [{"if": {"properties": {"action_id": {"const": "SUPPORT_ANOMALY"}}},
+    "then": {"properties": {"parameters": {"required": ["case_id", "expected_case_revision"]}}}}],
+  "additionalProperties": false
+}
