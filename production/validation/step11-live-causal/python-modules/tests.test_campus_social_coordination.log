@@ -1,0 +1,11 @@
+test_confirmed_private_messages_immutable_plans_and_single_shot (tests.test_campus_social_coordination.CoordinationTests) ... ok
+test_interruption_cancels_once_without_teleport_and_roundtrips (tests.test_campus_social_coordination.CoordinationTests) ... ok
+test_missing_contacts_never_send_or_add (tests.test_campus_social_coordination.CoordinationTests) ... ok
+test_multiday_feedback_and_no_daytime_model_requests (tests.test_campus_social_coordination.CoordinationTests) ... ok
+test_reciprocal_invitations_do_not_double_book (tests.test_campus_social_coordination.CoordinationTests) ... ok
+test_schedule_and_relationship_declines_do_not_force_change (tests.test_campus_social_coordination.CoordinationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 43.543s
+
+OK

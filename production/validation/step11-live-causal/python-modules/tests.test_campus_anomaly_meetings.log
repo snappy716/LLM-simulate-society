@@ -1,0 +1,18 @@
+test_actual_phase_road_travel_wait_and_player_support (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+test_autonomous_pair_uses_shared_action_after_real_arrival (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+test_booking_free_private_no_duplicate_or_forged_consent (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+test_cancel_releases_major_reservation_without_refund (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+test_changed_consent_cancels_without_forcing_attendance (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+test_checkpoint_roundtrip_and_forged_completion_rejected (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+test_closed_place_and_contract (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+test_dawn_once_and_no_hidden_mastery_selection (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+test_future_appointment_survives_other_slots_unavailability (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+test_missing_player_does_not_heal_and_expires_once (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+test_obligations_invalid_slots_and_private_evidence (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+test_pending_request_rechecks_knowledge_and_float_revision (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+test_player_must_accept_subject_request_and_can_decline (tests.test_campus_anomaly_meetings.AnomalyMeetingTests) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 80.952s
+
+OK

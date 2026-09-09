@@ -1,0 +1,21 @@
+{
+  "updated_at": "2026-09-09T09:12:07.341057+00:00",
+  "attempts": 326,
+  "tokens": {
+    "prompt_tokens": 768104,
+    "completion_tokens": 41839,
+    "total_tokens": 809943,
+    "prompt_cache_hit_tokens": 122752,
+    "prompt_cache_miss_tokens": 645352
+  },
+  "missing_usage": 0,
+  "max_requests": 400,
+  "stop_after_reported_tokens": 1000000,
+  "limits_apply_only_to_this_audit": true,
+  "note": "Reported-token threshold may be crossed by the final request; not an account bill or a currency cap",
+  "ledgers": [
+    "probe/requests.json",
+    "llm-unattended/requests.json",
+    "llm-participant/requests.json"
+  ]
+}

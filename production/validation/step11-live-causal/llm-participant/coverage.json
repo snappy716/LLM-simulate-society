@@ -1,0 +1,180 @@
+{
+  "observed_focused_slots": 560,
+  "observed_llm_planned_slots": 500,
+  "completed_llm_planned_slots": 498,
+  "matching_activity_and_location": 443,
+  "daily_usage": {
+    "3": {
+      "day": 3,
+      "calls": 0,
+      "estimated_tokens": 0,
+      "automated_calls": 0,
+      "automated_estimated_tokens": 0,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "phase_calls": {},
+      "purpose_phase_calls": {},
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    },
+    "4": {
+      "day": 4,
+      "calls": 23,
+      "estimated_tokens": 54110,
+      "automated_calls": 23,
+      "automated_estimated_tokens": 54110,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 51917,
+      "completion_tokens": 2891,
+      "phase_calls": {
+        "morning": 23
+      },
+      "purpose_phase_calls": {
+        "morning:activity": 20,
+        "morning:interaction_dialogue": 3
+      },
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    },
+    "5": {
+      "day": 5,
+      "calls": 24,
+      "estimated_tokens": 56015,
+      "automated_calls": 24,
+      "automated_estimated_tokens": 56015,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 54599,
+      "completion_tokens": 3029,
+      "phase_calls": {
+        "morning": 24
+      },
+      "purpose_phase_calls": {
+        "morning:activity": 20,
+        "morning:interaction_dialogue": 4
+      },
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    },
+    "6": {
+      "day": 6,
+      "calls": 21,
+      "estimated_tokens": 55389,
+      "automated_calls": 21,
+      "automated_estimated_tokens": 55389,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 53682,
+      "completion_tokens": 2723,
+      "phase_calls": {
+        "morning": 21
+      },
+      "purpose_phase_calls": {
+        "morning:activity": 20,
+        "morning:interaction_dialogue": 1
+      },
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    },
+    "7": {
+      "day": 7,
+      "calls": 24,
+      "estimated_tokens": 56938,
+      "automated_calls": 24,
+      "automated_estimated_tokens": 56938,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 56435,
+      "completion_tokens": 3109,
+      "phase_calls": {
+        "morning": 24
+      },
+      "purpose_phase_calls": {
+        "morning:activity": 20,
+        "morning:interaction_dialogue": 4
+      },
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    },
+    "8": {
+      "day": 8,
+      "calls": 25,
+      "estimated_tokens": 57616,
+      "automated_calls": 25,
+      "automated_estimated_tokens": 57616,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 57198,
+      "completion_tokens": 3148,
+      "phase_calls": {
+        "morning": 25
+      },
+      "purpose_phase_calls": {
+        "morning:activity": 20,
+        "morning:interaction_dialogue": 5
+      },
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    },
+    "9": {
+      "day": 9,
+      "calls": 21,
+      "estimated_tokens": 55208,
+      "automated_calls": 21,
+      "automated_estimated_tokens": 55208,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 53690,
+      "completion_tokens": 2828,
+      "phase_calls": {
+        "morning": 21
+      },
+      "purpose_phase_calls": {
+        "morning:activity": 20,
+        "morning:interaction_dialogue": 1
+      },
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    },
+    "10": {
+      "day": 10,
+      "calls": 22,
+      "estimated_tokens": 56001,
+      "automated_calls": 22,
+      "automated_estimated_tokens": 56001,
+      "player_dialogue_calls": 0,
+      "prompt_tokens": 54757,
+      "completion_tokens": 2939,
+      "phase_calls": {
+        "morning": 22
+      },
+      "purpose_phase_calls": {
+        "morning:activity": 20,
+        "morning:interaction_dialogue": 2
+      },
+      "cache_hits": 0,
+      "fallbacks": 0,
+      "rejected_responses": 0,
+      "provider_errors": 0,
+      "budget_blocks": 0
+    }
+  },
+  "note": "Initial morning already happened under checkpoint plans; final morning only counts morning. Defeat intermediate phases without snapshots are not fabricated."
+}

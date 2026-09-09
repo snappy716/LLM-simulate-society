@@ -8,6 +8,7 @@ import argparse
 from collections import Counter
 from copy import deepcopy
 from dataclasses import asdict
+from datetime import datetime, timezone
 import getpass
 import io
 import json
@@ -34,7 +35,7 @@ class AuditedProvider(OpenAICompatibleCognitionProvider):
         self.records, self.consecutive_errors = [], 0
 
     def _complete_json(self, prompt, payload, limit):
-        record = {"index": len(self.records), "npc_id": payload.get("npc_id"),
+        record = {"index": len(self.records), "started_at": datetime.now(timezone.utc).isoformat(), "npc_id": payload.get("npc_id"),
                   "day": payload.get("day"), "phase": payload.get("phase"),
                   "kind": "plan" if "daily_options" in payload else "dialogue" if "dialogue_kind" in payload else "interaction",
                   "output_limit": limit, "request": payload}
@@ -47,7 +48,7 @@ class AuditedProvider(OpenAICompatibleCognitionProvider):
                 raw = response.read()
                 decoded = json.loads(raw)
                 choice = decoded.get("choices", [{}])[0]
-                record.update(http_status=response.status, actual_model=decoded.get("model"),
+                record.update(http_status=response.status, actual_model=decoded.get("model"), response_id=decoded.get("id"),
                               finish_reason=choice.get("finish_reason"), usage=decoded.get("usage", {}),
                               content_chars=len(choice.get("message", {}).get("content") or ""))
             return io.BytesIO(raw)

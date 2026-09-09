@@ -1,0 +1,18 @@
+test_actual_shop_purchase_uses_cash_stock_route_and_no_major_action (tests.test_campus_expeditions.ExpeditionTests) ... ok
+test_attention_naturally_forms_and_executes_without_player_or_llm (tests.test_campus_expeditions.ExpeditionTests) ... ok
+test_changed_task_cancels_without_punishing_helpers (tests.test_campus_expeditions.ExpeditionTests) ... ok
+test_checkpoint_replays_real_cooperative_battle_deterministically (tests.test_campus_expeditions.ExpeditionTests) ... ok
+test_cooperative_defeat_does_not_pay_reward_or_advance_player_time (tests.test_campus_expeditions.ExpeditionTests) ... ok
+test_expiry_releases_party_without_reward_and_only_once (tests.test_campus_expeditions.ExpeditionTests) ... ok
+test_forged_rewards_and_participants_fail_invariant (tests.test_campus_expeditions.ExpeditionTests) ... ok
+test_npc_can_refuse_and_is_not_forced_into_party (tests.test_campus_expeditions.ExpeditionTests) ... ok
+test_only_actual_participants_share_original_reward_and_pay_once (tests.test_campus_expeditions.ExpeditionTests) ... ok
+test_protected_duty_blocks_invitation (tests.test_campus_expeditions.ExpeditionTests) ... ok
+test_settlement_replay_is_idempotent_and_requires_real_battle (tests.test_campus_expeditions.ExpeditionTests) ... ok
+test_unavailable_helper_gets_no_reward_no_combat_charge_or_case (tests.test_campus_expeditions.ExpeditionTests) ... ok
+test_voluntary_departure_cancellation_releases_expedition_atomically (tests.test_campus_expeditions.ExpeditionTests) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 28.989s
+
+OK

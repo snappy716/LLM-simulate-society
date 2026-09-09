@@ -181,5 +181,42 @@ class CausalComparisonTests(unittest.TestCase):
             for r in right["summary"]["history"]), right["summary"]["player_supports"])
         self.assertGreater(right["summary"]["player_night_containments"], 0)
 
+    def test_provider_axis_keeps_identical_checkpoint_and_tracks_real_adapter_requests(self):
+        import io
+        import json
+        import tempfile
+        from pathlib import Path
+        from production.live_causal_audit import CausalProvider, AuditBudget, coverage
+        class Response(io.BytesIO):
+            status = 200
+        def respond(request, **kwargs):
+            payload = json.loads(json.loads(request.data)["messages"][1]["content"])
+            result = {"npc_id": payload["npc_id"], "candidate_revision": payload["candidate_revision"]}
+            if "daily_options" in payload:
+                result.update(selected_action_id=None, reason="test", social_choice=None,
+                    daily_choices={phase: options[0]["candidate_id"] for phase, options in payload["daily_options"].items()})
+            elif "dialogue_kind" in payload:
+                result.update(target_id=payload["target_id"], utterance="你好。", fact_ids_used=[])
+            else:
+                result.update(selected_action_id=payload["candidates"][0]["candidate_id"], reason="test")
+            return Response(json.dumps({"id": "mock-only", "model": "mock-only", "usage": {"prompt_tokens": 10, "completion_tokens": 1, "total_tokens": 11},
+                "choices": [{"finish_reason": "stop", "message": {"content": json.dumps(result)}}]}).encode())
+        with tempfile.TemporaryDirectory() as directory:
+            provider = CausalProvider("fake-private-test-key", Path(directory)/"live", AuditBudget(Path(directory)))
+            with patch("urllib.request.urlopen", respond):
+                left = run_branch(self.checkpoint, self.cid, 1, "unattended")
+                right = run_branch(self.checkpoint, self.cid, 1, "unattended", provider=provider)
+            self.assertEqual(20, sum(r["kind"] == "plan" for r in provider.records))
+            self.assertTrue(compare(left, right, axis="provider", allow_api=True)["same_checkpoint_verified"])
+            self.assertEqual(20, coverage(right)["observed_llm_planned_slots"])
+            with self.assertRaises(ValueError): compare(left, right, axis="provider")
+            bad_control = deepcopy(left)
+            bad_control["frames"][1]["calls_today"] = 1
+            with self.assertRaises(ValueError): compare(bad_control, right, axis="provider", allow_api=True)
+            changed = deepcopy(right)
+            changed["mode"] = "participant"
+            with self.assertRaises(ValueError): compare(left, changed, axis="provider", allow_api=True)
+            provider.secret_forget()
+
 
 if __name__ == "__main__": unittest.main()

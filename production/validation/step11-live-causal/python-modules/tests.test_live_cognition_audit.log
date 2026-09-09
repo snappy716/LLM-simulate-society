@@ -1,0 +1,12 @@
+test_non_thinking_is_only_an_explicit_test_option_and_no_secret_is_logged (tests.test_live_cognition_audit.LiveAuditTests) ... {"index": 0, "day": null, "kind": "interaction", "seconds": 0.001, "error": null, "finish_reason": "stop"}
+{"index": 0, "day": null, "kind": "interaction", "seconds": 0.0, "error": null, "finish_reason": "stop"}
+ok
+test_truncated_response_retains_usage_and_stops_after_three_failures (tests.test_live_cognition_audit.LiveAuditTests) ... {"index": 0, "day": null, "kind": "interaction", "seconds": 0.0, "error": "ProviderFailure", "finish_reason": "length"}
+{"index": 1, "day": null, "kind": "interaction", "seconds": 0.0, "error": "ProviderFailure", "finish_reason": "length"}
+{"index": 2, "day": null, "kind": "interaction", "seconds": 0.0, "error": "ProviderFailure", "finish_reason": "length"}
+ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.016s
+
+OK

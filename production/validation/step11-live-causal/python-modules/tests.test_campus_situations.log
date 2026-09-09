@@ -1,0 +1,13 @@
+test_actual_expired_sites_create_persistent_pressure_once (tests.test_campus_situations.SituationTests) ... ok
+test_exposure_template_weights_and_night_privacy (tests.test_campus_situations.SituationTests) ... ok
+test_older_shortage_gets_limited_cash_before_fresh_shortage (tests.test_campus_situations.SituationTests) ... ok
+test_player_real_site_resolution_reduces_pressure (tests.test_campus_situations.SituationTests) ... ok
+test_pressure_settles_once_per_day_and_checkpoint_roundtrip (tests.test_campus_situations.SituationTests) ... ok
+test_prior_expiry_receipt_prevents_recharge_after_checkpoint (tests.test_campus_situations.SituationTests) ... ok
+test_same_region_night_expiries_share_cap_but_retain_all_receipts (tests.test_campus_situations.SituationTests) ... ok
+test_shortage_duration_prioritizes_real_paid_supply_then_recovers (tests.test_campus_situations.SituationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 50.848s
+
+OK

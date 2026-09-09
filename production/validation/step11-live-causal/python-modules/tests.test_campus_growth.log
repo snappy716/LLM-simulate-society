@@ -1,0 +1,26 @@
+test_attribute_growth_raises_capacity_without_healing_and_preserves_source_idempotency (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_checkpoint_preserves_growth_and_custom_deck (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_focus_is_free_and_ordinary_major_learning_contributes_to_selected_topic (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_free_self_care_does_not_grant_growth (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_invalid_component_values_and_containers_rejected (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_npc_can_read_with_own_budget_and_does_not_grant_player_knowledge (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_npcs_earn_real_battle_and_field_cases_without_player_or_duplicate_credit (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_owned_deck_save_is_free_and_rejects_unowned_or_missing_basics (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_reading_spends_one_action_not_a_phase_and_only_grants_theory (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_selected_owned_deck_is_used_by_real_battle_instances (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_theory_cap_no_free_mastery_and_missing_reflection_prerequisite (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_view_is_read_only_and_does_not_reveal_other_actor_learning (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_wrong_location_no_budget_and_unknown_topic_are_atomic (tests.test_campus_growth.CampusGrowthTests) ... ok
+test_actual_victory_adds_owned_case_not_book_pages_and_deduplicates (tests.test_campus_growth.CampusKnowledgeBattleTests) ... ok
+test_application_requires_theory_and_is_once_per_battle_method (tests.test_campus_growth.CampusKnowledgeBattleTests) ... ok
+test_insight_interrupt_costs_two_points_blocks_one_attack_and_cannot_repeat (tests.test_campus_growth.CampusKnowledgeBattleTests) ... ok
+test_knowledge_damage_and_exposure_change_real_effects (tests.test_campus_growth.CampusKnowledgeBattleTests) ... ok
+test_low_understanding_has_no_insight_and_failed_command_changes_nothing (tests.test_campus_growth.CampusKnowledgeBattleTests) ... ok
+test_new_character_fields_are_declared_and_invalid_mastery_is_rejected (tests.test_campus_growth.CampusKnowledgeBattleTests) ... ok
+test_real_case_then_reading_unlocks_one_reflection_without_consuming_notebook (tests.test_campus_growth.CampusKnowledgeBattleTests) ... ok
+test_study_and_reconfiguration_are_locked_during_battle (tests.test_campus_growth.CampusKnowledgeBattleTests) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 99.254s
+
+OK

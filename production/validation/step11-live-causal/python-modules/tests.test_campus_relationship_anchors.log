@@ -1,0 +1,17 @@
+test_confirmation_is_free_private_idempotent_and_not_support (tests.test_campus_relationship_anchors.RelationshipAnchorTests) ... ok
+test_confirmed_anchor_survives_disk_and_corrupt_source_rejected (tests.test_campus_relationship_anchors.RelationshipAnchorTests) ... ok
+test_forged_or_foreign_source_and_stale_case_rejected (tests.test_campus_relationship_anchors.RelationshipAnchorTests) ... ok
+test_genuine_anchor_support_changes_case_not_health_and_cannot_stack (tests.test_campus_relationship_anchors.RelationshipAnchorTests) ... ok
+test_knowledge_and_current_consent_checked_before_cost (tests.test_campus_relationship_anchors.RelationshipAnchorTests) ... ok
+test_npc_uses_same_confirmation_and_effect_without_player (tests.test_campus_relationship_anchors.RelationshipAnchorTests) ... ok
+test_old_report_or_unreliable_anchor_does_not_unlock_effect (tests.test_campus_relationship_anchors.RelationshipAnchorTests) ... ok
+test_overnight_model_context_contains_only_own_dated_anchor (tests.test_campus_relationship_anchors.RelationshipAnchorTests) ... ok
+test_private_own_context_contains_anchor_not_worldwide_anchors (tests.test_campus_relationship_anchors.RelationshipAnchorTests) ... ok
+test_remote_confirmation_allowed_but_support_requires_actual_meeting (tests.test_campus_relationship_anchors.RelationshipAnchorTests) ... ok
+test_same_day_support_does_not_manufacture_independent_past (tests.test_campus_relationship_anchors.RelationshipAnchorTests) ... ok
+test_source_requires_completed_real_need_not_assent_or_ordinary_gift (tests.test_campus_relationship_anchors.RelationshipAnchorTests) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 94.251s
+
+OK

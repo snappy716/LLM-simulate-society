@@ -49,8 +49,9 @@ def visible_people(view):
 
 
 class AuditSession:
-    def __init__(self, bridge):
+    def __init__(self, bridge, provider=None):
         self.bridge = bridge
+        self.provider = provider
         self.commands, self.events, self.notes = [], [], []
 
     def act(self, action, parameters=None):
@@ -58,8 +59,12 @@ class AuditSession:
         command = SimulationCommand(f"causal:{state.revision}:{len(self.commands)}", "player", action,
             state.revision, parameters=parameters or {}, issued_day=state.clock.day,
             issued_phase=state.clock.phase, issued_minute=state.clock.minute)
+        first_request = len(self.provider.records) if self.provider else 0
         result = self.bridge.kernel.execute(command)
-        self.commands.append({"command": command.to_dict(), "result": result.to_dict()})
+        row = {"command": command.to_dict(), "result": result.to_dict()}
+        if self.provider:
+            row["request_span"] = [first_request, len(self.provider.records)]
+        self.commands.append(row)
         self.events.extend(e.to_dict() for e in result.events)
         return result
 
@@ -154,12 +159,17 @@ def sample(bridge, cid):
         "world_counts": {"completed_tasks": sum(t["state"] == "completed" for t in state.tasks.values()),
             "anomalies": dict(Counter(c["status"] for c in state.situations["campus_anomalies"]["cases"].values()))},
         "calls_today": state.cognition["usage"]["calls"]}
+    result["cognition_audit"] = {"usage": deepcopy(state.cognition["usage"]),
+        "focused_ids": list(state.cognition["focused_ids"]),
+        "actual_activities": {who: deepcopy(state.population[who].get("current_activity", {})) for who in state.cognition["focused_ids"]},
+        "daily_plans": {who: deepcopy(state.cognition.get("daily_plans", {}).get("actors", {}).get(who, {}))
+            for who in state.cognition["focused_ids"]}}
     if world_digest(bridge) != before:
         raise RuntimeError("Audit sampling mutated world or random streams")
     return result
 
 
-def run_branch(checkpoint, cid, days, mode, output=None):
+def run_branch(checkpoint, cid, days, mode, output=None, *, provider=None):
     if mode not in {"unattended", "explorer", "participant"} or not 1 <= days <= 7:
         raise ValueError("Expected unattended/explorer/participant and 1..7 days")
     initial, rng = checkpoint
@@ -167,7 +177,11 @@ def run_branch(checkpoint, cid, days, mode, output=None):
     bridge.cognition_runtime.configure_rule()
     bridge.kernel.restore_checkpoint(initial, rng, expected_revision=bridge.kernel.state.revision)
     restored_digest = world_digest(bridge)
-    session = AuditSession(bridge)
+    if provider is not None:
+        if not provider.configured or provider.records:
+            raise ValueError("Live branch requires a configured provider with a fresh audit ledger")
+        bridge.cognition_runtime.provider = provider
+    session = AuditSession(bridge, provider)
     frames = [sample(bridge, cid)]
     start_tick = clock_tick(frames[0]["clock"])
     if mode == "participant" and frames[0]["clock"]["phase"] != "morning":
@@ -186,7 +200,7 @@ def run_branch(checkpoint, cid, days, mode, output=None):
                 raise RuntimeError(f"Phase {index}: {result.code}")
         frames.append(sample(bridge, cid))
         frames[-1]["sample_after_command"] = session.commands[-1]["command"]["command_id"]
-        if frames[-1]["calls_today"]:
+        if provider is None and frames[-1]["calls_today"]:
             raise RuntimeError("Offline audit unexpectedly used a model")
         elapsed_phases = clock_tick(frames[-1]["clock"]) - start_tick
         if output:
@@ -194,6 +208,7 @@ def run_branch(checkpoint, cid, days, mode, output=None):
         print(mode, elapsed_phases, frames[-1]["clock"], flush=True)
     final = frames[-1]["auditor_only"]["case"]
     result = {"mode": mode, "days": days, "start_digest": restored_digest,
+        "provider_mode": "llm" if provider else "rule",
         "source_digest": digest(build_kernel_checkpoint(initial, rng)), "case_id": cid,
         "player_policy": {"unattended": "none", "explorer": "daytime_local_and_contacts_no_hidden_target",
             "participant": "observe_first_disclosed_appointments_public_night_tasks_real_cards"}[mode],
@@ -203,15 +218,25 @@ def run_branch(checkpoint, cid, days, mode, output=None):
             "player_supports": sum(r["route"] == "day_support" and r.get("helper_id") == "player" for r in final["history"]),
             "player_night_containments": sum(r["route"] == "night_containment" and r.get("helper_id") == "player" for r in final["history"]),
             "command_failures": dict(Counter(c["result"]["code"] for c in session.commands if not c["result"]["success"])),
-            "events": dict(Counter(e["event_type"] for e in session.events)), "api_calls": 0}}
+            "events": dict(Counter(e["event_type"] for e in session.events)),
+            "api_calls": len(provider.records) if provider else 0}}
+    if provider:
+        result["requests"] = deepcopy(provider.records)
     if output:
         write(output / f"{mode}.json", result)
     return result
 
 
-def compare(left, right):
-    if left["mode"] != "unattended" or right["mode"] not in {"explorer", "participant"}:
-        raise ValueError("Expected distinct unattended and player branches")
+def compare(left, right, *, axis="player", allow_api=False):
+    providers = (left.get("provider_mode", "rule"), right.get("provider_mode", "rule"))
+    if axis == "player":
+        if left["mode"] != "unattended" or right["mode"] not in {"explorer", "participant"} or providers[0] != providers[1]:
+            raise ValueError("Expected distinct unattended and player branches with the same provider mode")
+    elif axis == "provider":
+        if left["mode"] != right["mode"] or providers != ("rule", "llm"):
+            raise ValueError("Provider comparison must keep the player policy unchanged")
+    else:
+        raise ValueError("Unknown comparison axis")
     if left["start_digest"] != right["start_digest"] or left["source_digest"] != right["source_digest"] or left["case_id"] != right["case_id"]:
         raise ValueError("Branches did not begin at the same event/checkpoint")
     if left["days"] != right["days"]:
@@ -231,11 +256,19 @@ def compare(left, right):
         if (ends != expected or starts != [tick - 1 for tick in expected] or not set(groups) <= successful
                 or ticks[1:] != list(groups.values())
                 or [f["sample_after_command"] for f in branch["frames"][1:]] != list(groups)
-                or not all(r["result"]["success"] for r in advances) or any(f["calls_today"] for f in branch["frames"])):
+                or not all(r["result"]["success"] for r in advances)
+                or ((not allow_api or branch.get("provider_mode", "rule") == "rule")
+                    and (any(f["calls_today"] for f in branch["frames"]) or branch.get("requests")))):
             raise ValueError("Incomplete formal phase progression or unexpected API use")
+        if branch.get("provider_mode", "rule") == "llm":
+            if not allow_api:
+                raise ValueError("Paid audit must be explicitly enabled")
+            from production.live_causal_audit import validate_request_timing
+            validate_request_timing(branch)
     return {"same_checkpoint_verified": True, "case_id": left["case_id"], "days": left["days"],
-        "branches": {r["mode"]: r["summary"] for r in (left, right)},
-        "scope": "Offline comparison; real LLM and player-perceived story quality still require acceptance"}
+        "axis": axis,
+        "branches": {(r.get("provider_mode", "rule") + ":" + r["mode"] if axis == "provider" else r["mode"]): r["summary"] for r in (left, right)},
+        "scope": "Request and outcome evidence; player-perceived story quality is a separate judgement"}
 
 
 def code_manifest():

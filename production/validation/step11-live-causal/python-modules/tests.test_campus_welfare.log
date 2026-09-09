@@ -1,0 +1,14 @@
+test_actual_recovery_required_and_duplicate_check_no_effect (tests.test_campus_welfare.WelfareTests) ... ok
+test_checkpoint_preserves_reports_and_old_terminal_not_reinvented (tests.test_campus_welfare.WelfareTests) ... ok
+test_injured_poor_npc_requests_real_help_without_giving_or_healing (tests.test_campus_welfare.WelfareTests) ... ok
+test_npc_initiates_own_follow_up_not_omniscient_outsider (tests.test_campus_welfare.WelfareTests) ... ok
+test_real_kernel_free_check_and_invalid_target_atomic (tests.test_campus_welfare.WelfareTests) ... ok
+test_real_rest_closes_case_new_injury_does_not_reopen_old_story (tests.test_campus_welfare.WelfareTests) ... ok
+test_refusal_and_no_contacts_preserve_privacy (tests.test_campus_welfare.WelfareTests) ... ok
+test_release_reports_real_injury_and_does_not_heal_or_move (tests.test_campus_welfare.WelfareTests) ... ok
+test_unanswered_is_not_missing_or_secret_evidence (tests.test_campus_welfare.WelfareTests) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 81.959s
+
+OK
