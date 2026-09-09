@@ -1,0 +1,213 @@
+{
+  "rule-unattended": {
+    "counts": {
+      "rule_errand_completed": 404,
+      "rule_errand_then_npc_activity_completed": 404
+    },
+    "violations": [],
+    "examples": [],
+    "limits": "Only observed slots; optional receipts count errands, not distinct NPC phases. Legal primary overrides are not all failures."
+  },
+  "llm-unattended": {
+    "counts": {
+      "rule_errand_completed": 367,
+      "rule_errand_then_npc_activity_completed": 367,
+      "llm_errand_completed": 34,
+      "llm_errand_then_npc_activity_completed": 34,
+      "llm_errand_then_original_primary_completed": 34,
+      "observed_llm_slots": 500,
+      "selected_errands_in_observed_slots": 35,
+      "observed_completed_current_activity": 498,
+      "observed_matching_primary": 480,
+      "daily_requests": 140,
+      "requests_with_available_errands": 43,
+      "requests_choosing_errands": 35,
+      "requests_with_options_but_no_purchase_chosen": 8
+    },
+    "violations": [],
+    "examples": [
+      {
+        "clock_actor": [
+          4,
+          "morning",
+          "campus_staff_003"
+        ],
+        "purchase": {
+          "shop_id": "campus_canteen_counter",
+          "item_id": "restaurant_meal",
+          "quantity": 3
+        },
+        "chosen_primary": "TEACH_CLASS",
+        "chosen_location": "science_classroom_pool",
+        "actual_followup": {
+          "activity_id": "TEACH_CLASS",
+          "action_class": "major",
+          "location_id": "science_classroom_pool",
+          "route_step_count": 5
+        }
+      },
+      {
+        "clock_actor": [
+          4,
+          "morning",
+          "campus_staff_007"
+        ],
+        "purchase": {
+          "shop_id": "campus_canteen_counter",
+          "item_id": "restaurant_meal",
+          "quantity": 2
+        },
+        "chosen_primary": "LIBRARY_SHIFT",
+        "chosen_location": "library_reading_hall",
+        "actual_followup": {
+          "activity_id": "LIBRARY_SHIFT",
+          "action_class": "major",
+          "location_id": "library_reading_hall",
+          "route_step_count": 5
+        }
+      },
+      {
+        "clock_actor": [
+          4,
+          "morning",
+          "campus_staff_051"
+        ],
+        "purchase": {
+          "shop_id": "campus_canteen_counter",
+          "item_id": "restaurant_meal",
+          "quantity": 3
+        },
+        "chosen_primary": "MEDICAL_SHIFT",
+        "chosen_location": "hospital_clinic",
+        "actual_followup": {
+          "activity_id": "MEDICAL_SHIFT",
+          "action_class": "major",
+          "location_id": "hospital_clinic",
+          "route_step_count": 6
+        }
+      },
+      {
+        "clock_actor": [
+          5,
+          "morning",
+          "campus_student_021"
+        ],
+        "purchase": {
+          "shop_id": "campus_canteen_counter",
+          "item_id": "restaurant_meal",
+          "quantity": 2
+        },
+        "chosen_primary": "ATTEND_CLASS",
+        "chosen_location": "science_classroom_pool",
+        "actual_followup": {
+          "activity_id": "ATTEND_CLASS",
+          "action_class": "major",
+          "location_id": "science_classroom_pool",
+          "route_step_count": 5
+        }
+      }
+    ],
+    "limits": "Only observed slots; optional receipts count errands, not distinct NPC phases. Legal primary overrides are not all failures."
+  },
+  "llm-participant": {
+    "counts": {
+      "rule_errand_completed": 371,
+      "rule_errand_then_npc_activity_completed": 371,
+      "llm_errand_completed": 31,
+      "llm_errand_then_npc_activity_completed": 31,
+      "llm_errand_then_original_primary_completed": 31,
+      "observed_llm_slots": 500,
+      "selected_errands_in_observed_slots": 31,
+      "observed_completed_current_activity": 500,
+      "observed_matching_primary": 485,
+      "daily_requests": 140,
+      "requests_with_available_errands": 41,
+      "requests_choosing_errands": 31,
+      "requests_with_options_but_no_purchase_chosen": 10
+    },
+    "violations": [],
+    "examples": [
+      {
+        "clock_actor": [
+          4,
+          "morning",
+          "campus_staff_003"
+        ],
+        "purchase": {
+          "shop_id": "campus_canteen_counter",
+          "item_id": "restaurant_meal",
+          "quantity": 3
+        },
+        "chosen_primary": "TEACH_CLASS",
+        "chosen_location": "science_classroom_pool",
+        "actual_followup": {
+          "activity_id": "TEACH_CLASS",
+          "action_class": "major",
+          "location_id": "science_classroom_pool",
+          "route_step_count": 5
+        }
+      },
+      {
+        "clock_actor": [
+          4,
+          "morning",
+          "campus_staff_007"
+        ],
+        "purchase": {
+          "shop_id": "campus_canteen_counter",
+          "item_id": "restaurant_meal",
+          "quantity": 2
+        },
+        "chosen_primary": "LIBRARY_SHIFT",
+        "chosen_location": "library_reading_hall",
+        "actual_followup": {
+          "activity_id": "LIBRARY_SHIFT",
+          "action_class": "major",
+          "location_id": "library_reading_hall",
+          "route_step_count": 5
+        }
+      },
+      {
+        "clock_actor": [
+          4,
+          "morning",
+          "campus_staff_051"
+        ],
+        "purchase": {
+          "shop_id": "campus_canteen_counter",
+          "item_id": "restaurant_meal",
+          "quantity": 3
+        },
+        "chosen_primary": "MEDICAL_SHIFT",
+        "chosen_location": "hospital_clinic",
+        "actual_followup": {
+          "activity_id": "MEDICAL_SHIFT",
+          "action_class": "major",
+          "location_id": "hospital_clinic",
+          "route_step_count": 6
+        }
+      },
+      {
+        "clock_actor": [
+          5,
+          "morning",
+          "campus_student_021"
+        ],
+        "purchase": {
+          "shop_id": "campus_canteen_counter",
+          "item_id": "restaurant_meal",
+          "quantity": 2
+        },
+        "chosen_primary": "ATTEND_CLASS",
+        "chosen_location": "science_classroom_pool",
+        "actual_followup": {
+          "activity_id": "ATTEND_CLASS",
+          "action_class": "major",
+          "location_id": "science_classroom_pool",
+          "route_step_count": 5
+        }
+      }
+    ],
+    "limits": "Only observed slots; optional receipts count errands, not distinct NPC phases. Legal primary overrides are not all failures."
+  }
+}

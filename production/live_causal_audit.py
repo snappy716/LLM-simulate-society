@@ -103,7 +103,11 @@ def main():
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--days", type=int, choices=range(1, 8), default=7)
+    parser.add_argument("--max-requests", type=int, default=400, help="Acceptance-only request threshold; no game quota")
+    parser.add_argument("--max-reported-tokens", type=int, default=2_000_000, help="Acceptance-only reported-token threshold")
     args = parser.parse_args()
+    if args.max_requests < 1 or args.max_reported_tokens < 1:
+        parser.error("Acceptance thresholds must be positive")
     if not sys.stdin.isatty():
         parser.error("Use hidden interactive key input")
     loaded = load_kernel_checkpoint(args.checkpoint)
@@ -112,7 +116,7 @@ def main():
         parser.error("Same-checkpoint audit requires a morning start")
     cid = next(iter(loaded.state.situations["campus_anomalies"]["cases"]))
     args.output.mkdir(parents=True, exist_ok=False)
-    budget = AuditBudget(args.output)
+    budget = AuditBudget(args.output, max_requests=args.max_requests, max_tokens=args.max_reported_tokens)
     key = getpass.getpass("DeepSeek API Key (not saved): ").strip()
     if not key:
         parser.error("API key required")

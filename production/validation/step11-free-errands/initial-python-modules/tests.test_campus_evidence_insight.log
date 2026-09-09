@@ -1,0 +1,16 @@
+test_actual_sources_unlock_without_revealing_private_case (tests.test_campus_evidence_insight.EvidenceInsightTests) ... ok
+test_checkpoint_retains_private_provenance_and_rejects_forgery (tests.test_campus_evidence_insight.EvidenceInsightTests) ... ok
+test_downed_reserve_foreign_actor_and_insufficient_points_rejected (tests.test_campus_evidence_insight.EvidenceInsightTests) ... ok
+test_duplicate_does_not_cost_or_rearm_even_next_round (tests.test_campus_evidence_insight.EvidenceInsightTests) ... ok
+test_knowledge_alone_or_foreign_memory_cannot_replace_own_anchor (tests.test_campus_evidence_insight.EvidenceInsightTests) ... ok
+test_lost_reliability_or_current_willingness_blocks_without_cost (tests.test_campus_evidence_insight.EvidenceInsightTests) ... ok
+test_npc_controller_selects_same_available_tactic_and_real_handler (tests.test_campus_evidence_insight.EvidenceInsightTests) ... ok
+test_old_battle_without_optional_receipt_remains_valid (tests.test_campus_evidence_insight.EvidenceInsightTests) ... ok
+test_pending_interrupt_prevents_waste (tests.test_campus_evidence_insight.EvidenceInsightTests) ... ok
+test_real_cost_one_skipped_attack_not_remote_support_or_healing (tests.test_campus_evidence_insight.EvidenceInsightTests) ... ok
+test_same_archetype_without_this_case_source_does_not_qualify (tests.test_campus_evidence_insight.EvidenceInsightTests) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 34.152s
+
+OK

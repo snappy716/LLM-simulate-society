@@ -1,0 +1,10 @@
+test_campus_map_fast_travel_preserves_time_and_action_budget (tests.test_campus_kernel_bridge.CampusKernelBridgeTests) ... ok
+test_free_movement_preserves_budget_and_phase_can_advance (tests.test_campus_kernel_bridge.CampusKernelBridgeTests) ... ok
+test_remote_entrance_is_rejected_without_revision_change (tests.test_campus_kernel_bridge.CampusKernelBridgeTests) ... ok
+test_single_world_snapshot_has_campus_places_and_persistent_cast (tests.test_campus_kernel_bridge.CampusKernelBridgeTests) ... ok
+test_strict_kernel_command_crosses_continuous_region_boundary (tests.test_campus_kernel_bridge.CampusKernelBridgeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 3.196s
+
+OK

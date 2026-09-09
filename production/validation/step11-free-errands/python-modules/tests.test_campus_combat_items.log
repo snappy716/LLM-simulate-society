@@ -1,0 +1,15 @@
+test_adjacent_teammate_spends_own_last_bandage_not_player_stock (tests.test_campus_combat_items.CampusCombatItemTests) ... ok
+test_duplicate_request_and_checkpoint_restore_do_not_repeat_consumption (tests.test_campus_combat_items.CampusCombatItemTests) ... ok
+test_enemy_phase_and_backpack_shortcut_rejected (tests.test_campus_combat_items.CampusCombatItemTests) ... ok
+test_full_health_and_nonadjacent_target_never_consume (tests.test_campus_combat_items.CampusCombatItemTests) ... ok
+test_incapacitated_target_cannot_be_resurrected_by_bandage (tests.test_campus_combat_items.CampusCombatItemTests) ... ok
+test_insufficient_stock_points_and_nonmedicine_never_consume (tests.test_campus_combat_items.CampusCombatItemTests) ... ok
+test_invalid_quantity_identity_and_stale_revision (tests.test_campus_combat_items.CampusCombatItemTests) ... ok
+test_preview_matches_effect_and_only_exposes_available_deployed_stock (tests.test_campus_combat_items.CampusCombatItemTests) ... ok
+test_real_purchased_stock_heals_and_spends_exactly_one_point_without_world_time (tests.test_campus_combat_items.CampusCombatItemTests) ... ok
+test_stale_clock_and_impersonation_rejected (tests.test_campus_combat_items.CampusCombatItemTests) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 31.353s
+
+OK

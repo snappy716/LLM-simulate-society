@@ -1,0 +1,7 @@
+test_contract_files_are_valid_json_schemas (tests.test_architecture_contracts.ArchitectureContractTests) ... ok
+test_retired_source_copies_are_absent_and_campus_entry_remains (tests.test_architecture_contracts.ArchitectureContractTests) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.009s
+
+OK

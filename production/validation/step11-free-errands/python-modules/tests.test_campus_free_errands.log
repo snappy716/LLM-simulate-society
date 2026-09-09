@@ -1,0 +1,18 @@
+test_bad_response_shape_or_duplicate_is_rejected (tests.test_campus_free_errands.FreeErrandTests) ... ok
+test_candidates_are_read_only_and_show_actual_limits (tests.test_campus_free_errands.FreeErrandTests) ... ok
+test_changed_conditions_do_not_buy_alternative (tests.test_campus_free_errands.FreeErrandTests) ... ok
+test_command_replay_and_checkpoint_preserve_optional_intentions (tests.test_campus_free_errands.FreeErrandTests) ... ok
+test_full_phase_purchase_precedes_primary_and_chronicle_keeps_both (tests.test_campus_free_errands.FreeErrandTests) ... ok
+test_invalid_persisted_errand_is_rejected (tests.test_campus_free_errands.FreeErrandTests) ... ok
+test_lower_stock_reduces_quantity_and_repeat_rechecks_need (tests.test_campus_free_errands.FreeErrandTests) ... ok
+test_model_selection_is_detached_and_opt_out_is_preserved (tests.test_campus_free_errands.FreeErrandTests) ... ok
+test_model_wrong_phase_or_invented_candidate_cannot_execute (tests.test_campus_free_errands.FreeErrandTests) ... ok
+test_omitted_empty_and_legacy_model_plan_do_not_force_shopping (tests.test_campus_free_errands.FreeErrandTests) ... ok
+test_purchase_keeps_budget_clock_primary_and_authorized_quantity (tests.test_campus_free_errands.FreeErrandTests) ... ok
+test_reserved_commitment_skips_errands (tests.test_campus_free_errands.FreeErrandTests) ... ok
+test_unreachable_errand_does_not_move_or_spend (tests.test_campus_free_errands.FreeErrandTests) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 5.140s
+
+OK

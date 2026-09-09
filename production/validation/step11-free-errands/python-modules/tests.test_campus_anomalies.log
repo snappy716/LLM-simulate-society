@@ -1,0 +1,15 @@
+test_actual_reading_supplies_required_understanding_and_cost (tests.test_campus_anomalies.AnomalyTests) ... ok
+test_checkpoint_integrity_and_no_legacy_backlog (tests.test_campus_anomalies.AnomalyTests) ... ok
+test_consent_freshness_knowledge_and_bad_commands_do_not_mutate (tests.test_campus_anomalies.AnomalyTests) ... ok
+test_listening_is_free_private_source_bound_and_idempotent (tests.test_campus_anomalies.AnomalyTests) ... ok
+test_npc_same_handler_and_cost_without_player_participation (tests.test_campus_anomalies.AnomalyTests) ... ok
+test_real_incident_not_personality_or_unanswered_message (tests.test_campus_anomalies.AnomalyTests) ... ok
+test_remote_night_closed_place_busy_and_target_budget_boundaries (tests.test_campus_anomalies.AnomalyTests) ... ok
+test_support_costs_both_not_clock_or_health_and_cannot_farm (tests.test_campus_anomalies.AnomalyTests) ... ok
+test_three_day_support_and_stale_statements_need_renewal (tests.test_campus_anomalies.AnomalyTests) ... ok
+test_uninformed_person_cannot_act_using_leaked_case_id (tests.test_campus_anomalies.AnomalyTests) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 30.402s
+
+OK

@@ -1,0 +1,13 @@
+test_active_combat_prevents_campus_map_travel (tests.test_campus_combat_rounds.CampusCombatRoundTests) ... ok
+test_card_instances_fit_contract_and_round_events_enter_chronicle (tests.test_campus_combat_rounds.CampusCombatRoundTests) ... ok
+test_empty_draw_pile_reshuffles_discard_with_named_rng_and_caps_at_six (tests.test_campus_combat_rounds.CampusCombatRoundTests) ... ok
+test_end_round_discards_unplayed_cards_refills_points_and_draws_again (tests.test_campus_combat_rounds.CampusCombatRoundTests) ... ok
+test_initial_shuffle_and_draw_are_seeded_and_reproducible (tests.test_campus_combat_rounds.CampusCombatRoundTests) ... ok
+test_manual_time_advance_cannot_bypass_active_combat (tests.test_campus_combat_rounds.CampusCombatRoundTests) ... ok
+test_start_and_end_require_the_correct_phase_without_partial_mutation (tests.test_campus_combat_rounds.CampusCombatRoundTests) ... ok
+test_three_deployed_actors_get_eight_card_decks_and_six_shared_cards (tests.test_campus_combat_rounds.CampusCombatRoundTests) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 51.743s
+
+OK

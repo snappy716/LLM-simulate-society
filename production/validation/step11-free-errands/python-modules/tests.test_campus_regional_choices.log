@@ -1,0 +1,10 @@
+test_old_save_without_new_optional_ledger_remains_valid (tests.test_campus_regional_choices.RegionalChoiceTests) ... ok
+test_only_own_dated_notices_in_overnight_context_and_checkpoint (tests.test_campus_regional_choices.RegionalChoiceTests) ... ok
+test_real_view_claim_reason_abandon_and_player_reclaim (tests.test_campus_regional_choices.RegionalChoiceTests) ... ok
+test_same_read_notice_changes_ranking_with_own_personality_and_condition (tests.test_campus_regional_choices.RegionalChoiceTests) ... ok
+test_unread_and_locked_notices_do_not_inform_scores (tests.test_campus_regional_choices.RegionalChoiceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 14.624s
+
+OK

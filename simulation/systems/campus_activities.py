@@ -44,6 +44,7 @@ def make_scheduled_npc_phase_executor(
     decision_selector=None,
     activity_completed=None,
     phase_completed=None,
+    free_errands=None,
 ):
     """Build a phase-start callback that moves and activates every scheduled NPC.
 
@@ -73,6 +74,9 @@ def make_scheduled_npc_phase_executor(
             "stranded_actor_count": 0,
             "expedition_engaged_actor_count": 0,
             "decision_reason_counts": {},
+            "free_errand_count": 0,
+            "free_errand_failed_count": 0,
+            "free_errand_route_steps": 0,
         }
         decision_reasons: Counter[str] = Counter()
         destination_occupancy: Counter[str] = Counter()
@@ -132,6 +136,15 @@ def make_scheduled_npc_phase_executor(
                              actor_ids=[actor_id], visibility="private", severity=2,
                              knowledge_tags=["party", "schedule", "commitment"])
                 continue
+            errand_steps = 0
+            if free_errands is not None:
+                errand_counts = free_errands(context, actor_id, schedule_plan, phase_command)
+                for key, value in errand_counts.items():
+                    summary[key] += value
+                errand_steps = errand_counts["free_errand_route_steps"]
+                summary["route_step_count"] += errand_steps
+                if errand_steps:
+                    summary["moved_actor_count"] += 1
             plan = (
                 decision_selector(
                     context,
@@ -246,7 +259,7 @@ def make_scheduled_npc_phase_executor(
 
             route_step_count = len(route.steps)
             summary["route_step_count"] += route_step_count
-            if route_step_count:
+            if route_step_count and not errand_steps:
                 summary["moved_actor_count"] += 1
 
             action_class = str(plan.get("action_class", ""))

@@ -1,0 +1,10 @@
+test_exposure_auto_exit_and_surface_recovery_share_one_state (tests.test_campus_night_world.CampusNightWorldTests) ... ok
+test_moon_content_covers_demo_and_wraps_after_day_28 (tests.test_campus_night_world.CampusNightWorldTests) ... ok
+test_npc_entry_requires_capable_or_willing_access (tests.test_campus_night_world.CampusNightWorldTests) ... ok
+test_player_entry_is_night_only_free_and_reversible (tests.test_campus_night_world.CampusNightWorldTests) ... ok
+test_pollution_lock_and_contract_shape (tests.test_campus_night_world.CampusNightWorldTests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 16.653s
+
+OK

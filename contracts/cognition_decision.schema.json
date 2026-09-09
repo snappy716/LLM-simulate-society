@@ -10,6 +10,9 @@
     "candidate_revision": {"type": "integer", "minimum": 1},
     "selected_action_id": {"type": ["string", "null"]},
     "reason": {"type": "string", "maxLength": 500},
+    "daily_choices": {"type": ["object", "null"], "additionalProperties": {"type": "string"}},
+    "social_choice": {"type": ["string", "null"]},
+    "free_choices": {"type": ["object", "null"], "additionalProperties": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}},
     "dialogue_intent": {"type": ["string", "null"], "maxLength": 200},
     "target_id": {"type": ["string", "null"]},
     "proposed_parameters": {"type": "object"}

@@ -1,0 +1,8 @@
+test_auto_is_scoped_to_official_deepseek_v4_and_explicit_override_is_supported (tests.test_cognition_provider_options.ProviderOptionsTests) ... ok
+test_invalid_config_keeps_previous_provider_and_key (tests.test_cognition_provider_options.ProviderOptionsTests) ... ok
+test_truncation_counts_tokens_and_exposes_sanitized_failure (tests.test_cognition_provider_options.ProviderOptionsTests) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 4.915s
+
+OK

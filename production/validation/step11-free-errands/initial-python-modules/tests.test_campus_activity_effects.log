@@ -1,0 +1,17 @@
+test_all_schedule_activities_have_valid_data_driven_effects (tests.test_campus_activity_effects.CampusActivityEffectTests) ... ok
+test_phase_execution_applies_effects_to_every_scheduled_npc (tests.test_campus_activity_effects.CampusActivityEffectTests) ... FAIL
+test_player_activity_requires_location_and_spends_budget_atomically (tests.test_campus_activity_effects.CampusActivityEffectTests) ... ok
+test_rest_is_free_and_clamps_dynamic_meters (tests.test_campus_activity_effects.CampusActivityEffectTests) ... ok
+
+======================================================================
+FAIL: test_phase_execution_applies_effects_to_every_scheduled_npc (tests.test_campus_activity_effects.CampusActivityEffectTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_activity_effects.py", line 145, in test_phase_execution_applies_effects_to_every_scheduled_npc
+    self.assertEqual(200, len(effect_events) + len(purchases) - supply_count)
+AssertionError: 200 != 212
+
+----------------------------------------------------------------------
+Ran 4 tests in 4.593s
+
+FAILED (failures=1)

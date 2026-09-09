@@ -1,0 +1,22 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+GODOT_SIMULATION_READY http://127.0.0.1:55307
+WALK_EDGE campus_gate -> living_area
+WALK_EDGE living_area -> campus_gate
+WALK_EDGE campus_gate -> living_area
+WALK_EDGE living_area -> east_dormitory
+WALK_EDGE east_dormitory -> living_area
+WALK_EDGE living_area -> west_dormitory
+WALK_EDGE west_dormitory -> sports_field
+WALK_EDGE sports_field -> west_dormitory
+WALK_EDGE west_dormitory -> living_area
+WALK_EDGE living_area -> psychology_bridge
+WALK_EDGE psychology_bridge -> sports_field
+WALK_EDGE sports_field -> psychology_bridge
+WALK_EDGE psychology_bridge -> library
+WALK_EDGE library -> psychology_bridge
+WALK_EDGE psychology_bridge -> living_area
+WALK_EDGE living_area -> library
+WALK_EDGE library -> living_area
+WALK_EDGE living_area -> campus_gate
+CAMPUS_COLLAB_FLOW_OK

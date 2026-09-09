@@ -1,0 +1,27 @@
+test_battle_cannot_bypass_item_costs (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_bridge_economy_command_needs_no_old_world (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_buy_sell_atomic_conservation_free_time_and_budget (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_checkpoint_resume_preserves_inventory_and_replay (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_client_cannot_set_price_or_balance (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_drop_pickup_same_layer_and_location (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_equip_protect_unequip_sell (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_food_consumes_one_changes_real_need (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_give_requires_colocation_and_conserves_quantity (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_install_coverage_currency_and_catalog (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_insufficient_funds_stock_capacity_and_shop_cash (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_invalid_quantities_rollback (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_invariant_detects_invalid_equipment_negative_stock_and_money (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_night_cannot_shop_surface (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_npc_professional_tool_reserve (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_reinstallation_cannot_replenish (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_remote_purchase_rejected (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_replay_does_not_buy_twice (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_shop_closed_rejected (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_snapshot_is_private_and_defensive (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_stale_price_view_rejected (tests.test_campus_inventory.CampusInventoryTests) ... ok
+test_unsupported_item_effect_does_not_fake_success (tests.test_campus_inventory.CampusInventoryTests) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 22.388s
+
+OK

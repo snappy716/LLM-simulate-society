@@ -39,7 +39,7 @@ class CampusActivityExecutionTests(unittest.TestCase):
         self.assertTrue(result["ok"])
         execution = result["result"]["payload"]["phase_execution"]
         self.assertEqual(200, execution["planned_actor_count"])
-        # A real, free procurement plan may now replace an unprotected slot.
+        # Optional purchases never replace the one primary arrangement per NPC.
         self.assertEqual(200, execution["major_activity_count"] + execution["free_activity_count"])
         self.assertEqual(0, execution["blocked_actor_count"])
         self.assertGreater(execution["moved_actor_count"], 0)

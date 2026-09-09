@@ -30,7 +30,7 @@ from simulation.systems.campus_inventory import (  # noqa: E402
 )
 from simulation.systems.campus_trade import (
     TRADE_ACTIONS, install_campus_trade, make_campus_trade_handler,
-    advance_campus_trade, make_procurement_selector,
+    advance_campus_trade,
 )
 from simulation.systems.campus_supply import install_campus_supply, receive_campus_supply, review_campus_supply
 from simulation.systems import (  # noqa: E402
@@ -244,7 +244,6 @@ class CampusKernelBridge:
             graph,
             forum_policy,
         )
-        decision_selector = make_procurement_selector(decision_selector, graph, decision_policy.protected_schedule_priority)
         from simulation.systems.campus_goals import advance_personal_goals, personal_goals_invariant, make_ask_plan_handler
         from simulation.systems.campus_assistance import (ASSISTANCE_ACTIONS, advance_assistance_upkeep,
             advance_assistance_requests, advance_assistance_deliveries, make_assistance_handler, assistance_invariant, project_assistance_events)
@@ -438,6 +437,7 @@ class CampusKernelBridge:
             "FAST_TRAVEL_CAMPUS",
             make_fast_travel_handler(graph),
         )
+        from simulation.systems.campus_free_errands import make_free_errand_executor
         advance_phase_handler = make_advance_phase_handler(
                 action_policy,
                 make_scheduled_npc_phase_executor(
@@ -467,6 +467,8 @@ class CampusKernelBridge:
                         **advance_assistance_deliveries(context, messaging_policy),
                         **advance_dispute_mediation(context, messaging_policy),
                     },
+                    free_errands=make_free_errand_executor(graph, traverse_handler, inventory_handler,
+                        decision_policy.protected_schedule_priority),
                 ),
                 on_phase_ending=finish_phase_attention,
         )

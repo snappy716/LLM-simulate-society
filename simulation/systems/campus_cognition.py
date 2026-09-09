@@ -544,7 +544,7 @@ class CognitionRuntime:
             raw = deepcopy(cached)
             raw["candidate_revision"] = state.revision
         else:
-            output_tokens = max(1024 if request.social_options else 512, self.policy.max_output_tokens) if request.daily_options is not None else self.policy.max_output_tokens
+            output_tokens = max(1024 if request.social_options or any((request.free_options or {}).values()) else 512, self.policy.max_output_tokens) if request.daily_options is not None else self.policy.max_output_tokens
             estimated = max(1, len(canonical) // 4) + output_tokens
             purpose_limit = (
                 self.policy.phase_call_limit - self.policy.interaction_reserved_phase_calls
@@ -609,6 +609,13 @@ class CognitionRuntime:
                     phase = social["phase"]
                     chosen_slot = next(s for s in request.daily_options[phase] if s["candidate_id"] == selected[phase])
                     valid_choice = chosen_slot["location_id"] == social["location_id"]
+            free = response.free_choices or {}
+            valid_choice = valid_choice and set(free) <= set(request.free_options or {})
+            if valid_choice:
+                valid_choice = all(all(cid in {c["candidate_id"] for c in request.free_options[phase]}
+                                       for cid in choices) for phase, choices in free.items())
+        elif response.free_choices:
+            valid_choice = False
         if (
             response.npc_id != request.npc_id
             or response.candidate_revision != state.revision
@@ -623,7 +630,7 @@ class CognitionRuntime:
             self.provider.last_result.update(state="accepted", error_code="")
         return response
 
-    def plan_day(self, state: WorldState, actor_id: str, options: Mapping[str, Sequence[Dict[str, Any]]], social_options=()) -> Dict[str, Any] | None:
+    def plan_day(self, state: WorldState, actor_id: str, options: Mapping[str, Sequence[Dict[str, Any]]], social_options=(), free_options=None) -> Dict[str, Any] | None:
         if actor_id not in state.cognition.get("focused_ids", ()) or not self.provider.configured:
             return None
         request = self._request(state, actor_id, [])
@@ -637,7 +644,14 @@ class CognitionRuntime:
         public_social = tuple({**social, "compatible_daily_choices": [item["candidate_id"]
             for item in public_options[social["phase"]] if item["location_id"] == social["location_id"]]}
             for social in social_options)
-        request = replace(request, daily_options=public_options, social_options=public_social)
+        free_options = free_options or {phase: [] for phase in options}
+        public_free = {phase: tuple({"candidate_id": f"free:{phase}:{index}",
+            "activity_id": item["activity_id"], "location_id": item["location_id"],
+            "parameters": deepcopy(item["parameters"]), "max_unit_price": item["max_unit_price"],
+            "reason": "仅在执行时仍有真实缺口、库存、资金和可行路线时采购；数量和价格不超过此选项。",
+            **candidate_cost(item)} for index, item in enumerate(candidates[:self.policy.candidate_limit]))
+            for phase, candidates in free_options.items()}
+        request = replace(request, daily_options=public_options, social_options=public_social, free_options=public_free)
         response = self._select_response(state, request, purpose="activity")
         if response is None:
             return None
@@ -649,6 +663,14 @@ class CognitionRuntime:
             slot = deepcopy(options[phase][index])
             slot.update(decision_source="llm", decision_reason="overnight_composed_plan")
             schedule[phase] = slot
+            # An omitted optional choice means no errand, never permission for
+            # the rule controller to shop on behalf of a successful model plan.
+            slot["free_errands"] = []
+            for cid in (response.free_choices or {}).get(phase, ()):
+                index = next(i for i, c in enumerate(public_free[phase]) if c["candidate_id"] == cid)
+                errand = deepcopy(free_options[phase][index])
+                errand.update(decision_source="llm", decision_reason="overnight_optional_errand")
+                slot["free_errands"].append(errand)
         if response.social_choice is not None:
             social = deepcopy(next(s for s in social_options if s["candidate_id"] == response.social_choice))
             social["model_reason"] = response.reason
@@ -657,6 +679,7 @@ class CognitionRuntime:
         audit.append({"day": state.clock.day, "phase": state.clock.phase, "npc_id": actor_id,
                       "candidate_revision": state.revision, "purpose": "activity", "model": self.provider.model,
                       "daily_choices": dict(response.daily_choices), "social_choice": response.social_choice,
+                      "free_choices": {phase: list(ids) for phase, ids in (response.free_choices or {}).items()},
                       "reason": response.reason[:500]})
         del audit[:-96]
         return schedule

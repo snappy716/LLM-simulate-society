@@ -110,6 +110,7 @@ class BoundedDecisionRequest:
     candidates: Tuple[Mapping[str, Any], ...]
     daily_options: Optional[Mapping[str, Tuple[Mapping[str, Any], ...]]] = None
     social_options: Tuple[Mapping[str, Any], ...] = ()
+    free_options: Optional[Mapping[str, Tuple[Mapping[str, Any], ...]]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -125,6 +126,8 @@ class BoundedDecisionRequest:
             **({"social_options": [dict(item) for item in self.social_options]} if self.social_options else {}),
             **({"daily_options": {phase: [dict(item) for item in options]
                                    for phase, options in self.daily_options.items()}} if self.daily_options is not None else {}),
+            **({"free_options": {phase: [dict(item) for item in options]
+                                  for phase, options in self.free_options.items()}} if self.free_options is not None else {}),
         }
 
 
@@ -136,6 +139,7 @@ class BoundedDecisionResponse:
     reason: str
     daily_choices: Optional[Mapping[str, str]] = None
     social_choice: Optional[str] = None
+    free_choices: Optional[Mapping[str, Tuple[str, ...]]] = None
 
     @classmethod
     def from_mapping(cls, payload: Mapping[str, Any]) -> "BoundedDecisionResponse":
@@ -158,7 +162,14 @@ class BoundedDecisionResponse:
         social_choice = payload.get("social_choice")
         if social_choice is not None and not isinstance(social_choice, str):
             raise ValueError("social_choice must be an ID or null")
-        return cls(npc_id, revision, selected, reason, daily_choices, social_choice)
+        free_choices = payload.get("free_choices")
+        if free_choices is not None:
+            if (not isinstance(free_choices, dict) or any(not isinstance(k, str)
+                    or not isinstance(v, list) or any(not isinstance(i, str) for i in v)
+                    or len(v) != len(set(v)) for k, v in free_choices.items())):
+                raise ValueError("free_choices must map phases to unique ordered candidate IDs")
+            free_choices = {k: tuple(v) for k, v in free_choices.items()}
+        return cls(npc_id, revision, selected, reason, daily_choices, social_choice, free_choices)
 
 
 @dataclass(frozen=True)

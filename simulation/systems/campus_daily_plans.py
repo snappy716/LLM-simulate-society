@@ -32,6 +32,7 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, 
             if actor_id == "player":
                 continue
             options = {}
+            free_options = {}
             for phase in phases:
                 preview.clock.phase = phase
                 preview.action_economy["actors"][actor_id]["major_remaining"] = state.action_economy["policy"]["phases"][phase]["major_actions"]
@@ -41,13 +42,16 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, 
                     club_has_activity(preview, club, state.clock.day, phase)
                     for club in preview.population[actor_id].get("club_ids", ()))]
                 options[phase] = deepcopy(candidates[:runtime.policy.candidate_limit] or [dict(schedule)])
+                if actor_id in state.cognition.get("focused_ids", ()):
+                    from simulation.systems.campus_trade import procurement_candidates
+                    free_options[phase] = procurement_candidates(preview, actor_id, graph)[:runtime.policy.candidate_limit]
             # Legacy saves/new worlds bootstrap locally. Only a new morning is
             # allowed to send autonomous daily planning requests to a provider.
             social_options = ()
             if state.clock.phase == "morning" and runtime.provider.configured and actor_id in state.cognition.get("focused_ids", ()):
                 from simulation.cognition.social_planning import build_social_options
                 social_options = build_social_options(preview, actor_id, options, definitions, interaction_policy)
-            slots = runtime.plan_day(state, actor_id, options, social_options) if state.clock.phase == "morning" else None
+            slots = runtime.plan_day(state, actor_id, options, social_options, free_options) if state.clock.phase == "morning" else None
             planned_source = "llm" if slots is not None else "rule"
             if slots is None:
                 slots = {phase: deepcopy(options[phase][0]) for phase in phases}
@@ -101,6 +105,22 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, 
     return prepare, select
 
 
+def valid_free_errand(state, errand):
+    if not isinstance(errand, dict) or errand.get("activity_id") != "BUY_ITEM" or errand.get("action_class") != "free":
+        return False
+    params = errand.get("parameters")
+    if not isinstance(params, dict):
+        return False
+    shop_id, item_id = params.get("shop_id"), params.get("item_id")
+    if not isinstance(shop_id, str) or not isinstance(item_id, str):
+        return False
+    shop = state.inventories.get("shops", {}).get(shop_id, {})
+    return (bool(shop) and item_id in shop.get("accepted_item_ids", ())
+        and errand.get("location_id") == shop.get("location_id")
+        and type(params.get("quantity")) is int and params["quantity"] > 0
+        and type(errand.get("max_unit_price")) is int and errand["max_unit_price"] > 0)
+
+
 def daily_plans_invariant(state):
     ledger = state.cognition.get("daily_plans")
     if ledger is None:
@@ -116,6 +136,13 @@ def daily_plans_invariant(state):
         for phase, plan in slots.items():
             if plan.get("day") != ledger["day"] or plan.get("phase") != phase or plan.get("location_id") not in state.places:
                 yield "invalid daily plan clock/location"
+            errands = plan.get("free_errands", [])
+            if not isinstance(errands, list):
+                yield "invalid daily free errands"
+                continue
+            for errand in errands:
+                if not valid_free_errand(state, errand):
+                    yield "invalid daily free errand"
             social = plan.get("social_intent")
             if social is not None and (not isinstance(social, dict)
                     or social.get("target_id") not in state.population

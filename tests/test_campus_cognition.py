@@ -150,6 +150,16 @@ class CampusCognitionTests(unittest.TestCase):
         result = command(bridge, "ADVANCE_PHASE")
         self.assertTrue(result["ok"])
         state = bridge.kernel.state
+        # Procurement no longer parks staff in the shop for a guaranteed
+        # encounter. Test the reserved wording budget with explicit verified
+        # context, not an assumption that a natural encounter must occur.
+        self.assertEqual([], provider.dialogue_requests)
+        npc_id, target_id = state.cognition["focused_ids"][:2]
+        phrased = bridge.cognition_runtime.compose_interaction_dialogue(state, npc_id, target_id,
+            {"intent_id": "exchange_ideas", "outcome": "accepted", "verified_summary": "测试夹具：已交换学习想法。"}, [], [])
+        self.assertIsNotNone(phrased)
+        self.assertIsNone(bridge.cognition_runtime.compose_interaction_dialogue(state, npc_id, target_id,
+            {"intent_id": "exchange_ideas", "outcome": "accepted", "verified_summary": "测试夹具：另一次交流。"}, [], []))
         usage = state.cognition["usage"]
         # Social choices now belong to the daily request; there is no extra
         # per-encounter decision call. This old fake elects no social intention.
@@ -175,13 +185,12 @@ class CampusCognitionTests(unittest.TestCase):
             if event["event_type"] == "NPC_INTERACTION_RESOLVED"
             and event["payload"]["wording_source"] == "llm"
         ]
-        self.assertEqual(1, len(interaction_events))
-        self.assertEqual("llm", interaction_events[0]["payload"]["wording_source"])
-        self.assertIn("当面说清楚", interaction_events[0]["public_summary"])
+        self.assertEqual(0, len(interaction_events))
+        self.assertIn("当面说清楚", phrased["utterance"])
         dialogue_request = provider.dialogue_requests[0].to_dict()
         self.assertEqual("in_person", dialogue_request["dialogue_kind"])
         self.assertEqual(
-            interaction_events[0]["payload"]["intent_id"],
+            "exchange_ideas",
             dialogue_request["interaction_context"]["intent_id"],
         )
         self.assertNotIn("chronicles", dialogue_request)

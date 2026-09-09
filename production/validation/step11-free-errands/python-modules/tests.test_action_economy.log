@@ -1,0 +1,10 @@
+test_advancing_phase_resets_all_budgets_and_late_night_rolls_day (tests.test_action_economy.ActionEconomyTests) ... ok
+test_every_actor_starts_each_phase_with_one_major_action (tests.test_action_economy.ActionEconomyTests) ... ok
+test_npc_and_player_have_independent_major_actions (tests.test_action_economy.ActionEconomyTests) ... ok
+test_second_major_action_is_rejected_without_partial_commit (tests.test_action_economy.ActionEconomyTests) ... ok
+test_stale_phase_command_is_rejected (tests.test_action_economy.ActionEconomyTests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.031s
+
+OK

@@ -384,6 +384,42 @@ def advance_campus_trade(context):
     return {"private_trade_settled": settled}
 
 
+def procurement_candidates(state, actor_id, graph):
+    """Read-only, conditional offers, not instructions or future purchases."""
+    actor = state.population[actor_id]
+    if _layer(state, actor_id) != "surface" or _busy(state, actor_id):
+        return []
+    from simulation.systems.campus_assistance import waiting_for_material_help
+    candidates = []
+    catalog = _catalog(state)
+    inventory = _inventory(state.inventories["actors"][actor_id])
+    for shop in state.inventories["shops"].values():
+        if state.clock.phase not in state.places[shop["location_id"]].get("open_phases", []):
+            continue
+        route = graph.shortest_route(actor["current_location_id"], shop["location_id"],
+            phase=state.clock.phase, access_tags=actor.get("access_tags", ()))
+        if route is None:
+            continue
+        for item_id in shop["accepted_item_ids"]:
+            if item_id == "blank_notebook" and waiting_for_material_help(state, actor_id, item_id):
+                continue
+            needed = procurement_demand(state, actor_id, item_id)
+            price = state.inventories["catalog"][item_id]["base_price"]
+            quantity = min(needed, shop["quantities"].get(item_id, 0), actor["wealth"] // price)
+            while quantity > 0 and not inventory.can_add(catalog[item_id], quantity, catalog):
+                quantity -= 1
+            if quantity <= 0:
+                continue
+            candidates.append({"activity_id": "BUY_ITEM", "action_class": "free", "location_id": shop["location_id"],
+                "parameters": {"shop_id": shop["id"], "item_id": item_id, "quantity": quantity},
+                "max_unit_price": price, "route_step_count": len(route.steps),
+                "decision_source": "rule", "decision_reason": "necessary_item_shortage",
+                "reason_codes": ["need", "affordable", "shop_open", "reachable"],
+                "day": state.clock.day, "phase": state.clock.phase})
+    return sorted(candidates, key=lambda c: (c["max_unit_price"] * c["parameters"]["quantity"] + c["route_step_count"],
+        c["parameters"]["shop_id"], c["parameters"]["item_id"]))
+
+
 def make_procurement_selector(base_selector, graph, protected_priority):
     def select(context, actor_id, schedule_plan, occupancy):
         state, actor = context.state, context.state.population[actor_id]
@@ -393,39 +429,10 @@ def make_procurement_selector(base_selector, graph, protected_priority):
         if (int(schedule_plan.get("priority", 0)) >= protected_priority or actor.get("active_forum_task_id")
                 or _layer(state, actor_id) != "surface" or _busy(state, actor_id)):
             return base_selector(context, actor_id, schedule_plan, occupancy)
-        candidates = []
-        catalog = _catalog(state)
-        for shop in state.inventories["shops"].values():
-            if state.clock.phase not in state.places[shop["location_id"]].get("open_phases", []):
-                continue
-            for item_id in shop["accepted_item_ids"]:
-                # A study-material promise postpones duplicate autonomous shopping.
-                # Food and medical shortages can still be solved immediately.
-                from simulation.systems.campus_assistance import waiting_for_material_help
-                if item_id == "blank_notebook" and waiting_for_material_help(state, actor_id, item_id):
-                    continue
-                needed = procurement_demand(state, actor_id, item_id)
-                price = state.inventories["catalog"][item_id]["base_price"]
-                quantity = min(needed, shop["quantities"].get(item_id, 0), actor["wealth"] // price)
-                if quantity <= 0:
-                    continue
-                inventory = _inventory(state.inventories["actors"][actor_id])
-                while quantity > 0 and not inventory.can_add(catalog[item_id], quantity, catalog):
-                    quantity -= 1
-                if quantity <= 0:
-                    continue
-                route = graph.shortest_route(actor["current_location_id"], shop["location_id"], phase=state.clock.phase, access_tags=actor.get("access_tags", ()))
-                if route is not None:
-                    candidates.append((price * quantity + len(route.steps), shop["id"], item_id, quantity, route))
+        candidates = procurement_candidates(state, actor_id, graph)
         if not candidates:
             return base_selector(context, actor_id, schedule_plan, occupancy)
-        _, shop_id, item_id, quantity, route = min(candidates, key=lambda c: c[:3])
-        return {"activity_id": "BUY_ITEM", "action_class": "free", "location_id": route.destination_id,
-                "parameters": {"shop_id": shop_id, "item_id": item_id, "quantity": quantity},
-                "decision_source": "rule", "decision_reason": "necessary_item_shortage",
-                "reason_codes": ["need", "affordable", "shop_open", "reachable"], "candidate_count": len(candidates),
-                "scheduled_activity_id": schedule_plan.get("activity_id", ""),
-                "day": state.clock.day, "phase": state.clock.phase}
+        return dict(candidates[0], candidate_count=len(candidates), scheduled_activity_id=schedule_plan.get("activity_id", ""))
     return select
 
 

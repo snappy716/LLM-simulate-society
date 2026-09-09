@@ -1,0 +1,14 @@
+test_atomic_save_leaves_no_temporary_file (tests.test_kernel_persistence.KernelCheckpointTests) ... ok
+test_built_checkpoint_has_no_machine_absolute_paths (tests.test_kernel_persistence.KernelCheckpointTests) ... ok
+test_checksum_detects_tampering (tests.test_kernel_persistence.KernelCheckpointTests) ... ok
+test_content_mismatch_is_explicit (tests.test_kernel_persistence.KernelCheckpointTests) ... ok
+test_non_committing_result_remains_idempotent_after_load (tests.test_kernel_persistence.KernelCheckpointTests) ... ok
+test_rng_continues_from_checkpoint (tests.test_kernel_persistence.KernelCheckpointTests) ... ok
+test_round_trip_preserves_world_rng_content_and_idempotency (tests.test_kernel_persistence.KernelCheckpointTests) ... ok
+test_corrupt_journal_is_rejected (tests.test_kernel_persistence.KernelEventJournalTests) ... ok
+test_journal_appends_across_sessions_without_truncation (tests.test_kernel_persistence.KernelEventJournalTests) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.249s
+
+OK

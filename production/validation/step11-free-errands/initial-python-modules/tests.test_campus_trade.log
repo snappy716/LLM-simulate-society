@@ -1,0 +1,35 @@
+test_autonomous_peers_act_without_player_and_without_creating_resources (tests.test_campus_trade.CampusTradeTests) ... ok
+test_buffer_purchase_can_leave_old_surplus_without_renewing_item_lock (tests.test_campus_trade.CampusTradeTests) ... ok
+test_carried_food_does_not_also_charge_abstract_meal (tests.test_campus_trade.CampusTradeTests) ... ok
+test_checkpoint_preserves_quotes_price_memories_and_cooldowns (tests.test_campus_trade.CampusTradeTests) ... ok
+test_checkpoint_without_new_buffer_policy_uses_safe_defaults (tests.test_campus_trade.CampusTradeTests) ... ok
+test_competing_quotes_cannot_sell_last_surplus_twice (tests.test_campus_trade.CampusTradeTests) ... ok
+test_corrupt_cooldown_or_memory_rejected_by_invariant (tests.test_campus_trade.CampusTradeTests) ... ok
+test_failed_accept_revalidates_money_stock_location_capacity_layer_battle (tests.test_campus_trade.CampusTradeTests) ... ok
+test_food_reserve_target_respects_personality_and_financial_pressure (tests.test_campus_trade.CampusTradeTests) ... ok
+test_food_restock_uses_low_threshold_and_larger_target (tests.test_campus_trade.CampusTradeTests) ... ok
+test_incoming_player_offer_stays_pending_until_player_accepts (tests.test_campus_trade.CampusTradeTests) ... ok
+test_invalid_buffer_policy_is_rejected (tests.test_campus_trade.CampusTradeTests) ... ok
+test_invalid_quote_inputs_do_not_mutate_ledger (tests.test_campus_trade.CampusTradeTests) ... ok
+test_life_reserve_and_medical_tools (tests.test_campus_trade.CampusTradeTests) ... ok
+test_no_forced_player_accept_or_third_party_response (tests.test_campus_trade.CampusTradeTests) ... ok
+test_no_need_and_bad_price_are_real_npc_rejections (tests.test_campus_trade.CampusTradeTests) ... ok
+test_npc_two_to_four_day_cooldown_and_newly_acquired_item_lock (tests.test_campus_trade.CampusTradeTests) ... ok
+test_private_view_does_not_expose_unrelated_npc_quotes (tests.test_campus_trade.CampusTradeTests) ... ok
+test_procurement_plans_route_not_teleport_and_respects_commitments (tests.test_campus_trade.CampusTradeTests) ... ok
+test_procurement_shrinks_batch_to_weight_and_cash_instead_of_abandoning_it (tests.test_campus_trade.CampusTradeTests) ... ok
+test_procurement_uses_alternative_food_when_bread_sold_out (tests.test_campus_trade.CampusTradeTests) ... ok
+test_profession_demand_not_inflated_by_food_buffer (tests.test_campus_trade.CampusTradeTests) ... ok
+test_quote_is_not_settlement_and_response_is_atomic (tests.test_campus_trade.CampusTradeTests) ... ok
+test_reject_and_cancel_do_not_transfer_assets (tests.test_campus_trade.CampusTradeTests) ... ok
+test_relationship_suspicion_personality_pressure_change_values (tests.test_campus_trade.CampusTradeTests) ... ok
+test_replay_and_second_accept_do_not_pay_twice (tests.test_campus_trade.CampusTradeTests) ... ok
+test_same_pair_pending_and_offer_expiration (tests.test_campus_trade.CampusTradeTests) ... ok
+test_settled_price_and_quote_memory_are_separate (tests.test_campus_trade.CampusTradeTests) ... ok
+test_small_private_gap_does_not_trigger_another_shopping_trip (tests.test_campus_trade.CampusTradeTests) ... ok
+test_trading_profession_can_serve_multiple_people_but_not_flip_immediately (tests.test_campus_trade.CampusTradeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 23.354s
+
+OK

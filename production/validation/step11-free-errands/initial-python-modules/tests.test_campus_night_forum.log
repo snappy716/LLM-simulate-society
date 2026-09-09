@@ -1,0 +1,10 @@
+test_evening_publishes_twenty_hidden_tasks_and_sends_six_to_twelve_npcs (tests.test_campus_night_forum.CampusNightForumTests) ... ok
+test_first_player_entry_unlocks_readable_forum_and_allows_one_real_task (tests.test_campus_night_forum.CampusNightForumTests) ... ok
+test_morning_expires_unfinished_work_and_records_the_previous_team_size (tests.test_campus_night_forum.CampusNightForumTests) ... ok
+test_night_participation_and_task_results_are_deterministic (tests.test_campus_night_forum.CampusNightForumTests) ... ok
+test_night_task_events_project_into_actor_chronicles_and_invariants_hold (tests.test_campus_night_forum.CampusNightForumTests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 24.068s
+
+OK

@@ -1,0 +1,13 @@
+test_all_colleges_have_people_and_complete_skill_modules (tests.test_campus_population.CampusPopulationTests) ... ok
+test_focused_and_night_tier_budgets_are_exact (tests.test_campus_population.CampusPopulationTests) ... ok
+test_generated_record_contract_is_valid_json_schema_shape (tests.test_campus_population.CampusPopulationTests) ... ok
+test_generates_exact_persistent_composition (tests.test_campus_population.CampusPopulationTests) ... ok
+test_generation_is_seeded_and_reproducible (tests.test_campus_population.CampusPopulationTests) ... ok
+test_homes_rooms_locations_and_permissions_are_semantically_stable (tests.test_campus_population.CampusPopulationTests) ... ok
+test_population_installs_after_places_with_real_world_scale_metadata (tests.test_campus_population.CampusPopulationTests) ... ok
+test_records_include_decision_driving_character_fields (tests.test_campus_population.CampusPopulationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.299s
+
+OK

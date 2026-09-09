@@ -1,0 +1,12 @@
+test_binding_replaces_forged_rules_and_keeps_personal_differences (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_both_provider_types_pass_shared_guidance_and_actor_rules (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_budget_values_follow_runtime_policy_and_stale_is_unknown_not_free (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_costs_do_not_claim_healing_rest_or_unknown_actions_are_free (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_phone_player_and_npc_speech_all_receive_same_rules (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_reservation_exposes_only_own_current_boolean_not_private_details (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_shared_rules_for_every_actor_are_detached_and_read_only (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 1.266s
+
+OK

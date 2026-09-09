@@ -1,0 +1,12 @@
+test_existing_campus_slot_loads_after_service_restart (tests.test_campus_service_lifecycle.CampusServiceLifecycleTests) ... ok
+test_explicit_configuration_is_offline_until_dialogue_or_decision (tests.test_campus_service_lifecycle.CampusServiceLifecycleTests) ... ok
+test_fresh_process_never_imports_or_constructs_town_or_auto_enables_llm (tests.test_campus_service_lifecycle.CampusServiceLifecycleTests) ... ok
+test_http_only_exposes_campus_and_legacy_requests_cannot_mutate (tests.test_campus_service_lifecycle.CampusServiceLifecycleTests) ... ok
+test_module_entry_is_campus_server (tests.test_campus_service_lifecycle.CampusServiceLifecycleTests) ... ok
+test_no_legacy_snapshot_or_trace_files_on_startup (tests.test_campus_service_lifecycle.CampusServiceLifecycleTests) ... ok
+test_settings_default_local_override_and_invalid_json (tests.test_campus_service_lifecycle.CampusServiceLifecycleTests) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 5.600s
+
+OK
