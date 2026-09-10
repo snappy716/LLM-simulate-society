@@ -618,7 +618,7 @@ class CampusKernelBridge:
         with self.operation_lock:
             command = parse_simulation_command(payload)
             result = self.kernel.execute(command)
-            return {"ok": result.success, "result": command_result_view(result), "snapshot": self.snapshot()}
+            return {"ok": result.success, "result": command_result_view(result, viewer_id=command.actor_id), "snapshot": self.snapshot()}
 
     def persistence(self, store, payload):
         from simulation.persistence.campus_saves import SaveError, PRESENTATION_MAPS

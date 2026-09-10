@@ -1,0 +1,33 @@
+test_booking_is_free_and_performance_uses_pre_action_inputs_once (tests.test_campus_events.CampusEventTests) ... ok
+test_cancelled_and_missed_entries_never_receive_performance_or_award (tests.test_campus_events.CampusEventTests) ... ok
+test_festival_has_real_collective_outcome_and_club_contribution (tests.test_campus_events.CampusEventTests) ... ok
+test_low_participation_is_small_exchange_not_fabricated_festival (tests.test_campus_events.CampusEventTests) ... ok
+test_model_can_choose_events_in_existing_dawn_call_and_execute_same_rules (tests.test_campus_events.CampusEventTests) ... ok
+test_organization_options_permission_recheck_real_spend_and_no_double_charge (tests.test_campus_events.CampusEventTests) ... ok
+test_own_results_and_personal_motivation_do_not_imply_forced_participation (tests.test_campus_events.CampusEventTests) ... ok
+test_private_preparation_stays_private_and_public_results_not_contacts (tests.test_campus_events.CampusEventTests) ... ok
+test_results_wait_for_all_actors_ties_not_arrival_order_and_idempotent (tests.test_campus_events.CampusEventTests) ... ok
+test_save_roundtrip_additive_migration_preserves_history_rng_and_source (tests.test_campus_events.CampusEventTests) ... ok
+test_score_changes_with_real_inputs_not_claimed_result_and_view_is_read_only (tests.test_campus_events.CampusEventTests) ... ok
+test_unauthorized_options_and_forged_results_cannot_buy_success (tests.test_campus_events.CampusEventTests) ... ok
+test_campus_view_exposes_navigation_without_internal_command_history (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_command_parser_accepts_complete_strict_payload (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_command_parser_enforces_phase_and_unique_targets (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_command_parser_rejects_unknown_and_missing_fields (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_result_and_status_views_are_stable_read_only_shapes (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_phase_execution_populates_logs_without_embedding_them_in_snapshot (tests.test_npc_chronicles.CampusChronicleIntegrationTests) ... ok
+test_deep_validation_catches_historical_entry_corruption (tests.test_npc_chronicles.ChronicleDomainTests) ... ok
+test_entry_rejects_unknown_category_and_invalid_importance (tests.test_npc_chronicles.ChronicleDomainTests) ... ok
+test_world_state_round_trip_preserves_chronicles (tests.test_npc_chronicles.ChronicleDomainTests) ... ok
+test_event_sink_failure_rolls_back_state_event_sequence_and_chronicle (tests.test_npc_chronicles.ChronicleProjectionTests) ... ok
+test_intentions_and_global_clock_events_do_not_enter_personal_history (tests.test_npc_chronicles.ChronicleProjectionTests) ... ok
+test_movement_effect_and_completion_become_one_activity_entry (tests.test_npc_chronicles.ChronicleProjectionTests) ... ok
+test_projector_runs_before_invariants (tests.test_npc_chronicles.ChronicleProjectionTests) ... ok
+test_colocated_player_gets_reliable_witness_record (tests.test_npc_chronicles.ChronicleVisibilityAndPagingTests) ... ok
+test_pages_are_newest_first_and_cursor_is_bound_to_query (tests.test_npc_chronicles.ChronicleVisibilityAndPagingTests) ... ok
+test_public_campus_routine_is_reported_but_secret_event_is_hidden (tests.test_npc_chronicles.ChronicleVisibilityAndPagingTests) ... ok
+
+----------------------------------------------------------------------
+Ran 28 tests in 18.233s
+
+OK

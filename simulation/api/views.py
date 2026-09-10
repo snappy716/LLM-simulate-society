@@ -36,6 +36,18 @@ CAMPUS_WORLD_VIEW_VERSION = 23
 NPC_CHRONICLE_VIEW_VERSION = 1
 
 
+def _hide_private_event_receipt(effects):
+    """Redact a copied public projection, never the authoritative receipt.
+
+    Named life results are actor-local. Public event scores are published by
+    the separate end-of-session board, not by another actor's activity cache.
+    """
+    if isinstance(effects, dict) and isinstance(effects.get("life"), dict):
+        effects["life"].pop("event", None)
+        if not effects["life"]:
+            effects.pop("life")
+
+
 def _chronicle_cursor(actor_id: str, entry_id: str, filter_name: str) -> str:
     raw = json.dumps(
         {"actor_id": actor_id, "entry_id": entry_id, "filter": filter_name},
@@ -130,6 +142,11 @@ def npc_chronicle_view(
         if visibility is None:
             continue
         payload = deepcopy(entry)
+        if viewer_id != npc_id:
+            _hide_private_event_receipt(payload.get("parameters", {}).get("effects"))
+            result = payload.get("parameters", {}).get("result")
+            if isinstance(result, dict):
+                result.pop("event", None)
         payload.update(visibility)
         payload["scene_name"] = state.places.get(str(entry.get("scene_id", "")), {}).get(
             "name", entry.get("scene_id", "未知地点")
@@ -249,6 +266,10 @@ def campus_world_view(state: WorldState, *, graph=None) -> Dict[str, Any]:
     from simulation.systems.campus_goals import disclosed_plans
     reported_plans = disclosed_plans(state)
     for npc_id in cast:
+        _hide_private_event_receipt(cast[npc_id].get("last_activity_effects"))
+        activity = cast[npc_id].get("current_activity")
+        if isinstance(activity, dict):
+            _hide_private_event_receipt(activity.get("effects"))
         # Only a dated statement the NPC actually volunteered, never live private plans.
         cast[npc_id]["stated_plan"] = reported_plans.get(npc_id, {})
         source_record = state.population.get(npc_id, {})

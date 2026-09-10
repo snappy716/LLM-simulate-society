@@ -1,0 +1,28 @@
+test_booking_is_free_and_performance_uses_pre_action_inputs_once (tests.test_campus_events.CampusEventTests) ... ok
+test_cancelled_and_missed_entries_never_receive_performance_or_award (tests.test_campus_events.CampusEventTests) ... ok
+test_festival_has_real_collective_outcome_and_club_contribution (tests.test_campus_events.CampusEventTests) ... ok
+test_low_participation_is_small_exchange_not_fabricated_festival (tests.test_campus_events.CampusEventTests) ... ok
+test_organization_options_permission_recheck_real_spend_and_no_double_charge (tests.test_campus_events.CampusEventTests) ... ok
+test_own_results_and_personal_motivation_do_not_imply_forced_participation (tests.test_campus_events.CampusEventTests) ... ok
+test_private_preparation_stays_private_and_public_results_not_contacts (tests.test_campus_events.CampusEventTests) ... ok
+test_results_wait_for_all_actors_ties_not_arrival_order_and_idempotent (tests.test_campus_events.CampusEventTests) ... ok
+test_save_roundtrip_additive_migration_preserves_history_rng_and_source (tests.test_campus_events.CampusEventTests) ... ERROR
+test_score_changes_with_real_inputs_not_claimed_result_and_view_is_read_only (tests.test_campus_events.CampusEventTests) ... ok
+test_unauthorized_options_and_forged_results_cannot_buy_success (tests.test_campus_events.CampusEventTests) ... ok
+
+======================================================================
+ERROR: test_save_roundtrip_additive_migration_preserves_history_rng_and_source (tests.test_campus_events.CampusEventTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_events.py", line 219, in test_save_roundtrip_additive_migration_preserves_history_rng_and_source
+    migrated = load_kernel_checkpoint(path, expected_content_version=state.content_version)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/persistence/kernel_checkpoint.py", line 128, in load_kernel_checkpoint
+    loaded = migrate_campus_content(loaded, expected_content_version)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/persistence/content_migrations.py", line 120, in migrate_campus_content
+    raise CheckpointError(
+simulation.persistence.kernel_checkpoint.CheckpointError: content version mismatch: no approved migration for this save and current content
+
+----------------------------------------------------------------------
+Ran 11 tests in 9.143s
+
+FAILED (errors=1)

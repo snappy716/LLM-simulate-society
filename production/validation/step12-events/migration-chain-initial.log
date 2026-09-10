@@ -1,0 +1,20 @@
+test_all_remaining_modules_import_without_retired_dependencies (tests.test_runtime_retirement.RuntimeRetirementTests) ... ok
+test_old_world_constructor_is_no_longer_a_package_api (tests.test_runtime_retirement.RuntimeRetirementTests) ... ok
+test_retired_files_are_absent (tests.test_runtime_retirement.RuntimeRetirementTests) ... ok
+test_shared_clock_and_content_identity_survive_retirement (tests.test_runtime_retirement.RuntimeRetirementTests) ... FAIL
+
+======================================================================
+FAIL: test_shared_clock_and_content_identity_survive_retirement (tests.test_runtime_retirement.RuntimeRetirementTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_runtime_retirement.py", line 116, in test_shared_clock_and_content_identity_survive_retirement
+    self.assertEqual(study_migration["target_version"], current.content_version)
+AssertionError: '74314dd2ea32e235' != '5b24bd911139b2d3'
+- 74314dd2ea32e235
++ 5b24bd911139b2d3
+
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.058s
+
+FAILED (failures=1)

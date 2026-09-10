@@ -34,7 +34,9 @@ class LifeTests(unittest.TestCase):
     def test_browse_and_enroll_cancel_do_not_pay_or_advance(self):
         before = deepcopy(self.state)
         view = self.bridge.snapshot()["agenda"]["life"]
-        self.assertEqual(3 * len(ledger(self.state)["definitions"]), len(view["offers"]))
+        # Weekly competitions are not offered on every calendar day.
+        expected = [session(self.state, f"life:{day}:{key}") for day in range(1, 4) for key in ledger(self.state)["definitions"]]
+        self.assertEqual(sum(row is not None for row in expected), len(view["offers"]))
         self.assertEqual(before.to_dict(), self.state.to_dict())
         self.assertTrue(self.op("ENROLL_CAMPUS_OPPORTUNITY")["ok"])
         self.assertTrue(self.op("ENROLL_CAMPUS_OPPORTUNITY")["ok"])

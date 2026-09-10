@@ -100,6 +100,10 @@ def bind_cognition_identity(state, request):
     local = dict(request.state)
     from simulation.cognition.action_rules import action_rule_context
     local["action_rules"] = action_rule_context(state, request.npc_id)
+    from simulation.systems.campus_events import own_event_context
+    own_events = own_event_context(state, request.npc_id)
+    if own_events:
+        local["own_campus_event_results"] = own_events
     from simulation.systems.campus_bonds import own_bond_context
     own_bonds = own_bond_context(state, request.npc_id)
     if own_bonds:

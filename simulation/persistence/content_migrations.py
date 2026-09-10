@@ -9,6 +9,28 @@ from pathlib import Path
 def migrate_campus_content(loaded, expected_version):
     from simulation.persistence.kernel_checkpoint import CheckpointError, LoadedCheckpoint
 
+    event_spec = json.loads(Path(__file__).with_name("campus_events_content.json").read_text(encoding="utf-8"))
+    if expected_version == event_spec["target_version"]:
+        if loaded.state.content_version != event_spec["source_version"]:
+            loaded = migrate_campus_content(loaded, event_spec["source_version"])
+        if loaded.content_manifest != event_spec["source_manifest"]:
+            raise CheckpointError("campus events migration manifest mismatch")
+        migrated = loaded.state.clone()
+        life = migrated.situations.get("campus_life", {})
+        if life.get("definitions") != event_spec["source_definitions"]:
+            raise CheckpointError("campus events source definitions mismatch")
+        if any(sid.split(":")[-1] not in event_spec["source_definitions"] for sid in life.get("records", {})):
+            raise CheckpointError("legacy save unexpectedly contains event participation")
+        life["definitions"] = deepcopy(event_spec["definitions"])
+        life["events_available_from"] = {"day": migrated.clock.day, "phase": migrated.clock.phase}
+        from simulation.systems.campus_life import life_invariant
+        if list(life_invariant(migrated)):
+            raise CheckpointError("invalid migrated campus events ledger")
+        migrated.content_version = expected_version
+        migrated.require_valid()
+        return LoadedCheckpoint(migrated, loaded.rng.clone(), deepcopy(event_spec["target_manifest"]),
+                                loaded.migrations + (event_spec["migration_id"],))
+
     study_spec = json.loads(Path(__file__).with_name("campus_courses_jobs_content.json").read_text(encoding="utf-8"))
     if expected_version == study_spec["target_version"]:
         if loaded.state.content_version != study_spec["source_version"]:

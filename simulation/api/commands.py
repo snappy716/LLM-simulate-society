@@ -51,11 +51,26 @@ def parse_simulation_command(payload: Dict[str, Any]) -> SimulationCommand:
         raise CommandParseError("invalid_command", str(exc)) from exc
 
 
-def command_result_view(result: CommandResult) -> Dict[str, Any]:
-    return {
+def command_result_view(result: CommandResult, *, viewer_id=None) -> Dict[str, Any]:
+    view = {
         "contract_version": COMMAND_CONTRACT_VERSION,
         **result.to_dict(),
     }
+    if viewer_id is not None:
+        # Keep internal kernel/event audit receipts intact. Only the HTTP
+        # projection conceals other actors' private event preparation inputs.
+        for event in view["events"]:
+            if viewer_id in event.get("actor_ids", ()):
+                continue
+            payload = event.get("payload", {})
+            receipt = payload.get("result")
+            if isinstance(receipt, dict):
+                receipt.pop("event", None)
+            effects = payload.get("effects")
+            life = effects.get("life") if isinstance(effects, dict) else None
+            if isinstance(life, dict):
+                life.pop("event", None)
+    return view
 
 
 __all__ = [

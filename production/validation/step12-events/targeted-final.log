@@ -1,0 +1,28 @@
+test_booking_is_free_and_performance_uses_pre_action_inputs_once (tests.test_campus_events.CampusEventTests) ... ok
+test_cancelled_and_missed_entries_never_receive_performance_or_award (tests.test_campus_events.CampusEventTests) ... ok
+test_festival_has_real_collective_outcome_and_club_contribution (tests.test_campus_events.CampusEventTests) ... ok
+test_low_participation_is_small_exchange_not_fabricated_festival (tests.test_campus_events.CampusEventTests) ... ok
+test_model_can_choose_events_in_existing_dawn_call_and_execute_same_rules (tests.test_campus_events.CampusEventTests) ... ok
+test_organization_options_permission_recheck_real_spend_and_no_double_charge (tests.test_campus_events.CampusEventTests) ... ok
+test_own_results_and_personal_motivation_do_not_imply_forced_participation (tests.test_campus_events.CampusEventTests) ... ok
+test_private_preparation_stays_private_and_public_results_not_contacts (tests.test_campus_events.CampusEventTests) ... ok
+test_results_wait_for_all_actors_ties_not_arrival_order_and_idempotent (tests.test_campus_events.CampusEventTests) ... ok
+test_save_roundtrip_additive_migration_preserves_history_rng_and_source (tests.test_campus_events.CampusEventTests) ... ok
+test_score_changes_with_real_inputs_not_claimed_result_and_view_is_read_only (tests.test_campus_events.CampusEventTests) ... ok
+test_unauthorized_options_and_forged_results_cannot_buy_success (tests.test_campus_events.CampusEventTests) ... ok
+test_auto_night_entry_does_not_override_confirmed_surface_shift (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_cancel_and_miss_do_not_earn_units (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_cash_loss_after_booking_fails_without_cost_or_unpaid_attendance (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_course_three_actual_units_unlock_job_without_case_mastery (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_current_roundtrip_and_previous_activity_ledger_preserved (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_fake_model_can_choose_named_course_in_existing_daily_plan (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_job_qualification_and_malformed_content_rejected (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_no_unearned_course_or_wage_receipts (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_npcs_compete_for_same_real_job_slots_and_cancel_releases (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_unattended_three_days_produces_actual_course_and_work_receipts (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_wage_is_exact_atomic_transfer_not_generic_work_plus_wage (tests.test_campus_study_work.StudyWorkTests) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 63.509s
+
+OK

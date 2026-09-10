@@ -1,0 +1,21 @@
+{"seed": 314, "days_completed": 1, "clock": {"day": 2, "phase": "morning", "minute": 0}}
+{"seed": 314, "days_completed": 2, "clock": {"day": 3, "phase": "morning", "minute": 0}}
+{"seed": 314, "days_completed": 3, "clock": {"day": 4, "phase": "morning", "minute": 0}}
+{"seed": 314, "days_completed": 4, "clock": {"day": 5, "phase": "morning", "minute": 0}}
+{"seed": 314, "days_completed": 5, "clock": {"day": 6, "phase": "morning", "minute": 0}}
+{"seed": 314, "days_completed": 6, "clock": {"day": 7, "phase": "morning", "minute": 0}}
+{"seed": 314, "checkpoint_day": 8, "all_world_fields_and_rng_equal": true, "world_sha256": "340c4cd5fb988e5b2c2a108a4ce906338f1ede4f62033b247655f1df465560d2"}
+{"seed": 314, "days_completed": 7, "clock": {"day": 8, "phase": "morning", "minute": 0}}
+{"seed": 314, "days_completed": 8, "clock": {"day": 9, "phase": "morning", "minute": 0}}
+{"seed": 314, "days_completed": 9, "clock": {"day": 10, "phase": "morning", "minute": 0}}
+{"seed": 314, "days_completed": 10, "clock": {"day": 11, "phase": "morning", "minute": 0}}
+{"seed": 314, "days_completed": 11, "clock": {"day": 12, "phase": "morning", "minute": 0}}
+{"seed": 314, "days_completed": 12, "clock": {"day": 13, "phase": "morning", "minute": 0}}
+{"seed": 314, "days_completed": 13, "clock": {"day": 14, "phase": "morning", "minute": 0}}
+{"seed": 314, "days_completed": 14, "clock": {"day": 15, "phase": "morning", "minute": 0}}
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/production/validation/step12-events/audit_integrated_life.py", line 98, in <module>
+    audit(args.seed, args.days)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/production/validation/step12-events/audit_integrated_life.py", line 73, in audit
+    wages += row["result"].get("job", {}).get("wage", 0)
+KeyError: 'result'

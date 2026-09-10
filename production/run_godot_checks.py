@@ -23,6 +23,7 @@ STANDARD = (
 )
 FIXTURES = ("recovery", "trade", "supply", "enemy", "retreat", "pollution", "combat_item", "investigation", "growth", "knowledge", "goals", "assistance", "autonomous", "expedition", "attention", "fieldwork", "sites", "friend", "coordination", "situations", "disputes", "welfare", "commitment", "contact", "inquiry", "contact_leads", "anomaly", "afterimage", "meetings", "meetings_phone", "support_preparation", "anchors", "followup", "evidence", "routes", "free_errands", "life", "study", "work", "outings")
 FIXTURES = (*FIXTURES, "parallel", "medical", "bonds", "social_pacing", "support_reservations")
+FIXTURES = (*FIXTURES, "events", "festival")
 
 
 def unused_port():

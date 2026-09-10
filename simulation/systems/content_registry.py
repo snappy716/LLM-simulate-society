@@ -46,6 +46,7 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ContentSource("actions/campus_activities.json", "campus_activity", "activities"),
     ContentSource("actions/campus_life.json", "life_opportunity", "offers"),
     ContentSource("actions/campus_courses_jobs.json", "life_opportunity", "offers"),
+    ContentSource("actions/campus_events.json", "life_opportunity", "offers"),
     ContentSource(
         "actions/campus_decisions.json",
         "configuration",
@@ -485,6 +486,8 @@ class ContentRegistry:
         from simulation.systems.campus_study_work import study_work_definition_errors
         shops = {row["id"]: row for row in self.all("configuration").get("campus_economy", {}).get("shops", [])}
         errors.extend(study_work_definition_errors(self.all("life_opportunity"), shops))
+        from simulation.systems.campus_events import event_definition_errors
+        errors.extend(event_definition_errors(self.all("life_opportunity"), self.ids("item")))
         if errors:
             raise ContentValidationError("invalid content references: " + "; ".join(errors))
 

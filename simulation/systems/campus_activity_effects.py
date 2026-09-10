@@ -233,6 +233,8 @@ def make_campus_activity_handler(
             budget_payload.update(spent.payload)
             budget_payload["action_class"] = "major"
 
+        from simulation.systems.campus_events import prepare_performance
+        event_performance = prepare_performance(context, command)
         needs = _apply_meter_deltas(actor, "needs", NEED_NAMES, definition.need_deltas)
         emotions = _apply_meter_deltas(
             actor, "emotions", EMOTION_NAMES, definition.emotion_deltas
@@ -269,7 +271,7 @@ def make_campus_activity_handler(
         if healing_rest:
             effects["recovery"] = recover_by_rest(context, command.actor_id)
         actor["last_activity_effects"] = effects
-        settle_attendance(context, command, effects)
+        settle_attendance(context, command, effects, event_performance)
         settle_shift(context, command, definition)
         context.emit(
             "CAMPUS_ACTIVITY_EFFECT_APPLIED",

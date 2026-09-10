@@ -1,0 +1,39 @@
+test_booking_is_free_and_performance_uses_pre_action_inputs_once (tests.test_campus_events.CampusEventTests) ... ok
+test_cancelled_and_missed_entries_never_receive_performance_or_award (tests.test_campus_events.CampusEventTests) ... ok
+test_festival_has_real_collective_outcome_and_club_contribution (tests.test_campus_events.CampusEventTests) ... ok
+test_low_participation_is_small_exchange_not_fabricated_festival (tests.test_campus_events.CampusEventTests) ... ok
+test_model_can_choose_events_in_existing_dawn_call_and_execute_same_rules (tests.test_campus_events.CampusEventTests) ... ERROR
+test_organization_options_permission_recheck_real_spend_and_no_double_charge (tests.test_campus_events.CampusEventTests) ... ok
+test_own_results_and_personal_motivation_do_not_imply_forced_participation (tests.test_campus_events.CampusEventTests) ... ok
+test_private_preparation_stays_private_and_public_results_not_contacts (tests.test_campus_events.CampusEventTests) ... ERROR
+test_results_wait_for_all_actors_ties_not_arrival_order_and_idempotent (tests.test_campus_events.CampusEventTests) ... ok
+test_save_roundtrip_additive_migration_preserves_history_rng_and_source (tests.test_campus_events.CampusEventTests) ... ok
+test_score_changes_with_real_inputs_not_claimed_result_and_view_is_read_only (tests.test_campus_events.CampusEventTests) ... ok
+test_unauthorized_options_and_forged_results_cannot_buy_success (tests.test_campus_events.CampusEventTests) ... ok
+
+======================================================================
+ERROR: test_model_can_choose_events_in_existing_dawn_call_and_execute_same_rules (tests.test_campus_events.CampusEventTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_events.py", line 307, in test_model_can_choose_events_in_existing_dawn_call_and_execute_same_rules
+    result = execute(self.bridge, "ADVANCE_PHASE")
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_parties.py", line 25, in execute
+    return bridge.execute({
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/server.py", line 621, in execute
+    return {"ok": result.success, "result": command_result_view(result, viewer_id=command.actor_id), "snapshot": self.snapshot()}
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/commands.py", line 69, in command_result_view
+    life = payload.get("effects", {}).get("life", {})
+AttributeError: 'list' object has no attribute 'get'
+
+======================================================================
+ERROR: test_private_preparation_stays_private_and_public_results_not_contacts (tests.test_campus_events.CampusEventTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_events.py", line 189, in test_private_preparation_stays_private_and_public_results_not_contacts
+    event_payloads = [e for e in self.state.events if e.actor_ids == (actor,) and e.event_type in {"CAMPUS_ACTIVITY_EFFECT_APPLIED", "CAMPUS_LIFE_ATTENDED"}]
+AttributeError: 'WorldState' object has no attribute 'events'
+
+----------------------------------------------------------------------
+Ran 12 tests in 12.214s
+
+FAILED (errors=2)

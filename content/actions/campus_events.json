@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "offers": [
+    {
+      "id": "observation_challenge",
+      "name": "校园观察挑战赛",
+      "description": "周三、周六下午的观察记录与证据表达比赛。不限报名人数，须实际到场；时段结束后按表现统一排名，同分并列。参赛姓名、代表社团和最终成绩公开，不公开私有能力或准备明细。",
+      "activity_id": "CAMPUS_EXPLORATION",
+      "location_id": "indoor_sports_hall",
+      "phase": "afternoon",
+      "weekdays": [
+        2,
+        5
+      ],
+      "roles": [
+        "student",
+        "staff"
+      ],
+      "trait": "openness",
+      "required_items": {},
+      "event": {
+        "kind": "competition",
+        "attributes": {
+          "focus": 3,
+          "insight": 3
+        },
+        "practice_category": "study",
+        "preparation_topic": "course:research_methods",
+        "tool_id": "blank_notebook",
+        "club_resource_cost": 3,
+        "qualifying_score": 45,
+        "check_tags": [
+          "observation",
+          "evidence",
+          "analysis"
+        ]
+      }
+    },
+    {
+      "id": "club_exchange_festival",
+      "name": "社团交流节",
+      "description": "周末晚上的校园交流展示。可以个人参加，也可自愿代表自己的社团；骨干和负责人可明确选择使用公共资源。至少三人、总贡献达到 180 才形成完整联展，否则保留小型交流的真实成果；不虚构背景观众或额外参与者。参展姓名、代表社团和成果公开。",
+      "activity_id": "READ_OR_SOCIALIZE",
+      "location_id": "mirror_lake_square",
+      "phase": "evening",
+      "weekdays": [
+        5,
+        6
+      ],
+      "roles": [
+        "student",
+        "staff"
+      ],
+      "trait": "extraversion",
+      "required_items": {},
+      "event": {
+        "kind": "festival",
+        "attributes": {
+          "expression": 3,
+          "empathy": 3
+        },
+        "practice_category": "social",
+        "preparation_topic": "course:data_literacy",
+        "tool_id": "blank_notebook",
+        "club_resource_cost": 3,
+        "target_score": 180,
+        "minimum_participants": 3,
+        "check_tags": [
+          "dialogue",
+          "expression",
+          "cooperation"
+        ]
+      }
+    }
+  ]
+}

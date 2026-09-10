@@ -222,6 +222,7 @@ class StudyWorkTests(unittest.TestCase):
             self.assertEqual(ledger(old)["records"], ledger(migrated.state)["records"])
             comparison = migrated.state.clone()
             ledger(comparison)["definitions"] = deepcopy(spec["source_definitions"])
+            self.assertEqual({"day": old.clock.day, "phase": old.clock.phase}, ledger(comparison).pop("events_available_from"))
             comparison.content_version = old.content_version
             self.assertEqual(json.dumps(old.to_dict(), sort_keys=True), json.dumps(comparison.to_dict(), sort_keys=True))
             self.assertEqual(rng.snapshot(), migrated.rng.snapshot())

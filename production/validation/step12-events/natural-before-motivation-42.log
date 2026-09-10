@@ -1,0 +1,20 @@
+{"day": 1, "seed": 42, "participation": {}, "outcomes": {}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 0, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 2, "seed": 42, "participation": {"observation_challenge:enrolled": 2}, "outcomes": {}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 0, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 3, "seed": 42, "participation": {"observation_challenge:completed": 2}, "outcomes": {"participated": 1, "placed": 1}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 2, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 4, "seed": 42, "participation": {"observation_challenge:completed": 2}, "outcomes": {"participated": 1, "placed": 1}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 2, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 5, "seed": 42, "participation": {"observation_challenge:completed": 2, "observation_challenge:enrolled": 4}, "outcomes": {"participated": 1, "placed": 1}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 2, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 6, "seed": 42, "participation": {"observation_challenge:completed": 6}, "outcomes": {"participated": 3, "placed": 3}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 5, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 7, "seed": 42, "participation": {"observation_challenge:completed": 6}, "outcomes": {"participated": 3, "placed": 3}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 5, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 8, "seed": 42, "participation": {"observation_challenge:completed": 6}, "outcomes": {"participated": 3, "placed": 3}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 5, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 9, "seed": 42, "participation": {"observation_challenge:completed": 6, "observation_challenge:enrolled": 2}, "outcomes": {"participated": 3, "placed": 3}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 5, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 10, "seed": 42, "participation": {"observation_challenge:completed": 8}, "outcomes": {"participated": 4, "placed": 4}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 5, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 11, "seed": 42, "participation": {"observation_challenge:completed": 8}, "outcomes": {"participated": 4, "placed": 4}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 5, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 12, "seed": 42, "participation": {"observation_challenge:completed": 8, "observation_challenge:enrolled": 4}, "outcomes": {"participated": 4, "placed": 4}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 5, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 13, "seed": 42, "participation": {"observation_challenge:completed": 12}, "outcomes": {"participated": 5, "placed": 7}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 5, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+{"day": 14, "seed": 42, "participation": {"observation_challenge:completed": 12}, "outcomes": {"participated": 5, "placed": 7}, "resource_spent": 0, "club_contribution": 0, "unique_participants": 5, "paid_api_calls": 0, "injected_plans_or_outcomes": false}
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/production/validation/step12-events/run_natural.py", line 49, in <module>
+    run(args.seed, args.days)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/production/validation/step12-events/run_natural.py", line 39, in run
+    assert {r["kind"] for r in done} == {"competition", "festival"}, "Both event types must naturally reach attendance"
+AssertionError: Both event types must naturally reach attendance
