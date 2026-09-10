@@ -1,0 +1,1 @@
+{"result": "PYTHON_COVERAGE_OK", "modules": 93, "tests": 889, "initial_full_run_passed": false, "retested_module": "tests.test_campus_decisions", "retest_count": 4, "reason": "Only obsolete test assertion updated; runtime source unchanged during coverage and recheck", "remaining_failures": []}

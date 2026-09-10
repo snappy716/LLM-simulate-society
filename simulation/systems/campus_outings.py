@@ -36,6 +36,32 @@ def active_outing(state, actor):
         and actor in participants(r) and (r["day"], r["phase"]) == (state.clock.day, state.clock.phase)), None)
 
 
+def common_context(state, actor, other):
+    """Public shared college/club context, not an invented intimacy score."""
+    first, second = state.population[actor], state.population[other]
+    college = bool(first.get("college_id") and first.get("college_id") == second.get("college_id"))
+    clubs = bool(set(first.get("club_ids", ())) & set(second.get("club_ids", ())))
+    return college, clubs
+
+
+def companionship_motivation(state, actor, other):
+    """Long shared time has value beyond satisfying the short-chat social meter.
+
+    Uses own completed outings only. Pending/declined invitations cannot reset
+    or manufacture shared experience. No RNG draw, additional clock or quota.
+    """
+    person = state.population[actor]
+    extroversion = person.get("personality", {}).get("extraversion", 50)
+    completed = [r for r in records(state).values() if r["status"] == "completed" and actor in participants(r)]
+    last_day = max((r["day"] for r in completed), default=1)
+    days_without_shared_time = max(0, min(7, state.clock.day - last_day))
+    college, clubs = common_context(state, actor, other)
+    return {"shared_college": 4.0 if college else 0.0,
+        "shared_club": 6.0 if clubs else 0.0,
+        "meaningful_shared_time": round(days_without_shared_time * (1.5 + extroversion / 50), 3),
+        "recent_shared_time": -12.0 if completed and state.clock.day - last_day <= 1 else 0.0}
+
+
 def willing(state, actor, other, kind):
     """NPC response policy, never auto-accept on behalf of the player.
 
@@ -52,7 +78,11 @@ def willing(state, actor, other, kind):
         return relation["closeness"] >= 35 and relation["familiarity"] >= 30 and relation["trust"] >= 60
     social = person.get("needs", {}).get("social", 0)
     extroversion = person.get("personality", {}).get("extraversion", 50)
-    return relation["familiarity"] >= 10 and relation["closeness"] + social + extroversion >= 75
+    # Existing cohort contacts can get to know each other through a voluntary
+    # activity. Being in the phone book is neither friendship nor romantic consent.
+    acquaintance = relation["familiarity"] >= 10 or (
+        are_phone_contacts(state, actor, other) and any(common_context(state, actor, other)))
+    return acquaintance and relation["closeness"] + social + extroversion >= 75
 
 
 def slot_problem(state, first, second, day, phase, location, graph, *, ignore=None):
@@ -303,9 +333,16 @@ def outing_candidates(context, actor, schedule, graph, occupancy, policy, top_sc
     if state.clock.phase not in PHASES or int(schedule.get("priority", 0)) >= policy.protected_schedule_priority:
         return []
     person = state.population[actor]
-    contacts = [who for who in state.relationships.get(actor, {}) if who != actor
+    contacts = [who for who in state.cognition.get("messaging", {}).get("contacts_by_actor", {}).get(actor, ()) if who != actor
         and who in state.population and are_phone_contacts(state, actor, who)]
-    contacts.sort(key=lambda who: (-state.relationships[actor][who].get("closeness", 0), who))
+    # Rank public common interests and own attitude, not access to an already
+    # allocated relationship row. Ties rotate so a missing row cannot starve peers.
+    contacts.sort()
+    offset = (state.clock.day - 1) % max(1, len(contacts))
+    contacts = contacts[offset:] + contacts[:offset]
+    contacts.sort(key=lambda who: -(
+        state.relationships.get(actor, {}).get(who, {}).get("closeness", 0)
+        + sum(companionship_motivation(state, actor, who).values())))
     result = []
     for other in contacts[:3]:
         kind = "companionship"
@@ -324,11 +361,14 @@ def outing_candidates(context, actor, schedule, graph, occupancy, policy, top_sc
                 "phase": state.clock.phase, "location_id": location}
             score = top_score - 18 + (person.get("needs", {}).get("social", 0) - 40) * .4
             score += (person.get("personality", {}).get("extraversion", 50) - 50) * .2
+            motivations = companionship_motivation(state, actor, other)
+            score += sum(motivations.values())
             result.append({"candidate_id": f"outing-choice:{actor}:{other}:{state.clock.day}:{state.clock.phase}:{location}",
                 "activity_id": "WAIT_CAMPUS_OUTING", "action_class": "major", "location_id": location,
                 "parameters": {"outing_intent": intent}, "priority": 40, "decision_source": "rule",
-                "decision_reason": f"邀请熟人{state.population[other].get('display_name', other)}共同相处；需对方同意，各留一次主要行动，实际到场才有共同经历；被拒绝则按原日程。",
+                "decision_reason": f"想与已有联系的{state.population[other].get('display_name', other)}增进了解，兼顾共同学院/社团兴趣与近期缺少共同活动；需对方同意，各留一次主要行动，实际到场才有共同经历；被拒绝则按原日程。",
                 "reason_codes": ["personal_interest", "voluntary_companionship"], "score": round(score, 3),
+                "outing_motivations": motivations,
                 "day": state.clock.day, "phase": state.clock.phase, "route_minutes": route.total_minutes})
             # A separate legal choice, not an automatic upgrade of friendship.
             # Same daily request, same consent/reservation/attendance pipeline.

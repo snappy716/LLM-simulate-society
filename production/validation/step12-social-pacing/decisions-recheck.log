@@ -1,0 +1,9 @@
+test_high_priority_duty_is_protected_but_emergency_rest_can_override (tests.test_campus_decisions.CampusDecisionTests) ... ok
+test_policy_declares_legal_data_driven_candidates (tests.test_campus_decisions.CampusDecisionTests) ... ok
+test_seven_day_cycle_is_deterministic_legal_and_mixed (tests.test_campus_decisions.CampusDecisionTests) ... ok
+test_social_need_can_replace_a_low_priority_personal_plan (tests.test_campus_decisions.CampusDecisionTests) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 89.924s
+
+OK

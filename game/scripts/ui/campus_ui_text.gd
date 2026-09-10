@@ -38,6 +38,8 @@ const ACTIVITY_NAMES := {
 	"BUY_ITEM": "购买所需物品",
 	"DELIVER_MATERIAL_HELP": "交付约定物资",
 	"WAIT_MATERIAL_HELP": "等待互助碰面",
+	"WAIT_CAMPUS_OUTING": "赴约并等候共同活动",
+	"ATTEND_CAMPUS_OUTING": "与熟人共同活动",
 	"WAIT_ANOMALY_MEETING": "赴约并等候现实锚定活动",
 	"SUPPORT_ANOMALY": "共同完成现实锚定活动",
 	"TEACH": "授课",

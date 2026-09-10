@@ -1,0 +1,30 @@
+{"seed": 42, "elapsed_days": 1, "outings": {"declined": 2, "confirmed": 3}, "bonds": {}}
+{"seed": 42, "elapsed_days": 2, "outings": {"declined": 8, "completed": 3, "confirmed": 13}, "bonds": {}}
+{"seed": 42, "elapsed_days": 3, "outings": {"declined": 12, "completed": 16, "confirmed": 21}, "bonds": {}}
+{"seed": 42, "elapsed_days": 4, "outings": {"declined": 17, "completed": 37, "confirmed": 33}, "bonds": {}}
+{"seed": 42, "elapsed_days": 5, "outings": {"declined": 24, "completed": 70, "confirmed": 31}, "bonds": {}}
+{"seed": 42, "elapsed_days": 6, "outings": {"declined": 26, "completed": 101, "confirmed": 34}, "bonds": {}}
+{"seed": 42, "elapsed_days": 7, "outings": {"declined": 30, "completed": 135, "confirmed": 29}, "bonds": {}}
+{"seed": 42, "elapsed_days": 8, "outings": {"declined": 32, "completed": 164, "confirmed": 34}, "bonds": {}}
+{"seed": 42, "elapsed_days": 9, "outings": {"declined": 37, "completed": 198, "confirmed": 37}, "bonds": {}}
+{"seed": 42, "elapsed_days": 10, "outings": {"declined": 39, "completed": 235, "confirmed": 36}, "bonds": {}}
+{"seed": 42, "elapsed_days": 11, "outings": {"declined": 41, "completed": 270, "cancelled": 1, "confirmed": 42}, "bonds": {}}
+{"seed": 42, "elapsed_days": 12, "outings": {"declined": 43, "completed": 311, "cancelled": 2, "confirmed": 30}, "bonds": {}}
+{"seed": 42, "elapsed_days": 13, "outings": {"declined": 45, "completed": 341, "cancelled": 2, "confirmed": 41}, "bonds": {}}
+{"seed": 42, "elapsed_days": 14, "outings": {"declined": 46, "completed": 382, "cancelled": 2, "confirmed": 36}, "bonds": {}}
+{"result": "SOCIAL_FOURTEEN_DAYS_OK", "seed": 42, "completed": 382, "participating_npcs": 162, "quiet_npcs": 38, "actor_participation_histogram": {"7": 11, "5": 25, "10": 5, "4": 28, "9": 4, "6": 32, "3": 28, "8": 5, "2": 14, "11": 1, "1": 9}, "max_actor_day": 2, "unique_pairs": 132, "day_interval_histogram": {"2": 322, "3": 77, "1": 148, "5": 6, "4": 39, "6": 5, "7": 1}, "paid_api_calls": 0, "no_injected_affinity_or_receipts": true}
+{"seed": 314, "elapsed_days": 1, "outings": {"confirmed": 5, "declined": 2}, "bonds": {}}
+{"seed": 314, "elapsed_days": 2, "outings": {"completed": 5, "declined": 8, "confirmed": 16}, "bonds": {}}
+{"seed": 314, "elapsed_days": 3, "outings": {"completed": 21, "declined": 13, "confirmed": 34}, "bonds": {}}
+{"seed": 314, "elapsed_days": 4, "outings": {"completed": 54, "declined": 15, "cancelled": 1, "confirmed": 41}, "bonds": {}}
+{"seed": 314, "elapsed_days": 5, "outings": {"completed": 95, "declined": 16, "cancelled": 1, "confirmed": 37}, "bonds": {}}
+{"seed": 314, "elapsed_days": 6, "outings": {"completed": 132, "declined": 17, "cancelled": 1, "confirmed": 34}, "bonds": {}}
+{"seed": 314, "elapsed_days": 7, "outings": {"completed": 166, "declined": 18, "cancelled": 1, "confirmed": 38}, "bonds": {}}
+{"seed": 314, "elapsed_days": 8, "outings": {"completed": 204, "declined": 20, "cancelled": 1, "confirmed": 40}, "bonds": {}}
+{"seed": 314, "elapsed_days": 9, "outings": {"completed": 244, "declined": 25, "cancelled": 1, "confirmed": 37}, "bonds": {}}
+{"seed": 314, "elapsed_days": 10, "outings": {"completed": 278, "declined": 26, "cancelled": 4, "confirmed": 44}, "bonds": {}}
+{"seed": 314, "elapsed_days": 11, "outings": {"completed": 321, "declined": 28, "cancelled": 5, "confirmed": 36}, "bonds": {}}
+{"seed": 314, "elapsed_days": 12, "outings": {"completed": 354, "declined": 30, "cancelled": 8, "confirmed": 42}, "bonds": {}}
+{"seed": 314, "elapsed_days": 13, "outings": {"completed": 396, "declined": 32, "cancelled": 8, "confirmed": 37}, "bonds": {}}
+{"seed": 314, "elapsed_days": 14, "outings": {"completed": 433, "declined": 33, "cancelled": 8, "confirmed": 47}, "bonds": {}}
+{"result": "SOCIAL_FOURTEEN_DAYS_OK", "seed": 314, "completed": 433, "participating_npcs": 165, "quiet_npcs": 35, "actor_participation_histogram": {"4": 22, "6": 26, "12": 1, "7": 16, "9": 7, "5": 37, "8": 12, "11": 3, "10": 3, "3": 24, "2": 5, "1": 9}, "max_actor_day": 2, "unique_pairs": 139, "day_interval_histogram": {"3": 96, "2": 362, "6": 3, "1": 204, "4": 25, "5": 5, "7": 1}, "paid_api_calls": 0, "no_injected_affinity_or_receipts": true}

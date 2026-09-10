@@ -203,6 +203,19 @@ def make_scheduled_npc_phase_executor(
                 knowledge_tags=["decision", "activity"],
             )
             destination_id = str(plan.get("location_id", ""))
+            from simulation.systems.campus_medical import SHIFTS
+            from simulation.systems.campus_vitals import actor_layer
+            if plan.get("activity_id") in SHIFTS and actor_layer(context.state, actor_id) != "surface":
+                # A legal old routine can become unavailable after a real night
+                # departure. Do not walk to a surface clinic, grant capacity or
+                # abort everybody else's phase. Intraday replanning stays off.
+                actor["current_activity"] = _activity_record(context.state, plan, status="blocked",
+                    route_step_count=0, block_code="clinic_layer_unavailable")
+                summary["blocked_actor_count"] += 1
+                context.emit("NPC_ACTIVITY_BLOCKED", "本人仍在里世界，无法执行表世界医疗值班；未获得值班收益或接诊容量。",
+                    actor_ids=[actor_id], scene_id=actor.get("current_location_id"), visibility="private",
+                    knowledge_tags=["activity"], payload={"activity_id": plan["activity_id"], "code": "clinic_layer_unavailable"})
+                continue
             route = graph.shortest_route(
                 str(actor.get("current_location_id", "")),
                 destination_id,

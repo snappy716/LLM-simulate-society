@@ -223,8 +223,12 @@ class OutingTests(unittest.TestCase):
                 for slot in day.values(): slot["priority"] = 10
         provider = OutingProvider()
         self.bridge.cognition_runtime.provider = provider
+        unavailable_night_shift = False
         for _ in range(5):
             self.advance()
+            unavailable_night_shift |= any(person.get("current_activity", {}).get("block_code") == "clinic_layer_unavailable"
+                for person in self.state.population.values())
+        self.assertTrue(unavailable_night_shift, "off-duty medic in night world must not abort the shared phase")
         requests = [r for r in provider.requests if r.daily_options is not None]
         self.assertEqual(20, len(requests))
         self.assertTrue(all(r.phase == "morning" for r in requests))

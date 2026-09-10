@@ -181,7 +181,19 @@ class CampusDecisionTests(unittest.TestCase):
                 decision = actor["current_decision"]
                 activity = actor["current_activity"]
                 self.assertEqual("completed", activity["status"], actor_id)
-                self.assertEqual(decision["activity_id"], activity["activity_id"], actor_id)
+                if decision["activity_id"] == "WAIT_CAMPUS_OUTING" and activity["activity_id"] == "ATTEND_CAMPUS_OUTING":
+                    # A real second arrival settles the wait into a shared
+                    # activity. Require the authoritative two-party receipt,
+                    # rather than pretending the actor is still waiting.
+                    row = state.situations["campus_outings"]["records"][activity["effects"]["outing_id"]]
+                    self.assertEqual("completed", row["status"])
+                    self.assertEqual({row["proposer_id"], row["recipient_id"]}, set(row["attended"]))
+                    self.assertIn(actor_id, row["attended"])
+                    self.assertEqual(set(row["attended"]), set(row["receipt"]["costs"]))
+                    self.assertEqual((state.clock.day, state.clock.phase, actor["current_location_id"]),
+                        (row["receipt"]["day"], row["receipt"]["phase"], row["receipt"]["location_id"]))
+                else:
+                    self.assertEqual(decision["activity_id"], activity["activity_id"], actor_id)
                 self.assertEqual(activity["location_id"], actor["current_location_id"], actor_id)
                 if (decision["location_id"] != actor["current_location_id"]
                         and decision["activity_id"] == "NIGHT_RESCUE" and activity.get("battle_result") == "victory"):

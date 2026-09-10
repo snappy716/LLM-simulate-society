@@ -1,0 +1,27 @@
+test_fake_daily_model_can_choose_optional_outings_without_extra_calls (tests.test_campus_outings.OutingTests) ... {"actor": "campus_staff_051", "day": 1, "phase": "evening", "location": "hospital_clinic", "layer": "night", "occupation": "medical_staff", "health": 116, "captive": false, "battle": false, "activity": "MEDICAL_SHIFT", "parameters": {"location_id": "hospital_clinic", "scheduled": true, "forum_task_id": ""}, "decision": {"activity_id": "MEDICAL_SHIFT", "action_class": "major", "priority": 10, "requested_location_id": "hospital_clinic", "location_id": "hospital_clinic", "capacity_redirected": false, "redirect_reason": "", "day": 1, "phase": "evening", "decision_source": "schedule", "candidate_count": 1}}
+ERROR
+
+======================================================================
+ERROR: test_fake_daily_model_can_choose_optional_outings_without_extra_calls (tests.test_campus_outings.OutingTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_outings.py", line 227, in test_fake_daily_model_can_choose_optional_outings_without_extra_calls
+    self.advance()
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_outings.py", line 64, in advance
+    result = command(self.bridge, "ADVANCE_PHASE", {})
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_disputes.py", line 24, in command
+    return bridge.execute({
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/server.py", line 620, in execute
+    result = self.kernel.execute(command)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/transactions.py", line 202, in execute
+    outcome = handler(context, command)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/time.py", line 205, in advance
+    phase_execution = on_phase_started(context, command) if on_phase_started else {}
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/campus_activities.py", line 295, in execute
+    raise RuntimeError(
+RuntimeError: scheduled activity could not execute for campus_staff_051: medical_shift_unavailable
+
+----------------------------------------------------------------------
+Ran 1 test in 1.449s
+
+FAILED (errors=1)

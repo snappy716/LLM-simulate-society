@@ -1,0 +1,50 @@
+test_emergency_distrust_and_protected_duties_still_block (tests.test_campus_social_pacing.SocialPacingTests) ... ok
+test_existing_cohort_contact_without_affinity_row_can_be_invited (tests.test_campus_social_pacing.SocialPacingTests) ... ok
+test_existing_contact_order_does_not_change_candidates (tests.test_campus_social_pacing.SocialPacingTests) ... ok
+test_no_stranger_or_automatic_contact_creation (tests.test_campus_social_pacing.SocialPacingTests) ... ok
+test_only_completed_shared_time_reduces_maintenance_pressure (tests.test_campus_social_pacing.SocialPacingTests) ... ok
+test_shared_time_not_short_chat_meter_changes_motivation (tests.test_campus_social_pacing.SocialPacingTests) ... ok
+test_actual_road_arrival_and_atomic_shared_cost (tests.test_campus_outings.OutingTests) ... ok
+test_changed_willingness_cancels_without_partial_cost (tests.test_campus_outings.OutingTests) ... ok
+test_conflicts_in_both_directions_and_cancel_releases (tests.test_campus_outings.OutingTests) ... ok
+test_fake_daily_model_can_choose_optional_outings_without_extra_calls (tests.test_campus_outings.OutingTests) ... ok
+test_invite_reserves_both_without_reward_and_is_private (tests.test_campus_outings.OutingTests) ... ok
+test_missing_player_expires_without_consuming_partner_budget (tests.test_campus_outings.OutingTests) ... ok
+test_npc_invitation_requires_player_response_and_refusal_no_penalty (tests.test_campus_outings.OutingTests) ... ok
+test_npc_pair_can_complete_without_player_attendance (tests.test_campus_outings.OutingTests) ... ok
+test_reserved_budget_and_partner_cost_failure_are_atomic (tests.test_campus_outings.OutingTests) ... ok
+test_save_roundtrip_and_forged_receipt_rejected (tests.test_campus_outings.OutingTests) ... ok
+test_untrusted_parameters_do_not_create_invitations (tests.test_campus_outings.OutingTests) ... ok
+test_autonomous_dawn_is_idempotent_and_never_accepts_for_player (tests.test_campus_bonds.BondTests) ... ok
+test_checkpoint_preserves_multiple_bonds_and_old_save_compatibility (tests.test_campus_bonds.BondTests) ... ok
+test_daily_planner_offers_date_and_companionship_separately (tests.test_campus_bonds.BondTests) ... ok
+test_duplicate_stale_revision_and_malformed_parameters (tests.test_campus_bonds.BondTests) ... ok
+test_friendship_separate_from_romance_and_no_free_gains (tests.test_campus_bonds.BondTests) ... ok
+test_high_affinity_without_shared_dates_is_not_romance (tests.test_campus_bonds.BondTests) ... ok
+test_invariant_rejects_duplicate_and_forged_consent (tests.test_campus_bonds.BondTests) ... ok
+test_llm_context_knows_own_bonds_not_other_peoples_partners (tests.test_campus_bonds.BondTests) ... ok
+test_multiple_partners_and_ending_one_preserves_other (tests.test_campus_bonds.BondTests) ... ok
+test_npc_to_npc_real_outing_can_lead_to_mutual_friendship (tests.test_campus_bonds.BondTests) ... ok
+test_outsider_cannot_see_or_mutate (tests.test_campus_bonds.BondTests) ... ok
+test_personality_changes_readiness_without_partner_cap (tests.test_campus_bonds.BondTests) ... ok
+test_player_consent_cannot_be_assumed (tests.test_campus_bonds.BondTests) ... ok
+test_player_source_cannot_impersonate_npc_and_command_replay (tests.test_campus_bonds.BondTests) ... ok
+test_refusal_and_cooldown_do_not_punish (tests.test_campus_bonds.BondTests) ... ok
+test_suspicion_and_needs_can_block_even_after_dates (tests.test_campus_bonds.BondTests) ... ok
+test_actual_shift_cash_stock_healing_and_no_patient_action_cost (tests.test_campus_medical.MedicalTests) ... ok
+test_bad_saved_ledger_is_rejected_without_crashing (tests.test_campus_medical.MedicalTests) ... ok
+test_capacity_real_staff_location_and_patient_privacy (tests.test_campus_medical.MedicalTests) ... ok
+test_checkpoint_replay_no_second_charge_and_previous_shift_expiry (tests.test_campus_medical.MedicalTests) ... ok
+test_full_health_is_not_diagnosed_from_focus_or_stress (tests.test_campus_medical.MedicalTests) ... ok
+test_model_can_choose_care_or_opt_out_without_new_daytime_calls (tests.test_campus_medical.MedicalTests) ... ok
+test_no_fake_medical_shift_or_parameter_override (tests.test_campus_medical.MedicalTests) ... ok
+test_no_staff_wrong_location_funds_and_stock_fail_without_mutation (tests.test_campus_medical.MedicalTests) ... ok
+test_optional_old_ledger_and_tampered_capacity (tests.test_campus_medical.MedicalTests) ... ok
+test_real_phase_execution_supplies_clinic_and_keeps_normal_staff_budget (tests.test_campus_medical.MedicalTests) ... ok
+test_rules_respect_economic_pressure_risk_and_candidates_do_not_peek_staff_plans (tests.test_campus_medical.MedicalTests) ... ok
+test_whole_phase_clinic_errand_then_actual_primary_and_three_day_capacity (tests.test_campus_medical.MedicalTests) ... ok
+
+----------------------------------------------------------------------
+Ran 45 tests in 57.204s
+
+OK
