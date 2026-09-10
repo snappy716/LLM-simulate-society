@@ -209,10 +209,14 @@ class FieldworkTests(unittest.TestCase):
         # additionally exercised by the release verification outside this unit.
         state, rng = self.bridge.kernel.capture_checkpoint()
         state.content_version = spec["source_version"]
+        state.situations.pop("campus_life", None)  # Frozen old content predates public activities.
         loaded = LoadedCheckpoint(state, rng, spec["source_manifest"])
         result = migrate_campus_content(loaded, self.bridge.registry.content_version)
         comparison = result.state.clone()
         comparison.content_version = state.content_version
+        life = comparison.situations.pop("campus_life")
+        self.assertEqual({}, life["records"])
+        self.assertEqual(self.bridge.registry.all("life_opportunity"), life["definitions"])
         self.assertEqual(state, comparison)
         self.assertEqual(rng.snapshot(), result.rng.snapshot())
         self.assertEqual(self.bridge.registry.manifest, result.content_manifest)

@@ -1,0 +1,15 @@
+======================================================================
+FAIL: test_seven_day_cycle_is_deterministic_legal_and_mixed (tests.test_campus_decisions.CampusDecisionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_decisions.py", line 183, in test_seven_day_cycle_is_deterministic_legal_and_mixed
+    self.assertEqual("completed", activity["status"], actor_id)
+AssertionError: 'completed' != 'blocked'
+- completed
++ blocked
+ : campus_student_008
+
+----------------------------------------------------------------------
+Ran 15 tests in 14.788s
+
+FAILED (failures=1)

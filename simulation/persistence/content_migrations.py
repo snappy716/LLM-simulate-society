@@ -9,6 +9,22 @@ from pathlib import Path
 def migrate_campus_content(loaded, expected_version):
     from simulation.persistence.kernel_checkpoint import CheckpointError, LoadedCheckpoint
 
+    life_spec = json.loads(Path(__file__).with_name("campus_life_content.json").read_text(encoding="utf-8"))
+    if expected_version == life_spec["target_version"]:
+        if loaded.state.content_version != life_spec["source_version"]:
+            loaded = migrate_campus_content(loaded, life_spec["source_version"])
+        if loaded.content_manifest != life_spec["source_manifest"]:
+            raise CheckpointError("campus life migration manifest mismatch")
+        migrated = loaded.state.clone()
+        if "campus_life" in migrated.situations:
+            raise CheckpointError("legacy save unexpectedly contains campus life ledger")
+        from simulation.systems.campus_life import install_life
+        install_life(migrated, life_spec["definitions"])
+        migrated.content_version = expected_version
+        migrated.require_valid()
+        return LoadedCheckpoint(migrated, loaded.rng.clone(), deepcopy(life_spec["target_manifest"]),
+                                loaded.migrations + (life_spec["migration_id"],))
+
     field_spec = json.loads(Path(__file__).with_name("campus_field_content.json").read_text(encoding="utf-8"))
     sites_spec = json.loads(Path(__file__).with_name("campus_night_sites_content.json").read_text(encoding="utf-8"))
     friend_spec = json.loads(Path(__file__).with_name("campus_friend_content.json").read_text(encoding="utf-8"))

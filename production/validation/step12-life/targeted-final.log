@@ -1,0 +1,23 @@
+test_attend_actual_time_location_cost_effect_and_exactly_once (tests.test_campus_life.LifeTests) ... ok
+test_browse_and_enroll_cancel_do_not_pay_or_advance (tests.test_campus_life.LifeTests) ... ok
+test_cancelled_cached_intent_uses_existing_schedule_without_model_replan (tests.test_campus_life.LifeTests) ... ok
+test_checkpoint_roundtrip_and_allowlisted_old_save_add_empty_ledger (tests.test_campus_life.LifeTests) ... ok
+test_departure_and_other_opportunity_conflicts_both_directions (tests.test_campus_life.LifeTests) ... ok
+test_duplicate_slot_tampering_rejected (tests.test_campus_life.LifeTests) ... ok
+test_forged_ids_action_or_target_do_not_settle (tests.test_campus_life.LifeTests) ... ok
+test_invalid_ledger_is_rejected (tests.test_campus_life.LifeTests) ... ok
+test_later_forum_task_does_not_revoke_already_confirmed_attendance (tests.test_campus_life.LifeTests) ... ok
+test_missed_not_attendance_not_reward (tests.test_campus_life.LifeTests) ... ok
+test_model_can_select_opportunities_without_extra_planning_calls (tests.test_campus_life.LifeTests) ... ok
+test_npc_duties_and_identity_requirements_not_bypassed (tests.test_campus_life.LifeTests) ... ok
+test_personality_changes_candidate_score_not_eligibility (tests.test_campus_life.LifeTests) ... ok
+test_public_projection_hides_names_and_llm_only_own_slots (tests.test_campus_life.LifeTests) ... ok
+test_reservation_blocks_other_major_action_until_cancelled (tests.test_campus_life.LifeTests) ... ok
+test_stale_clock_cannot_enroll_without_spending (tests.test_campus_life.LifeTests) ... ok
+test_three_day_unattended_world_participates_and_records_without_player (tests.test_campus_life.LifeTests) ... ok
+test_tools_rechecked_no_invented_materials_and_failure_atomic (tests.test_campus_life.LifeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 42.356s
+
+OK

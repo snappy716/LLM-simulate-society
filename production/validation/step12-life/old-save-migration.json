@@ -1,0 +1,13 @@
+{
+  "source_file": "production/validation/step11-free-errands/godot-flows/save_flow/saves/slot_1.json",
+  "sha256": "90e92d966780c9328089e7b97381534cb3d64f9810540e3216b7e8fdcf8f0f5b",
+  "source_version": "577c66c40498661e",
+  "target_version": "c8a2159b713fd251",
+  "migrations": ["campus-life-opportunity-v1"],
+  "all_existing_state_preserved": true,
+  "rng_preserved": true,
+  "source_file_unchanged": true,
+  "full_runtime_restore_validated": true,
+  "old_attendance_created": 0,
+  "offers_after_restore": 9
+}

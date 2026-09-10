@@ -112,11 +112,20 @@ class SupportFollowupTests(unittest.TestCase):
         self.assertEqual("support_followup", self.goal["kind"])
         self.assertEqual(3, self.state.clock.day)
         self.assertEqual(20, mastery_by_topic(self.state, self.helper)[self.goal["topic_id"]])
-        # The NPC may really fight during the four normal phase advances. Those
-        # valid experiences stay; the care goal must not invent a battle case.
+        # Normal phases can produce combat OR independently completed fieldwork.
+        # Verify either actual source; a support goal alone grants neither.
         cases = self.state.knowledge.get("growth", {}).get("actors", {}).get(self.helper, {}).get("case_records", {})
         for record in cases.values():
-            self.assertIn(self.helper, self.state.battles[record["battle_id"]]["participant_ids"])
+            if "battle_id" in record:
+                self.assertIn(self.helper, self.state.battles[record["battle_id"]]["participant_ids"])
+            else:
+                task = self.state.tasks[record["task_id"]]
+                self.assertEqual("completed", task["state"])
+                self.assertEqual("night", task["forum"])
+                self.assertEqual(self.helper, task["assignee_id"])
+                self.assertEqual(task["enemy_archetype_id"], record["topic_id"])
+                self.assertTrue(any(entry["actor_id"] == self.helper and record["event_id"] in entry["source_event_ids"]
+                                    for entry in self.state.chronicles["entries"].values()))
         self.assertTrue(set(self.goal["source_ids"]).isdisjoint(cases))
         self.assertNotIn("player", self.state.cognition["long_term_plans"]["actors"])
         self.assertEqual("completed", self.state.cognition["long_term_plans"]["actors"][self.helper]["support:" + self.cid]["status"])

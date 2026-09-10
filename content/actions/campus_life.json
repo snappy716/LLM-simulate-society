@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "offers": [
+    {"id": "reading_exchange", "name": "图书馆晚间读书交流", "description": "带着各自的阅读体会交流，不等于掌握异常知识或建立恋爱关系。", "activity_id": "READ_OR_SOCIALIZE", "location_id": "library_reading_hall", "phase": "evening", "weekdays": [0,1,2,3,4,5,6], "roles": ["student","staff"], "trait": "extraversion", "required_items": {}},
+    {"id": "campus_walk", "name": "新生校园走访", "description": "到体育馆集合，熟悉校园公共设施；按真实路径到场后才记出勤。", "activity_id": "CAMPUS_EXPLORATION", "location_id": "indoor_sports_hall", "phase": "afternoon", "weekdays": [0,1,2,3,4,5,6], "roles": ["student"], "trait": "openness", "required_items": {}},
+    {"id": "reference_practice", "name": "阅览室资料检索练习", "description": "携带一本笔记本整理检索记录；笔记本为工具，不消耗，不赠送。", "activity_id": "SELF_STUDY", "location_id": "library_reading_hall", "phase": "afternoon", "weekdays": [0,1,2,3,4,5,6], "roles": ["student","staff"], "trait": "conscientiousness", "required_items": {"blank_notebook": 1}}
+  ]
+}

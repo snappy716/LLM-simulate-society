@@ -16,6 +16,30 @@ class AutonomousCombatTests(unittest.TestCase):
         for index in range(2):
             result = execute(cls.bridge, "ADVANCE_PHASE", marker=f"npc-combat-{index}")
             assert result["ok"], result["result"]["code"]
+        # This suite needs a solo-owned combat job, not a particular natural
+        # enrollment outcome. Public activities can change who joins a squad.
+        # If the natural sample has only squad owners, establish the isolated
+        # solo precondition through the same real claim command, never inject
+        # ownership, bypass access, disable life activities or grant a victory.
+        from tests.test_campus_contact_inquiries import as_npc
+        state = cls.bridge.kernel._state
+        def has_solo_job():
+            return any(t.get("forum") == "night" and t.get("resolution_kind") != "field_recon"
+                and t.get("assignee_id") and party_for_actor(cls.bridge.kernel._state, t["assignee_id"]) is None
+                for t in cls.bridge.kernel._state.tasks.values())
+        if not has_solo_job():
+            candidates = [n for n, a in state.population.items() if n != "player"
+                and not a.get("active_forum_task_id") and party_for_actor(state, n) is None
+                and state.situations["night_world"]["actor_states"][n]["layer"] == "night"]
+            for npc_id in candidates:
+                for task_id in list(cls.bridge.kernel._state.tasks):
+                    task = cls.bridge.kernel._state.tasks[task_id]
+                    if task.get("forum") != "night" or task.get("resolution_kind") == "field_recon" or task.get("assignee_id"):
+                        continue
+                    outcome = as_npc(cls.bridge, npc_id, "CLAIM_FORUM_TASK", {"task_id": task_id, "expected_task_revision": task["lock_revision"]})
+                    if outcome.success: break
+                if has_solo_job(): break
+        assert has_solo_job(), "Could not establish a legal solo combat fixture"
         cls.baseline, cls.rng = cls.bridge.kernel.capture_checkpoint()
 
     def setUp(self):

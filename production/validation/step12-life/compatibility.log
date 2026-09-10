@@ -1,0 +1,40 @@
+test_high_priority_duty_is_protected_but_emergency_rest_can_override (tests.test_campus_decisions.CampusDecisionTests) ... ok
+test_policy_declares_legal_data_driven_candidates (tests.test_campus_decisions.CampusDecisionTests) ... ok
+test_seven_day_cycle_is_deterministic_legal_and_mixed (tests.test_campus_decisions.CampusDecisionTests) ... ok
+test_social_need_can_replace_a_low_priority_personal_plan (tests.test_campus_decisions.CampusDecisionTests) ... ok
+test_campus_boot_content_does_not_need_any_town_document (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_checksum_is_verified_before_migration (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_failed_migration_does_not_replace_live_world (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_generic_world_with_known_version_is_not_converted_to_campus (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_historical_content_split_does_not_upgrade_to_new_combat_semantics (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_migration_only_changes_content_identity_not_saved_resources (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_save_store_returns_migration_then_resave_keeps_original_backup (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_source_and_target_manifests_match_frozen_versions (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_unknown_source_or_missing_or_changed_manifest_is_rejected (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_unknown_target_version_is_not_silently_accepted (tests.test_campus_content_split.CampusContentSplitTests) ... ok
+test_backup_retains_previous_slot_and_can_restore_it (tests.test_campus_saves.CampusSaveTests) ... ok
+test_battle_task_locks_cards_and_next_draw_survive_load (tests.test_campus_saves.CampusSaveTests) ... ok
+test_confirmation_and_slot_token_are_required (tests.test_campus_saves.CampusSaveTests) ... ok
+test_content_mismatch_not_silently_reinitialized (tests.test_campus_saves.CampusSaveTests) ... ok
+test_corrupt_current_preserves_world_and_good_backup (tests.test_campus_saves.CampusSaveTests) ... ok
+test_cross_instance_store_lock_and_slot_conflict (tests.test_campus_saves.CampusSaveTests) ... ok
+test_failed_disk_write_preserves_prior_file (tests.test_campus_saves.CampusSaveTests) ... ok
+test_full_runtime_invariants_checked_before_restore (tests.test_campus_saves.CampusSaveTests) ... ok
+test_http_route_lists_saves_and_returns_rejection_not_server_error (tests.test_campus_saves.CampusSaveTests) ... ok
+test_known_missing_policy_migrates_without_changing_assets_or_original_file (tests.test_campus_saves.CampusSaveTests) ... ok
+test_missing_old_campus_resources_rejected_not_regenerated (tests.test_campus_saves.CampusSaveTests) ... ok
+test_no_path_traversal_unknown_fields_or_symlinks (tests.test_campus_saves.CampusSaveTests) ... ok
+test_pending_supply_and_phase_continuation_remain_exact_after_load (tests.test_campus_saves.CampusSaveTests) ... ok
+test_rng_clone_failure_cannot_partially_replace_world (tests.test_campus_saves.CampusSaveTests) ... ok
+test_rng_restart_and_api_secret_not_in_save (tests.test_campus_saves.CampusSaveTests) ... ok
+test_save_load_restores_wallet_inventory_and_free_action_budget (tests.test_campus_saves.CampusSaveTests) ... ok
+test_saved_map_is_allowlisted_and_does_not_mutate_live_world (tests.test_campus_saves.CampusSaveTests) ... ok
+test_saved_processed_purchase_cannot_charge_twice (tests.test_campus_saves.CampusSaveTests) ... ok
+test_stale_future_command_cannot_apply_after_load (tests.test_campus_saves.CampusSaveTests) ... ok
+test_stale_world_revision_rejected_without_io_mutation (tests.test_campus_saves.CampusSaveTests) ... ok
+test_three_empty_slots_and_no_world_mutation (tests.test_campus_saves.CampusSaveTests) ... ok
+
+----------------------------------------------------------------------
+Ran 35 tests in 61.416s
+
+OK

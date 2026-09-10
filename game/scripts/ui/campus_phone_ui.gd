@@ -706,6 +706,10 @@ func _build_forum_page() -> VBoxContainer:
 	_forum_access_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_forum_access_note.add_theme_color_override("font_color", Color("91a4bc"))
 	root.add_child(_forum_access_note)
+	var opportunities := Button.new()
+	opportunities.text = "公开校园活动与参与记录"
+	opportunities.pressed.connect(func(): _open_app("agenda", "日程与约定"))
+	root.add_child(opportunities)
 	_forum_situations = RichTextLabel.new()
 	_forum_situations.custom_minimum_size = Vector2(0, 100)
 	_forum_situations.size_flags_horizontal = Control.SIZE_EXPAND_FILL

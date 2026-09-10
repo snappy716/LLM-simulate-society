@@ -1,0 +1,10 @@
+test_all_remaining_modules_import_without_retired_dependencies (tests.test_runtime_retirement.RuntimeRetirementTests) ... ok
+test_old_world_constructor_is_no_longer_a_package_api (tests.test_runtime_retirement.RuntimeRetirementTests) ... ok
+test_retired_files_are_absent (tests.test_runtime_retirement.RuntimeRetirementTests) ... ok
+test_shared_clock_and_content_identity_survive_retirement (tests.test_runtime_retirement.RuntimeRetirementTests) ... ok
+test_goal_requires_own_past_support_and_not_fake_case_experience (tests.test_campus_support_followup.SupportFollowupTests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 20.855s
+
+OK

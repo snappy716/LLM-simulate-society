@@ -1,0 +1,70 @@
+======================================================================
+ERROR: test_departure_blocks_social_invitation_for_sender_or_recipient (tests.test_campus_commitments.CommitmentTests) (owner='sender')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_commitments.py", line 70, in test_departure_blocks_social_invitation_for_sender_or_recipient
+    state, sender, target, plans, registry, context = prepare_fixture(bridge)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_social_coordination.py", line 24, in prepare_fixture
+    assert command(bridge, "ADVANCE_PHASE")["ok"]
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_cognition.py", line 21, in command
+    return bridge.execute({
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/server.py", line 597, in execute
+    result = self.kernel.execute(command)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/transactions.py", line 231, in execute
+    draft_state.require_valid(invariant_errors)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/domain/world_state.py", line 129, in require_valid
+    raise ValueError("invalid world state: " + "; ".join(errors))
+ValueError: invalid world state: actor campus_student_008 current_decision has invalid source; actor campus_student_032 current_decision has invalid source; actor campus_student_034 current_decision has invalid source; actor campus_student_044 current_decision has invalid source; actor campus_student_046 current_decision has invalid source; actor campus_student_050 current_decision has invalid source; actor campus_student_051 current_decision has invalid source; actor campus_student_054 current_decision has invalid source; actor campus_student_078 current_decision has invalid source; actor campus_student_079 current_decision has invalid source; actor campus_student_087 current_decision has invalid source; actor campus_student_100 current_decision has invalid source; actor campus_student_104 current_decision has invalid source; actor campus_student_109 current_decision has invalid source; actor campus_student_114 current_decision has invalid source; actor campus_student_116 current_decision has invalid source; actor campus_student_118 current_decision has invalid source; actor campus_student_128 current_decision has invalid source; actor campus_staff_016 current_decision has invalid source; actor campus_staff_022 current_decision has invalid source; actor campus_staff_065 current_decision has invalid source
+
+======================================================================
+ERROR: test_departure_blocks_social_invitation_for_sender_or_recipient (tests.test_campus_commitments.CommitmentTests) (owner='recipient')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_commitments.py", line 70, in test_departure_blocks_social_invitation_for_sender_or_recipient
+    state, sender, target, plans, registry, context = prepare_fixture(bridge)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_social_coordination.py", line 24, in prepare_fixture
+    assert command(bridge, "ADVANCE_PHASE")["ok"]
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_cognition.py", line 21, in command
+    return bridge.execute({
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/server.py", line 597, in execute
+    result = self.kernel.execute(command)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/transactions.py", line 231, in execute
+    draft_state.require_valid(invariant_errors)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/domain/world_state.py", line 129, in require_valid
+    raise ValueError("invalid world state: " + "; ".join(errors))
+ValueError: invalid world state: actor campus_student_008 current_decision has invalid source; actor campus_student_032 current_decision has invalid source; actor campus_student_034 current_decision has invalid source; actor campus_student_044 current_decision has invalid source; actor campus_student_046 current_decision has invalid source; actor campus_student_050 current_decision has invalid source; actor campus_student_051 current_decision has invalid source; actor campus_student_054 current_decision has invalid source; actor campus_student_078 current_decision has invalid source; actor campus_student_079 current_decision has invalid source; actor campus_student_087 current_decision has invalid source; actor campus_student_100 current_decision has invalid source; actor campus_student_104 current_decision has invalid source; actor campus_student_109 current_decision has invalid source; actor campus_student_114 current_decision has invalid source; actor campus_student_116 current_decision has invalid source; actor campus_student_118 current_decision has invalid source; actor campus_student_128 current_decision has invalid source; actor campus_staff_016 current_decision has invalid source; actor campus_staff_022 current_decision has invalid source; actor campus_staff_065 current_decision has invalid source
+
+======================================================================
+ERROR: test_intraday_runs_without_model_and_morning_selects_full_day (tests.test_campus_daily_plans.CampusDailyPlansTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_daily_plans.py", line 22, in test_intraday_runs_without_model_and_morning_selects_full_day
+    self.assertTrue(command(bridge, "ADVANCE_PHASE")["ok"])
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_cognition.py", line 21, in command
+    return bridge.execute({
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/server.py", line 597, in execute
+    result = self.kernel.execute(command)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/transactions.py", line 231, in execute
+    draft_state.require_valid(invariant_errors)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/domain/world_state.py", line 129, in require_valid
+    raise ValueError("invalid world state: " + "; ".join(errors))
+ValueError: invalid world state: actor campus_student_008 current_decision has invalid source; actor campus_student_032 current_decision has invalid source; actor campus_student_034 current_decision has invalid source; actor campus_student_044 current_decision has invalid source; actor campus_student_046 current_decision has invalid source; actor campus_student_050 current_decision has invalid source; actor campus_student_051 current_decision has invalid source; actor campus_student_054 current_decision has invalid source; actor campus_student_078 current_decision has invalid source; actor campus_student_079 current_decision has invalid source; actor campus_student_087 current_decision has invalid source; actor campus_student_100 current_decision has invalid source; actor campus_student_104 current_decision has invalid source; actor campus_student_109 current_decision has invalid source; actor campus_student_114 current_decision has invalid source; actor campus_student_116 current_decision has invalid source; actor campus_student_118 current_decision has invalid source; actor campus_student_128 current_decision has invalid source; actor campus_staff_016 current_decision has invalid source; actor campus_staff_022 current_decision has invalid source; actor campus_staff_065 current_decision has invalid source
+
+======================================================================
+ERROR: test_seven_day_cycle_is_deterministic_legal_and_mixed (tests.test_campus_decisions.CampusDecisionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_decisions.py", line 138, in test_seven_day_cycle_is_deterministic_legal_and_mixed
+    result = first.execute({
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/server.py", line 597, in execute
+    result = self.kernel.execute(command)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/transactions.py", line 231, in execute
+    draft_state.require_valid(invariant_errors)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/domain/world_state.py", line 129, in require_valid
+    raise ValueError("invalid world state: " + "; ".join(errors))
+ValueError: invalid world state: actor campus_student_008 current_decision has invalid source; actor campus_student_032 current_decision has invalid source; actor campus_student_034 current_decision has invalid source; actor campus_student_044 current_decision has invalid source; actor campus_student_046 current_decision has invalid source; actor campus_student_050 current_decision has invalid source; actor campus_student_051 current_decision has invalid source; actor campus_student_054 current_decision has invalid source; actor campus_student_078 current_decision has invalid source; actor campus_student_079 current_decision has invalid source; actor campus_student_087 current_decision has invalid source; actor campus_student_100 current_decision has invalid source; actor campus_student_104 current_decision has invalid source; actor campus_student_109 current_decision has invalid source; actor campus_student_114 current_decision has invalid source; actor campus_student_116 current_decision has invalid source; actor campus_student_118 current_decision has invalid source; actor campus_student_128 current_decision has invalid source; actor campus_staff_016 current_decision has invalid source; actor campus_staff_022 current_decision has invalid source; actor campus_staff_065 current_decision has invalid source
+
+----------------------------------------------------------------------
+Ran 15 tests in 7.051s
+
+FAILED (errors=4)

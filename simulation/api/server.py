@@ -188,6 +188,8 @@ class CampusKernelBridge:
         )
         self.cognition_runtime = CognitionRuntime(cognition_policy)
         activity_definitions = load_campus_activity_definitions(registry)
+        from simulation.systems.campus_life import install_life, make_life_handler, life_invariant, expire_life, booking_plan
+        install_life(state, registry.all("life_opportunity"))
         activity_handler = make_campus_activity_handler(
             activity_definitions,
             action_policy,
@@ -244,6 +246,9 @@ class CampusKernelBridge:
             graph,
             forum_policy,
         )
+        life_base_selector = decision_selector
+        def decision_selector(context, actor_id, schedule_plan, destination_occupancy):
+            return booking_plan(context.state, actor_id) or life_base_selector(context, actor_id, schedule_plan, destination_occupancy)
         from simulation.systems.campus_goals import advance_personal_goals, personal_goals_invariant, make_ask_plan_handler
         from simulation.systems.campus_assistance import (ASSISTANCE_ACTIONS, advance_assistance_upkeep,
             advance_assistance_requests, advance_assistance_deliveries, make_assistance_handler, assistance_invariant, project_assistance_events)
@@ -251,6 +256,7 @@ class CampusKernelBridge:
         def campus_phase_upkeep(context):
             from simulation.systems.campus_expeditions import upkeep_expeditions, form_npc_expeditions, prepare_npc_combat_supplies
             summary = receive_campus_supply(context)
+            summary.update(expire_life(context))
             from simulation.systems.campus_night_sites import upkeep_night_sites
             summary.update(upkeep_night_sites(context))
             from simulation.systems.campus_situations import advance_campus_situations
@@ -316,6 +322,11 @@ class CampusKernelBridge:
             for _ in range(12):
                 social_attention(context)
         self.kernel = WorldKernel(state, rng=rng_pool)
+        self.kernel.add_invariant(life_invariant)
+        life_handler = make_life_handler(activity_handler)
+        from simulation.systems.campus_life import ACTIONS as LIFE_ACTIONS
+        for action_id in LIFE_ACTIONS:
+            self.kernel.register_handler(action_id, life_handler)
         self.kernel.add_invariant(contact_inquiries_invariant)
         from simulation.systems.campus_contact_leads import contact_leads_invariant
         self.kernel.add_invariant(contact_leads_invariant)

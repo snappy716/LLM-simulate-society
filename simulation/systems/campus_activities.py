@@ -282,6 +282,7 @@ def make_scheduled_npc_phase_executor(
             if not activity_outcome.success:
                 from simulation.systems.campus_autonomous_combat import EXPECTED_NPC_COMBAT_FAILURES
                 if (activity_command.action_id == "BUY_ITEM"
+                        or "life_session_id" in activity_command.parameters
                         or (plan.get("task_id") and activity_outcome.code in EXPECTED_NPC_COMBAT_FAILURES | {"major_action_exhausted", "major_action_reserved", "no_new_evidence", "field_evidence_required", "contact_already_resumed", "actor_unavailable", "task_time_unavailable"})
                         or (plan.get("personal_goal_id") and activity_outcome.code in EXPECTED_STEP_FAILURES)
                         or (plan.get("assistance_id") and activity_outcome.code in EXPECTED_ASSISTANCE_FAILURES)):

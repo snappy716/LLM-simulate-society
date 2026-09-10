@@ -44,6 +44,7 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ),
     ContentSource("actions/action_economy.json", "configuration", singleton_id="action_economy"),
     ContentSource("actions/campus_activities.json", "campus_activity", "activities"),
+    ContentSource("actions/campus_life.json", "life_opportunity", "offers"),
     ContentSource(
         "actions/campus_decisions.json",
         "configuration",
@@ -474,6 +475,12 @@ class ContentRegistry:
                 errors.append(
                     f"surface task {template.get('id')} references unknown chain parent: {parent_id}"
                 )
+        for offer in self.all("life_opportunity").values():
+            activity = self.all("campus_activity").get(offer.get("activity_id"), {})
+            if (offer.get("location_id") not in self.ids("campus_location")
+                    or activity.get("action_class") != "major"
+                    or offer.get("phase") not in activity.get("allowed_phases", ())):
+                errors.append("life opportunity requires a valid location and major activity phase")
         if errors:
             raise ContentValidationError("invalid content references: " + "; ".join(errors))
 

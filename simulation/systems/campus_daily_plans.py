@@ -63,6 +63,8 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, 
         state.cognition["daily_plans"] = {"schema_version": 1, "day": state.clock.day,
             "created_phase": state.clock.phase, "actors": plans}
         from simulation.systems.campus_social_coordination import coordinate_daily_social
+        from simulation.systems.campus_life import enroll_chosen_plans
+        enroll_chosen_plans(context, plans)
         coordinate_daily_social(context, plans, messaging_policy)
         context.emit("NPC_DAILY_PLANS_PREPARED", "已整理本日安排；日内按计划执行并核对实际条件。",
             visibility="private", knowledge_tags=["schedule", "planning"],
@@ -76,6 +78,12 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, 
         if ledger.get("day") != state.clock.day or not plan:
             return schedule  # Old/missing slots never trigger day-time model work.
         chosen = deepcopy(plan)
+        sid = chosen.get("parameters", {}).get("life_session_id")
+        if sid:
+            from simulation.systems.campus_life import participant
+            record = participant(state, actor_id, sid)
+            if not record or record.get("status") != "enrolled":
+                chosen = dict(schedule)  # Cancelled/failed enrollment never forces a visit or model replan.
         # New duties and lost access invalidate an intention, not reality.
         actor = state.population[actor_id]
         emergency = max(actor.get("needs", {}).get(key, 0) for key in ("rest", "food", "safety"))

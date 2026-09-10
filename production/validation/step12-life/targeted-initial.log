@@ -1,0 +1,71 @@
+test_attend_actual_time_location_cost_effect_and_exactly_once (tests.test_campus_life.LifeTests) ... ok
+test_browse_and_enroll_cancel_do_not_pay_or_advance (tests.test_campus_life.LifeTests) ... FAIL
+test_checkpoint_roundtrip_and_allowlisted_old_save_add_empty_ledger (tests.test_campus_life.LifeTests) ... FAIL
+test_departure_and_other_opportunity_conflicts_both_directions (tests.test_campus_life.LifeTests) ... ERROR
+test_forged_ids_action_or_target_do_not_settle (tests.test_campus_life.LifeTests) ... ERROR
+test_invalid_ledger_is_rejected (tests.test_campus_life.LifeTests) ... ok
+test_missed_not_attendance_not_reward (tests.test_campus_life.LifeTests) ... ok
+test_npc_duties_and_identity_requirements_not_bypassed (tests.test_campus_life.LifeTests) ... ok
+test_personality_changes_candidate_score_not_eligibility (tests.test_campus_life.LifeTests) ... ok
+test_public_projection_hides_names_and_llm_only_own_slots (tests.test_campus_life.LifeTests) ... ok
+test_reservation_blocks_other_major_action_until_cancelled (tests.test_campus_life.LifeTests) ... ok
+test_three_day_unattended_world_participates_and_records_without_player (tests.test_campus_life.LifeTests) ... ok
+test_tools_rechecked_no_invented_materials_and_failure_atomic (tests.test_campus_life.LifeTests) ... ok
+
+======================================================================
+ERROR: test_departure_and_other_opportunity_conflicts_both_directions (tests.test_campus_life.LifeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_life.py", line 82, in test_departure_and_other_opportunity_conflicts_both_directions
+    self.assertTrue(self.op("ENROLL_CAMPUS_OPPORTUNITY")["ok"])
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_life.py", line 31, in op
+    return execute(self.bridge, action, {"session_id": sid})
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_parties.py", line 25, in execute
+    return bridge.execute({
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/server.py", line 597, in execute
+    result = self.kernel.execute(command)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/transactions.py", line 175, in execute
+    duplicate = self._duplicate_result(command.command_id, fingerprint)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/transactions.py", line 258, in _duplicate_result
+    raise DuplicateCommandError(f"command_id reused with different payload: {command_id}")
+simulation.systems.transactions.DuplicateCommandError: command_id reused with different payload: party-ENROLL_CAMPUS_OPPORTUNITY-player-4
+
+======================================================================
+ERROR: test_forged_ids_action_or_target_do_not_settle (tests.test_campus_life.LifeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_life.py", line 109, in test_forged_ids_action_or_target_do_not_settle
+    self.assertFalse(self.op("ENROLL_CAMPUS_OPPORTUNITY", sid)["ok"])
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_life.py", line 31, in op
+    return execute(self.bridge, action, {"session_id": sid})
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_parties.py", line 25, in execute
+    return bridge.execute({
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/server.py", line 597, in execute
+    result = self.kernel.execute(command)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/transactions.py", line 175, in execute
+    duplicate = self._duplicate_result(command.command_id, fingerprint)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/transactions.py", line 258, in _duplicate_result
+    raise DuplicateCommandError(f"command_id reused with different payload: {command_id}")
+simulation.systems.transactions.DuplicateCommandError: command_id reused with different payload: party-ENROLL_CAMPUS_OPPORTUNITY-player-1
+
+======================================================================
+FAIL: test_browse_and_enroll_cancel_do_not_pay_or_advance (tests.test_campus_life.LifeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_life.py", line 39, in test_browse_and_enroll_cancel_do_not_pay_or_advance
+    self.assertTrue(self.op("ENROLL_CAMPUS_OPPORTUNITY")["ok"])
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_checkpoint_roundtrip_and_allowlisted_old_save_add_empty_ledger (tests.test_campus_life.LifeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_life.py", line 167, in test_checkpoint_roundtrip_and_allowlisted_old_save_add_empty_ledger
+    self.assertEqual(state.to_dict(), loaded.state.to_dict())
+AssertionError: {'rev[1746621 chars]ll': (200, 365), 'tags': ('gate', 'public', 't[578026 chars]{}}}} != {'rev[1746621 chars]ll': [200, 365], 'tags': ['gate', 'public', 't[578008 chars]{}}}}
+Diff is 7552223 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 13 tests in 21.669s
+
+FAILED (failures=2, errors=2)

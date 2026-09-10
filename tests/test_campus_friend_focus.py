@@ -93,6 +93,7 @@ class FriendFocusTests(unittest.TestCase):
         legacy = self.state.clone()
         old_spec = json.loads(Path("simulation/persistence/campus_friend_content.json").read_text())
         legacy.content_version = old_spec["source_version"]
+        legacy.situations.pop("campus_life", None)  # This aggregate did not exist in the frozen old build.
         old_ids = list(legacy.cognition["focused_ids"])
         legacy.cognition["awakened_ids"] = old_ids[:2]
         legacy.cognition.pop("base_focused_ids")

@@ -107,7 +107,11 @@ class RuntimeRetirementTests(unittest.TestCase):
         self.assertEqual(migration["target_version"], sites_migration["source_version"])
         friend_migration = json.loads((ROOT / "simulation/persistence/campus_friend_content.json").read_text())
         self.assertEqual(sites_migration["target_version"], friend_migration["source_version"])
-        self.assertEqual(friend_migration["target_version"], ContentRegistry.load_default(ROOT / "content").content_version)
+        life_migration = json.loads((ROOT / "simulation/persistence/campus_life_content.json").read_text())
+        self.assertEqual(friend_migration["target_version"], life_migration["source_version"])
+        current = ContentRegistry.load_default(ROOT / "content")
+        self.assertEqual(life_migration["target_version"], current.content_version)
+        self.assertEqual(life_migration["target_manifest"], current.manifest)
 
 
 if __name__ == "__main__":

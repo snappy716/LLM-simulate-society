@@ -90,6 +90,10 @@ def consume_major_action(
     if command.actor_id not in state.population:
         return MajorActionResult(False, "unknown_actor", "行动者不存在。")
     budget = ensure_actor_budget(state, policy, command.actor_id)
+    from simulation.systems.campus_life import active_booking
+    booking = active_booking(state, command.actor_id)
+    if booking and (command.parameters.get("life_session_id") != booking["session_id"] or command.action_id != booking["activity_id"]):
+        return MajorActionResult(False, "major_action_reserved", "行动已为报名的校园活动预留，请先参加或退出。")
     from simulation.systems.campus_anomaly_meetings import reserved_meeting
     meeting = reserved_meeting(state, command.actor_id)
     if meeting and (command.action_id != "SUPPORT_ANOMALY" or command.parameters.get("case_id") != meeting["case_id"]):
