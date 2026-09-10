@@ -86,6 +86,14 @@ def _eligible_night_npcs(
         assessment = night_entry_assessment(state, actor_id, policy)
         if not assessment.get("allowed"):
             continue
+        # Automatic night participation must not overwrite a previously
+        # confirmed surface course/activity/shift. There is no autonomous
+        # return-before-a-late-night-appointment workflow yet, so protect both
+        # night slots. Explicit player entry remains their own choice.
+        from simulation.systems.campus_commitments import commitments_at
+        if any(row["kind"] == "life" for phase in ("evening", "late_night")
+               for row in commitments_at(state, actor_id, state.clock.day, phase)):
+            continue
         schedule = current_schedule_slot(state, actor_id)
         if schedule and int(schedule.get("priority", 0)) >= 90:
             continue

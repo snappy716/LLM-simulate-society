@@ -200,6 +200,8 @@ def make_campus_activity_handler(
         if validation is not None:
             return validation
 
+        from simulation.systems.campus_study_work import activity_terms
+        definition = activity_terms(context.state, command, definition)
         current_location = str(actor.get("current_location_id", ""))
         declared_location = str(command.parameters.get("location_id", current_location))
         if not current_location or declared_location != current_location:
@@ -263,7 +265,7 @@ def make_campus_activity_handler(
         if healing_rest:
             effects["recovery"] = recover_by_rest(context, command.actor_id)
         actor["last_activity_effects"] = effects
-        settle_attendance(context, command)
+        settle_attendance(context, command, effects)
         context.emit(
             "CAMPUS_ACTIVITY_EFFECT_APPLIED",
             f"{actor.get('display_name', command.actor_id)} 完成 {definition.activity_id}。",

@@ -1,0 +1,6 @@
+test_auto_night_entry_does_not_override_confirmed_surface_shift (tests.test_campus_study_work.StudyWorkTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.542s
+
+OK

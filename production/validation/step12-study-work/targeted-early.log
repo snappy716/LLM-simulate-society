@@ -1,0 +1,23 @@
+test_cancel_and_miss_do_not_earn_units (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_cash_loss_after_booking_fails_without_cost_or_unpaid_attendance (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_course_three_actual_units_unlock_job_without_case_mastery (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_current_roundtrip_and_previous_activity_ledger_preserved (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_job_qualification_and_malformed_content_rejected (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_no_unearned_course_or_wage_receipts (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_npcs_compete_for_same_real_job_slots_and_cancel_releases (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_wage_is_exact_atomic_transfer_not_generic_work_plus_wage (tests.test_campus_study_work.StudyWorkTests) ... ok
+test_callers_receive_defensive_copies (tests.test_content_registry.ContentRegistryTests) ... ok
+test_content_version_is_reproducible_and_manifest_is_portable (tests.test_content_registry.ContentRegistryTests) ... ok
+test_default_registry_loads_one_canonical_view (tests.test_content_registry.ContentRegistryTests) ... ok
+test_duplicate_identifier_is_rejected (tests.test_content_registry.ContentRegistryTests) ... ok
+test_paths_cannot_escape_content_root (tests.test_content_registry.ContentRegistryTests) ... ok
+test_unknown_cross_reference_is_rejected (tests.test_content_registry.ContentRegistryTests) ... ok
+test_all_remaining_modules_import_without_retired_dependencies (tests.test_runtime_retirement.RuntimeRetirementTests) ... ok
+test_old_world_constructor_is_no_longer_a_package_api (tests.test_runtime_retirement.RuntimeRetirementTests) ... ok
+test_retired_files_are_absent (tests.test_runtime_retirement.RuntimeRetirementTests) ... ok
+test_shared_clock_and_content_identity_survive_retirement (tests.test_runtime_retirement.RuntimeRetirementTests) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 19.957s
+
+OK

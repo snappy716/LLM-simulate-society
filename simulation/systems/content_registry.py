@@ -45,6 +45,7 @@ DEFAULT_CONTENT_SOURCES: Tuple[ContentSource, ...] = (
     ContentSource("actions/action_economy.json", "configuration", singleton_id="action_economy"),
     ContentSource("actions/campus_activities.json", "campus_activity", "activities"),
     ContentSource("actions/campus_life.json", "life_opportunity", "offers"),
+    ContentSource("actions/campus_courses_jobs.json", "life_opportunity", "offers"),
     ContentSource(
         "actions/campus_decisions.json",
         "configuration",
@@ -481,6 +482,9 @@ class ContentRegistry:
                     or activity.get("action_class") != "major"
                     or offer.get("phase") not in activity.get("allowed_phases", ())):
                 errors.append("life opportunity requires a valid location and major activity phase")
+        from simulation.systems.campus_study_work import study_work_definition_errors
+        shops = {row["id"]: row for row in self.all("configuration").get("campus_economy", {}).get("shops", [])}
+        errors.extend(study_work_definition_errors(self.all("life_opportunity"), shops))
         if errors:
             raise ContentValidationError("invalid content references: " + "; ".join(errors))
 

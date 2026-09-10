@@ -34,7 +34,7 @@ class LifeTests(unittest.TestCase):
     def test_browse_and_enroll_cancel_do_not_pay_or_advance(self):
         before = deepcopy(self.state)
         view = self.bridge.snapshot()["agenda"]["life"]
-        self.assertEqual(9, len(view["offers"]))
+        self.assertEqual(3 * len(ledger(self.state)["definitions"]), len(view["offers"]))
         self.assertEqual(before.to_dict(), self.state.to_dict())
         self.assertTrue(self.op("ENROLL_CAMPUS_OPPORTUNITY")["ok"])
         self.assertTrue(self.op("ENROLL_CAMPUS_OPPORTUNITY")["ok"])

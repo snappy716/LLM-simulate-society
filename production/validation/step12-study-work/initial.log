@@ -1,0 +1,56 @@
+test_callers_receive_defensive_copies (tests.test_content_registry.ContentRegistryTests) ... ok
+test_content_version_is_reproducible_and_manifest_is_portable (tests.test_content_registry.ContentRegistryTests) ... ok
+test_default_registry_loads_one_canonical_view (tests.test_content_registry.ContentRegistryTests) ... ok
+test_duplicate_identifier_is_rejected (tests.test_content_registry.ContentRegistryTests) ... ok
+test_paths_cannot_escape_content_root (tests.test_content_registry.ContentRegistryTests) ... ok
+test_unknown_cross_reference_is_rejected (tests.test_content_registry.ContentRegistryTests) ... ERROR
+test_attend_actual_time_location_cost_effect_and_exactly_once (tests.test_campus_life.LifeTests) ... ok
+test_browse_and_enroll_cancel_do_not_pay_or_advance (tests.test_campus_life.LifeTests) ... FAIL
+test_cancelled_cached_intent_uses_existing_schedule_without_model_replan (tests.test_campus_life.LifeTests) ... ok
+test_checkpoint_roundtrip_and_allowlisted_old_save_add_empty_ledger (tests.test_campus_life.LifeTests) ... ok
+test_departure_and_other_opportunity_conflicts_both_directions (tests.test_campus_life.LifeTests) ... ok
+test_duplicate_slot_tampering_rejected (tests.test_campus_life.LifeTests) ... ok
+test_forged_ids_action_or_target_do_not_settle (tests.test_campus_life.LifeTests) ... ok
+test_invalid_ledger_is_rejected (tests.test_campus_life.LifeTests) ... ok
+test_later_forum_task_does_not_revoke_already_confirmed_attendance (tests.test_campus_life.LifeTests) ... ok
+test_missed_not_attendance_not_reward (tests.test_campus_life.LifeTests) ... ok
+test_model_can_select_opportunities_without_extra_planning_calls (tests.test_campus_life.LifeTests) ... ok
+test_npc_duties_and_identity_requirements_not_bypassed (tests.test_campus_life.LifeTests) ... ok
+test_personality_changes_candidate_score_not_eligibility (tests.test_campus_life.LifeTests) ... ok
+test_public_projection_hides_names_and_llm_only_own_slots (tests.test_campus_life.LifeTests) ... ok
+test_reservation_blocks_other_major_action_until_cancelled (tests.test_campus_life.LifeTests) ... ok
+test_stale_clock_cannot_enroll_without_spending (tests.test_campus_life.LifeTests) ... ok
+test_three_day_unattended_world_participates_and_records_without_player (tests.test_campus_life.LifeTests) ... ok
+test_tools_rechecked_no_invented_materials_and_failure_atomic (tests.test_campus_life.LifeTests) ... ok
+
+======================================================================
+ERROR: test_unknown_cross_reference_is_rejected (tests.test_content_registry.ContentRegistryTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/content_registry.py", line 132, in get
+    return deepcopy(self._entries[kind][content_id])
+KeyError: 'configuration'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_content_registry.py", line 88, in test_unknown_cross_reference_is_rejected
+    registry.validate_references()
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/content_registry.py", line 486, in validate_references
+    shops = {row["id"]: row for row in self.get("configuration", "campus_economy").get("shops", [])}
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/content_registry.py", line 134, in get
+    raise KeyError(f"unknown {kind}: {content_id}") from exc
+KeyError: 'unknown configuration: campus_economy'
+
+======================================================================
+FAIL: test_browse_and_enroll_cancel_do_not_pay_or_advance (tests.test_campus_life.LifeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_life.py", line 37, in test_browse_and_enroll_cancel_do_not_pay_or_advance
+    self.assertEqual(9, len(view["offers"]))
+AssertionError: 9 != 21
+
+----------------------------------------------------------------------
+Ran 24 tests in 26.385s
+
+FAILED (failures=1, errors=1)

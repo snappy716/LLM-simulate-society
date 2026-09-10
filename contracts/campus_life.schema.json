@@ -2,9 +2,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Actor-local campus opportunity projection under snapshot.agenda.life",
   "type": "object",
-  "required": ["offers", "history"],
+  "required": ["offers", "history", "courses"],
   "additionalProperties": false,
   "properties": {
+    "courses": {"type": "array", "items": {"type": "object", "required": ["offer_id", "name", "completed_units", "total_units", "complete", "next_unit", "receipts"], "properties": {"completed_units": {"type": "integer", "minimum": 0}, "total_units": {"type": "integer", "minimum": 1}, "complete": {"type": "boolean"}, "receipts": {"type": "array"}}}},
     "offers": {"type": "array", "items": {"type": "object", "required": ["session_id", "name", "day", "phase", "location_id", "status", "can_enroll", "can_cancel", "can_attend", "enrolled_count", "completed_count", "reason", "attend_reason"], "properties": {
       "session_id": {"type": "string", "pattern": "^life:[1-9][0-9]*:[a-z_]+$"},
       "day": {"type": "integer", "minimum": 1},
@@ -15,7 +16,7 @@
       "participants": false, "actor_ids": false, "private_history": false
     }}},
     "history": {"type": "array", "maxItems": 30, "items": {"type": "object", "required": ["session_id", "name", "day", "phase", "status", "status_text"], "additionalProperties": false, "properties": {
-      "session_id": {"type": "string"}, "name": {"type": "string"}, "day": {"type": "integer", "minimum": 1}, "phase": {"type": "string"}, "status": {"enum": ["enrolled", "completed", "cancelled", "missed"]}, "status_text": {"type": "string"}
+      "session_id": {"type": "string"}, "name": {"type": "string"}, "day": {"type": "integer", "minimum": 1}, "phase": {"type": "string"}, "status": {"enum": ["enrolled", "completed", "cancelled", "missed"]}, "status_text": {"type": "string"}, "result": {"type": "object"}
     }}}
   }
 }

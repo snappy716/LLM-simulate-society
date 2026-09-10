@@ -90,6 +90,14 @@ func refresh() -> void:
 	var history_lines := PackedStringArray(["我的参与记录（仅本人）"])
 	for row in data.get("life", {}).get("history", []):
 		history_lines.append("第 %d 天 %s · %s · %s" % [int(row.day), PHASES.get(row.phase, row.phase), row.name, row.status_text])
+		var result: Dictionary = row.get("result", {})
+		if result.has("course"):
+			history_lines.append("  已学习：%s · 知识进度 +%d" % [result.course.unit_name, int(result.course.knowledge_gain)])
+		if result.has("job"):
+			history_lines.append("  实收 %d · 付款方：%s" % [int(result.job.wage), result.job.payer_name])
+	history_lines.append("\n我的课程进度（真实到课，不是考试成绩或异常掌握度）")
+	for course in data.get("life", {}).get("courses", []):
+		history_lines.append("%s · %d/%d · %s" % [course.name, int(course.completed_units), int(course.total_units), course.next_unit])
 	participation.text = "\n".join(history_lines)
 	_show_opportunity()
 
@@ -124,3 +132,4 @@ func _show_opportunity() -> void:
 		opportunity_detail.text = "暂无可查看的公开活动。"
 		return
 	opportunity_detail.text = "%s\n%s\n%s · %s\n待到场 %d 人 · 已实际参加 %d 人\n%s\n参加条件：%s\n普通移动、聊天和购物仍不扣主要行动。" % [row.name, row.description, row.location_name, row.status_text, int(row.enrolled_count), int(row.completed_count), row.reason, row.attend_reason]
+	opportunity_detail.text += "\n" + String(row.get("summary", ""))

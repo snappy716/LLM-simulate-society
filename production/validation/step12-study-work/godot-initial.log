@@ -1,0 +1,16 @@
+GODOT_CHECK_LOGS /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-eol8u6cm
+PASS study: CAMPUS_STUDY_FLOW_OK actual_course_platform_button actual_http_enroll_and_attend one_unit_one_action private_progress no_api
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+SCRIPT ERROR: Invalid access to property or key 'player' on a base object of type 'Dictionary'.
+          at: _run (res://tools/test_campus_work_flow.gd:32)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://tools/test_campus_work_flow.gd:32)
+              [1] _on_campus_request_completed (res://scripts/simulation/simulation_bridge.gd:1004)
+
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/production/run_godot_checks.py", line 91, in <module>
+    main()
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/production/run_godot_checks.py", line 77, in main
+    raise RuntimeError(f"{flow} failed; see {work}")
+RuntimeError: work failed; see /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-eol8u6cm/work

@@ -96,6 +96,10 @@ def assessment(state, actor_id, row, *, attending=False):
         return "opportunity_materials", "缺少活动要求的随身工具。"
     if when == now and state.action_economy.get("actors", {}).get(actor_id, {}).get("major_remaining", 0) < 1:
         return "major_action_exhausted", "本时段没有剩余主要行动。"
+    from simulation.systems.campus_study_work import study_work_assessment
+    outcome = study_work_assessment(state, actor_id, row)
+    if outcome:
+        return outcome
     return "", "报名/退出免费；实际参加消耗一次主要行动，工具不消耗，不自动推进时间。"
 
 
@@ -129,16 +133,21 @@ def validate_attendance(context, command, definition):
     return TransactionOutcome(False, False, code, message) if code else None
 
 
-def settle_attendance(context, command):
+def settle_attendance(context, command, effects):
     sid = command.parameters.get("life_session_id")
     if not sid:
         return
     row = session(context.state, sid)
     record = participant(context.state, command.actor_id, sid)
+    from simulation.systems.campus_study_work import settle_study_work, visible_result
+    result = settle_study_work(context, command.actor_id, row, effects)
+    if result:
+        record["result"] = result
+        effects["life"] = visible_result(result)
     record.update(status="completed", completed_day=context.state.clock.day, completed_phase=context.state.clock.phase)
     record["history"].append({"status": "completed", "day": context.state.clock.day, "phase": context.state.clock.phase})
     context.emit("CAMPUS_LIFE_ATTENDED", f"实际参加了 {row['name']}。", actor_ids=[command.actor_id],
-        scene_id=row["location_id"], payload={"session_id": sid, "name": row["name"], "activity_id": row["activity_id"], "major_action_cost": 1},
+        scene_id=row["location_id"], payload={"session_id": sid, "name": row["name"], "activity_id": row["activity_id"], "major_action_cost": 1, "result": visible_result(result)},
         visibility="private", knowledge_tags=["campus_life", "activity"])
 
 
@@ -211,9 +220,13 @@ def life_candidates(context, actor_id, schedule, graph, occupancy, policy, top_s
         if not route or not _has_capacity(graph, occupancy, row["location_id"]):
             continue
         score = top_score - 12 + (actor.get("personality", {}).get(row["trait"], 50) - 50) * 0.4
+        from simulation.systems.campus_study_work import study_work_view
+        details = study_work_view(state, actor_id, row)
+        if row.get("job"):
+            score += max(0, actor.get("needs", {}).get("money", 0) - 40) * 0.3
         result.append({"candidate_id": row["session_id"], "activity_id": row["activity_id"], "action_class": "major",
                        "location_id": row["location_id"], "parameters": {"life_session_id": row["session_id"]},
-                       "priority": 45, "decision_source": "rule", "decision_reason": row["name"] + "；报名后须实际到场",
+                       "priority": 45, "decision_source": "rule", "decision_reason": row["name"] + "；报名后须实际到场；" + details["summary"],
                        "reason_codes": ["personal_interest", "public_opportunity"], "score": round(score, 3),
                        "day": row["day"], "phase": row["phase"], "route_minutes": route.total_minutes})
     return result
@@ -228,6 +241,7 @@ def enroll_chosen_plans(context, plans):
 
 
 def life_view(state, actor_id="player"):
+    from simulation.systems.campus_study_work import study_work_view, course_progress, visible_result
     offers, history = [], []
     for day in range(state.clock.day, state.clock.day + 3):
         for key in ledger(state).get("definitions", {}):
@@ -239,7 +253,7 @@ def life_view(state, actor_id="player"):
             code, reason = assessment(state, actor_id, row)
             attend_code, attend_reason = assessment(state, actor_id, row, attending=True)
             records = ledger(state)["records"].get(row["session_id"], {})
-            offers.append({**row, "location_name": state.places[row["location_id"]]["name"],
+            offers.append({**row, **study_work_view(state, actor_id, row), "location_name": state.places[row["location_id"]]["name"],
                 "status": status, "status_text": STATUS_TEXT.get(status, "可选择"),
                 "enrolled_count": sum(r["status"] == "enrolled" for r in records.values()),
                 "completed_count": sum(r["status"] == "completed" for r in records.values()),
@@ -249,8 +263,10 @@ def life_view(state, actor_id="player"):
         if actor_id in records:
             row = session(state, sid)
             history.append({"session_id": sid, "name": row["name"], "day": row["day"], "phase": row["phase"],
-                            "status": records[actor_id]["status"], "status_text": STATUS_TEXT[records[actor_id]["status"]]})
-    return {"offers": offers, "history": sorted(history, key=lambda r: (r["day"], PHASE_IDS.index(r["phase"])), reverse=True)[:30]}
+                            "status": records[actor_id]["status"], "status_text": STATUS_TEXT[records[actor_id]["status"]],
+                            "result": visible_result(records[actor_id].get("result", {}))})
+    courses = [course_progress(state, actor_id, key) for key, row in ledger(state).get("definitions", {}).items() if row.get("course")]
+    return {"offers": offers, "history": sorted(history, key=lambda r: (r["day"], PHASE_IDS.index(r["phase"])), reverse=True)[:30], "courses": courses}
 
 
 def life_invariant(state):
@@ -291,3 +307,5 @@ def life_invariant(state):
                 if slot in reserved_slots:
                     yield "duplicate campus life reservation"
                 reserved_slots.add(slot)
+    from simulation.systems.campus_study_work import study_work_invariant
+    yield from study_work_invariant(state)

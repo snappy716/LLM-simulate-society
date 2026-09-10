@@ -1,0 +1,15 @@
+{
+  "source_file": "previous step12-life full Godot save_flow/saves/slot_1.json",
+  "source_sha256": "12a87bbf4cf73c9adf629ad803d912b62aa807c6e8c9c4ba4839511f8dfae59b",
+  "source_version": "c8a2159b713fd251",
+  "target_version": "74314dd2ea32e235",
+  "migrations": [
+    "campus-courses-jobs-v1"
+  ],
+  "all_prior_state_preserved": true,
+  "rng_preserved": true,
+  "source_bytes_unchanged": true,
+  "full_runtime_restore_validated": true,
+  "new_course_units_granted": 0,
+  "offers_after_restore": 21
+}

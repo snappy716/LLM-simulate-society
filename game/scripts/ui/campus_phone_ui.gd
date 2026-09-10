@@ -342,6 +342,11 @@ func _build_app_page() -> VBoxContainer:
 	_growth_root = preload("res://scripts/ui/campus_growth_panel.gd").new()
 	_growth_root.visible = false
 	body.add_child(_growth_root)
+	var public_courses := Button.new()
+	public_courses.name = "PublicCourses"
+	public_courses.text = "查看课程、兼职与真实参与记录"
+	public_courses.pressed.connect(func(): _open_app("agenda", "日程与约定"))
+	_growth_root.add_child(public_courses)
 	_agenda_root = preload("res://scripts/ui/campus_agenda_panel.gd").new()
 	_agenda_root.visible = false
 	body.add_child(_agenda_root)

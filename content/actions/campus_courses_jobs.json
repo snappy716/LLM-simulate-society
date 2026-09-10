@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "offers": [
+    {"id": "research_methods_course", "name": "研究方法入门", "description": "三次实际到课，依次练习观察记录、区分事实与推测、研究伦理；不是异常答案或临床执业资格。", "activity_id": "COURSEWORK", "location_id": "humanities_classroom_pool", "phase": "afternoon", "weekdays": [0,1,2,3,4,5,6], "roles": ["student","staff"], "trait": "openness", "required_items": {"blank_notebook": 1}, "course": {"topic": "course:research_methods", "units": ["观察与记录", "事实与推测", "研究伦理"]}},
+    {"id": "data_literacy_course", "name": "校园数据素养", "description": "三次实际练习：分类、核对、误差；完成后可应聘超市盘点协助，不直接授予考试分数。", "activity_id": "COURSEWORK", "location_id": "science_classroom_pool", "phase": "afternoon", "weekdays": [0,1,2,3,4,5,6], "roles": ["student","staff"], "trait": "conscientiousness", "required_items": {"blank_notebook": 1}, "course": {"topic": "course:data_literacy", "units": ["分类与计数", "交叉核对", "误差与报告"]}},
+    {"id": "canteen_part_time", "name": "食堂晚间整理班", "description": "协助收台与整理，每场两个岗位；真实出勤后由食堂现有现金支付 12。报名不发钱，执行时复核付款能力。", "activity_id": "CAMPUS_SERVICE_SHIFT", "location_id": "canteen_dining_hall", "phase": "evening", "weekdays": [0,1,2,3,4,5,6], "roles": ["student"], "trait": "conscientiousness", "required_items": {}, "job": {"shop_id": "campus_canteen_counter", "wage": 12, "openings": 2}},
+    {"id": "market_inventory_part_time", "name": "超市晚间盘点班", "description": "完成校园数据素养后可应聘，每场一个岗位；现有超市现金支付 18，不凭空补货。", "activity_id": "CAMPUS_SERVICE_SHIFT", "location_id": "supermarket_sales_floor", "phase": "evening", "weekdays": [0,1,2,3,4,5,6], "roles": ["student"], "trait": "conscientiousness", "required_items": {"blank_notebook": 1}, "job": {"shop_id": "campus_market", "wage": 18, "openings": 1, "required_course": "data_literacy_course"}}
+  ]
+}
