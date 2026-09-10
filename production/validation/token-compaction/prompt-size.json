@@ -1,0 +1,35 @@
+{
+  "baseline_commit": "75afaff29dbb67874e3e9b11af77c4b06112e7ab",
+  "network_calls": 0,
+  "lossless_roundtrip": true,
+  "unit": "Unicode characters including system prompt and compaction guidance; not tokens or cost",
+  "groups": {
+    "DAILY_PLAN_SYSTEM_PROMPT": {
+      "requests": 280,
+      "compacted": 272,
+      "before_input_chars": 3449837,
+      "after_input_chars": 2967913,
+      "historical_prompt_tokens": 1198659,
+      "input_char_reduction_percent": 13.97,
+      "historical_mean_prompt_tokens": 4280.93
+    },
+    "DIALOGUE_SYSTEM_PROMPT": {
+      "requests": 39,
+      "compacted": 0,
+      "before_input_chars": 168421,
+      "after_input_chars": 144865,
+      "historical_prompt_tokens": 68005,
+      "input_char_reduction_percent": 13.99,
+      "historical_mean_prompt_tokens": 1743.72
+    },
+    "SYSTEM_PROMPT": {
+      "requests": 1,
+      "compacted": 0,
+      "before_input_chars": 5666,
+      "after_input_chars": 5335,
+      "historical_prompt_tokens": 2137,
+      "input_char_reduction_percent": 5.84,
+      "historical_mean_prompt_tokens": 2137.0
+    }
+  }
+}

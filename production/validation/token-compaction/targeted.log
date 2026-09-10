@@ -1,0 +1,24 @@
+test_both_provider_http_bodies_use_compaction_without_changing_response_or_limits (tests.test_prompt_compaction.PromptCompactionTests) ... ok
+test_different_phase_costs_remain_separate (tests.test_prompt_compaction.PromptCompactionTests) ... ok
+test_existing_foreign_defaults_do_not_collide (tests.test_prompt_compaction.PromptCompactionTests) ... ok
+test_guidance_overhead_included_and_only_added_once (tests.test_prompt_compaction.PromptCompactionTests) ... ok
+test_lossless_roundtrip_and_original_not_mutated (tests.test_prompt_compaction.PromptCompactionTests) ... ok
+test_own_field_overrides_group_default (tests.test_prompt_compaction.PromptCompactionTests) ... ok
+test_short_single_empty_or_mixed_groups_pass_through (tests.test_prompt_compaction.PromptCompactionTests) ... ok
+test_unequal_typed_values_and_missing_fields_are_not_factored (tests.test_prompt_compaction.PromptCompactionTests) ... ok
+test_unknown_fields_targets_price_limits_and_untrusted_text_preserved (tests.test_prompt_compaction.PromptCompactionTests) ... ok
+test_binding_replaces_forged_rules_and_keeps_personal_differences (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_both_provider_types_pass_shared_guidance_and_actor_rules (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_budget_values_follow_runtime_policy_and_stale_is_unknown_not_free (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_costs_do_not_claim_healing_rest_or_unknown_actions_are_free (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_phone_player_and_npc_speech_all_receive_same_rules (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_reservation_exposes_only_own_current_boolean_not_private_details (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_shared_rules_for_every_actor_are_detached_and_read_only (tests.test_cognition_action_rules.ActionRulesTests) ... ok
+test_auto_is_scoped_to_official_deepseek_v4_and_explicit_override_is_supported (tests.test_cognition_provider_options.ProviderOptionsTests) ... ok
+test_invalid_config_keeps_previous_provider_and_key (tests.test_cognition_provider_options.ProviderOptionsTests) ... ok
+test_truncation_counts_tokens_and_exposes_sanitized_failure (tests.test_cognition_provider_options.ProviderOptionsTests) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 10.829s
+
+OK
