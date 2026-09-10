@@ -1,0 +1,10 @@
+test_atomic_preflight_even_if_earlier_projection_misses_a_reservation (tests.test_campus_support_reservations.SupportReservationTests) ... ok
+test_autonomous_support_does_not_steal_reserved_actions (tests.test_campus_support_reservations.SupportReservationTests) ... ok
+test_explicit_cancellation_releases_support_without_free_recovery (tests.test_campus_support_reservations.SupportReservationTests) ... ok
+test_life_booking_of_either_participant_is_respected (tests.test_campus_support_reservations.SupportReservationTests) ... ok
+test_outing_of_either_participant_is_respected (tests.test_campus_support_reservations.SupportReservationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 49.959s
+
+OK

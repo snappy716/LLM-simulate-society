@@ -5,6 +5,7 @@ Listening is free; a consented grounding activity costs both participants one
 major action. Ordinary conversation, personality and unanswered calls never
 create a case. Night interventions will consume this same persistent ledger.
 """
+from copy import copy, deepcopy
 from dataclasses import replace
 
 from simulation.actions.commands import SimulationCommand
@@ -79,6 +80,10 @@ def _support_problem(state, case, listener):
     if mastery_by_topic(state, listener).get(case["topic_id"], 0) < 20:
         return "knowledge_required", "需要先将对应现象的理解提升至 20；可通过阅读和实际案例学习。"
     for who in (listener, subject):
+        from simulation.systems.campus_outings import active_outing
+        from simulation.systems.campus_life import active_booking
+        if active_outing(state, who) or active_booking(state, who):
+            return "major_action_reserved", "有人已有确认的共同活动或校园报名，请先赴约或主动取消；本次未扣行动。"
         from simulation.systems.campus_anomaly_meetings import reserved_meeting
         meeting = reserved_meeting(state, who)
         if meeting and (meeting["case_id"] != case["case_id"] or meeting["helper_id"] != listener
@@ -181,9 +186,18 @@ def make_anomaly_handler():
             if problem:
                 return fail(*problem)
         policy = build_action_economy_policy([{"id": key, **value} for key, value in state.action_economy["policy"]["phases"].items()])
-        for who in (actor, target):
-            cost = consume_major_action(state, policy, replace(command, actor_id=who))
-            assert cost.success, cost.code  # Every rejection was checked before either cost.
+        # The shared budget service is authoritative, including reservations
+        # introduced by newer systems. Validate both costs before spending either.
+        preview = copy(state)
+        preview.action_economy = deepcopy(state.action_economy)
+        commands = [replace(command, actor_id=who) for who in (actor, target)]
+        for participant_command in commands:
+            cost = consume_major_action(preview, policy, participant_command)
+            if not cost.success:
+                return fail(cost.code, "双方尚不能共同进行支持活动：" + cost.message)
+        for participant_command in commands:
+            cost = consume_major_action(state, policy, participant_command)
+            assert cost.success, cost.code  # No state change can intervene inside this transaction.
         before = {key: case[key] for key in INITIAL}
         for key, amount in (ANCHOR_DELTA if anchor_id else SUPPORT_DELTA).items():
             case[key] = max(0, case[key] - amount)

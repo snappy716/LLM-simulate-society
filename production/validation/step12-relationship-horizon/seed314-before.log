@@ -1,0 +1,24 @@
+{"result": "RELATIONSHIP_HORIZON", "seed": 314, "elapsed_days": 7, "outings": {"companionship:completed": 166, "companionship:declined": 18, "companionship:cancelled": 1, "companionship:confirmed": 38}, "bonds": {}, "unique_pairs": 110, "directed_ready": {}, "friendship_missing_thresholds": {"familiarity": 220, "closeness": 220, "trust": 203}, "strongest_completed_pairs": [{"completed_together": 1, "familiarity": 2, "closeness": 14, "trust": 75}, {"completed_together": 1, "familiarity": 2, "closeness": 11, "trust": 57}, {"completed_together": 3, "familiarity": 13, "closeness": 8, "trust": 56}, {"completed_together": 3, "familiarity": 13, "closeness": 8, "trust": 57}, {"completed_together": 2, "familiarity": 13, "closeness": 8, "trust": 56}, {"completed_together": 2, "familiarity": 13, "closeness": 8, "trust": 54}, {"completed_together": 3, "familiarity": 9, "closeness": 7, "trust": 53}, {"completed_together": 3, "familiarity": 8, "closeness": 6, "trust": 53}], "paid_api_calls": 0, "injected_relationships_or_receipts": false}
+{"result": "RELATIONSHIP_HORIZON", "seed": 314, "elapsed_days": 14, "outings": {"companionship:completed": 433, "companionship:declined": 33, "companionship:cancelled": 8, "companionship:confirmed": 47}, "bonds": {}, "unique_pairs": 139, "directed_ready": {}, "friendship_missing_thresholds": {"familiarity": 251, "closeness": 278, "trust": 199}, "strongest_completed_pairs": [{"completed_together": 5, "familiarity": 38, "closeness": 24, "trust": 81}, {"completed_together": 5, "familiarity": 36, "closeness": 24, "trust": 81}, {"completed_together": 5, "familiarity": 30, "closeness": 20, "trust": 72}, {"completed_together": 5, "familiarity": 30, "closeness": 20, "trust": 67}, {"completed_together": 5, "familiarity": 21, "closeness": 18, "trust": 71}, {"completed_together": 6, "familiarity": 28, "closeness": 18, "trust": 65}, {"completed_together": 6, "familiarity": 26, "closeness": 18, "trust": 71}, {"completed_together": 6, "familiarity": 24, "closeness": 16, "trust": 56}], "paid_api_calls": 0, "injected_relationships_or_receipts": false}
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/production/validation/step12-relationship-horizon/run_horizon.py", line 63, in <module>
+    run(args.seed, args.days)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/production/validation/step12-relationship-horizon/run_horizon.py", line 47, in run
+    result = bridge.kernel.execute(SimulationCommand(f"horizon:{seed}:{step}", "player", "ADVANCE_PHASE",
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/transactions.py", line 202, in execute
+    outcome = handler(context, command)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/time.py", line 205, in advance
+    phase_execution = on_phase_started(context, command) if on_phase_started else {}
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/campus_activities.py", line 84, in execute
+    summary.update(phase_upkeep(context))
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/server.py", line 320, in phase_upkeep
+    summary = forum_phase_upkeep(context)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/campus_tasks.py", line 808, in upkeep
+    summary = dict(base_upkeep(context)) if base_upkeep is not None else {}
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/server.py", line 291, in campus_phase_upkeep
+    summary.update(advance_anomaly_support(context))
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/campus_anomalies.py", line 252, in advance_anomaly_support
+    result = handler(context, replace(command, action_id="SUPPORT_ANOMALY", parameters=automatic_support_parameters(context, case, helper)))
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/campus_anomalies.py", line 186, in handle
+    assert cost.success, cost.code  # Every rejection was checked before either cost.
+AssertionError: major_action_reserved
