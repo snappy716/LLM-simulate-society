@@ -12,7 +12,7 @@ from simulation.systems.campus_schedules import current_schedule_slot
 from simulation.systems.transactions import TransactionContext
 
 
-def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, messaging_policy):
+def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, messaging_policy, outing_handler=None):
     def prepare(context):
         state = context.state
         ledger = state.cognition.get("daily_plans", {})
@@ -65,6 +65,9 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, 
         from simulation.systems.campus_social_coordination import coordinate_daily_social
         from simulation.systems.campus_life import enroll_chosen_plans
         enroll_chosen_plans(context, plans)
+        if outing_handler is not None:
+            from simulation.systems.campus_outings import invite_chosen_outings
+            invite_chosen_outings(context, plans, outing_handler)
         coordinate_daily_social(context, plans, messaging_policy)
         context.emit("NPC_DAILY_PLANS_PREPARED", "已整理本日安排；日内按计划执行并核对实际条件。",
             visibility="private", knowledge_tags=["schedule", "planning"],
@@ -78,6 +81,10 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, 
         if ledger.get("day") != state.clock.day or not plan:
             return schedule  # Old/missing slots never trigger day-time model work.
         chosen = deepcopy(plan)
+        if chosen.get("parameters", {}).get("outing_intent"):
+            # Actual confirmed appointments are selected by the shared runtime
+            # wrapper. An unaccepted proposal must not become a forced visit.
+            chosen = dict(schedule)
         sid = chosen.get("parameters", {}).get("life_session_id")
         if sid:
             from simulation.systems.campus_life import participant

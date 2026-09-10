@@ -12,6 +12,10 @@ ANCHOR_DELTA = {"shell": 10, "core": 40, "coherence": 30}
 def sources(state, case, helper):
     """Only both participants' actual experiences, never another NPC's diary."""
     result = []
+    from simulation.systems.campus_outings import records, participants
+    for outing in records(state).values():
+        if outing["status"] == "completed" and set(participants(outing)) == {helper, case["actor_id"]}:
+            result.append({"source_id": "outing:" + outing["outing_id"], "label": outing["receipt"]["summary"]})
     for row in case["history"]:
         if row["route"] == "day_support" and row["helper_id"] == helper and row["day"] < state.clock.day:
             result.append({"source_id": "support:" + str(row["revision"]),
@@ -27,6 +31,12 @@ def sources(state, case, helper):
 
 def source_valid(state, case, anchor):
     source = anchor["source_id"]
+    if source.startswith("outing:"):
+        from simulation.systems.campus_outings import records, participants
+        outing = records(state).get(source.removeprefix("outing:"))
+        return bool(outing and outing["status"] == "completed" and outing["receipt"]
+            and set(participants(outing)) == {anchor["helper_id"], case["actor_id"]}
+            and phase_index(outing["day"], outing["phase"]) <= phase_index(anchor["day"], anchor["phase"]))
     if source.startswith("support:"):
         return any(row["route"] == "day_support" and "support:" + str(row["revision"]) == source
             and row["helper_id"] == anchor["helper_id"] and row["day"] < anchor["day"]

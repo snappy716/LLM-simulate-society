@@ -40,6 +40,7 @@ def action_rule_context(state, actor_id):
     from simulation.systems.campus_anomaly_meetings import reserved_meeting
     from simulation.systems.campus_commitments import commitments_for
     from simulation.systems.campus_life import active_booking
+    from simulation.systems.campus_outings import active_outing
 
     budget = state.action_economy.get("actors", {}).get(actor_id, {})
     current = (budget.get("day"), budget.get("phase")) == (state.clock.day, state.clock.phase)
@@ -55,7 +56,7 @@ def action_rule_context(state, actor_id):
             "day": state.clock.day, "phase": state.clock.phase,
             "major_remaining": budget.get("major_remaining") if current else None,
             "known": current,
-            "reserved_for_existing_commitment": bool(active_departure(state, actor_id) or reserved_meeting(state, actor_id) or active_booking(state, actor_id)),
+            "reserved_for_existing_commitment": bool(active_departure(state, actor_id) or reserved_meeting(state, actor_id) or active_booking(state, actor_id) or active_outing(state, actor_id)),
         },
         "personality_scale": {"minimum": 0, "maximum": 100,
             "meanings": dict(TRAIT_MEANINGS),

@@ -1,0 +1,21 @@
+test_campus_view_exposes_navigation_without_internal_command_history (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_command_parser_accepts_complete_strict_payload (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_command_parser_enforces_phase_and_unique_targets (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_command_parser_rejects_unknown_and_missing_fields (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_result_and_status_views_are_stable_read_only_shapes (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_actual_road_arrival_and_atomic_shared_cost (tests.test_campus_outings.OutingTests) ... ok
+test_changed_willingness_cancels_without_partial_cost (tests.test_campus_outings.OutingTests) ... ok
+test_conflicts_in_both_directions_and_cancel_releases (tests.test_campus_outings.OutingTests) ... ok
+test_fake_daily_model_can_choose_optional_outings_without_extra_calls (tests.test_campus_outings.OutingTests) ... ok
+test_invite_reserves_both_without_reward_and_is_private (tests.test_campus_outings.OutingTests) ... ok
+test_missing_player_expires_without_consuming_partner_budget (tests.test_campus_outings.OutingTests) ... ok
+test_npc_invitation_requires_player_response_and_refusal_no_penalty (tests.test_campus_outings.OutingTests) ... ok
+test_npc_pair_can_complete_without_player_attendance (tests.test_campus_outings.OutingTests) ... ok
+test_reserved_budget_and_partner_cost_failure_are_atomic (tests.test_campus_outings.OutingTests) ... ok
+test_save_roundtrip_and_forged_receipt_rejected (tests.test_campus_outings.OutingTests) ... ok
+test_untrusted_parameters_do_not_create_invitations (tests.test_campus_outings.OutingTests) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 16.378s
+
+OK

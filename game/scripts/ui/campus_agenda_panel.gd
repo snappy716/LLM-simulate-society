@@ -55,6 +55,9 @@ func _ready() -> void:
 	participation.fit_content = true
 	participation.scroll_active = false
 	add_child(participation)
+	var outings := preload("res://scripts/ui/campus_outing_panel.gd").new()
+	outings.name = "Outings"
+	add_child(outings)
 	SimulationBridge.campus_life_operation_completed.connect(func(success, result):
 		if not _pending: return
 		_pending = false

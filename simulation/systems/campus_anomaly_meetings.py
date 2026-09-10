@@ -51,7 +51,8 @@ def slot_problem(state, case, helper, day, phase, location, graph, ignore=None):
         conflicts = commitments_at(state, actor, day, phase, ignore=("support", ignore))
         if conflicts:
             return {"support": "这个时段已有支持预约。", "social": "这个时段已经约好与其他人见面。",
-                "departure": "这个时段已有出击预约。"}[conflicts[0]["kind"]]
+                "departure": "这个时段已有出击预约。", "life": "这个时段已有校园活动。",
+                "outing": "这个时段已有共同活动。"}.get(conflicts[0]["kind"], "这个时段已有约定。")
         if (day, phase) == (state.clock.day, state.clock.phase) and state.action_economy["actors"][actor]["major_remaining"] < 1:
             return "当前时段有人没有剩余主要行动，请约其他时段。"
         if (state.places[location].get("open_phases") and phase not in state.places[location]["open_phases"]):

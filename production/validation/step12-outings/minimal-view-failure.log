@@ -1,0 +1,26 @@
+test_campus_view_exposes_navigation_without_internal_command_history (tests.test_kernel_api_contracts.KernelApiContractTests) ... ERROR
+test_command_parser_accepts_complete_strict_payload (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_command_parser_enforces_phase_and_unique_targets (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_command_parser_rejects_unknown_and_missing_fields (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+test_result_and_status_views_are_stable_read_only_shapes (tests.test_kernel_api_contracts.KernelApiContractTests) ... ok
+
+======================================================================
+ERROR: test_campus_view_exposes_navigation_without_internal_command_history (tests.test_kernel_api_contracts.KernelApiContractTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_kernel_api_contracts.py", line 106, in test_campus_view_exposes_navigation_without_internal_command_history
+    view = campus_world_view(state)
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/api/views.py", line 519, in campus_world_view
+    "agenda": agenda_view(state),
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/campus_commitments.py", line 62, in agenda_view
+    "outings": outing_agenda_view(state, actor_id),
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/campus_outings.py", line 269, in outing_agenda_view
+    "slots": [{"day": day, "phase": phase, "location_id": location, "location_name": state.places[location]["name"]}
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/campus_outings.py", line 269, in <listcomp>
+    "slots": [{"day": day, "phase": phase, "location_id": location, "location_name": state.places[location]["name"]}
+KeyError: 'mirror_lake_square'
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.004s
+
+FAILED (errors=1)

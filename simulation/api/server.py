@@ -190,6 +190,9 @@ class CampusKernelBridge:
         activity_definitions = load_campus_activity_definitions(registry)
         from simulation.systems.campus_life import install_life, make_life_handler, life_invariant, expire_life, booking_plan
         install_life(state, registry.all("life_opportunity"))
+        from simulation.systems.campus_outings import (ACTIONS as OUTING_ACTIONS, make_outing_handler,
+            outings_invariant, outing_plan, expire_outings, arrive_for_outing, settle_outings)
+        outing_handler = make_outing_handler(graph, action_policy, messaging_policy)
         activity_handler = make_campus_activity_handler(
             activity_definitions,
             action_policy,
@@ -203,7 +206,7 @@ class CampusKernelBridge:
         )
         from simulation.systems.campus_daily_plans import make_daily_planner, daily_plans_invariant
         prepare_daily_plans, base_decision_selector = make_daily_planner(
-            self.cognition_runtime, graph, activity_definitions, decision_policy, interaction_policy, messaging_policy
+            self.cognition_runtime, graph, activity_definitions, decision_policy, interaction_policy, messaging_policy, outing_handler
         )
         def decision_selector(context, actor_id, schedule_plan, destination_occupancy):
             from simulation.systems.campus_anomaly_meetings import meeting_plan
@@ -248,7 +251,7 @@ class CampusKernelBridge:
         )
         life_base_selector = decision_selector
         def decision_selector(context, actor_id, schedule_plan, destination_occupancy):
-            return booking_plan(context.state, actor_id) or life_base_selector(context, actor_id, schedule_plan, destination_occupancy)
+            return outing_plan(context.state, actor_id) or booking_plan(context.state, actor_id) or life_base_selector(context, actor_id, schedule_plan, destination_occupancy)
         from simulation.systems.campus_goals import advance_personal_goals, personal_goals_invariant, make_ask_plan_handler
         from simulation.systems.campus_assistance import (ASSISTANCE_ACTIONS, advance_assistance_upkeep,
             advance_assistance_requests, advance_assistance_deliveries, make_assistance_handler, assistance_invariant, project_assistance_events)
@@ -257,6 +260,7 @@ class CampusKernelBridge:
             from simulation.systems.campus_expeditions import upkeep_expeditions, form_npc_expeditions, prepare_npc_combat_supplies
             summary = receive_campus_supply(context)
             summary.update(expire_life(context))
+            expire_outings(context, messaging_policy)
             from simulation.systems.campus_night_sites import upkeep_night_sites
             summary.update(upkeep_night_sites(context))
             from simulation.systems.campus_situations import advance_campus_situations
@@ -315,6 +319,8 @@ class CampusKernelBridge:
                     summary[key] = summary.get(key, 0) + value
             return summary
         def finish_phase_attention(context):
+            settle_outings(context, action_policy, messaging_policy)
+            expire_outings(context, messaging_policy, ending=True)
             from simulation.systems.campus_anomaly_meetings import advance_meetings
             advance_meetings(context, graph, messaging_policy, ending=True)
             # Offline/headless worlds also resolve pending consideration. These
@@ -323,6 +329,9 @@ class CampusKernelBridge:
                 social_attention(context)
         self.kernel = WorldKernel(state, rng=rng_pool)
         self.kernel.add_invariant(life_invariant)
+        self.kernel.add_invariant(outings_invariant)
+        for action_id in OUTING_ACTIONS:
+            self.kernel.register_handler(action_id, outing_handler)
         life_handler = make_life_handler(activity_handler)
         from simulation.systems.campus_life import ACTIONS as LIFE_ACTIONS
         for action_id in LIFE_ACTIONS:
@@ -345,6 +354,8 @@ class CampusKernelBridge:
         for action_id in TRADE_ACTIONS:
             self.kernel.register_handler(action_id, make_campus_trade_handler())
         def scheduled_activity_handler(context, command):
+            if command.action_id == "WAIT_CAMPUS_OUTING":
+                return arrive_for_outing(context, command, outing_handler)
             if command.action_id == "WAIT_ANOMALY_MEETING":
                 from simulation.systems.transactions import TransactionOutcome
                 return TransactionOutcome(True, True, "appointment_arrived", "已沿道路到达约定地点，预留行动等候；尚未完成支持。")
@@ -460,6 +471,7 @@ class CampusKernelBridge:
                     decision_selector,
                     complete_assigned_task,
                     lambda context: {
+                        **settle_outings(context, action_policy, messaging_policy),
                         **settle_meetings(context, messaging_policy),
                         **advance_campus_trade(context),
                         **review_campus_supply(context),

@@ -282,6 +282,7 @@ def make_scheduled_npc_phase_executor(
             if not activity_outcome.success:
                 from simulation.systems.campus_autonomous_combat import EXPECTED_NPC_COMBAT_FAILURES
                 if (activity_command.action_id == "BUY_ITEM"
+                        or "outing_id" in activity_command.parameters
                         or "life_session_id" in activity_command.parameters
                         or (plan.get("task_id") and activity_outcome.code in EXPECTED_NPC_COMBAT_FAILURES | {"major_action_exhausted", "major_action_reserved", "no_new_evidence", "field_evidence_required", "contact_already_resumed", "actor_unavailable", "task_time_unavailable"})
                         or (plan.get("personal_goal_id") and activity_outcome.code in EXPECTED_STEP_FAILURES)
@@ -338,6 +339,13 @@ def make_scheduled_npc_phase_executor(
             )
         if phase_completed is not None:
             summary.update(phase_completed(context))
+        # Arrivals are free; completed two-person activities are only known
+        # after everyone has moved. Count the actual paid activity, not twice.
+        for who, person in context.state.population.items():
+            activity = person.get("current_activity", {})
+            if who != "player" and activity.get("activity_id") == "ATTEND_CAMPUS_OUTING" and (activity.get("day"), activity.get("phase")) == (context.state.clock.day, context.state.clock.phase):
+                summary["free_activity_count"] -= 1
+                summary["major_activity_count"] += 1
         summary["decision_reason_counts"] = dict(sorted(decision_reasons.items()))
         return summary
 

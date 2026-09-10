@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Actor-local snapshot.agenda.outings",
+  "type": "object",
+  "required": ["records", "contacts", "slots", "note"],
+  "additionalProperties": false,
+  "properties": {
+    "note": {"type": "string"},
+    "contacts": {"type": "array", "items": {"type": "object", "required": ["actor_id", "name"], "additionalProperties": false,
+      "properties": {"actor_id": {"type": "string"}, "name": {"type": "string"}}}},
+    "slots": {"type": "array", "items": {"type": "object", "required": ["day", "phase", "location_id", "location_name"],
+      "properties": {"day": {"type": "integer", "minimum": 1}, "phase": {"enum": ["afternoon", "evening"]},
+        "location_id": {"enum": ["mirror_lake_square", "library_reading_hall"]}, "location_name": {"type": "string"}}}},
+    "records": {"type": "array", "items": {"type": "object",
+      "required": ["outing_id", "proposer_id", "recipient_id", "kind", "day", "phase", "location_id", "created_day", "created_phase", "status", "revision", "message_ids", "attended", "receipt", "reason", "partner_name", "location_name", "can_reply", "can_cancel", "can_attend"],
+      "properties": {
+        "outing_id": {"type": "string", "pattern": "^outing:[1-9][0-9]*$"},
+        "proposer_id": {"type": "string"}, "recipient_id": {"type": "string"},
+        "kind": {"enum": ["companionship", "date"]}, "day": {"type": "integer", "minimum": 1},
+        "phase": {"enum": ["afternoon", "evening"]}, "location_id": {"type": "string"},
+        "status": {"enum": ["pending", "confirmed", "completed", "declined", "cancelled", "missed"]},
+        "revision": {"type": "integer", "minimum": 0},
+        "message_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "attended": {"type": "array", "maxItems": 2, "uniqueItems": true, "items": {"type": "string"}},
+        "receipt": {"type": ["object", "null"]}, "reason": {"type": "string"},
+        "can_reply": {"type": "boolean"}, "can_cancel": {"type": "boolean"}, "can_attend": {"type": "boolean"}
+      }
+    }}
+  }
+}

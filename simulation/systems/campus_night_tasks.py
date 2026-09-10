@@ -91,7 +91,7 @@ def _eligible_night_npcs(
         # return-before-a-late-night-appointment workflow yet, so protect both
         # night slots. Explicit player entry remains their own choice.
         from simulation.systems.campus_commitments import commitments_at
-        if any(row["kind"] == "life" for phase in ("evening", "late_night")
+        if any(row["kind"] in {"life", "outing"} for phase in ("evening", "late_night")
                for row in commitments_at(state, actor_id, state.clock.day, phase)):
             continue
         schedule = current_schedule_slot(state, actor_id)

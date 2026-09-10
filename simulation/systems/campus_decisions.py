@@ -509,6 +509,9 @@ def rank_campus_npc_activities(
     from simulation.systems.campus_life import life_candidates
     ranked.extend(life_candidates(context, actor_id, schedule_plan, graph, occupancy, policy,
                                   max((item["score"] for item in ranked), default=0)))
+    from simulation.systems.campus_outings import outing_candidates
+    ranked.extend(outing_candidates(context, actor_id, schedule_plan, graph, occupancy, policy,
+                                    max((item["score"] for item in ranked), default=0)))
     ranked.sort(key=lambda item: (-item["score"], item["candidate_id"]))
     for item in ranked:
         item["candidate_count"] = len(ranked)
