@@ -1,0 +1,5 @@
+GODOT_CHECK_LOGS /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-ogcwzucy
+PASS movement_pacing: CAMPUS_MOVEMENT_PACING_OK actual_phase_http stable_individual_speed staggered_four_walkers real_stationary_residents pause_waypoints pause_ui no_refresh_snap cancel_old_routes unchanged_authority no_api
+PASS navigation_flow: CAMPUS_NAVIGATION_FLOW_OK
+PASS collab_flow: CAMPUS_COLLAB_FLOW_OK
+GODOT_CHECKS_OK 3 flows

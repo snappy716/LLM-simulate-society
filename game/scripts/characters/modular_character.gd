@@ -17,6 +17,7 @@ var current_animation: StringName = &"idle"
 var current_frame_index := 0
 var frame_elapsed := 0.0
 var facing_right := false
+var movement_animation_speed := 1.0
 var _layers: Dictionary = {}
 
 
@@ -39,7 +40,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	var fps := IDLE_FPS if current_animation == &"idle" else RUN_FPS
+	var fps := IDLE_FPS if current_animation == &"idle" else RUN_FPS * movement_animation_speed
 	var frame_count := IDLE_FRAMES if current_animation == &"idle" else RUN_FRAMES
 	frame_elapsed += delta
 	var frame_duration := 1.0 / fps

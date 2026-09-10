@@ -5,7 +5,8 @@ signal movement_replay_finished()
 
 @export var npc_scene: PackedScene
 @export_range(1, 40, 1) var max_visible_npcs := 18
-@export var playback_speed := 320.0
+@export var playback_speed := 90.0
+@export_range(1, 12, 1) var max_concurrent_walkers := 4
 @export var map_origin_cell := Vector2(195, 300)
 @export var map_origin_world := Vector2(740, 300)
 @export var map_scale := Vector2(3, 5)
@@ -16,6 +17,9 @@ var last_replayed_count := 0
 var _places: Dictionary = {}
 var _population: Dictionary = {}
 var _active_routes := 0
+var _running_routes := 0
+var _pending_routes: Array[Dictionary] = []
+var _replay_generation := 0
 var _scene_route_points: Dictionary = {}
 var _current_map_entry: Dictionary = {}
 var _visible_actors: Dictionary = {}
@@ -23,6 +27,7 @@ var _player_location_id := ""
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_to_group("campus_npc_movement_layer")
 	_refresh_scene_route_anchors()
 	SimulationBridge.campus_snapshot_updated.connect(_on_snapshot_updated)
@@ -61,6 +66,11 @@ func _on_phase_advanced(success: bool, response: Dictionary) -> void:
 
 
 func _replay_movement_events(events: Array, snapshot: Dictionary) -> void:
+	var previous_positions: Dictionary = {}
+	for actor_id in _visible_actors:
+		var actor = _visible_actors[actor_id]
+		if is_instance_valid(actor):
+			previous_positions[actor_id] = actor.global_position
 	_clear_replay()
 	var route_locations: Dictionary = {}
 	for event_value in events:
@@ -79,24 +89,31 @@ func _replay_movement_events(events: Array, snapshot: Dictionary) -> void:
 		(route_locations[actor_id] as Array).append(String(payload.get("to_id", "")))
 
 	var population: Dictionary = snapshot.get("population", {})
+	# Keep genuine non-travelling residents on screen, not invented bystanders.
+	_populate_residents(route_locations, mini(6, maxi(0, max_visible_npcs - 1)))
+	for actor_id in _visible_actors:
+		if previous_positions.has(actor_id):
+			_visible_actors[actor_id].global_position = previous_positions[actor_id]
+	last_replayed_count = 0
 	var actor_ids: Array = route_locations.keys()
 	actor_ids.sort()
 	for actor_id_value in actor_ids:
-		if last_replayed_count >= max_visible_npcs:
+		if visible_resident_count() >= max_visible_npcs:
 			break
 		var actor_id := String(actor_id_value)
 		var points := _route_world_points(route_locations[actor_id])
 		if points.size() < 2 or not _route_intersects_view(points):
 			continue
-		_spawn_route_actor(actor_id, points, population.get(actor_id, {}))
+		_spawn_route_actor(actor_id, points, population.get(actor_id, {}), previous_positions)
 
 	movement_replay_started.emit(last_replayed_count)
+	_start_waiting_routes()
 	if _active_routes == 0:
 		_refresh_residents()
 		movement_replay_finished.emit()
 
 
-func _spawn_route_actor(actor_id: String, points: PackedVector2Array, data: Dictionary) -> void:
+func _spawn_route_actor(actor_id: String, points: PackedVector2Array, data: Dictionary, previous_positions: Dictionary = {}) -> void:
 	if npc_scene == null:
 		push_error("校园 NPC 移动层没有配置 npc_scene")
 		return
@@ -105,20 +122,50 @@ func _spawn_route_actor(actor_id: String, points: PackedVector2Array, data: Dict
 	var offset_points := PackedVector2Array()
 	for point in points:
 		offset_points.append(point + offset)
-	var destination_id := String((data.get("current_activity", {}) as Dictionary).get("location_id", ""))
-	npc.simulation_route_finished.connect(_on_route_finished.bind(npc, destination_id))
+	if previous_positions.has(actor_id):
+		offset_points[0] = previous_positions[actor_id]
+	npc.global_position = offset_points[0]
+	# Actual final location, not the intended activity if that activity failed.
+	var destination_id := String(data.get("current_location_id", ""))
+	npc.simulation_route_finished.connect(_on_route_finished.bind(npc, destination_id, _replay_generation))
 	_active_routes += 1
 	last_replayed_count += 1
-	npc.play_simulation_route(offset_points, playback_speed)
+	_pending_routes.append({"npc": npc, "points": offset_points, "actor_id": actor_id})
 
 
-func _on_route_finished(_npc_id: String, npc: Node, destination_id: String) -> void:
+func _walking_style(actor_id: String) -> Dictionary:
+	# Stable presentation-only variation: no simulation RNG, API or save writes.
+	var style_rng := RandomNumberGenerator.new()
+	style_rng.seed = absi(actor_id.hash())
+	return {"speed": clampf(playback_speed * style_rng.randf_range(0.82, 1.18), 55.0, 125.0),
+		"delay": style_rng.randf_range(0.3, 4.5),
+		"pause": style_rng.randf_range(0.4, 1.6)}
+
+
+func _start_waiting_routes() -> void:
+	while _running_routes < max_concurrent_walkers and not _pending_routes.is_empty():
+		var job: Dictionary = _pending_routes.pop_front()
+		var npc = job.npc
+		if not is_instance_valid(npc) or npc.is_queued_for_deletion():
+			_active_routes = maxi(0, _active_routes - 1)
+			continue
+		var style := _walking_style(job.actor_id)
+		_running_routes += 1
+		npc.play_simulation_route(job.points, style.speed, style.delay, style.pause)
+
+
+func _on_route_finished(_npc_id: String, npc: Node, destination_id: String, generation: int) -> void:
+	if generation != _replay_generation:
+		return
 	_active_routes = maxi(0, _active_routes - 1)
+	_running_routes = maxi(0, _running_routes - 1)
 	if not _location_is_visible(destination_id) and is_instance_valid(npc):
 		_visible_actors.erase(String(npc.npc_id))
 		npc.queue_free()
 	elif is_instance_valid(npc):
 		npc.set_campus_profile(_population.get(String(npc.npc_id), {}))
+		npc.set_meta("visual_location_id", destination_id)
+	_start_waiting_routes()
 	if _active_routes == 0:
 		_refresh_residents()
 		movement_replay_finished.emit()
@@ -201,23 +248,30 @@ func visible_resident_count() -> int:
 
 
 func _refresh_residents() -> void:
+	_populate_residents()
+
+
+func _populate_residents(excluded_ids: Dictionary = {}, resident_limit: int = -1) -> void:
 	# A deferred snapshot/map refresh can outlive removal of the old scene on load.
 	if not is_inside_tree() or is_queued_for_deletion():
 		return
 	if _active_routes > 0 or _places.is_empty() or _population.is_empty():
+		return
+	var limit := max_visible_npcs if resident_limit < 0 else resident_limit
+	if limit <= 0:
 		return
 	var desired_ids: Array[String] = []
 	var actor_ids: Array = _population.keys()
 	actor_ids.sort_custom(_resident_precedes)
 	for actor_id_value in actor_ids:
 		var actor_id := String(actor_id_value)
-		if actor_id == "player":
+		if actor_id == "player" or excluded_ids.has(actor_id):
 			continue
 		var data: Dictionary = _population.get(actor_id, {})
 		if not _location_is_visible(String(data.get("current_location_id", ""))):
 			continue
 		desired_ids.append(actor_id)
-		if desired_ids.size() >= max_visible_npcs:
+		if desired_ids.size() >= limit:
 			break
 
 	for actor_id_value in _visible_actors.keys():
@@ -238,12 +292,13 @@ func _refresh_residents() -> void:
 		actor.set_campus_profile(data)
 		var location_id := String(data.get("current_location_id", ""))
 		var point_value = _world_point_for_location(location_id)
-		if point_value is Vector2:
+		if point_value is Vector2 and String(actor.get_meta("visual_location_id", "")) != location_id:
 			actor.global_position = (
 				point_value as Vector2
 				if desired_index == 0
 				else _resident_world_point(actor_id, point_value as Vector2)
 			)
+		actor.set_meta("visual_location_id", location_id)
 		actor.set_move_direction(Vector2.ZERO)
 	last_replayed_count = visible_resident_count()
 
@@ -343,7 +398,11 @@ func _resident_world_point(actor_id: String, anchor: Vector2) -> Vector2:
 
 
 func _clear_replay() -> void:
+	_replay_generation += 1
+	_pending_routes.clear()
+	_running_routes = 0
 	for child in get_children():
+		child.set_physics_process(false)
 		child.queue_free()
 	_visible_actors.clear()
 	last_replayed_count = 0

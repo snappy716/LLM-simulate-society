@@ -31,7 +31,7 @@ y_sort_enabled = true
 script = ExtResource("4_npc_movement")
 npc_scene = ExtResource("5_npc")
 max_visible_npcs = 18
-playback_speed = 220.0
+playback_speed = 90.0
 use_scene_route_anchors = true
 
 [node name="MapEdgeTransitions" type="Node2D" parent="."]

@@ -15,6 +15,8 @@ var _anchors: Array[Node] = []
 var _wait_time := 0.0
 var _simulation_route := PackedVector2Array()
 var _simulation_route_index := 0
+var _route_wait := 0.0
+var _waypoint_pause := 0.0
 var campus_profile: Dictionary = {}
 
 signal simulation_route_finished(npc_id: String)
@@ -59,10 +61,13 @@ func _physics_process(delta: float) -> void:
 	set_move_direction(direction)
 
 
-func play_simulation_route(points: PackedVector2Array, speed: float = 240.0) -> void:
+func play_simulation_route(points: PackedVector2Array, speed: float = 90.0, start_delay: float = 0.0, waypoint_pause: float = 0.0) -> void:
 	"""Replay an authoritative semantic route without making a local decision."""
 	simulation_controlled = true
 	move_speed = speed
+	movement_animation_speed = clampf(move_speed / 150.0, 0.45, 0.9)
+	_route_wait = maxf(0.0, start_delay)
+	_waypoint_pause = maxf(0.0, waypoint_pause)
 	_simulation_route = points
 	_simulation_route_index = 1
 	if _simulation_route.is_empty():
@@ -88,6 +93,11 @@ func _follow_simulation_route(delta: float) -> void:
 		velocity = Vector2.ZERO
 		set_move_direction(Vector2.ZERO)
 		return
+	if _route_wait > 0.0:
+		_route_wait = maxf(0.0, _route_wait - delta)
+		velocity = Vector2.ZERO
+		set_move_direction(Vector2.ZERO)
+		return
 	var target := _simulation_route[_simulation_route_index]
 	var direction := global_position.direction_to(target)
 	var travel_distance := move_speed * delta
@@ -97,7 +107,9 @@ func _follow_simulation_route(delta: float) -> void:
 		if _simulation_route_index >= _simulation_route.size():
 			_finish_simulation_route()
 		else:
-			set_move_direction(global_position.direction_to(_simulation_route[_simulation_route_index]))
+			_route_wait = _waypoint_pause
+			velocity = Vector2.ZERO
+			set_move_direction(Vector2.ZERO)
 		return
 	velocity = direction * move_speed
 	move_and_slide()
