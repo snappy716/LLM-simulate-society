@@ -75,6 +75,7 @@ class OpenAICompatibleCognitionProvider:
         *,
         timeout_seconds: float = 8.0,
         thinking_mode: str = "auto",
+        max_concurrent_requests: int = 10,
     ) -> None:
         self.base_url = base_url.strip().rstrip("/")
         self.model = model.strip()
@@ -85,6 +86,9 @@ class OpenAICompatibleCognitionProvider:
             raise ValueError("unsupported thinking mode")
         self.timeout_seconds = float(timeout_seconds)
         self.thinking_mode = thinking_mode
+        if type(max_concurrent_requests) is not int or not 1 <= max_concurrent_requests <= 20:
+            raise ValueError("request concurrency must be an integer between 1 and 20")
+        self.max_concurrent_requests = max_concurrent_requests
         self.effective_thinking = ("disabled" if urlparse(self.base_url).hostname == "api.deepseek.com"
                                    and self.model.startswith("deepseek-v4-") else "default") if thinking_mode == "auto" else thinking_mode
         self.last_result = {"state": "untested", "error_code": "", "actual_model": ""}
@@ -92,6 +96,12 @@ class OpenAICompatibleCognitionProvider:
     @property
     def configured(self) -> bool:
         return bool(self.base_url and self.model and self._api_key)
+
+    @property
+    def parallel_requests_supported(self) -> bool:
+        # Subclasses may wrap process-global transport or keep counters/files.
+        # Do not silently make existing audit/custom adapters concurrent.
+        return type(self) is OpenAICompatibleCognitionProvider
 
     def decide(self, request: BoundedDecisionRequest, *, max_output_tokens: int) -> Mapping[str, Any]:
         return self._complete_json(DAILY_PLAN_SYSTEM_PROMPT if request.daily_options is not None else SYSTEM_PROMPT, request.to_dict(), max_output_tokens)

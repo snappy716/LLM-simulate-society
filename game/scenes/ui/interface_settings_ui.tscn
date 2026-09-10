@@ -144,11 +144,11 @@ placeholder_text = "仅保存在本机 user://"
 [node name="Security" type="Label" parent="Panel/Window"]
 offset_left = 276.0
 offset_top = 338.0
-offset_right = 752.0
+offset_right = 505.0
 offset_bottom = 372.0
 theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.85, 0.75, 0.45, 1)
-text = "应用配置本身不调用模型。\n校园对话与 NPC 决策会使用当前接口。"
+text = "配置不调用模型；聊天不限次数。\n过夜并发不增加请求总数。"
 
 [node name="SaveApply" type="Button" parent="Panel/Window"]
 offset_left = 402.0
@@ -187,3 +187,19 @@ offset_bottom = 336.0
 min_value = 1.0
 max_value = 120.0
 value = 30.0
+
+[node name="ConcurrencyLabel" type="Label" parent="Panel/Window"]
+offset_left = 517.0
+offset_top = 342.0
+offset_right = 625.0
+offset_bottom = 370.0
+text = "过夜并发"
+
+[node name="RequestConcurrency" type="SpinBox" parent="Panel/Window"]
+offset_left = 632.0
+offset_top = 338.0
+offset_right = 752.0
+offset_bottom = 372.0
+min_value = 1.0
+max_value = 20.0
+value = 10.0

@@ -1,0 +1,25 @@
+test_additional_friends_get_full_plans_and_daytime_never_replans (tests.test_parallel_daily_plans.ParallelDailyPlansTests) ... ok
+test_concurrency_is_optional_validated_and_not_a_player_call_quota (tests.test_parallel_daily_plans.ParallelDailyPlansTests) ... ok
+test_opt_in_automated_budget_cannot_be_oversubscribed_by_workers (tests.test_parallel_daily_plans.ParallelDailyPlansTests) ... ok
+test_parallel_and_serial_multi_day_worlds_rng_requests_and_usage_match (tests.test_parallel_daily_plans.ParallelDailyPlansTests) ... ok
+test_parent_capacity_boundary_waits_before_next_candidate_is_built (tests.test_parallel_daily_plans.ParallelDailyPlansTests) ... ok
+test_partial_failure_billing_and_fallbacks_identical_without_retries (tests.test_parallel_daily_plans.ParallelDailyPlansTests) ... ok
+test_real_adapter_parallel_wire_usage_and_diagnostics_are_isolated (tests.test_parallel_daily_plans.ParallelDailyPlansTests) ... ok
+test_usage_reservations_cache_and_validation_run_on_world_thread (tests.test_parallel_daily_plans.ParallelDailyPlansTests) ... ERROR
+
+======================================================================
+ERROR: test_usage_reservations_cache_and_validation_run_on_world_thread (tests.test_parallel_daily_plans.ParallelDailyPlansTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_parallel_daily_plans.py", line 130, in test_usage_reservations_cache_and_validation_run_on_world_thread
+    request = runtime._request(state, state.cognition["focused_ids"][0],
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/campus_cognition.py", line 462, in _request
+    public_candidates = tuple({
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/simulation/systems/campus_cognition.py", line 466, in <genexpr>
+    "reason": item["decision_reason"],
+KeyError: 'decision_reason'
+
+----------------------------------------------------------------------
+Ran 8 tests in 41.763s
+
+FAILED (errors=1)

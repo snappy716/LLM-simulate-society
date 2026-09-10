@@ -1,0 +1,20 @@
+GODOT_CHECK_LOGS /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-unhke41e
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+GODOT_SIMULATION_READY http://127.0.0.1:63931
+SCRIPT ERROR: Assertion failed.
+          at: _run (res://tools/test_campus_startup_flow.gd:66)
+          GDScript backtrace (most recent call first):
+              [0] _run (res://tools/test_campus_startup_flow.gd:66)
+              [1] _on_request_completed (res://scripts/simulation/simulation_bridge.gd:846)
+ERROR: campus startup test timed out
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] <anonymous lambda> (res://tools/test_campus_startup_flow.gd:11)
+
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/production/run_godot_checks.py", line 92, in <module>
+    main()
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/production/run_godot_checks.py", line 78, in main
+    raise RuntimeError(f"{flow} failed; see {work}")
+RuntimeError: startup_flow failed; see /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-unhke41e/startup_flow

@@ -14,6 +14,7 @@ const THINKING_MODES := ["auto", "default", "disabled", "enabled"]
 @onready var status: Label = $Panel/Window/Status
 @onready var thinking: OptionButton = $Panel/Window/Thinking
 @onready var request_timeout: SpinBox = $Panel/Window/RequestTimeout
+@onready var request_concurrency: SpinBox = $Panel/Window/RequestConcurrency
 
 var profiles: Array[Dictionary] = []
 var selected_index := -1
@@ -29,6 +30,7 @@ func _ready() -> void:
 	for label in ["自动适配", "服务默认", "关闭思考", "开启思考"]:
 		thinking.add_item(label)
 	thinking.tooltip_text = "自动：官方 DeepSeek V4 使用非思考模式；其他兼容服务不添加私有参数。显式开关要求服务支持 thinking 参数。"
+	request_concurrency.tooltip_text = "过夜同时请求数，默认 10。只并行互不影响的日程，不增加请求总数或限制聊天次数。遇到服务限流可调低；本地 Ollama 保持串行。"
 	profile_list.item_selected.connect(_select_profile)
 	$Panel/Window/Add.pressed.connect(_add_profile)
 	$Panel/Window/Delete.pressed.connect(_delete_profile)
@@ -89,6 +91,7 @@ func _load_profiles() -> void:
 				"api_key": config.get_value(section, "api_key", ""),
 				"thinking_mode": config.get_value(section, "thinking_mode", "auto"),
 				"timeout_seconds": config.get_value(section, "timeout_seconds", 30.0),
+				"max_concurrent_requests": config.get_value(section, "max_concurrent_requests", 10),
 			})
 	if profiles.is_empty():
 		profiles = [
@@ -119,6 +122,7 @@ func _select_profile(index: int) -> void:
 	api_key.text = String(item.api_key)
 	thinking.select(maxi(0, THINKING_MODES.find(str(item.get("thinking_mode", "auto")))))
 	request_timeout.value = float(item.get("timeout_seconds", 30.0))
+	request_concurrency.value = int(item.get("max_concurrent_requests", 10))
 	_provider_changed(provider.selected)
 	status.text = "配置仅保存在本机 user://"
 
@@ -152,6 +156,7 @@ func _save_and_apply() -> void:
 		"api_key": api_key.text.strip_edges(),
 		"thinking_mode": THINKING_MODES[thinking.selected],
 		"timeout_seconds": request_timeout.value,
+		"max_concurrent_requests": int(request_concurrency.value),
 	}
 	if not _save_profiles():
 		return
@@ -183,6 +188,7 @@ func _provider_changed(index: int) -> void:
 	api_key.editable = provider_id == "openai_compatible"
 	thinking.disabled = provider_id != "openai_compatible"
 	request_timeout.editable = provider_id == "openai_compatible"
+	request_concurrency.editable = provider_id == "openai_compatible"
 	if provider_id == "ollama":
 		api_key.text = ""
 

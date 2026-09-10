@@ -50,13 +50,20 @@ func _run() -> void:
 	(settings.get("model") as LineEdit).text = "deepseek-v4-flash"
 	(settings.get("api_key") as LineEdit).text = "fake-no-paid-request"
 	(settings.get("request_timeout") as SpinBox).value = 30
+	assert((settings.get("request_concurrency") as SpinBox).value == 10)
+	(settings.get("request_concurrency") as SpinBox).value = 6
 	settings.call("_save_and_apply")
 	var deepseek = await bridge.interface_configured
 	assert(bool(deepseek[0]))
 	assert(deepseek[1].status.thinking_mode == "disabled")
 	assert(deepseek[1].status.timeout_seconds == 30)
+	assert(deepseek[1].max_concurrent_requests == 6)
 	assert(deepseek[1].status.last_result.state == "untested")
 	assert((settings.get("status") as Label).text.contains("尚未请求验证"))
+	var selected_profile := int(settings.get("selected_index"))
+	settings.call("_load_profiles")
+	settings.call("_select_profile", selected_profile)
+	assert((settings.get("request_concurrency") as SpinBox).value == 6)
 	settings.call("_select_profile", 0)
 	settings.call("_save_and_apply")
 	await bridge.interface_configured

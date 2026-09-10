@@ -592,6 +592,7 @@ class CampusKernelBridge:
                 str(config.get("api_key", "")).strip(),
                 thinking_mode=config.get("thinking_mode", "auto"),
                 timeout_seconds=config.get("timeout_seconds"),
+                max_concurrent_requests=config.get("max_concurrent_requests", 10),
             )
             return
         raise ValueError(f"unsupported provider: {provider}")
@@ -696,6 +697,7 @@ class SimulationBridge:
             self.campus.configure_cognition_interface(config)
             status = self.campus.cognition_runtime.public_status()
         return {"ok": True, "provider": config.get("provider", "rule"),
+                "max_concurrent_requests": getattr(self.campus.cognition_runtime.provider, "max_concurrent_requests", 1),
                 "base_url": str(config.get("base_url", "")).strip().rstrip("/"),
                 "model": str(config.get("model", "")).strip(),
                 "api_key_configured": bool(str(config.get("api_key", "")).strip()),

@@ -1,0 +1,6 @@
+test_usage_reservations_cache_and_validation_run_on_world_thread (tests.test_parallel_daily_plans.ParallelDailyPlansTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 3.240s
+
+OK

@@ -1,0 +1,7 @@
+test_later_cached_plan_does_not_overtake_inflight_audit_or_call_network (tests.test_parallel_daily_plans.ParallelDailyPlansTests) ... ok
+test_usage_reservations_cache_and_validation_run_on_world_thread (tests.test_parallel_daily_plans.ParallelDailyPlansTests) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 7.808s
+
+OK

@@ -28,30 +28,8 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, 
         plans = {}
         occupancy = {phase: Counter() for phase in phases}
         from simulation.systems.campus_clubs import club_has_activity
-        for actor_id in sorted(state.population):
-            if actor_id == "player":
-                continue
-            options = {}
-            free_options = {}
-            for phase in phases:
-                preview.clock.phase = phase
-                preview.action_economy["actors"][actor_id]["major_remaining"] = state.action_economy["policy"]["phases"][phase]["major_actions"]
-                schedule = current_schedule_slot(preview, actor_id)
-                candidates = rank_campus_npc_activities(scratch, actor_id, schedule, graph, definitions, policy, occupancy[phase])
-                candidates = [candidate for candidate in candidates if candidate["activity_id"] != "CLUB_ACTIVITY" or any(
-                    club_has_activity(preview, club, state.clock.day, phase)
-                    for club in preview.population[actor_id].get("club_ids", ()))]
-                options[phase] = deepcopy(candidates[:runtime.policy.candidate_limit] or [dict(schedule)])
-                if actor_id in state.cognition.get("focused_ids", ()):
-                    from simulation.systems.campus_trade import procurement_candidates
-                    free_options[phase] = procurement_candidates(preview, actor_id, graph)[:runtime.policy.candidate_limit]
-            # Legacy saves/new worlds bootstrap locally. Only a new morning is
-            # allowed to send autonomous daily planning requests to a provider.
-            social_options = ()
-            if state.clock.phase == "morning" and runtime.provider.configured and actor_id in state.cognition.get("focused_ids", ()):
-                from simulation.cognition.social_planning import build_social_options
-                social_options = build_social_options(preview, actor_id, options, definitions, interaction_policy)
-            slots = runtime.plan_day(state, actor_id, options, social_options, free_options) if state.clock.phase == "morning" else None
+
+        def apply(actor_id, slots, options):
             planned_source = "llm" if slots is not None else "rule"
             if slots is None:
                 slots = {phase: deepcopy(options[phase][0]) for phase in phases}
@@ -60,6 +38,42 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, 
                 slot["planned_source"] = planned_source
                 reserve_decision_destination(graph, occupancy[phase], slot.get("location_id", ""))
             plans[actor_id] = slots
+
+        from simulation.systems.daily_plan_jobs import DailyPlanJobs
+        limit = getattr(runtime.provider, "max_concurrent_requests", 1)
+        if not getattr(runtime.provider, "parallel_requests_supported", True):
+            limit = 1
+        with DailyPlanJobs(graph, occupancy, limit, apply) as jobs:
+            for actor_id in sorted(state.population):
+                if actor_id == "player":
+                    continue
+                jobs.before_actor()
+                options = {}
+                free_options = {}
+                for phase in phases:
+                    preview.clock.phase = phase
+                    preview.action_economy["actors"][actor_id]["major_remaining"] = state.action_economy["policy"]["phases"][phase]["major_actions"]
+                    schedule = current_schedule_slot(preview, actor_id)
+                    candidates = rank_campus_npc_activities(scratch, actor_id, schedule, graph, definitions, policy, occupancy[phase])
+                    candidates = [candidate for candidate in candidates if candidate["activity_id"] != "CLUB_ACTIVITY" or any(
+                        club_has_activity(preview, club, state.clock.day, phase)
+                        for club in preview.population[actor_id].get("club_ids", ()))]
+                    options[phase] = deepcopy(candidates[:runtime.policy.candidate_limit] or [dict(schedule)])
+                    if actor_id in state.cognition.get("focused_ids", ()):
+                        from simulation.systems.campus_trade import procurement_candidates
+                        free_options[phase] = procurement_candidates(preview, actor_id, graph)[:runtime.policy.candidate_limit]
+                # Legacy/bootstrap and intraday execution never call a model.
+                if state.clock.phase != "morning":
+                    apply(actor_id, None, options)
+                    continue
+                social_options = ()
+                if runtime.provider.configured and actor_id in state.cognition.get("focused_ids", ()):
+                    from simulation.cognition.social_planning import build_social_options
+                    social_options = build_social_options(preview, actor_id, options, definitions, interaction_policy)
+                jobs.submit(actor_id, runtime.plan_day_flow(state, actor_id, options, social_options, free_options), options)
+        runtime.last_daily_performance = dict(jobs.metrics)
+        # Application completion order must not change downstream iteration.
+        plans = dict(sorted(plans.items()))
         state.cognition["daily_plans"] = {"schema_version": 1, "day": state.clock.day,
             "created_phase": state.clock.phase, "actors": plans}
         from simulation.systems.campus_social_coordination import coordinate_daily_social

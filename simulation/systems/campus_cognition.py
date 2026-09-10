@@ -411,18 +411,20 @@ class CognitionRuntime:
     def __init__(self, policy: CognitionPolicy, provider: CognitionProvider | None = None) -> None:
         self.policy = policy
         self.provider: CognitionProvider = provider or RuleOnlyProvider()
+        self.last_daily_performance = {}  # Ephemeral; never changes replay/save data.
 
     def configure_rule(self) -> None:
         if isinstance(self.provider, OpenAICompatibleCognitionProvider):
             self.provider.secret_forget()
         self.provider = RuleOnlyProvider()
 
-    def configure_openai_compatible(self, base_url: str, model: str, api_key: str, *, thinking_mode="auto", timeout_seconds=None) -> None:
+    def configure_openai_compatible(self, base_url: str, model: str, api_key: str, *, thinking_mode="auto", timeout_seconds=None, max_concurrent_requests=10) -> None:
         if not base_url or not model or not api_key:
             raise ValueError("兼容接口需要 Base URL、模型名和 API Key。")
         replacement = OpenAICompatibleCognitionProvider(
             base_url, model, api_key, timeout_seconds=self.policy.request_timeout_seconds if timeout_seconds is None else timeout_seconds,
             thinking_mode=thinking_mode,
+            max_concurrent_requests=max_concurrent_requests,
         )
         if isinstance(self.provider, OpenAICompatibleCognitionProvider):
             self.provider.secret_forget()
@@ -517,6 +519,11 @@ class CognitionRuntime:
         *,
         purpose: str,
     ) -> BoundedDecisionResponse | None:
+        from simulation.cognition.request_jobs import run_inline
+        return run_inline(self._select_response_flow(state, request, purpose=purpose))
+
+    def _select_response_flow(self, state, request, *, purpose):
+        from simulation.cognition.request_jobs import CachedDecisionJob, DecisionJob
         request = bind_cognition_identity(state, request)
         usage = state.cognition["usage"]
         if usage.get("day") != state.clock.day:
@@ -540,9 +547,10 @@ class CognitionRuntime:
         ).hexdigest()
         cached = state.cognition["decision_cache"].get(cache_key)
         if isinstance(cached, dict):
+            # A cache hit must not overtake an earlier in-flight NPC when
+            # validating/recording its plan. This job never calls a provider.
+            raw, _, _, _ = yield CachedDecisionJob(deepcopy(cached), state.revision)
             usage["cache_hits"] += 1
-            raw = deepcopy(cached)
-            raw["candidate_revision"] = state.revision
         else:
             output_tokens = max(1024 if request.social_options or any((request.free_options or {}).values()) else 512, self.policy.max_output_tokens) if request.daily_options is not None else self.policy.max_output_tokens
             estimated = max(1, len(canonical) // 4) + output_tokens
@@ -566,9 +574,10 @@ class CognitionRuntime:
             purpose_phase_calls[purpose_key] = current_purpose_calls + 1
             usage["estimated_tokens"] += estimated
             usage["automated_estimated_tokens"] = automated_estimated_tokens + estimated
-            try:
-                raw = dict(self.provider.decide(request, max_output_tokens=output_tokens))
-            except Exception as exc:
+            raw, exc, status, _ = yield DecisionJob(self.provider, request, output_tokens)
+            if status is not None:
+                self.provider.last_result = status
+            if exc is not None:
                 if isinstance(exc, ProviderFailure):
                     usage["prompt_tokens"] += exc.usage["prompt_tokens"]
                     usage["completion_tokens"] += exc.usage["completion_tokens"]
@@ -631,6 +640,10 @@ class CognitionRuntime:
         return response
 
     def plan_day(self, state: WorldState, actor_id: str, options: Mapping[str, Sequence[Dict[str, Any]]], social_options=(), free_options=None) -> Dict[str, Any] | None:
+        from simulation.cognition.request_jobs import run_inline
+        return run_inline(self.plan_day_flow(state, actor_id, options, social_options, free_options))
+
+    def plan_day_flow(self, state, actor_id, options, social_options=(), free_options=None):
         if actor_id not in state.cognition.get("focused_ids", ()) or not self.provider.configured:
             return None
         request = self._request(state, actor_id, [])
@@ -652,7 +665,7 @@ class CognitionRuntime:
             **candidate_cost(item)} for index, item in enumerate(candidates[:self.policy.candidate_limit]))
             for phase, candidates in free_options.items()}
         request = replace(request, daily_options=public_options, social_options=public_social, free_options=public_free)
-        response = self._select_response(state, request, purpose="activity")
+        response = yield from self._select_response_flow(state, request, purpose="activity")
         if response is None:
             return None
         schedule = {}
