@@ -191,6 +191,10 @@ def make_campus_activity_handler(
             return TransactionOutcome(False, False, "battle_locked", "战斗中不能通过休息恢复。")
         if context.state.clock.phase not in definition.allowed_phases:
             return TransactionOutcome(False, False, "activity_wrong_phase", "当前时段不能进行这项活动。")
+        from simulation.systems.campus_medical import validate_shift, settle_shift
+        validation = validate_shift(context, command, definition)
+        if validation is not None:
+            return validation
         if activity_validator is not None:
             validation = activity_validator(context, command, definition)
             if validation is not None:
@@ -266,6 +270,7 @@ def make_campus_activity_handler(
             effects["recovery"] = recover_by_rest(context, command.actor_id)
         actor["last_activity_effects"] = effects
         settle_attendance(context, command, effects)
+        settle_shift(context, command, definition)
         context.emit(
             "CAMPUS_ACTIVITY_EFFECT_APPLIED",
             f"{actor.get('display_name', command.actor_id)} 完成 {definition.activity_id}。",

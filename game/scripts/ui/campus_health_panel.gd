@@ -5,6 +5,9 @@ const UI_TEXT = preload("res://scripts/ui/campus_ui_text.gd")
 var detail: RichTextLabel
 var rest_button: Button
 var home_button: Button
+var clinic_route_button: Button
+var clinic_button: Button
+var _clinic_passage := ""
 var _home_passage := ""
 var skill_picker: OptionButton
 var target_picker: OptionButton
@@ -26,6 +29,13 @@ func _ready() -> void:
 	rest_button.text = "在住处充分休息（1 次主要行动）"
 	rest_button.pressed.connect(func(): _send("REST", {}))
 	add_child(rest_button)
+	clinic_route_button = Button.new()
+	clinic_route_button.text = "沿道路 / 医院入口前往诊室（下一段）"
+	clinic_route_button.pressed.connect(func(): SimulationBridge.traverse_campus_passage(_clinic_passage))
+	add_child(clinic_route_button)
+	clinic_button = Button.new()
+	clinic_button.pressed.connect(func(): _send("VISIT_CAMPUS_CLINIC", {}))
+	add_child(clinic_button)
 	skill_picker = OptionButton.new()
 	add_child(skill_picker)
 	target_picker = OptionButton.new()
@@ -65,6 +75,19 @@ func refresh() -> void:
 	if not bool(player.get("can_rest_recover", false)):
 		lines.append("请先回到表世界的住处；战斗和里世界不能靠休息回血。")
 	var options: Array = player.get("field_recovery_options", [])
+	var clinic: Dictionary = player.get("clinic", {})
+	_clinic_passage = preload("res://scripts/ui/campus_inventory_panel.gd")._route_first_passage(String(clinic.get("location_id", "hospital_clinic")))
+	clinic_route_button.disabled = _pending or _clinic_passage.is_empty() or bool(snapshot.get("economy", {}).get("battle_locked", false))
+	clinic_route_button.tooltip_text = "沿可通行道路前往下一段；不会通过手机远程治疗。"
+	clinic_button.text = "正在处理…" if _pending else "诊室处理伤势（%d 元，不占主要行动）" % int(clinic.get("fee", 0))
+	clinic_button.disabled = _pending or not bool(clinic.get("can_visit", false))
+	clinic_button.tooltip_text = UI_TEXT.PENDING_MESSAGE if _pending else String(clinic.get("reason", "诊室尚不可用。"))
+	lines.append("\n校医院：最多恢复 50% 最大生命，不恢复专注、不清除污染。")
+	lines.append("实际到岗接诊余量：%d；%s" % [int(clinic.get("available_visits", 0)), clinic.get("reason", "")])
+	var receipts: Array = clinic.get("receipts", [])
+	if not receipts.is_empty():
+		var receipt: Dictionary = receipts.back()
+		lines.append("本人最近就诊：第 %d 天，恢复 %d 生命，支付 %d 元。记录仅本人可查看。" % [int(receipt.get("day", 0)), int(receipt.get("health", {}).get("delta", 0)), int(receipt.get("fee", 0))])
 	var previous := skill_picker.selected
 	skill_picker.clear()
 	for option in options:

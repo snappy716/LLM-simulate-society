@@ -1,0 +1,4 @@
+GODOT_CHECK_LOGS /var/folders/b8/q5t81wyd095ff0jlv8c2pjhw0000gn/T/campus-godot-checks-4qh0kuh6
+PASS medical: CAMPUS_MEDICAL_FLOW_OK real_entrance actual_staff_shift actual_http_cash_heal no_patient_major private_receipt duplicate_guard three_sizes no_api
+PASS recovery: CAMPUS_RECOVERY_FLOW_OK explicit_wounded_fixture_not_enemy_AI
+GODOT_CHECKS_OK 2 flows

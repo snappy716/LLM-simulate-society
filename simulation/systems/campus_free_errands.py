@@ -1,9 +1,10 @@
-"""Execute optional purchases without replacing a person's primary arrangement."""
+"""Execute optional errands without replacing a person's primary arrangement."""
 from copy import deepcopy
 
 from simulation.actions.commands import CommandSource, SimulationCommand
 from simulation.systems.campus_daily_plans import valid_free_errand
 from simulation.systems.campus_trade import procurement_candidates
+from simulation.systems.campus_medical import ACTION as CLINIC_ACTION, optional_errand_candidates, clinic_candidates, make_medical_handler
 
 
 def make_free_errand_executor(graph, traverse, inventory_handler, protected_priority):
@@ -22,7 +23,7 @@ def make_free_errand_executor(graph, traverse, inventory_handler, protected_prio
         else:
             if int(schedule.get("priority", 0)) >= protected_priority or actor.get("active_forum_task_id"):
                 return counts
-            errands = procurement_candidates(state, actor_id, graph)[:1]
+            errands = optional_errand_candidates(state, actor_id, graph, rule_choice=True)[:1]
 
         def command(index, suffix, action, params):
             return SimulationCommand(
@@ -35,7 +36,7 @@ def make_free_errand_executor(graph, traverse, inventory_handler, protected_prio
             counts["free_errand_count" if success else "free_errand_failed_count"] += 1
             context.emit("NPC_FREE_ERRAND_COMPLETED" if success else "NPC_FREE_ERRAND_BLOCKED",
                 message, actor_ids=[actor_id], scene_id=actor["current_location_id"],
-                payload={"activity_id": "BUY_ITEM", "activity_role": "optional_errand", "errand_index": index,
+                payload={"activity_id": errand.get("activity_id", "BUY_ITEM"), "activity_role": "optional_errand", "errand_index": index,
                     "code": code, "parameters": deepcopy(errand.get("parameters", {})), "route_step_count": steps},
                 visibility="private", knowledge_tags=["trade", "activity"])
 
@@ -44,15 +45,22 @@ def make_free_errand_executor(graph, traverse, inventory_handler, protected_prio
                 receipt(index, errand if isinstance(errand, dict) else {}, False, "invalid_errand", "采购安排无效；继续核对主体安排。")
                 continue
             wanted = errand["parameters"]
-            current = next((c for c in procurement_candidates(state, actor_id, graph)
-                if c["parameters"]["shop_id"] == wanted["shop_id"] and c["parameters"]["item_id"] == wanted["item_id"]), None)
+            is_clinic = errand["activity_id"] == CLINIC_ACTION
+            if is_clinic:
+                current = next(iter(clinic_candidates(state, actor_id, graph)), None)
+            else:
+                current = next((c for c in procurement_candidates(state, actor_id, graph)
+                    if c["parameters"]["shop_id"] == wanted["shop_id"] and c["parameters"]["item_id"] == wanted["item_id"]), None)
             if current is None or current["max_unit_price"] > errand["max_unit_price"]:
-                receipt(index, errand, False, "conditions_changed", "采购条件已变化，未购买；继续核对主体安排。")
+                receipt(index, errand, False, "conditions_changed", "可选办事条件已变化，未执行；继续核对主体安排。")
                 continue
-            params = dict(wanted, quantity=min(wanted["quantity"], current["parameters"]["quantity"]))
+            params = {} if is_clinic else dict(wanted, quantity=min(wanted["quantity"], current["parameters"]["quantity"]))
             route = graph.shortest_route(actor["current_location_id"], current["location_id"],
                 phase=state.clock.phase, access_tags=actor.get("access_tags", ()))
             steps = 0
+            if route is None:
+                receipt(index, errand, False, "route_unavailable", "目前无法沿开放道路到达；继续核对主体安排。")
+                continue
             for step_index, step in enumerate(route.steps):
                 outcome = traverse(context, command(index, f"move:{step_index}", "TRAVERSE_LOCATION_PASSAGE", {"passage_id": step.passage_id}))
                 if not outcome.success:
@@ -62,7 +70,8 @@ def make_free_errand_executor(graph, traverse, inventory_handler, protected_prio
             if steps != len(route.steps):
                 receipt(index, errand, False, "route_unavailable", "采购途中无法继续通行；从实际位置核对主体安排。", steps)
                 continue
-            outcome = inventory_handler(context, command(index, "buy", "BUY_ITEM", params))
+            handler = make_medical_handler() if is_clinic else inventory_handler
+            outcome = handler(context, command(index, "service" if is_clinic else "buy", errand["activity_id"], params))
             receipt(index, dict(errand, parameters=params), outcome.success, outcome.code, outcome.message, steps)
         return counts
     return execute

@@ -661,7 +661,7 @@ class CognitionRuntime:
         public_free = {phase: tuple({"candidate_id": f"free:{phase}:{index}",
             "activity_id": item["activity_id"], "location_id": item["location_id"],
             "parameters": deepcopy(item["parameters"]), "max_unit_price": item["max_unit_price"],
-            "reason": "仅在执行时仍有真实缺口、库存、资金和可行路线时采购；数量和价格不超过此选项。",
+            "reason": item.get("reason", "仅在执行时仍有真实缺口、库存、资金和可行路线时采购；数量和价格不超过此选项。"),
             **candidate_cost(item)} for index, item in enumerate(candidates[:self.policy.candidate_limit]))
             for phase, candidates in free_options.items()}
         request = replace(request, daily_options=public_options, social_options=public_social, free_options=public_free)

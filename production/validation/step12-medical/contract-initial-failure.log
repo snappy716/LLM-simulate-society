@@ -1,0 +1,15 @@
+test_contract_files_are_valid_json_schemas (tests.test_architecture_contracts.ArchitectureContractTests) ... ERROR
+test_retired_source_copies_are_absent_and_campus_entry_remains (tests.test_architecture_contracts.ArchitectureContractTests) ... ok
+
+======================================================================
+ERROR: test_contract_files_are_valid_json_schemas (tests.test_architecture_contracts.ArchitectureContractTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_architecture_contracts.py", line 20, in test_contract_files_are_valid_json_schemas
+    self.assertEqual("object", schema["type"])
+KeyError: 'type'
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.003s
+
+FAILED (errors=1)

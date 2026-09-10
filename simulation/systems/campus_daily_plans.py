@@ -60,8 +60,8 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, 
                         for club in preview.population[actor_id].get("club_ids", ()))]
                     options[phase] = deepcopy(candidates[:runtime.policy.candidate_limit] or [dict(schedule)])
                     if actor_id in state.cognition.get("focused_ids", ()):
-                        from simulation.systems.campus_trade import procurement_candidates
-                        free_options[phase] = procurement_candidates(preview, actor_id, graph)[:runtime.policy.candidate_limit]
+                        from simulation.systems.campus_medical import optional_errand_candidates
+                        free_options[phase] = optional_errand_candidates(preview, actor_id, graph)[:runtime.policy.candidate_limit]
                 # Legacy/bootstrap and intraday execution never call a model.
                 if state.clock.phase != "morning":
                     apply(actor_id, None, options)
@@ -135,6 +135,11 @@ def make_daily_planner(runtime, graph, definitions, policy, interaction_policy, 
 
 
 def valid_free_errand(state, errand):
+    from simulation.systems.campus_medical import ACTION, LOCATION
+    if isinstance(errand, dict) and errand.get("activity_id") == ACTION:
+        return (errand.get("action_class") == "free" and errand.get("parameters") == {}
+                and errand.get("location_id") == LOCATION
+                and type(errand.get("max_unit_price")) is int and errand["max_unit_price"] > 0)
     if not isinstance(errand, dict) or errand.get("activity_id") != "BUY_ITEM" or errand.get("action_class") != "free":
         return False
     params = errand.get("parameters")

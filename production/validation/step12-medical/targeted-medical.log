@@ -1,0 +1,17 @@
+test_actual_shift_cash_stock_healing_and_no_patient_action_cost (tests.test_campus_medical.MedicalTests) ... ok
+test_bad_saved_ledger_is_rejected_without_crashing (tests.test_campus_medical.MedicalTests) ... ok
+test_capacity_real_staff_location_and_patient_privacy (tests.test_campus_medical.MedicalTests) ... ok
+test_checkpoint_replay_no_second_charge_and_previous_shift_expiry (tests.test_campus_medical.MedicalTests) ... ok
+test_full_health_is_not_diagnosed_from_focus_or_stress (tests.test_campus_medical.MedicalTests) ... ok
+test_model_can_choose_care_or_opt_out_without_new_daytime_calls (tests.test_campus_medical.MedicalTests) ... ok
+test_no_fake_medical_shift_or_parameter_override (tests.test_campus_medical.MedicalTests) ... ok
+test_no_staff_wrong_location_funds_and_stock_fail_without_mutation (tests.test_campus_medical.MedicalTests) ... ok
+test_optional_old_ledger_and_tampered_capacity (tests.test_campus_medical.MedicalTests) ... ok
+test_real_phase_execution_supplies_clinic_and_keeps_normal_staff_budget (tests.test_campus_medical.MedicalTests) ... ok
+test_rules_respect_economic_pressure_risk_and_candidates_do_not_peek_staff_plans (tests.test_campus_medical.MedicalTests) ... ok
+test_whole_phase_clinic_errand_then_actual_primary_and_three_day_capacity (tests.test_campus_medical.MedicalTests) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 12.968s
+
+OK

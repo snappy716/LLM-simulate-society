@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://llm-simulate-society.local/contracts/campus_medical_command.schema.json",
+  "title": "Campus clinic self-care request",
+  "type": "object",
+  "allOf": [
+    {"$ref": "simulation_command.schema.json"},
+    {"properties": {
+      "action_id": {"const": "VISIT_CAMPUS_CLINIC"},
+      "parameters": {"type": "object", "maxProperties": 0}
+    }}
+  ],
+  "description": "Self only, actual surface clinic arrival, completed on-site medical shift with remaining capacity, real pharmacy supplies and cash. Heals up to 50 percent maximum health; no focus or pollution change. One visit per phase, no patient major action. Physician shift consumes its existing major action. All checks precede atomic settlement; receipts are private."
+}

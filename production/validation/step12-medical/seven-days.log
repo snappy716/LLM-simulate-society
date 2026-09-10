@@ -1,0 +1,18 @@
+{"seed": 42, "days_advanced": 1, "natural_visits": 0, "failed_attempts": 0}
+{"seed": 42, "days_advanced": 2, "natural_visits": 0, "failed_attempts": 0}
+{"seed": 42, "days_advanced": 3, "natural_visits": 1, "failed_attempts": 0}
+{"checkpoint_native_difference": {"path": "world.places.south_gate_region.map_cell", "before_type": "tuple", "after_type": "list"}, "array_normalized_equal": true, "rng_equal": true}
+{"seed": 42, "days_advanced": 4, "natural_visits": 1, "failed_attempts": 0}
+{"seed": 42, "days_advanced": 5, "natural_visits": 2, "failed_attempts": 0}
+{"seed": 42, "days_advanced": 6, "natural_visits": 2, "failed_attempts": 0}
+{"seed": 42, "days_advanced": 7, "natural_visits": 2, "failed_attempts": 0}
+{"result": "MEDICAL_SEVEN_DAY_AUDIT_OK", "seed": 42, "phases_advanced": 28, "natural_visits": 2, "distinct_patients": 2, "staff_shifts": 157, "fees_transferred": 76, "materials_consumed": {"bandage_roll": 2, "antiseptic_bottle": 2}, "health_restored": 88, "failed_attempts": [], "post_visit_primary_completed": 2, "post_visit_other_statuses": [], "checkpoint_roundtrip": true, "injected_injury_or_plan": false, "paid_api_calls": 0}
+{"seed": 46, "days_advanced": 1, "natural_visits": 2, "failed_attempts": 0}
+{"seed": 46, "days_advanced": 2, "natural_visits": 2, "failed_attempts": 0}
+{"seed": 46, "days_advanced": 3, "natural_visits": 2, "failed_attempts": 0}
+{"checkpoint_native_difference": {"path": "world.places.south_gate_region.map_cell", "before_type": "tuple", "after_type": "list"}, "array_normalized_equal": true, "rng_equal": true}
+{"seed": 46, "days_advanced": 4, "natural_visits": 3, "failed_attempts": 0}
+{"seed": 46, "days_advanced": 5, "natural_visits": 4, "failed_attempts": 0}
+{"seed": 46, "days_advanced": 6, "natural_visits": 4, "failed_attempts": 0}
+{"seed": 46, "days_advanced": 7, "natural_visits": 4, "failed_attempts": 0}
+{"result": "MEDICAL_SEVEN_DAY_AUDIT_OK", "seed": 46, "phases_advanced": 28, "natural_visits": 4, "distinct_patients": 2, "staff_shifts": 137, "fees_transferred": 152, "materials_consumed": {"bandage_roll": 4, "antiseptic_bottle": 4}, "health_restored": 180, "failed_attempts": [], "post_visit_primary_completed": 4, "post_visit_other_statuses": [], "checkpoint_roundtrip": true, "injected_injury_or_plan": false, "paid_api_calls": 0}

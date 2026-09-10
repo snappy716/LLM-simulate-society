@@ -191,6 +191,8 @@ def campus_world_view(state: WorldState, *, graph=None) -> Dict[str, Any]:
         player["can_rest_recover"] = rest_recovery_allowed(state, "player")
         player["recovery_skills"] = recovery_skills(state, "player")
         player["field_recovery_options"] = recovery_options(state)
+        from simulation.systems.campus_medical import medical_view
+        player["clinic"] = medical_view(state)
     actor_budgets = state.action_economy.get("actors", {})
     player["action_budget"] = deepcopy(actor_budgets.get("player", {}))
     player["current_plan"] = current_schedule_slot(state, "player")

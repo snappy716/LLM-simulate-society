@@ -407,6 +407,9 @@ class CampusKernelBridge:
         from simulation.systems.campus_welfare import make_welfare_handler, welfare_invariant
         self.kernel.register_handler("CHECK_NPC_WELFARE", make_welfare_handler(messaging_policy))
         self.kernel.add_invariant(welfare_invariant)
+        from simulation.systems.campus_medical import ACTION as MEDICAL_ACTION, make_medical_handler, medical_invariant
+        self.kernel.register_handler(MEDICAL_ACTION, make_medical_handler())
+        self.kernel.add_invariant(medical_invariant)
         from simulation.systems.campus_anomalies import ANOMALY_ACTIONS, make_anomaly_handler, anomalies_invariant
         anomaly_handler = make_anomaly_handler()
         for action_id in ANOMALY_ACTIONS:

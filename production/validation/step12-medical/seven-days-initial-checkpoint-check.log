@@ -1,0 +1,9 @@
+{"seed": 42, "days_advanced": 1, "natural_visits": 0, "failed_attempts": 0}
+{"seed": 42, "days_advanced": 2, "natural_visits": 0, "failed_attempts": 0}
+{"seed": 42, "days_advanced": 3, "natural_visits": 1, "failed_attempts": 0}
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/production/validation/step12-medical/run_seven_days.py", line 108, in <module>
+    run(int(seed))
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/production/validation/step12-medical/run_seven_days.py", line 86, in run
+    assert restored.to_dict() == expected and restored_rng.snapshot() == rng.snapshot()
+AssertionError
