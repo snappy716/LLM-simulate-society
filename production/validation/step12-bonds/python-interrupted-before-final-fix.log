@@ -1,0 +1,8 @@
+DISCOVER 92 883
+PASS_MODULE tests.test_architecture_contracts 2
+PASS_MODULE tests.test_action_economy 5
+PASS_MODULE tests.test_campus_abilities 6
+PASS_MODULE tests.test_campus_activity_effects 4
+PASS_MODULE tests.test_campus_activities 3
+PASS_MODULE tests.test_campus_anomalies 10
+PASS_MODULE tests.test_campus_assistance 23

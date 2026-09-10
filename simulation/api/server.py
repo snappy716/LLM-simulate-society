@@ -193,6 +193,9 @@ class CampusKernelBridge:
         from simulation.systems.campus_outings import (ACTIONS as OUTING_ACTIONS, make_outing_handler,
             outings_invariant, outing_plan, expire_outings, arrive_for_outing, settle_outings)
         outing_handler = make_outing_handler(graph, action_policy, messaging_policy)
+        from simulation.systems.campus_bonds import (ACTIONS as BOND_ACTIONS, make_bond_handler,
+            bonds_invariant, advance_bonds)
+        bond_handler = make_bond_handler(messaging_policy)
         activity_handler = make_campus_activity_handler(
             activity_definitions,
             action_policy,
@@ -292,6 +295,7 @@ class CampusKernelBridge:
             summary.update(advance_meetings(context, graph, messaging_policy))
             if context.state.cognition.get("daily_plans", {}).get("day") != context.state.clock.day:
                 summary.update(advance_personal_goals(context))
+                advance_bonds(context, bond_handler, messaging_policy)
                 summary.update(prepare_daily_plans(context))
             return summary
 
@@ -330,6 +334,9 @@ class CampusKernelBridge:
         self.kernel = WorldKernel(state, rng=rng_pool)
         self.kernel.add_invariant(life_invariant)
         self.kernel.add_invariant(outings_invariant)
+        self.kernel.add_invariant(bonds_invariant)
+        for action_id in BOND_ACTIONS:
+            self.kernel.register_handler(action_id, bond_handler)
         for action_id in OUTING_ACTIONS:
             self.kernel.register_handler(action_id, outing_handler)
         life_handler = make_life_handler(activity_handler)

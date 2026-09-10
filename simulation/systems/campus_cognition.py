@@ -100,6 +100,11 @@ def bind_cognition_identity(state, request):
     local = dict(request.state)
     from simulation.cognition.action_rules import action_rule_context
     local["action_rules"] = action_rule_context(state, request.npc_id)
+    from simulation.systems.campus_bonds import own_bond_context
+    own_bonds = own_bond_context(state, request.npc_id)
+    if own_bonds:
+        local["own_bond_statuses"] = own_bonds
+        local["bond_rule"] = "仅 active 是已确认关系；ended/declined 不是恋人。聊天不能创建同意。不限制伴侣数量，不得替玩家接受。"
     if isinstance(request, BoundedDecisionRequest):
         # Dated, actually read publications, never live unseen regional state.
         local["own_read_regional_notices"] = [dict(row) for row in sorted(

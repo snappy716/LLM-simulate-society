@@ -1,0 +1,25 @@
+test_autonomous_dawn_is_idempotent_and_never_accepts_for_player (tests.test_campus_bonds.BondTests) ... ok
+test_checkpoint_preserves_multiple_bonds_and_old_save_compatibility (tests.test_campus_bonds.BondTests) ... ERROR
+test_duplicate_stale_revision_and_malformed_parameters (tests.test_campus_bonds.BondTests) ... ok
+test_friendship_separate_from_romance_and_no_free_gains (tests.test_campus_bonds.BondTests) ... ok
+test_high_affinity_without_shared_dates_is_not_romance (tests.test_campus_bonds.BondTests) ... ok
+test_invariant_rejects_duplicate_and_forged_consent (tests.test_campus_bonds.BondTests) ... ok
+test_multiple_partners_and_ending_one_preserves_other (tests.test_campus_bonds.BondTests) ... ok
+test_outsider_cannot_see_or_mutate (tests.test_campus_bonds.BondTests) ... ok
+test_personality_changes_readiness_without_partner_cap (tests.test_campus_bonds.BondTests) ... ok
+test_player_consent_cannot_be_assumed (tests.test_campus_bonds.BondTests) ... ok
+test_refusal_and_cooldown_do_not_punish (tests.test_campus_bonds.BondTests) ... ok
+test_suspicion_and_needs_can_block_even_after_dates (tests.test_campus_bonds.BondTests) ... ok
+
+======================================================================
+ERROR: test_checkpoint_preserves_multiple_bonds_and_old_save_compatibility (tests.test_campus_bonds.BondTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/luozixinxi-mei/Documents/New project/LLM-simulate-society/tests/test_campus_bonds.py", line 146, in test_checkpoint_preserves_multiple_bonds_and_old_save_compatibility
+    save_kernel_checkpoint(self.bridge.kernel, path)
+TypeError: save_kernel_checkpoint() missing 1 required positional argument: 'rng'
+
+----------------------------------------------------------------------
+Ran 12 tests in 17.135s
+
+FAILED (errors=1)

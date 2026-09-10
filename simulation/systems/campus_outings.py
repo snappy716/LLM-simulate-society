@@ -308,7 +308,7 @@ def outing_candidates(context, actor, schedule, graph, occupancy, policy, top_sc
     contacts.sort(key=lambda who: (-state.relationships[actor][who].get("closeness", 0), who))
     result = []
     for other in contacts[:3]:
-        kind = "companionship"  # Romantic intent is explicit, never assigned automatically.
+        kind = "companionship"
         if not willing(state, actor, other, kind):
             continue
         if any(set(participants(r)) == {actor, other} and (r["status"] in LIVE or r["created_day"] >= state.clock.day - 1)
@@ -330,6 +330,18 @@ def outing_candidates(context, actor, schedule, graph, occupancy, policy, top_sc
                 "decision_reason": f"邀请熟人{state.population[other].get('display_name', other)}共同相处；需对方同意，各留一次主要行动，实际到场才有共同经历；被拒绝则按原日程。",
                 "reason_codes": ["personal_interest", "voluntary_companionship"], "score": round(score, 3),
                 "day": state.clock.day, "phase": state.clock.phase, "route_minutes": route.total_minutes})
+            # A separate legal choice, not an automatic upgrade of friendship.
+            # Same daily request, same consent/reservation/attendance pipeline.
+            from simulation.systems.campus_bonds import own_bond_context
+            if willing(state, actor, other, "date") and any(
+                    r["other_id"] == other and r["status"] == "active" for r in own_bond_context(state, actor)):
+                date = deepcopy(result[-1])
+                date["candidate_id"] += ":date"
+                date["parameters"]["outing_intent"]["kind"] = "date"
+                date["decision_reason"] = f"明确邀请{state.population[other].get('display_name', other)}约会；可拒绝，不自动确立恋爱关系。"
+                date["score"] += .01
+                date["reason_codes"] = ["personal_interest", "voluntary_date"]
+                result.append(date)
             break
     return result
 

@@ -23,6 +23,7 @@ signal campus_investigation_operation_completed(success: bool, result: Dictionar
 signal campus_growth_operation_completed(success: bool, result: Dictionary)
 signal campus_life_operation_completed(success: bool, result: Dictionary)
 signal campus_outing_operation_completed(success: bool, result: Dictionary)
+signal campus_bond_operation_completed(success: bool, result: Dictionary)
 signal campus_goal_operation_completed(success: bool, result: Dictionary)
 signal campus_assistance_operation_completed(success: bool, result: Dictionary)
 signal campus_persistence_completed(success: bool, result: Dictionary)
@@ -435,6 +436,10 @@ func operate_campus_outing(action_id: String, parameters: Dictionary = {}) -> vo
 	_send_campus_item_or_investigation(action_id, parameters, "outing")
 
 
+func operate_campus_bond(action_id: String, parameters: Dictionary = {}) -> void:
+	_send_campus_item_or_investigation(action_id, parameters, "bond")
+
+
 func ask_campus_npc_plan(npc_id: String) -> void:
 	_send_campus_item_or_investigation("ASK_NPC_PLAN", {"npc_id": npc_id}, "goal")
 
@@ -453,6 +458,8 @@ func _send_campus_item_or_investigation(action_id: String, parameters: Dictionar
 		completed = campus_life_operation_completed
 	if operation == "outing":
 		completed = campus_outing_operation_completed
+	if operation == "bond":
+		completed = campus_bond_operation_completed
 	if _campus_busy or not connected or campus_snapshot.is_empty():
 		completed.emit(false, {"error": "校园模拟尚未连接或正在处理其他行动"})
 		return
@@ -939,6 +946,8 @@ func _on_campus_request_completed(
 			call_deferred("_restore_loaded_scene", String(response.get("presentation_map_id", "")))
 		return
 	if response_code != 200 or not parsed is Dictionary:
+		if operation == "bond":
+			campus_bond_operation_completed.emit(false, parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"})
 		if operation == "outing":
 			campus_outing_operation_completed.emit(false, parsed if parsed is Dictionary else {"error": "校园接口返回无效响应"})
 		if operation == "life":
@@ -1013,6 +1022,8 @@ func _on_campus_request_completed(
 		campus_life_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
 	if operation == "outing":
 		campus_outing_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
+	if operation == "bond":
+		campus_bond_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
 	if operation == "goal":
 		campus_goal_operation_completed.emit(bool(parsed.get("ok", false)), parsed)
 	if operation == "assistance":

@@ -1,0 +1,21 @@
+test_autonomous_dawn_is_idempotent_and_never_accepts_for_player (tests.test_campus_bonds.BondTests) ... ok
+test_checkpoint_preserves_multiple_bonds_and_old_save_compatibility (tests.test_campus_bonds.BondTests) ... ok
+test_daily_planner_offers_date_and_companionship_separately (tests.test_campus_bonds.BondTests) ... ok
+test_duplicate_stale_revision_and_malformed_parameters (tests.test_campus_bonds.BondTests) ... ok
+test_friendship_separate_from_romance_and_no_free_gains (tests.test_campus_bonds.BondTests) ... ok
+test_high_affinity_without_shared_dates_is_not_romance (tests.test_campus_bonds.BondTests) ... ok
+test_invariant_rejects_duplicate_and_forged_consent (tests.test_campus_bonds.BondTests) ... ok
+test_llm_context_knows_own_bonds_not_other_peoples_partners (tests.test_campus_bonds.BondTests) ... ok
+test_multiple_partners_and_ending_one_preserves_other (tests.test_campus_bonds.BondTests) ... ok
+test_npc_to_npc_real_outing_can_lead_to_mutual_friendship (tests.test_campus_bonds.BondTests) ... ok
+test_outsider_cannot_see_or_mutate (tests.test_campus_bonds.BondTests) ... ok
+test_personality_changes_readiness_without_partner_cap (tests.test_campus_bonds.BondTests) ... ok
+test_player_consent_cannot_be_assumed (tests.test_campus_bonds.BondTests) ... ok
+test_player_source_cannot_impersonate_npc_and_command_replay (tests.test_campus_bonds.BondTests) ... ok
+test_refusal_and_cooldown_do_not_punish (tests.test_campus_bonds.BondTests) ... ok
+test_suspicion_and_needs_can_block_even_after_dates (tests.test_campus_bonds.BondTests) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 100.969s
+
+OK

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Actor-local snapshot.agenda.bonds",
+  "type": "object",
+  "required": ["records", "note"],
+  "additionalProperties": false,
+  "properties": {
+    "note": {"type": "string"},
+    "records": {"type": "array", "items": {
+      "type": "object",
+      "required": ["bond_id", "proposer_id", "recipient_id", "kind", "status", "revision", "created_day", "created_phase", "updated_day", "updated_phase", "history", "message_ids", "reason", "partner_id", "partner_name", "can_reply", "can_cancel", "can_end"],
+      "properties": {
+        "bond_id": {"type": "string", "pattern": "^bond:[1-9][0-9]*$"},
+        "proposer_id": {"type": "string"}, "recipient_id": {"type": "string"},
+        "partner_id": {"type": "string"}, "partner_name": {"type": "string"},
+        "kind": {"enum": ["friendship", "romance"]},
+        "status": {"enum": ["pending", "active", "declined", "cancelled", "ended", "expired"]},
+        "revision": {"type": "integer", "minimum": 1},
+        "created_day": {"type": "integer", "minimum": 1}, "updated_day": {"type": "integer", "minimum": 1},
+        "created_phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+        "updated_phase": {"enum": ["morning", "afternoon", "evening", "late_night"]},
+        "reason": {"type": "string"},
+        "history": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["status", "actor_id", "day", "phase", "reason"]}},
+        "message_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "can_reply": {"type": "boolean"}, "can_cancel": {"type": "boolean"}, "can_end": {"type": "boolean"}
+      }
+    }}
+  }
+}

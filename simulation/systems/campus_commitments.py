@@ -58,7 +58,9 @@ def agenda_view(state, actor_id="player"):
         row["management_app"] = "party" if row["kind"] == "departure" else "agenda" if row["kind"] in {"life", "outing"} else "messages"
     from simulation.systems.campus_life import life_view
     from simulation.systems.campus_outings import outing_agenda_view
+    from simulation.systems.campus_bonds import bond_view
     return {"commitments": rows,
+        "bonds": bond_view(state, actor_id),
         "outings": outing_agenda_view(state, actor_id),
         "life": life_view(state, actor_id),
         "note": "这里只显示本人已经确认的约定，不显示其他人的私密日程。预约不是已完成；实际到场后仍核对条件并结算。短暂见面不扣主要行动，但不能同时答应无法兼顾的出击。取消不会返还已用行动。"}

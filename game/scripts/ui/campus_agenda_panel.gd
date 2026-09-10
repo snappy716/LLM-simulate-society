@@ -57,6 +57,9 @@ func _ready() -> void:
 	add_child(participation)
 	var outings := preload("res://scripts/ui/campus_outing_panel.gd").new()
 	outings.name = "Outings"
+	var bonds := preload("res://scripts/ui/campus_bond_panel.gd").new()
+	bonds.name = "Bonds"
+	add_child(bonds)
 	add_child(outings)
 	SimulationBridge.campus_life_operation_completed.connect(func(success, result):
 		if not _pending: return
