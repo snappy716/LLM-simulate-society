@@ -151,6 +151,16 @@ func _select_map(map_id: String) -> void:
 			lines.append("%s%s" % ["我的 · " if task.get("owned_by_player", false) else "", task.get("title", "委托")])
 			count += 1
 	if count == 0: lines.append("暂无公开的进行中委托。")
+	for notice in snapshot.get("forums", {}).get("night", {}).get("situations", []):
+		if notice.get("id") in regions: lines.append("\n已知夜相区域 · " + String(notice.get("summary", "")))
+	lines.append("\n当前公开活动")
+	var offer_count := 0
+	for offer in snapshot.get("agenda", {}).get("life", {}).get("offers", []):
+		var place: Dictionary = snapshot.get("places", {}).get(offer.get("location_id", ""), {})
+		if place.get("region_id", offer.get("location_id")) in regions and int(offer.get("day", 0)) == int(snapshot.get("clock", {}).get("day", 1)) and offer.get("phase") == phase:
+			lines.append(String(offer.get("name", "校园活动")) + " · 请在日程页核验报名与到场条件")
+			offer_count += 1
+	if offer_count == 0: lines.append("此时段没有已公布的活动。")
 	for row in snapshot.get("agenda", {}).get("commitments", []):
 		var place: Dictionary = snapshot.get("places", {}).get(row.get("location_id", ""), {})
 		if place.get("region_id", row.get("location_id")) in regions: lines.append("约定 · 第 %d 天 · %s" % [int(row.day), row.label])

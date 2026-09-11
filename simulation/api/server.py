@@ -705,6 +705,28 @@ class SimulationBridge:
         output_dir = output_dir or GAME_DIR / "data" / "simulation" / "live"
         self.campus_saves = CampusSaveStore(save_dir or output_dir / "campus_saves")
         self.campus = CampusKernelBridge(int(settings.get("seed", 42)))
+        self.interface_probe_results = {}
+        self.interface_probe_usage = {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0}
+
+    def probe_interface(self, payload: dict) -> dict:
+        from copy import deepcopy
+        from simulation.cognition.interface_probe import validate_probe, run_probe
+        request_id = validate_probe(payload)
+        with self.campus.operation_lock:
+            if request_id in self.interface_probe_results:
+                return deepcopy(self.interface_probe_results[request_id])
+            provider = self.campus.cognition_runtime.provider
+            result = run_probe(provider)
+            self.interface_probe_usage["calls"] += int(provider.configured)
+            for key in ("prompt_tokens", "completion_tokens"):
+                self.interface_probe_usage[key] += result["usage"][key]
+            result.update({"request_id": request_id, "aggregate_usage": dict(self.interface_probe_usage),
+                           "scope": "本地模拟服务本次启动的接口测试；不包含游戏请求，不等于供应商账单。", "world_changed": False})
+            self.interface_probe_results[request_id] = deepcopy(result)
+            # Retry deduplication, not a request quota. No automatic retry.
+            if len(self.interface_probe_results) > 64:
+                self.interface_probe_results.pop(next(iter(self.interface_probe_results)))
+            return result
 
     def configure_interface(self, config: dict) -> dict:
         if not isinstance(config, dict):
@@ -782,7 +804,7 @@ class Handler(BaseHTTPRequestHandler):
             self._reply(410, {"error": "旧城镇接口已下线，请使用校园统一行动", "code": "town_retired"})
             return
         if self.path not in {
-            "/configure", "/kernel/command", "/kernel/saves"
+            "/configure", "/interface/probe", "/kernel/command", "/kernel/saves"
         }:
             self._reply(404, {"error": "not found"})
             return
@@ -791,6 +813,8 @@ class Handler(BaseHTTPRequestHandler):
             payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
             if self.path == "/configure":
                 self._reply(200, self.bridge.configure_interface(payload))
+            elif self.path == "/interface/probe":
+                self._reply(200, self.bridge.probe_interface(payload))
             elif self.path == "/kernel/command":
                 self._reply(200, self.bridge.campus_command(payload))
             else:

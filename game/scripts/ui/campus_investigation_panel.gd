@@ -16,10 +16,13 @@ var share: Button
 var link: Button
 var _pending := false
 var _data: Dictionary = {}
+var query: LineEdit
 
 
 func _ready() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
+	query = preload("res://scripts/ui/campus_ui_kit.gd").search("搜索本人已知的线索摘要", func(_text): refresh())
+	add_child(query)
 	var row := HBoxContainer.new()
 	add_child(row)
 	observe = _button(row, "查看公告 · 免费", func(): _send("OBSERVE_SCENE"))
@@ -92,6 +95,7 @@ func refresh() -> void:
 		var previous := _selected(picker)
 		picker.clear()
 		for entry in _data.get("entries", []):
+			if not query.text.is_empty() and not String(entry.claim.summary).containsn(query.text): continue
 			var index: int = picker.item_count
 			picker.add_item(("关联：" if picker == related else "记录：") + String(entry.claim.summary).left(52))
 			picker.set_item_metadata(index, entry.claim.claim_id)

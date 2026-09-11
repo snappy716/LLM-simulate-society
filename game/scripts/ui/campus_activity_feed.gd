@@ -14,7 +14,7 @@ var pager: HBoxContainer
 func _ready() -> void:
 	add_child(KIT.label("校园动态 · 有据可查", 22))
 	add_child(KIT.label("只汇总公开委托、本人消息与约定。不代表校园发生的全部事情。", 14))
-	add_child(KIT.tabs(["今天", "通知与约定", "历史记录"], func(index): mode = index; page = 0; refresh()))
+	add_child(KIT.tabs(["今天", "通知与约定", "历史记录", "昨日回顾"], func(index): mode = index; page = 0; refresh()))
 	add_child(KIT.search("搜索已公开的事项", func(text): query = text; page = 0; refresh()))
 	cards = VBoxContainer.new()
 	add_child(cards)
@@ -40,6 +40,25 @@ static func project(snapshot: Dictionary, notifications: bool = false) -> Array:
 			if not PUBLIC_EVENTS.has(kind): continue
 			# Construct labels from public state transitions, not private motive prose.
 			result.append({"day": int(entry.get("day", 1)), "phase": entry.get("phase", ""), "title": "%s · %s" % [PUBLIC_EVENTS[kind], task.get("title", "委托")], "source": ("里世界论坛" if task.get("forum") == "night" else "校园论坛") + " · 正式任务记录", "app": "forums", "target": id})
+	for record in snapshot.get("agenda", {}).get("bonds", {}).get("records", []):
+		for entry in record.get("history", []):
+			var status: String = {"pending":"待回应", "active":"双方确认", "declined":"婉拒", "cancelled":"撤回", "ended":"结束", "expired":"到期"}.get(String(entry.get("status", "")), "状态更新")
+			result.append({"day": int(entry.get("day", today)), "phase": entry.get("phase", ""), "title": "%s · 与 %s 的%s关系" % [status, record.get("partner_name", "联系人"), "好友" if record.get("kind") == "friendship" else "恋爱"], "source": "本人关系记录（非公开消息）", "app": "relationships", "target": ""})
+	for entry in snapshot.get("agenda", {}).get("life", {}).get("history", []):
+		# Enrollment isn't an accomplished event; preserve its official status label.
+		result.append({"day": int(entry.get("day", today)), "phase": entry.get("phase", ""), "title": "%s · %s" % [entry.get("status_text", "参与记录"), entry.get("name", "校园活动")], "source": "本人报名与参与记录", "app": "agenda", "target": ""})
+	for entry in snapshot.get("forums", {}).get("surface", {}).get("situations", []):
+		result.append({"day": int(entry.get("updated_day", today)), "phase": "", "title": entry.get("summary", "供应通告"), "source": "校园论坛 · 最近一次供应通告", "app": "forums", "target": "channel:surface"})
+	for entry in snapshot.get("social", {}).get("welfare", []):
+		result.append({"day": int(entry.get("day", today)), "phase": entry.get("phase", ""), "title": "%s · %s" % [entry.get("name", "联系人"), entry.get("summary", "本人近况陈述")], "source": "本人获知的近况 · 不是当前定位", "app": "notes", "target": entry.get("claim_id", "")})
+	for episode in snapshot.get("social", {}).get("anomalies", []):
+		var report: Dictionary = episode.get("report", {})
+		if report.is_empty(): continue
+		result.append({"day": int(report.get("day", today)), "phase": report.get("phase", ""), "title": report.get("summary", "月相体验陈述"), "source": "本人听取的陈述 · 不据此推断当前状态", "app": "notes", "target": report.get("claim_id", "")})
+	for notice in snapshot.get("forums", {}).get("night", {}).get("situations", []):
+		for entry in notice.get("history", []):
+			var place := String(snapshot.get("places", {}).get(notice.get("id", ""), {}).get("name", "已知区域"))
+			result.append({"day": int(entry.get("day", today)), "phase": entry.get("phase", ""), "title": "%s · 异常压力 %d → %d" % [place, int(entry.get("before", 0)), int(entry.get("after", 0))], "source": "里世界论坛 · 区域记录（不推断幕后原因）", "app": "forums", "target": "channel:night"})
 	result.sort_custom(func(a, b):
 		if a.day != b.day: return a.day > b.day
 		return PHASES.keys().find(a.phase) > PHASES.keys().find(b.phase)
@@ -55,7 +74,8 @@ func refresh() -> void:
 		remove_child(pager)
 		pager.queue_free()
 	rows = project(SimulationBridge.campus_snapshot, mode == 1).filter(func(row):
-		return (mode != 0 or row.day == int(SimulationBridge.campus_snapshot.get("clock", {}).get("day", 1))) and (query.is_empty() or String(row.title).containsn(query) or String(row.source).containsn(query))
+		var date := int(SimulationBridge.campus_snapshot.get("clock", {}).get("day", 1)) - (1 if mode == 3 else 0)
+		return (mode not in [0, 3] or row.day == date) and (query.is_empty() or String(row.title).containsn(query) or String(row.source).containsn(query))
 	)
 	var count := ceili(rows.size() / 8.0)
 	page = clampi(page, 0, maxi(0, count - 1))

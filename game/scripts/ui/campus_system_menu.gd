@@ -99,6 +99,8 @@ func _input(event: InputEvent) -> void:
 	# CanvasLayer draw order is not input priority. Overnight owns all shortcuts.
 	if OvernightTransition.is_active(): return
 	if InterfaceSettings.is_open() or confirmation.visible: return
+	for dialog in get_tree().get_nodes_in_group("campus_settings_confirmation"):
+		if dialog.visible: return
 	if event.is_action_pressed("ui_cancel"):
 		if _opened:
 			_back()
@@ -256,7 +258,7 @@ func _settings() -> void:
 	_clear("设置", "当前已支持的设置 · 不展示无效开关", "settings")
 	_button("api", "LLM / API 接口管理", InterfaceSettings.open_settings, "primary").grab_focus()
 	_button("controls", "查看键盘操作", _guide)
-	body.add_child(KIT.label("接口只保存在本机；本地服务已连接不等于模型已验证。\n\n显示缩放与镜头操作在游戏内手机的“时间与镜头”中。音量、画质和自定义键位尚未接入，本页不放置假开关。", 14))
+	body.add_child(preload("res://scripts/ui/campus_preferences_panel.gd").new())
 
 func _guide() -> void:
 	_guide_return = page

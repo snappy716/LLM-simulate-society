@@ -21,9 +21,17 @@ var _event_boards: Array = []
 var _event_session := ""
 var _offers: Array = []
 var _pending := false
+var calendar: VBoxContainer
 
 
 func _ready() -> void:
+	calendar = preload("res://scripts/ui/campus_week_calendar.gd").new()
+	calendar.manage.connect(func(app, title):
+		if app == "agenda":
+			opportunity.grab_focus()
+		else: open_management.emit(app, title)
+	)
+	add_child(calendar)
 	detail = RichTextLabel.new()
 	detail.bbcode_enabled = false
 	detail.fit_content = true
@@ -35,6 +43,7 @@ func _ready() -> void:
 	add_child(note)
 	for entry in [["party", "行动小队"], ["messages", "校园通讯"]]:
 		var button := Button.new()
+		button.name = "Manage_" + entry[0]
 		button.text = "前往%s管理约定" % entry[1]
 		button.pressed.connect(func(): open_management.emit(entry[0], entry[1]))
 		add_child(button)
@@ -101,6 +110,7 @@ func _ready() -> void:
 
 
 func refresh() -> void:
+	calendar.refresh()
 	var data: Dictionary = SimulationBridge.campus_snapshot.get("agenda", {})
 	var lines := PackedStringArray(["我已确认的约定"])
 	var rows: Array = data.get("commitments", [])

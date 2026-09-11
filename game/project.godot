@@ -23,6 +23,7 @@ CampusPresentation="*res://scripts/world/campus_presentation.gd"
 InterfaceSettings="*res://scenes/ui/interface_settings_ui.tscn"
 OvernightTransition="*res://scripts/ui/campus_overnight_transition.gd"
 SystemMenu="*res://scripts/ui/campus_system_menu.gd"
+CampusPreferences="*res://scripts/ui/campus_preferences.gd"
 
 [display]
 

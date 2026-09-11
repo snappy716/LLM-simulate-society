@@ -17,6 +17,9 @@ var submit: Button
 var travel: Button
 var _next_passage := ""
 var _pending := false
+var item_search: LineEdit
+var category: OptionButton
+const CATEGORIES := ["全部", "消耗品", "装备", "其他"]
 
 
 func _ready() -> void:
@@ -43,6 +46,10 @@ func _ready() -> void:
 	quantity.value_changed.connect(func(_value): _refresh_detail())
 	row.add_child(quantity)
 	add_child(row)
+	item_search = preload("res://scripts/ui/campus_ui_kit.gd").search("搜索当前列表的物品", func(_value): refresh())
+	add_child(item_search)
+	category = preload("res://scripts/ui/campus_ui_kit.gd").filter(CATEGORIES, func(_index): refresh())
+	add_child(category)
 	item_picker = OptionButton.new()
 	item_picker.item_selected.connect(func(_index): _refresh_detail())
 	add_child(item_picker)
@@ -97,12 +104,19 @@ func refresh() -> void:
 		for shop in economy.get("shops", []):
 			if shop.id == _selected(shop_picker):
 				for good in shop.goods:
-					ids.append(good.item_id)
+					if _action() == "BUY_ITEM" or int(economy.get("inventory", {}).get("quantities", {}).get(good.item_id, 0)) > 0:
+						ids.append(good.item_id)
 	else:
 		var source: Dictionary = economy.get("ground", {}) if _action() == "PICK_UP_ITEM" else economy.get("inventory", {})
 		ids = (source.get("quantities", {}) as Dictionary).keys()
 	for item_id in ids:
 		var item: Dictionary = (economy.get("items", {}) as Dictionary).get(item_id, {})
+		if not item_search.text.is_empty() and not String(item.get("name", item_id)).containsn(item_search.text): continue
+		var consumable := bool(item.get("consumable", false))
+		var equipment := String(item.get("category", "")) == "equipment"
+		if category.selected == 1 and not consumable: continue
+		if category.selected == 2 and not equipment: continue
+		if category.selected == 3 and (consumable or equipment): continue
 		var index := item_picker.item_count
 		item_picker.add_item(String(item.get("name", item_id)))
 		item_picker.set_item_metadata(index, item_id)
@@ -130,7 +144,7 @@ func _refresh_detail() -> void:
 	var item_id := _selected(item_picker)
 	var item: Dictionary = items.get(item_id, {})
 	var lines := PackedStringArray(["余额：%d %s  负重：%.1f / %.1f" % [int(economy.get("balance", 0)), economy.get("currency", "元"), float(economy.get("weight", 0)), float(inventory.get("max_weight", 0))]])
-	lines.append("\n%s\n%s" % [item.get("name", "没有物品"), item.get("description", "")])
+	lines.append("\n%s\n%s" % [item.get("name", "当前筛选下没有物品，请调整分类或搜索。"), item.get("description", "")])
 	var owned := int((inventory.get("quantities", {}) as Dictionary).get(item_id, 0))
 	lines.append("持有：%d" % owned)
 	if item_id == "bandage_roll":

@@ -209,6 +209,12 @@ func _build_ui() -> void:
 	_title.add_theme_font_size_override("font_size", 27)
 	_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	shell.add_child(_title)
+	var shortcuts := HBoxContainer.new()
+	shell.add_child(shortcuts)
+	var kit = preload("res://scripts/ui/campus_ui_kit.gd")
+	shortcuts.add_child(kit.button("人物与日志", func(): _body_scroll.scroll_vertical = 0))
+	shortcuts.add_child(kit.button("当面交谈", func(): _dialogue_input.grab_focus()))
+	shortcuts.add_child(kit.button("联系与深度交互", func(): _contact_button.grab_focus()))
 	_body_scroll = ScrollContainer.new()
 	_body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_body_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -253,6 +259,7 @@ func _build_ui() -> void:
 	_plan_feedback = Label.new()
 	_plan_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_plan_feedback)
+	column.add_child(preload("res://scripts/ui/campus_ui_kit.gd").label("关心与调查 · 以下操作须由对方回应", 18))
 	_dispute_ask = Button.new()
 	_dispute_ask.text = "询问是否有未解的争执（免费）"
 	_dispute_ask.pressed.connect(_ask_dispute)
@@ -358,7 +365,7 @@ func _build_ui() -> void:
 	_dialogue_feedback = Label.new()
 	_dialogue_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_dialogue_feedback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_dialogue_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	_dialogue_feedback.add_theme_color_override("font_color", Color("8cddff"))
 	column.add_child(_dialogue_feedback)
 	var proposal_row := HBoxContainer.new()
 	proposal_row.add_theme_constant_override("separation", 8)
@@ -376,12 +383,12 @@ func _build_ui() -> void:
 	_proposal_feedback = Label.new()
 	_proposal_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_proposal_feedback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_proposal_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	_proposal_feedback.add_theme_color_override("font_color", Color("8cddff"))
 	column.add_child(_proposal_feedback)
 	_incoming_proposal_label = Label.new()
 	_incoming_proposal_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_incoming_proposal_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_incoming_proposal_label.add_theme_color_override("font_color", Color("e0b86a"))
+	_incoming_proposal_label.add_theme_color_override("font_color", Color("8cddff"))
 	column.add_child(_incoming_proposal_label)
 	var incoming_actions := HBoxContainer.new()
 	_incoming_proposal_accept = Button.new()
@@ -401,7 +408,7 @@ func _build_ui() -> void:
 	column.add_child(_contact_button)
 	_contact_feedback = Label.new()
 	_contact_feedback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_contact_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	_contact_feedback.add_theme_color_override("font_color", Color("8cddff"))
 	column.add_child(_contact_feedback)
 	_awaken_button = Button.new()
 	_awaken_button.text = "记名觉醒（长期深度认知）"
@@ -409,7 +416,7 @@ func _build_ui() -> void:
 	column.add_child(_awaken_button)
 	_awaken_feedback = Label.new()
 	_awaken_feedback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_awaken_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	_awaken_feedback.add_theme_color_override("font_color", Color("8cddff"))
 	column.add_child(_awaken_feedback)
 	var close := Button.new()
 	_close_button = close
@@ -474,7 +481,7 @@ func _select_tab(tab_id: String) -> void:
 		_load_more.visible = false
 		return
 	if not _chronicle_pages.has(tab_id):
-		_details.text = "[color=#91a4bc]正在读取人物记录……[/color]"
+		_details.text = "[color=#bdcedb]正在读取人物记录……[/color]"
 		_load_more.visible = false
 		_request_chronicle(tab_id)
 		return
@@ -522,7 +529,7 @@ func _render_chronicle(filter_name: String) -> void:
 	var page: Dictionary = _chronicle_pages.get(filter_name, {})
 	var items = page.get("items", [])
 	if not items is Array or items.is_empty():
-		_details.text = "[b]%s[/b]\n\n目前没有玩家已知的记录。\n\n[color=#91a4bc]%s[/color]" % [
+		_details.text = "[b]%s[/b]\n\n目前没有玩家已知的记录。\n\n[color=#bdcedb]%s[/color]" % [
 		"最近七日日程" if filter_name == "recent" else "重要经历",
 		_safe_text(page.get("knowledge_note"), "未知行动不会显示。"),
 		]
@@ -548,7 +555,7 @@ func _render_chronicle(filter_name: String) -> void:
 		var source := _source_name(_safe_text(entry.get("source")))
 		lines.append("  [color=#8fb7d6]%s[/color]  %s  [color=#8491a3]· %s[/color]" % [phase_name, summary, source])
 	lines.append("")
-	lines.append("[color=#91a4bc]%s[/color]" % _safe_text(page.get("knowledge_note"), "未知行动不会显示。"))
+	lines.append("[color=#bdcedb]%s[/color]" % _safe_text(page.get("knowledge_note"), "未知行动不会显示。"))
 	_details.text = "\n".join(lines)
 	_load_more.visible = bool(page.get("has_more", false))
 
@@ -600,7 +607,7 @@ func _public_profile_text(profile: Dictionary) -> String:
 		statement = "第 %s 天 · %s，本人告知：\n%s\n（当时的说法，后续可能改变。）" % [
 			str(int(report.get("day", 0))), {"morning": "上午", "afternoon": "下午", "evening": "晚上", "late_night": "深夜"}.get(String(report.get("phase", "")), "当时"),
 			String(report.get("summary", "")).replace("[", "[lb]")]
-	return "[b]公开身份[/b]\n%s\n\n[b]当前位置[/b]\n%s\n\n[b]正在做的事[/b]\n%s\n\n[b]可观察状态[/b]\n%s\n\n[b]对方说过的打算[/b]\n%s\n\n[color=#91a4bc]内在需求、秘密动机与后续计划不会直接显示；需要通过交流、观察、关系或调查逐渐了解。[/color]" % [
+	return "[b]公开身份[/b]\n%s\n\n[b]当前位置[/b]\n%s\n\n[b]正在做的事[/b]\n%s\n\n[b]可观察状态[/b]\n%s\n\n[b]对方说过的打算[/b]\n%s\n\n[color=#bdcedb]内在需求、秘密动机与后续计划不会直接显示；需要通过交流、观察、关系或调查逐渐了解。[/color]" % [
 		identity_line,
 		String(place.get("name", location_id if not location_id.is_empty() else "未知")),
 		ACTIVITY_NAMES.get(activity_id, activity_id if not activity_id.is_empty() else "暂时没有明显行动"),

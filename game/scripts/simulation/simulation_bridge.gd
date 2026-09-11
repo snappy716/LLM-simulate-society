@@ -2,6 +2,9 @@ extends Node
 
 signal connection_state_changed(connected: bool, message: String)
 signal interface_configured(success: bool, result: Dictionary)
+signal interface_probe_completed(result: Dictionary)
+var last_interface_probe: Dictionary = {}
+var interface_probe_pending := false
 signal campus_snapshot_updated(snapshot: Dictionary)
 signal campus_traversal_completed(success: bool, result: Dictionary, passage_id: String)
 signal campus_phase_advanced(success: bool, result: Dictionary)
@@ -149,6 +152,34 @@ func configure_interface(config: Dictionary) -> void:
 	if error != OK:
 		busy = false
 		interface_configured.emit(false, {"error": "无法发送接口配置：%s" % error})
+
+
+func probe_interface() -> void:
+	if interface_probe_pending or busy or not connected or is_campus_busy(): return
+	interface_probe_pending = true
+	busy = true
+	_campus_busy = true
+	var request := HTTPRequest.new()
+	request.timeout = 140
+	add_child(request)
+	request.request_completed.connect(func(result, code, _headers, bytes):
+		var parsed: Variant = JSON.parse_string(bytes.get_string_from_utf8())
+		last_interface_probe = parsed if result == HTTPRequest.RESULT_SUCCESS and code == 200 and parsed is Dictionary else {"ok": false, "message": "测试结果尚未确认；可能已产生费用，不会自动重试。"}
+		interface_probe_pending = false
+		busy = false
+		_campus_busy = false
+		interface_probe_completed.emit(last_interface_probe)
+		request.queue_free()
+	)
+	var id := Crypto.new().generate_random_bytes(16).hex_encode()
+	var error := request.request(_base_url + "/interface/probe", PackedStringArray(["Content-Type: application/json"]), HTTPClient.METHOD_POST, JSON.stringify({"request_id": id, "confirmed": true}))
+	if error != OK:
+		interface_probe_pending = false
+		busy = false
+		_campus_busy = false
+		last_interface_probe = {"ok": false, "message": "无法发起测试请求。"}
+		interface_probe_completed.emit(last_interface_probe)
+		request.queue_free()
 
 
 

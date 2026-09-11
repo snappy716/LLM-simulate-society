@@ -44,6 +44,8 @@ var _home_brief: Button
 var _feed_root: VBoxContainer
 var _contact_search: LineEdit
 var _message_drafts: Dictionary = {}
+var _battle_screen: CanvasLayer
+var _section_nav: HBoxContainer
 var _app_page: VBoxContainer
 var _app_scroll: ScrollContainer
 var _back_button: Button
@@ -147,6 +149,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("campus_phone_ui")
 	_build_ui()
+	_battle_screen = preload("res://scripts/ui/campus_battle_screen.gd").new()
+	add_child(_battle_screen)
 	call_deferred("_prepare_readable_forms", _app_page)
 	SimulationBridge.connection_state_changed.connect(_refresh_connection)
 	_refresh_connection(SimulationBridge.connected, "")
@@ -162,6 +166,10 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if InterfaceSettings.is_open():
+		return
+	if _battle_screen.opened and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("toggle_phone")):
+		_battle_screen.close_screen()
+		get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("toggle_phone"):
 		_set_open(not _opened)
@@ -341,6 +349,8 @@ func _build_app_page() -> VBoxContainer:
 	_app_title.add_theme_font_size_override("font_size", 22)
 	nav.add_child(_app_title)
 	page.add_child(nav)
+	_section_nav = HBoxContainer.new()
+	page.add_child(_section_nav)
 	_app_scroll = ScrollContainer.new()
 	_app_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_app_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -469,7 +479,7 @@ func _build_message_page() -> VBoxContainer:
 	root.add_child(_message_log)
 	_message_feedback = Label.new()
 	_message_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_message_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	_message_feedback.add_theme_color_override("font_color", Color("8cddff"))
 	root.add_child(_message_feedback)
 	var composer := HBoxContainer.new()
 	_message_input = LineEdit.new()
@@ -513,7 +523,7 @@ func _build_message_page() -> VBoxContainer:
 	root.add_child(proposal_row)
 	var incoming_label := Label.new()
 	incoming_label.text = "待处理请求（NPC 会按自己的计划主动提出）"
-	incoming_label.add_theme_color_override("font_color", Color("91a4bc"))
+	incoming_label.add_theme_color_override("font_color", Color("bdcedb"))
 	root.add_child(incoming_label)
 	_incoming_proposal_picker = OptionButton.new()
 	root.add_child(_incoming_proposal_picker)
@@ -546,7 +556,7 @@ func _build_club_page() -> VBoxContainer:
 	root.add_child(_club_detail)
 	_club_feedback = Label.new()
 	_club_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_club_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	_club_feedback.add_theme_color_override("font_color", Color("8cddff"))
 	root.add_child(_club_feedback)
 	var actions := HBoxContainer.new()
 	_club_membership_action = Button.new()
@@ -609,7 +619,7 @@ func _build_party_page() -> VBoxContainer:
 	root.add_child(departure_row)
 	_party_feedback = Label.new()
 	_party_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_party_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	_party_feedback.add_theme_color_override("font_color", Color("8cddff"))
 	root.add_child(_party_feedback)
 	return root
 
@@ -617,9 +627,10 @@ func _build_party_page() -> VBoxContainer:
 func _build_combat_page() -> VBoxContainer:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 7)
+	root.add_child(KIT.button("打开独立战场 · 人物牌 / 手牌 / 目标", func(): _battle_screen.open_screen(), "primary"))
 	var context_label := Label.new()
 	context_label.text = "夜相任务与出战阵容"
-	context_label.add_theme_color_override("font_color", Color("d7b27a"))
+	context_label.add_theme_color_override("font_color", Color("48c2ff"))
 	root.add_child(context_label)
 	var task_row := HBoxContainer.new()
 	_combat_task_picker = OptionButton.new()
@@ -753,7 +764,7 @@ func _build_combat_page() -> VBoxContainer:
 	commands.add_child(_combat_insights)
 	_combat_feedback = Label.new()
 	_combat_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_combat_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	_combat_feedback.add_theme_color_override("font_color", Color("8cddff"))
 	root.add_child(_combat_feedback)
 	return root
 
@@ -777,7 +788,7 @@ func _build_forum_page() -> VBoxContainer:
 	root.add_child(channel_bar)
 	_forum_access_note = Label.new()
 	_forum_access_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_forum_access_note.add_theme_color_override("font_color", Color("91a4bc"))
+	_forum_access_note.add_theme_color_override("font_color", Color("bdcedb"))
 	root.add_child(_forum_access_note)
 	var opportunities := Button.new()
 	opportunities.text = "公开校园活动与参与记录"
@@ -841,7 +852,7 @@ func _build_forum_page() -> VBoxContainer:
 	_forum_detail_view.add_child(_forum_detail)
 	_forum_feedback = Label.new()
 	_forum_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_forum_feedback.add_theme_color_override("font_color", Color("e0b86a"))
+	_forum_feedback.add_theme_color_override("font_color", Color("8cddff"))
 	_forum_detail_view.add_child(_forum_feedback)
 	_forum_primary_action = Button.new()
 	_forum_primary_action.pressed.connect(_perform_primary_task_action)
@@ -856,6 +867,7 @@ func _build_forum_page() -> VBoxContainer:
 
 func _open_app(app_id: String, app_name: String) -> void:
 	_app_scroll.scroll_vertical = 0
+	_update_section_nav(app_id)
 	_feed_root.visible = app_id == "feed"
 	if _feed_root.visible: _feed_root.call("refresh")
 	if app_id == "settings":
@@ -934,6 +946,31 @@ func _open_app(app_id: String, app_name: String) -> void:
 		_content.text = _app_text(app_id)
 	_home.visible = false
 	_app_page.visible = true
+
+
+func _update_section_nav(app_id: String) -> void:
+	for child in _section_nav.get_children():
+		_section_nav.remove_child(child)
+		child.queue_free()
+	var entries: Array = []
+	match app_id:
+		"agenda": entries = [["一周安排", _agenda_root.calendar], ["课程与活动", _agenda_root.opportunity], ["我的参与记录", _agenda_root.participation], ["公开活动结果", _agenda_root.event_board_picker]]
+		"market": entries = [["物品筛选", _inventory_root.item_search], ["物品详情", _inventory_root.detail], ["执行操作", _inventory_root.submit]]
+		"notes": entries = [["已知线索", _investigation_root.evidence], ["询问与分享", _investigation_root.target], ["我的推测", _investigation_root.hypothesis]]
+		"cards": entries = [["个人牌组", _growth_root.actor], ["保存配置", _growth_root.save_deck], ["可用卡牌图鉴", _growth_root.catalog_grid]]
+		"courses": entries = [["研习主题", _growth_root.topic], ["阅读与反思", _growth_root.read], ["课程报名", _growth_root.get_node("PublicCourses")]]
+		"party": entries = [["当前小队", _party_detail], ["邀请成员", _party_candidate_picker], ["预约出击", _departure_picker]]
+		"clubs": entries = [["选择社团", _club_picker], ["社团详情", _club_detail], ["参加活动", _club_activity_action]]
+		"messages": entries = [["联系人", _contact_search], ["聊天", _message_input], ["正式提议", _message_proposal_picker], ["待回应请求", _incoming_proposal_picker]]
+	_section_nav.visible = not entries.is_empty()
+	for entry in entries:
+		var target: Control = entry[1]
+		var button := KIT.button(entry[0], func():
+			_app_scroll.scroll_vertical += roundi(target.get_global_rect().position.y - _app_scroll.get_global_rect().position.y)
+			if target is LineEdit or target is OptionButton or target is Button: target.grab_focus()
+		)
+		button.add_theme_font_size_override("font_size", 14)
+		_section_nav.add_child(button)
 
 
 func _app_text(app_id: String) -> String:
@@ -1085,30 +1122,30 @@ func _refresh_message_thread() -> void:
 	if _contact_check_picker.selected >= 0 and _contact_check_picker.selected < check_options.size():
 		var option: Dictionary = check_options[_contact_check_picker.selected]
 		_contact_check_button.disabled = _contact_check_button.disabled or not bool(option.get("available", true))
-		lines.append("[color=#91a4bc]寻访选择依据：%s[/color]" % option.get("basis", "公开会面点，不代表对方位置。"))
+		lines.append("[color=#bdcedb]寻访选择依据：%s[/color]" % option.get("basis", "公开会面点，不代表对方位置。"))
 		if not bool(option.get("available", true)):
-			lines.append("[color=#91a4bc]本次联系经历已有待处理/已见到的寻访，或此点已核对。[/color]")
+			lines.append("[color=#bdcedb]本次联系经历已有待处理/已见到的寻访，或此点已核对。[/color]")
 	var contact_status: Dictionary = thread.get("contact_status", {})
 	match String(contact_status.get("status", "")):
 		"awaiting":
 			lines.append("[color=#d9bc83]已有 %d 个时段尝试联系，暂未收到回应。尚不能据此确认失踪或原因。[/color]" % int(contact_status.get("distinct_phases", 1)))
 		"contact_resumed":
-			lines.append("[color=#91a4bc]对方已恢复联系；不代表此前的问题或委托已经解决。[/color]")
+			lines.append("[color=#bdcedb]对方已恢复联系；不代表此前的问题或委托已经解决。[/color]")
 		"record_expired":
-			lines.append("[color=#91a4bc]先前未回应消息已超出记录保留范围，尚未确认联系恢复。[/color]")
+			lines.append("[color=#bdcedb]先前未回应消息已超出记录保留范围，尚未确认联系恢复。[/color]")
 	for message in thread.get("messages", []):
 		if not message is Dictionary:
 			continue
 		var mine := String(message.get("sender_id", "")) == "player"
 		var author := "我" if mine else String(thread.get("counterpart_name", "联系人"))
 		var safe_text := String(message.get("text", "")).replace("[", "［").replace("]", "］")
-		lines.append("[color=#91a4bc]D%d %s[/color]  [b]%s[/b]\n%s" % [
+		lines.append("[color=#bdcedb]D%d %s[/color]  [b]%s[/b]\n%s" % [
 			int(message.get("day", 1)),
 			SimulationBridge.phase_display_name(String(message.get("phase", "morning"))),
 			author, safe_text,
 		])
 	if lines.is_empty():
-		_message_log.text = "[color=#91a4bc]还没有聊天记录。你们不需要处于同一地点即可联系。[/color]"
+		_message_log.text = "[color=#bdcedb]还没有聊天记录。你们不需要处于同一地点即可联系。[/color]"
 	else:
 		_message_log.text = "\n\n".join(lines)
 		_message_log.scroll_to_line(max(0, _message_log.get_line_count() - 1))
@@ -1663,7 +1700,7 @@ func _refresh_club_detail() -> void:
 			for day in slot.get("days", []):
 				days.append(weekday_names[clampi(int(day), 0, 6)])
 			schedule_lines.append("%s %s" % ["、".join(days), SimulationBridge.phase_display_name(String(slot.get("phase", "")))])
-	_club_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]负责人[/b]  %s\n[b]成员[/b]  %d（无硬性人数上限）\n[b]公共资源[/b]  %d / %d（%s）\n[b]活动时间[/b]  %s\n\n[b]你的身份[/b]\n%s\n[b]入社评估[/b]\n%s\n\n[b]表世界实践[/b]  %s\n[b]团队战术[/b]  %s · 消耗 %d 公共资源\n[color=#91a4bc]可加入多个社团；能否实际参加由活动时间冲突和主要行动次数决定。团队战术需要至少两名同社团成员，并由骨干或负责人组织。[/color]" % [
+	_club_detail.text = "[font_size=22][b]%s[/b][/font_size]\n%s\n\n[b]负责人[/b]  %s\n[b]成员[/b]  %d（无硬性人数上限）\n[b]公共资源[/b]  %d / %d（%s）\n[b]活动时间[/b]  %s\n\n[b]你的身份[/b]\n%s\n[b]入社评估[/b]\n%s\n\n[b]表世界实践[/b]  %s\n[b]团队战术[/b]  %s · 消耗 %d 公共资源\n[color=#bdcedb]可加入多个社团；能否实际参加由活动时间冲突和主要行动次数决定。团队战术需要至少两名同社团成员，并由骨干或负责人组织。[/color]" % [
 		club.get("name", _selected_club_id), UI_TEXT.CLUB_TERMS.get(club.get("category", ""), "校园社团"),
 		club.get("leader_name", "未知"), int(club.get("member_count", 0)),
 		int(resources.get("current", 0)),
@@ -1753,7 +1790,7 @@ func _refresh_party_page() -> void:
 			skill_lines.append("• %s（%s）" % [skill.get("name", skill.get("skill_id", "")), skill.get("source_name", "")])
 	if skill_lines.is_empty():
 		skill_lines.append("尚未形成关系协作能力")
-	_party_detail.text = "[font_size=22][b]行动小队 %d / %d[/b][/font_size]\n用途：夜相调查准备\n稳定度：%d · %s\n\n[b]当前成员[/b]\n%s\n\n[b]关系协作能力[/b]\n%s\n\n[color=#91a4bc]邀请不会消耗主要行动。NPC 会根据关系、性格、压力、共同学院/社团和夜间行动意愿自行接受或拒绝；拒绝后当天不能反复邀请。[/color]" % [
+	_party_detail.text = "[font_size=22][b]行动小队 %d / %d[/b][/font_size]\n用途：夜相调查准备\n稳定度：%d · %s\n\n[b]当前成员[/b]\n%s\n\n[b]关系协作能力[/b]\n%s\n\n[color=#bdcedb]邀请不会消耗主要行动。NPC 会根据关系、性格、压力、共同学院/社团和夜间行动意愿自行接受或拒绝；拒绝后当天不能反复邀请。[/color]" % [
 		int(party.get("member_count", 1)), int(party.get("max_members", 3)),
 		int(stability.get("score", 0)), band_names.get(String(stability.get("band", "uncertain")), "未知"),
 		"\n".join(member_lines), "\n".join(skill_lines),
@@ -1953,7 +1990,7 @@ func _refresh_combat_page() -> void:
 	)
 
 	if active.is_empty():
-		_combat_formation_detail.text = "[font_size=21][b]人物牌部署[/b][/font_size]\n\n%s\n\n[color=#91a4bc]先接取夜相任务并抵达目标区域。部署不消耗生活主要行动；队友会按真实校园路线前来集合，不会凭空出现。[/color]" % reason_names.get(String(combat.get("preparation_reason", "")), "当前不能建立战斗准备。")
+		_combat_formation_detail.text = "[font_size=21][b]人物牌部署[/b][/font_size]\n\n%s\n\n[color=#bdcedb]先接取夜相任务并抵达目标区域。部署不消耗生活主要行动；队友会按真实校园路线前来集合，不会凭空出现。[/color]" % reason_names.get(String(combat.get("preparation_reason", "")), "当前不能建立战斗准备。")
 		if _combat_feedback.text.contains("小队败北") or _combat_feedback.text.contains("撤回表世界"):
 			_combat_formation_detail.text = "[b]上次战斗结果[/b]\n%s\n\n%s" % [_combat_feedback.text, _combat_formation_detail.text]
 		_combat_character_picker.clear()
@@ -1968,7 +2005,7 @@ func _refresh_combat_page() -> void:
 		_combat_end_round_action.disabled = true
 		_combat_retreat_action.disabled = true
 		_reset_combat_action_controls()
-		_combat_hand_detail.text = "[color=#91a4bc]锁定阵型后可生成个人八张牌组与共享战术手牌。[/color]"
+		_combat_hand_detail.text = "[color=#bdcedb]锁定阵型后可生成个人八张牌组与共享战术手牌。[/color]"
 		_refresh_combat_hints()
 		return
 
@@ -2015,7 +2052,7 @@ func _refresh_combat_page() -> void:
 		"enemy_turn": "敌方行动", "round_end": "轮次结算", "resolved": "战斗结束",
 	}
 	var phase_name := String(phase_names.get(String(active.get("phase", "")), "战斗中"))
-	_combat_formation_detail.text = "[font_size=21][b]%s[/b][/font_size]\n[b]我方阵型[/b]\n%s\n\n[b]敌方阵型[/b]\n%s\n\n[color=#91a4bc]每排最多两人；玩家必须上场；锁定后本场不能替补。[/color]" % [
+	_combat_formation_detail.text = "[font_size=21][b]%s[/b][/font_size]\n[b]我方阵型[/b]\n%s\n\n[b]敌方阵型[/b]\n%s\n\n[color=#bdcedb]每排最多两人；玩家必须上场；锁定后本场不能替补。[/color]" % [
 		phase_name, "\n".join(lines), "\n".join(enemy_lines)
 	]
 	_refresh_combat_hand(active, cards)
@@ -2072,7 +2109,7 @@ func _refresh_combat_hand(active: Dictionary, characters: Dictionary) -> void:
 	var phase := String(active.get("phase", ""))
 	if phase == "setup":
 		_reset_combat_action_controls()
-		_combat_hand_detail.text = "[color=#91a4bc]先完成人物牌部署。[/color]"
+		_combat_hand_detail.text = "[color=#bdcedb]先完成人物牌部署。[/color]"
 		return
 	if phase == "ready":
 		_reset_combat_action_controls()
@@ -2516,7 +2553,19 @@ func _navigate_feed(app_id: String, target_id: String) -> void:
 		_selected_message_contact_id = target_id
 		_message_input.text = String(_message_drafts.get(target_id, ""))
 	_open_app(app_id, {"messages": "校园通讯", "forums": "双层论坛", "party": "行动小队", "agenda": "日程与约定"}.get(app_id, "校园事项"))
+	if app_id == "notes" and not target_id.is_empty():
+		_investigation_root.query.text = ""
+		_investigation_root.refresh()
+		var picker: OptionButton = _investigation_root.evidence
+		for index in range(picker.item_count):
+			if String(picker.get_item_metadata(index)) == target_id:
+				picker.select(index)
+				_investigation_root._update_detail()
+				break
 	if app_id == "forums" and not target_id.is_empty():
+		if target_id.begins_with("channel:"):
+			_set_forum_channel(target_id.trim_prefix("channel:"))
+			return
 		var task: Dictionary = SimulationBridge.campus_snapshot.get("tasks", {}).get(target_id, {})
 		if not task.is_empty():
 			_set_forum_channel(String(task.get("forum", "surface")))
@@ -2535,6 +2584,7 @@ func _prepare_readable_forms(node: Node) -> void:
 
 
 func _set_open(value: bool) -> void:
+	if not value and _battle_screen != null and _battle_screen.opened: _battle_screen.close_screen()
 	if value:
 		for group_name in ["campus_map_ui", "campus_npc_inspector_ui"]:
 			var other_ui = get_tree().get_first_node_in_group(group_name)

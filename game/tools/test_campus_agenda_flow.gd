@@ -23,7 +23,8 @@ func _run() -> void:
 	var panel: Node = phone.get("_agenda_root")
 	assert(panel.visible and panel.get("detail").text.contains("目前没有"))
 	assert(not phone.get("_content").visible)
-	panel.get_child(2).pressed.emit()
+	assert(panel.get("calendar").get("grid").get_child_count() == 4)
+	panel.get_node("Manage_party").pressed.emit()
 	assert(phone.get("_party_root").visible and not panel.visible)
 	phone.get("_departure_reserve").pressed.emit()
 	var reserved = await bridge.campus_party_operation_completed
@@ -33,7 +34,7 @@ func _run() -> void:
 	assert(panel.get("detail").text.contains("第 1 天"))
 	assert(panel.get("detail").text.contains("实际执行时核验"))
 	assert(not phone.get("_party_root").visible)
-	panel.get_child(2).pressed.emit()
+	panel.get_node("Manage_party").pressed.emit()
 	phone.get("_departure_cancel").pressed.emit()
 	var cancelled = await bridge.campus_party_operation_completed
 	assert(cancelled[0])
@@ -41,7 +42,7 @@ func _run() -> void:
 	assert(panel.get("detail").text.contains("目前没有"))
 	var after: Dictionary = bridge.get("campus_snapshot")
 	assert(initial.clock == after.clock and initial.action_economy == after.action_economy)
-	panel.get_child(3).pressed.emit()
+	panel.get_node("Manage_messages").pressed.emit()
 	assert(phone.get("_message_root").visible and not panel.visible)
 	print("CAMPUS_AGENDA_FLOW_OK real_http phone_home calendar reserve_cancel original_management no_time_cost no_api")
 	quit(0)

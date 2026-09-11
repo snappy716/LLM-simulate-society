@@ -17,6 +17,7 @@ var _dirty := false
 var _loaded_actor := ""
 var _cards_only := false
 var _catalog_detail: RichTextLabel
+var catalog_grid: GridContainer
 
 
 func _ready() -> void:
@@ -58,6 +59,10 @@ func _ready() -> void:
 	_catalog_detail.scroll_active = false
 	_catalog_detail.visible = false
 	add_child(_catalog_detail)
+	catalog_grid = GridContainer.new()
+	catalog_grid.columns = 2
+	catalog_grid.visible = false
+	add_child(catalog_grid)
 	SimulationBridge.campus_snapshot_updated.connect(func(_snapshot):
 		if visible:
 			refresh()
@@ -177,6 +182,9 @@ func _details() -> void:
 	for picker in slots:
 		picker.disabled = save_deck.disabled
 	if _catalog_detail != null:
+		for child in catalog_grid.get_children():
+			catalog_grid.remove_child(child)
+			child.queue_free()
 		var card_lines := PackedStringArray(["该角色可用卡牌"])
 		var effects := {"grant_guard": "获得护盾", "restore_focus": "恢复专注", "reveal_pattern": "辨析规律", "apply_disruption": "施加干扰", "deal_physical": "物理攻击", "deal_technique": "技巧攻击", "restore_health": "恢复生命", "specialization_effect": "专业特效", "knowledge_insight": "知识洞察"}
 		var ranges := {"any_ally": "任意友方", "same_or_adjacent_ally": "同排或相邻排友方", "any_enemy": "任意敌方", "frontmost_enemy": "最前排敌方", "front_two_enemy_rows": "前两排敌方", "card_defined": "依卡牌情境"}
@@ -184,6 +192,13 @@ func _details() -> void:
 			var descriptions := PackedStringArray()
 			for effect in card.get("effect_ids", []): descriptions.append(String(effects.get(effect, "特殊效果")))
 			card_lines.append("%s · %d 费\n%s · 基础效力 %d · %s" % [card.name, int(card.command_cost), " / ".join(descriptions), int(card.get("base_power", 0)), ranges.get(card.get("range_pattern", ""), "依卡牌规则")])
+			var tile := PanelContainer.new()
+			tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			catalog_grid.add_child(tile)
+			var margin := MarginContainer.new()
+			for side in ["left", "top", "right", "bottom"]: margin.add_theme_constant_override("margin_" + side, 12)
+			tile.add_child(margin)
+			margin.add_child(preload("res://scripts/ui/campus_ui_kit.gd").label(card_lines[-1]))
 		card_lines.append("基础效力不等于最终伤害；实际数值由战斗状态、知识与目标共同结算。")
 		_catalog_detail.text = "\n\n".join(card_lines)
 
@@ -192,7 +207,8 @@ func set_cards_only(value: bool) -> void:
 	_cards_only = value
 	for control in [topic, detail, reason, read.get_parent(), focus]:
 		control.visible = not value
-	_catalog_detail.visible = value
+	_catalog_detail.visible = false
+	catalog_grid.visible = value
 	var courses := get_node_or_null("PublicCourses")
 	if courses != null: courses.visible = not value
 

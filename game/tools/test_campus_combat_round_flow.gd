@@ -53,13 +53,17 @@ func _run_flow() -> void:
 	prepare.pressed.emit()
 	var prepared = await bridge.campus_combat_operation_completed
 	assert(bool(prepared[0]), "combat prepare failed: %s" % prepared[1])
+	var screen = phone.get("_battle_screen")
+	screen.open_screen()
+	assert(screen.deploy_buttons.size() == 3)
 
 	var row_picker := phone.get("_combat_row_picker") as OptionButton
 	row_picker.select(2)
 	var deploy := phone.get("_combat_deploy_action") as Button
-	deploy.pressed.emit()
+	screen.deploy_buttons.back.pressed.emit()
 	var deployed = await bridge.campus_combat_operation_completed
 	assert(bool(deployed[0]), "combat deploy failed: %s" % deployed[1])
+	screen.close_screen()
 	var confirm := phone.get("_combat_confirm_action") as Button
 	assert(not confirm.disabled)
 	confirm.pressed.emit()
@@ -93,9 +97,37 @@ func _run_flow() -> void:
 	assert(not card_picker.disabled)
 	assert(not target_picker.disabled)
 	assert(not play_card.disabled)
-	play_card.pressed.emit()
+	screen.open_screen()
+	for window_size in [Vector2i(960, 540), Vector2i(1280, 720), Vector2i(1920, 1080)]:
+		root.size = window_size
+		for i in range(8): await process_frame
+		assert(root.get_visible_rect().encloses(screen.footer.get_global_rect()))
+	assert(screen.hand.get_child_count() == 2)
+	var focused_card: Button = screen.hand.get_child(1)
+	var focused_id := String(focused_card.get_meta("card_id"))
+	focused_card.grab_focus()
+	focused_card.pressed.emit()
+	for i in range(3): await process_frame
+	assert(root.gui_get_focus_owner() != null and root.gui_get_focus_owner().get_meta("card_id", "") == focused_id)
+	screen.hand.get_child(0).pressed.emit()
+	for i in range(3): await process_frame
+	assert(screen.heading.text.contains("3/3"))
+	assert(not screen.actions.play.disabled)
+	if "--capture-dir" in OS.get_cmdline_user_args():
+		root.size = Vector2i(1280, 720)
+		for i in range(8): await process_frame
+		RenderingServer.force_draw()
+		var args := OS.get_cmdline_user_args()
+		var output := args[args.find("--capture-dir") + 1]
+		DirAccess.make_dir_recursive_absolute(output)
+		root.get_texture().get_image().save_png(output.path_join("battle.png"))
+	screen.actions.play.pressed.emit()
 	var played = await bridge.campus_combat_operation_completed
 	assert(bool(played[0]), "combat card play failed: %s" % played[1])
+	for i in range(3): await process_frame
+	assert(screen.hand.get_child_count() == 1)
+	screen.close_screen()
+	assert(phone.get("_combat_root").get_parent() == screen.source_parent)
 	battle = ((bridge.get("campus_snapshot") as Dictionary).get("combat", {}) as Dictionary).get("active_battle", {})
 	assert((battle.get("shared_hand_ids", []) as Array).size() == 1)
 	assert(int((battle.get("command_points", {}) as Dictionary).get("party:player", 0)) < 3)

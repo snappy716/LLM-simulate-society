@@ -88,10 +88,10 @@ func _build() -> void:
 	_content.anchor_bottom = 0.84
 	_content.add_theme_constant_override("separation", 12)
 	_sky.add_child(_content)
-	_date = _label(14, Color("c7ad7f"))
+	_date = _label(14, Color("8cddff"))
 	_title = _label(30, Color("eef0ee"))
 	_detail = _label(16, Color("c4cdd5"))
-	_tip = _label(14, Color("93a5b6"))
+	_tip = _label(14, Color("bdcedb"))
 	_dismiss = Button.new()
 	_dismiss.text = "返回校园界面"
 	_dismiss.custom_minimum_size = Vector2(180, 40)
@@ -133,7 +133,7 @@ func _on_started(clock: Dictionary) -> void:
 	get_tree().paused = true
 	_sky.elapsed = 0.0
 	_sky.dawn = 0.0
-	_sky.moving = true
+	_sky.moving = not CampusPreferences.values.reduced_motion
 	_sky.modulate.a = 1.0
 	_sky.show()
 	_date.text = "第 %d 天 · 深夜  /  第 %d 天 · 清晨" % [_from_day, _from_day + 1]

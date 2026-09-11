@@ -14,12 +14,18 @@ var detail: Label
 var feedback: Label
 var _rows: Array = []
 var _pending := false
+var overview: VBoxContainer
+var filter_kind := 0
 
 
 func _ready() -> void:
 	var heading := Label.new()
 	heading.text = "交友与恋爱 · 每段关系分别确认"
 	add_child(heading)
+	var kit = preload("res://scripts/ui/campus_ui_kit.gd")
+	add_child(kit.tabs(["全部关系", "好友", "恋人", "待回应"], func(index): filter_kind = index; refresh()))
+	overview = VBoxContainer.new()
+	add_child(overview)
 	contacts = _picker()
 	kind = _picker()
 	kind.add_item("确认好友关系")
@@ -70,6 +76,22 @@ func refresh() -> void:
 		if old_contact == row.actor_id: contacts.select(contacts.item_count - 1)
 	var old_id = _selected(history)
 	_rows = agenda.get("bonds", {}).get("records", [])
+	for child in overview.get_children():
+		overview.remove_child(child)
+		child.queue_free()
+	for row in _rows:
+		if filter_kind == 1 and row.kind != "friendship": continue
+		if filter_kind == 2 and row.kind != "romance": continue
+		if filter_kind == 3 and row.status != "pending": continue
+		var card = preload("res://scripts/ui/campus_ui_kit.gd").button("%s · %s · %s" % [row.partner_name, "好友" if row.kind == "friendship" else "恋人", STATUS.get(row.status, row.status)], func():
+			for index in range(history.item_count):
+				if history.get_item_metadata(index) == row.bond_id:
+					history.select(index)
+					_show_record()
+					history.grab_focus()
+		)
+		overview.add_child(card)
+	if overview.get_child_count() == 0: overview.add_child(preload("res://scripts/ui/campus_ui_kit.gd").status("此分类没有已建立或待确认的关系。", "empty"))
 	history.clear()
 	for row in _rows:
 		history.add_item("%s · %s · %s" % [row.partner_name, "好友" if row.kind == "friendship" else "恋人", STATUS.get(row.status, row.status)])
