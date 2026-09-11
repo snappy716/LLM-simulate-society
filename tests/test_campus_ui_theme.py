@@ -55,6 +55,30 @@ class CampusThemeTests(unittest.TestCase):
         self.assertIn("License (CC0)", (directory / "license.txt").read_text())
         self.assertNotIn("func _icon_style", phone)
 
+    def test_original_atelier_icons_cover_every_phone_app(self):
+        import re
+        import xml.etree.ElementTree as ET
+        catalog = (ROOT / "game/scripts/ui/campus_phone_catalog.gd").read_text()
+        ids = re.findall(r'"id": "([^"]+)"', catalog)
+        directory = ROOT / "game/assets/ui/campus_atelier"
+        for name in ids + ["knowledge", "support", "character", "anomaly"]:
+            svg = ET.parse(directory / "icons" / (name + ".svg")).getroot()
+            self.assertEqual(svg.attrib["viewBox"], "0 0 64 64")
+        phone = (ROOT / "game/scripts/ui/campus_phone_ui.gd").read_text()
+        self.assertIn('campus_ui_art.gd").icon(String(entry.id))', phone)
+
+    def test_atelier_assets_are_local_and_presentation_only(self):
+        import struct
+        directory = ROOT / "game/assets/ui/campus_atelier"
+        image = (directory / "moon_lake_v1.png").read_bytes()
+        self.assertEqual(image[:8], b"\x89PNG\r\n\x1a\n")
+        self.assertEqual(struct.unpack(">II", image[16:24]), (1536, 1024))
+        helper = (ROOT / "game/scripts/ui/campus_ui_art.gd").read_text()
+        self.assertNotIn("SimulationBridge", helper)
+        self.assertIn("MOUSE_FILTER_IGNORE", helper)
+        self.assertTrue((directory / "card_idle.svg").is_file())
+        self.assertTrue((directory / "card_active.svg").is_file())
+
     def test_phone_long_forms_have_fixed_navigation_and_shared_activity_labels(self):
         phone = (ROOT / "game/scripts/ui/campus_phone_ui.gd").read_text()
         self.assertIn("_app_scroll.follow_focus = true", phone)

@@ -1,6 +1,7 @@
 extends CanvasLayer
 ## Dedicated presentation, using the phone's existing command controller.
 const KIT = preload("res://scripts/ui/campus_ui_kit.gd")
+const ART = preload("res://scripts/ui/campus_ui_art.gd")
 const ROWS := {"front": "前排", "middle": "中排", "back": "后排"}
 var controller: Node
 var overlay: Control
@@ -150,6 +151,10 @@ func refresh() -> void:
 				target_button.disabled = target_id not in targets or controller.get("_combat_pending")
 				target_button.add_theme_color_override("font_disabled_color", KIT.INK)
 				target_button.set_meta("target_id", target_id)
+				target_button.icon = ART.icon("anomaly" if enemy else "character")
+				target_button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+				target_button.expand_icon = true
+				target_button.add_theme_constant_override("icon_max_width", 34)
 				lane.add_child(target_button)
 				var bar := ProgressBar.new()
 				bar.max_value = maxi(1, int(unit.get("max_health", 0)))
@@ -179,7 +184,7 @@ func refresh() -> void:
 				candidates.item_selected.emit(index)
 				refresh()
 			, "primary" if id == controller.get("_selected_character_card_id") else "secondary")
-			character.custom_minimum_size = Vector2(155, 110)
+			ART.decorate_card(character, "character", id == controller.get("_selected_character_card_id"))
 			character.disabled = controller.get("_combat_pending")
 			hand.add_child(character)
 	var picker: OptionButton = controller.get("_combat_card_picker")
@@ -192,7 +197,7 @@ func refresh() -> void:
 			picker.item_selected.emit(index)
 			refresh()
 		, "primary" if id == controller.get("_selected_combat_card_id") else "secondary")
-		card.custom_minimum_size = Vector2(155, 110)
+		ART.decorate_card(card, ART.card_kind(instance.get("effect_ids", [])), id == controller.get("_selected_combat_card_id"))
 		card.tooltip_text = "可选目标与费用以当前规则校验为准。" if option.get("playable", false) else "当前不可出牌，可在下方查看具体条件。"
 		card.tooltip_text += "\n基础效力 %d（非最终伤害）；作用范围 %s。" % [int(instance.get("base_power", 0)), {"any_ally":"任意友方", "any_enemy":"任意敌方", "frontmost_enemy":"最前排敌方", "front_two_enemy_rows":"前两排敌方", "same_or_adjacent_ally":"同排或相邻排友方"}.get(String(instance.get("range_pattern", "")), "依卡牌规则")]
 		card.disabled = controller.get("_combat_pending")

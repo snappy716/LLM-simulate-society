@@ -16,6 +16,11 @@ func _run() -> void:
 	for id in ["feed", "messages", "agenda", "relationships", "market", "notes", "cards", "party", "combat"]:
 		phone.call("_open_app", id, {"feed":"校园动态", "messages":"校园通讯", "agenda":"日程与约定", "relationships":"关系", "market":"校园商城", "notes":"调查笔记", "cards":"卡牌库", "party":"行动小队", "combat":"夜战部署"}.get(id, id))
 		await _save(output, id)
+		if id == "cards":
+			var catalog: GridContainer = phone.get("_growth_root").catalog_grid
+			if catalog.get_child_count() > 0:
+				phone.get("_app_scroll").ensure_control_visible(catalog.get_child(0))
+				await _save(output, "cards_catalog")
 	phone.call("_set_open", false)
 	var map := current_scene.get_node("CampusMapUI")
 	map.call("_set_open", true)

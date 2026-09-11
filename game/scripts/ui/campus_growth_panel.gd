@@ -193,12 +193,21 @@ func _details() -> void:
 			for effect in card.get("effect_ids", []): descriptions.append(String(effects.get(effect, "特殊效果")))
 			card_lines.append("%s · %d 费\n%s · 基础效力 %d · %s" % [card.name, int(card.command_cost), " / ".join(descriptions), int(card.get("base_power", 0)), ranges.get(card.get("range_pattern", ""), "依卡牌规则")])
 			var tile := PanelContainer.new()
+			var art := preload("res://scripts/ui/campus_ui_art.gd")
+			tile.add_theme_stylebox_override("panel", art.frame())
+			tile.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 			tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			catalog_grid.add_child(tile)
 			var margin := MarginContainer.new()
 			for side in ["left", "top", "right", "bottom"]: margin.add_theme_constant_override("margin_" + side, 12)
 			tile.add_child(margin)
-			margin.add_child(preload("res://scripts/ui/campus_ui_kit.gd").label(card_lines[-1]))
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 12)
+			margin.add_child(row)
+			row.add_child(art.emblem(art.card_kind(card.get("effect_ids", []))))
+			var description := preload("res://scripts/ui/campus_ui_kit.gd").label(card_lines[-1])
+			description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(description)
 		card_lines.append("基础效力不等于最终伤害；实际数值由战斗状态、知识与目标共同结算。")
 		_catalog_detail.text = "\n\n".join(card_lines)
 

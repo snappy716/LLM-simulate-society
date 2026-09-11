@@ -40,7 +40,8 @@ func _build() -> void:
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
 	var art := TextureRect.new()
-	art.texture = load("res://assets/maps/campus_collab/campus_gate.png")
+	art.texture = load("res://assets/ui/campus_atelier/moon_lake_v1.png")
+	art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -48,6 +49,7 @@ func _build() -> void:
 	art.name = "TitleArt"
 	overlay.add_child(art)
 	var shade := ColorRect.new()
+	shade.name = "MenuShade"
 	shade.color = Color("0b2239b8")
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.add_child(shade)
@@ -132,6 +134,7 @@ func _open() -> void:
 	overlay.show()
 	get_tree().paused = true
 	overlay.get_node("TitleArt").visible = title_mode
+	overlay.get_node("MenuShade").color = Color("0b22395c") if title_mode else Color("0b2239b8")
 
 func open_title() -> void:
 	title_mode = true

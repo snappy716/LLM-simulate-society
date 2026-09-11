@@ -298,9 +298,10 @@ func _build_home() -> Control:
 					continue
 				var button := Button.new()
 				button.text = "%s\n%s" % [app.name, entry.caption]
-				button.icon = load("res://assets/ui/kenney_game_icons/%s.png" % entry.icon)
+				button.icon = preload("res://scripts/ui/campus_ui_art.gd").icon(String(entry.id))
+				button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 				button.expand_icon = true
-				button.add_theme_constant_override("icon_max_width", 26)
+				button.add_theme_constant_override("icon_max_width", 32)
 				button.add_theme_font_size_override("font_size", 14)
 				button.custom_minimum_size = Vector2(152, 42)
 				button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
