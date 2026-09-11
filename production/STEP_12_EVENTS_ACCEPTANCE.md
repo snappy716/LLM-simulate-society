@@ -1,6 +1,6 @@
 # 第 12 步：比赛与节庆验收
 
-日期：2026-09-10。本批本地验收已通过；第 12 步整体基础核对见 `../design/STEP_12_CLOSURE_AUDIT.md`。上传以远端开发分支核验为准，不合并 main。运行规则见 `../design/CAMPUS_EVENTS_RUNTIME.md`。
+日期：2026-09-10 验收，2026-09-11 发布核验。本批验收已通过，代码提交 `cae37233b79a1493b45176884ea3197fbd2d0bdd` 已上传并核验远端 `codex/campus-demo-architecture`，未合并 main；第 12 步整体基础核对见 `../design/STEP_12_CLOSURE_AUDIT.md`。运行规则见 `../design/CAMPUS_EVENTS_RUNTIME.md`。
 
 ## 验收范围
 
