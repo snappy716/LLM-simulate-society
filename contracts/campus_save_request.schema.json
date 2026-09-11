@@ -4,7 +4,7 @@
   "type": "object",
   "required": ["operation"],
   "properties": {
-    "operation": {"enum": ["list", "save", "load"]},
+    "operation": {"enum": ["list", "save", "load", "new"]},
     "slot_id": {"enum": ["slot_1", "slot_2", "slot_3"]},
     "expected_world_revision": {"type": "integer", "minimum": 1},
     "expected_token": {"type": "string"},
@@ -14,5 +14,13 @@
   },
   "if": {"properties": {"operation": {"enum": ["save", "load"]}}},
   "then": {"required": ["slot_id", "expected_world_revision", "expected_token", "confirmed"]},
+  "allOf": [{
+    "if": {"properties": {"operation": {"const": "new"}}},
+    "then": {
+      "required": ["confirmed", "expected_world_revision"],
+      "properties": {"confirmed": {"const": true}},
+      "not": {"anyOf": [{"required": ["slot_id"]}, {"required": ["expected_token"]}, {"required": ["backup"]}, {"required": ["presentation_map_id"]}]}
+    }
+  }],
   "additionalProperties": false
 }

@@ -59,7 +59,7 @@ class CampusSaveStore:
     def token(path):
         return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else ""
 
-    def listing(self):
+    def listing(self, content_version=None):
         result = []
         for slot in SLOTS:
             versions = {}
@@ -69,12 +69,24 @@ class CampusSaveStore:
                 if entry["exists"]:
                     try:
                         data = json.loads(path.read_text(encoding="utf-8"))
+                        if not isinstance(data, dict) or not isinstance(data.get("content", {}), dict):
+                            raise ValueError("invalid checkpoint metadata")
                         world = data["world"]
                         player = world["population"]["player"]
                         entry.update(status="present", day=world["clock"]["day"], phase=world["clock"]["phase"],
                                      location_id=player["current_location_id"], revision=world["revision"])
+                        entry.update(saved_at_unix=path.stat().st_mtime,
+                                     content_version=data.get("content", {}).get("version", "unknown"))
                     except (ValueError, KeyError, TypeError, UnicodeError):
                         entry.update(status="invalid")
+                    if content_version is not None:
+                        try:
+                            self.load(slot, backup=backup, expected_token=entry["token"],
+                                      confirmed=True, content_version=content_version)
+                            entry["compatible"] = True
+                        except (CheckpointError, SaveError, ValueError, KeyError, TypeError):
+                            entry["compatible"] = False
+                            entry["compatibility_note"] = "版本不兼容或存档校验失败，原文件保留。"
                 versions["backup" if backup else "current"] = entry
             result.append({"slot_id": slot, **versions})
         return result

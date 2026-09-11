@@ -6,6 +6,8 @@
 
 **U1a 视觉接续**：保持 30 px 图标（46 px 热区）、无底框和悬停渐亮。收到“太暗、看不出来”的反馈后，雾蓝透明版已替换为不透明亮白/清亮蓝，图标和文字加细暗边；保留原七张地图，不修改场景内容和业务规则。最新记录见 `production/UI_BRIGHT_HUD_ACCEPTANCE.md`，历史场景融合版见 `production/UI_SCENE_INK_ACCEPTANCE.md`。
 
+**用户指定 UI01 / UI02 接续**：公共视觉与交互底座及标题/暂停菜单已接入，整合新游戏权威重建、真实存读档、引导与原 API 设置。规范见 `UI01_PUBLIC_SPEC.md`，验收/上传状态见 `production/UI01_UI02_ACCEPTANCE.md`；其余 UI 工作包不自动勾选，第 13 步主线仍不启动。
+
 **当前执行点（2026-09-11，优先于下方历史接续）**：第 12 步比赛/节庆与整体基础收束已验收并交付开发分支：最终干净全量 95 模块 / 906 项 Python、65 条后台 Godot 全部通过，两组十四日综合生活样本含第七日真实存读档续跑通过。课程、社团晋升、相处/约会、多伴侣协议、兼职/购物、医疗和比赛共用实际行动与账本。详见 `STEP_12_CLOSURE_AUDIT.md`、`production/STEP_12_EVENTS_ACCEPTANCE.md`。代码提交 `cae37233b79a1493b45176884ea3197fbd2d0bdd` 已上传并核验远端 `codex/campus-demo-architecture`，未合并 main。目标在第 12 步交付处结束，不自动进入第 13 步主线；精细场景、长期故事质量、真实 API 十五秒目标和 Windows 原生发行仍属后续。
 
 执行目标持续至第 12 步，每个主要功能完整 Python/Godot 验收后上传开发分支，不合并 main，不实施第 13 步主线。第 1～8 步基础 MVP 与 LLM 补强、第 9～10 步基础机制已收束。第 11 步第三批七日对照曾发现免费采购替代主体安排，历史证据见 production/STEP_11_LIVE_CAUSAL_ACCEPTANCE.md；当前修复与后续进度以下方最新接续为准，不把历史缺口当作当前缺口。

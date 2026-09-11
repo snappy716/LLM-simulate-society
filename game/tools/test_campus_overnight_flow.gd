@@ -62,7 +62,8 @@ func _run() -> void:
 			event.pressed = true
 			Input.parse_input_event(event)
 			await process_frame
-		assert(not phone.is_open() and not settings.is_open())
+			assert(not phone.is_open() and not settings.is_open())
+			assert(not root.get_node("SystemMenu").is_open(), "overnight must own Escape above the pause menu")
 		assert(transition.is_active() and paused)
 		bridge.campus_phase_advanced.emit(false, {"result": {"message": "测试：日程暂时无法结算"}})
 		await process_frame

@@ -23,8 +23,8 @@ func _run() -> void:
 	for retired_signal in ["snapshot_updated", "advance_state_changed", "trade_completed", "item_use_completed", "action_completed"]:
 		assert(not bridge.has_signal(retired_signal), "retired town signal must not return")
 	var main_path := String(ProjectSettings.get_setting("application/run/main_scene"))
-	assert(main_path == "res://scenes/campus/campus_collab_test.tscn")
-	change_scene_to_file(main_path)
+	assert(main_path == "res://scenes/ui/campus_title.tscn")
+	change_scene_to_file("res://scenes/campus/campus_collab_test.tscn")
 	await process_frame
 	await process_frame
 	var phone := current_scene.get_node("CampusPhoneUI")
@@ -72,10 +72,11 @@ func _run() -> void:
 	var escape := InputEventAction.new()
 	escape.action = "ui_cancel"
 	escape.pressed = true
-	settings.call("_unhandled_input", escape)
-	assert(settings.call("is_open") and paused)
-	settings.call("_unhandled_input", escape)
-	assert(not settings.call("is_open") and not paused)
+	var menu := root.get_node("SystemMenu")
+	menu.call("_input", escape)
+	assert(menu.is_open() and paused and not settings.is_open())
+	menu.call("_input", escape)
+	assert(not menu.is_open() and not paused)
 	phone.call("_set_open", true)
 	phone.call("_open_app", "settings", "接口设置")
 	print("CAMPUS_STARTUP_FLOW_OK campus_default campus_handshake offline_settings modal_guard stable_user_path")

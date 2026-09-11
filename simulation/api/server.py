@@ -629,7 +629,22 @@ class CampusKernelBridge:
                 raise SaveError("存档请求含未知字段；不接受文件路径。")
             action = payload.get("operation")
             if action == "list":
-                return {"ok": True, "slots": store.listing()}
+                return {"ok": True, "operation": "list", "slots": store.listing(self.registry.content_version)}
+            if action == "new":
+                if set(payload) != {"operation", "confirmed", "expected_world_revision"} or payload.get("confirmed") is not True:
+                    raise SaveError("新游戏需要明确确认；不接受额外角色或世界参数。")
+                state, _ = self.kernel.capture_checkpoint()
+                revision = payload.get("expected_world_revision")
+                if type(revision) is not int or revision != state.revision:
+                    raise SaveError("世界已改变，请重新确认新游戏。")
+                # Build offline before replacing anything. Existing saves and the
+                # configured provider remain untouched; no generation API call.
+                slots = store.listing(self.registry.content_version)
+                fresh = CampusKernelBridge(state.master_seed)
+                initial, rng = fresh.kernel.capture_checkpoint()
+                self.kernel.restore_checkpoint(initial, rng, expected_revision=revision)
+                return {"ok": True, "operation": "new", "snapshot": self.snapshot(),
+                        "slots": slots, "presentation_map_id": "campus_gate"}
             if action not in ("save", "load"):
                 raise SaveError("未知存档操作。")
             if (type(payload.get("confirmed")) is not bool or not isinstance(payload.get("expected_token"), str)
@@ -656,7 +671,7 @@ class CampusKernelBridge:
                     raise SaveError("备份选项无效。")
                 loaded, changes = store.load(slot, backup=backup, content_version=self.registry.content_version, **options)
                 self.kernel.restore_checkpoint(loaded.state, loaded.rng, expected_revision=revision)
-            return {"ok": True, "operation": action, "slots": store.listing(),
+            return {"ok": True, "operation": action, "slots": store.listing(self.registry.content_version),
                     "presentation_map_id": state.metadata.get("save_presentation_map", "") if action == "save" else loaded.state.metadata.get("save_presentation_map", ""),
                     "migrations": changes, "preserved_invalid": preserved_invalid, "snapshot": self.snapshot()}
 

@@ -51,6 +51,50 @@ class CampusSaveTests(unittest.TestCase):
         self.assertTrue(all(not s["current"]["exists"] for s in slots))
         self.assertEqual(before, self.bridge.kernel.state.to_dict())
 
+    def test_new_game_is_confirmed_atomic_and_preserves_save_and_provider(self):
+        self.request("save")
+        token = self.store.token(self.store.path("slot_1"))
+        runtime = self.bridge.cognition_runtime
+        self.bridge.kernel._state.population["player"]["wealth"] = 12
+        revision = self.bridge.kernel.state.revision
+        result = self.bridge.persistence(self.store, {"operation": "new", "confirmed": True,
+                                                     "expected_world_revision": revision})
+        self.assertEqual(result["operation"], "new")
+        self.assertEqual(result["snapshot"]["player"]["wealth"], 500)
+        self.assertEqual(result["snapshot"]["clock"]["day"], 1)
+        self.assertGreater(self.bridge.kernel.state.revision, revision)
+        self.assertIs(self.bridge.cognition_runtime, runtime)
+        self.assertEqual(token, self.store.token(self.store.path("slot_1")))
+        self.assertTrue(result["slots"][0]["current"]["compatible"])
+
+    def test_new_game_rejects_missing_confirmation_stale_revision_and_extra_options(self):
+        before = self.bridge.kernel.state.to_dict()
+        valid = {"operation": "new", "confirmed": True, "expected_world_revision": before["revision"]}
+        for overrides in ({"confirmed": False}, {"confirmed": 1}, {"expected_world_revision": -1}, {"seed": 7}):
+            with self.subTest(overrides=overrides), self.assertRaises(SaveError):
+                self.bridge.persistence(self.store, {**valid, **overrides})
+            self.assertEqual(before, self.bridge.kernel.state.to_dict())
+
+    def test_new_game_construction_failure_does_not_replace_world(self):
+        before = self.bridge.kernel.state.to_dict()
+        with patch("simulation.api.server.CampusKernelBridge", side_effect=ValueError("fixture failure")):
+            with self.assertRaises(ValueError):
+                self.bridge.persistence(self.store, {"operation": "new", "confirmed": True,
+                                                     "expected_world_revision": before["revision"]})
+        self.assertEqual(before, self.bridge.kernel.state.to_dict())
+
+    def test_listing_reports_compatibility_without_loading_into_current_world(self):
+        self.request("save")
+        before = self.bridge.kernel.state.to_dict()
+        record = self.bridge.persistence(self.store, {"operation": "list"})["slots"][0]["current"]
+        self.assertTrue(record["compatible"])
+        self.assertGreater(record["saved_at_unix"], 0)
+        self.assertEqual(record["content_version"], self.bridge.registry.content_version)
+        self.store.path("slot_1").write_text("broken", encoding="utf-8")
+        record = self.bridge.persistence(self.store, {"operation": "list"})["slots"][0]["current"]
+        self.assertFalse(record["compatible"])
+        self.assertEqual(before, self.bridge.kernel.state.to_dict())
+
     def test_save_load_restores_wallet_inventory_and_free_action_budget(self):
         self.bridge.kernel._state.population["player"]["current_location_id"] = "supermarket_sales_floor"
         before = self.bridge.kernel.state.to_dict()

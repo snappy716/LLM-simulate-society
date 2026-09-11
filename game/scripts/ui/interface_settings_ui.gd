@@ -19,6 +19,7 @@ const THINKING_MODES := ["auto", "default", "disabled", "enabled"]
 var profiles: Array[Dictionary] = []
 var selected_index := -1
 var _paused_before_open := false
+var _return_focus: WeakRef
 
 
 func _ready() -> void:
@@ -46,6 +47,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if panel.visible:
 			_close()
 		else:
+			var system_menu := get_node_or_null("/root/SystemMenu")
+			if system_menu != null:
+				return
 			for group_name in ["campus_phone_ui", "campus_map_ui", "campus_npc_inspector_ui"]:
 				var other := get_tree().get_first_node_in_group(group_name)
 				if other != null and other.is_open():
@@ -62,9 +66,12 @@ func open_settings() -> void:
 	if is_open():
 		return
 	_paused_before_open = get_tree().paused
+	var focus := get_viewport().gui_get_focus_owner()
+	_return_focus = weakref(focus) if focus != null else null
 	_load_profiles()
 	panel.visible = true
 	get_tree().paused = true
+	profile_list.grab_focus()
 	var current: Dictionary = SimulationBridge.campus_snapshot.get("cognition", {}).get("provider", {})
 	var last: Dictionary = current.get("last_result", {})
 	var labels := {"untested": "尚未验证", "received": "已收到响应，待校验", "accepted": "最近响应已通过校验", "failed": "最近请求失败"}
@@ -208,4 +215,6 @@ func _interface_configured(success: bool, result: Dictionary) -> void:
 
 func _close() -> void:
 	panel.visible = false
+	if _return_focus != null and is_instance_valid(_return_focus.get_ref()):
+		_return_focus.get_ref().grab_focus()
 	get_tree().paused = _paused_before_open

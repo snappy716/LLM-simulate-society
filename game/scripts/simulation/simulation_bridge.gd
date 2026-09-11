@@ -165,6 +165,9 @@ func refresh_campus_snapshot() -> void:
 
 
 func advance_social_pulse() -> void:
+	var system_menu := get_node_or_null("/root/SystemMenu")
+	if system_menu != null and system_menu.is_open():
+		return
 	if _campus_busy or busy or not connected or campus_snapshot.is_empty():
 		return
 	_campus_command_counter += 1
@@ -939,13 +942,14 @@ func _on_campus_request_completed(
 		var success := response_code == 200 and bool(response.get("ok", false))
 		if success and response.get("snapshot") is Dictionary:
 			# Loaded history is a notification baseline, never newly delivered mail.
-			if response.get("operation") == "load" and has_meta("hud_messages"):
-				remove_meta("hud_messages")
+			if response.get("operation") in ["load", "new"]:
+				for key in ["hud_messages", "hud_tracking_id", "hud_tracking_expanded"]:
+					if has_meta(key): remove_meta(key)
 			campus_snapshot = response.snapshot
 			last_campus_update_kind = "persistence"
 			campus_snapshot_updated.emit(campus_snapshot)
 		campus_persistence_completed.emit(success, response)
-		if success and response.get("operation") == "load":
+		if success and response.get("operation") in ["load", "new"]:
 			call_deferred("_restore_loaded_scene", String(response.get("presentation_map_id", "")))
 		return
 	if response_code != 200 or not parsed is Dictionary:
