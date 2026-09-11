@@ -2,12 +2,12 @@ extends CanvasLayer
 ## Read-only persistent chrome. All actions remain in the existing authority-backed pages.
 
 const ICONS := {
-	"phone": preload("res://assets/ui/campus_moon/phone.svg"),
-	"map": preload("res://assets/ui/campus_moon/map.svg"),
-	"party": preload("res://assets/ui/campus_moon/party.svg"),
-	"character": preload("res://assets/ui/campus_moon/character.svg"),
-	"cards": preload("res://assets/ui/campus_moon/cards.svg"),
-	"relationships": preload("res://assets/ui/campus_moon/relationships.svg"),
+	"phone": preload("res://assets/ui/campus_paper/phone.svg"),
+	"map": preload("res://assets/ui/campus_paper/map.svg"),
+	"party": preload("res://assets/ui/campus_paper/party.svg"),
+	"character": preload("res://assets/ui/campus_paper/character.svg"),
+	"cards": preload("res://assets/ui/campus_paper/cards.svg"),
+	"relationships": preload("res://assets/ui/campus_paper/relationships.svg"),
 }
 const SCENE_INK := preload("res://assets/ui/campus_moon/scene_ink.gdshader")
 var location: Label

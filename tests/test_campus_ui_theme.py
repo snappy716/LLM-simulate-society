@@ -138,6 +138,21 @@ class CampusThemeTests(unittest.TestCase):
             self.assertIn(f"Button/styles/{state}", theme)
         self.assertIn('CampusPhone/base_type = &"PanelContainer"', theme)
 
+    def test_paper_hud_has_six_local_filled_icons_and_preserves_hit_areas(self):
+        import xml.etree.ElementTree as ET
+        hud = (ROOT / "game/scripts/ui/campus_hud.gd").read_text()
+        for name in ("phone", "map", "party", "character", "cards", "relationships"):
+            relative = f"game/assets/ui/campus_paper/{name}.svg"
+            svg = ET.parse(ROOT / relative).getroot()
+            self.assertEqual(svg.attrib["viewBox"], "0 0 64 64")
+            self.assertEqual(svg.attrib["width"], "64")
+            self.assertIn(f'campus_paper/{name}.svg', hud)
+            self.assertTrue(any(node.attrib.get("fill") == "#dff5ff" for node in svg.iter()))
+            self.assertTrue(any(node.attrib.get("fill") == "#1888ff" for node in svg.iter()))
+            self.assertFalse(any(node.tag.endswith("image") for node in svg.iter()))
+        self.assertIn('Vector2(46, 46)', hud)
+        self.assertIn('"icon_max_width", 30', hud)
+
     def test_phone_uses_real_connection_signal_not_fictional_percentage(self):
         phone = (ROOT / "game/scripts/ui/campus_phone_ui.gd").read_text()
         self.assertIn("connection_state_changed.connect(_refresh_connection)", phone)

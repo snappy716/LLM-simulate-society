@@ -18,6 +18,10 @@ func _run() -> void:
 	var hud := current_scene.get_node("CampusHUD")
 	var phone := current_scene.get_node("CampusPhoneUI")
 	var before: Dictionary = bridge.campus_snapshot.duplicate(true)
+	assert(hud.phone.icon.resource_path.ends_with("campus_paper/phone.svg"))
+	for id in hud.entries:
+		assert(hud.entries[id].icon.resource_path.ends_with("campus_paper/" + id + ".svg"))
+		assert(hud.entries[id].icon.get_size() == Vector2(64, 64))
 	assert(hud.clock.modulate.a == 1.0, "date must not fade into the background")
 	assert(hud.location.get_theme_color("font_color").r > 0.95)
 	assert(hud.clock.get_theme_constant("outline_size") == 2)

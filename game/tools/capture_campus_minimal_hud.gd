@@ -57,7 +57,8 @@ func _run() -> void:
 
 
 func _save(directory: String, name_value: String) -> void:
-	await RenderingServer.frame_post_draw
+	for _frame in range(4): await process_frame
+	RenderingServer.force_draw()
 	var frame := root.get_texture().get_image()
 	assert(not frame.is_empty())
 	assert(frame.save_png(directory.path_join(name_value + ".png")) == OK)
