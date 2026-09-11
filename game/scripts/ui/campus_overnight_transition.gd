@@ -21,17 +21,18 @@ class NightSky extends Control:
 		queue_redraw()
 
 	func _draw() -> void:
-		var night := Color("101a2c").lerp(Color("506776"), dawn)
+		var night := Color("173b5c").lerp(Color("376889"), dawn)
 		draw_rect(Rect2(Vector2.ZERO, size), night)
 		# A handful of vector shapes; no textures, video decoding or extra model calls.
 		for i in range(36):
 			var star := Vector2(fmod(float(i * 137 + 31), 953.0) / 953.0 * size.x, fmod(float(i * 79 + 17), 227.0) / 540.0 * size.y)
 			var alpha := (0.22 + 0.16 * sin(elapsed * 0.7 + i)) * (1.0 - dawn)
 			draw_circle(star, 1.0, Color(0.83, 0.89, 0.94, alpha))
-		var moon := Vector2(size.x * 0.5, size.y * 0.235)
-		draw_circle(moon, 47.0 + sin(elapsed * 0.8) * 2.0, Color(0.83, 0.87, 0.91, 0.035))
-		draw_circle(moon, 35.0, Color("d5d7ce"))
-		draw_circle(moon + Vector2(14, -7), 32.0, night)
+		# Clock, not a plot symbol; hands are decorative, never a fake ETA.
+		var dial := Vector2(size.x * 0.5, size.y * 0.235)
+		draw_arc(dial, 30, 0, TAU, 48, Color("c7eaff"), 2, true)
+		draw_line(dial, dial + Vector2(0, -18), Color("c7eaff"), 2, true)
+		draw_line(dial, dial + Vector2(13, 7), Color("c7eaff"), 2, true)
 		for i in range(5):
 			var glow := 0.25 + 0.65 * maxf(0.0, sin(elapsed * 2.0 - i * 0.65))
 			draw_circle(Vector2(size.x * 0.5 + (i - 2) * 14, size.y * 0.36), 2.0, Color(0.78, 0.69, 0.49, glow))

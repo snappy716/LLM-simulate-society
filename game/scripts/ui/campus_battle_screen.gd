@@ -197,7 +197,7 @@ func refresh() -> void:
 			picker.item_selected.emit(index)
 			refresh()
 		, "primary" if id == controller.get("_selected_combat_card_id") else "secondary")
-		ART.decorate_card(card, ART.card_kind(instance.get("effect_ids", [])), id == controller.get("_selected_combat_card_id"))
+		ART.decorate_card(card, ART.effect_kind(instance.get("effect_ids", [])), id == controller.get("_selected_combat_card_id"))
 		card.tooltip_text = "可选目标与费用以当前规则校验为准。" if option.get("playable", false) else "当前不可出牌，可在下方查看具体条件。"
 		card.tooltip_text += "\n基础效力 %d（非最终伤害）；作用范围 %s。" % [int(instance.get("base_power", 0)), {"any_ally":"任意友方", "any_enemy":"任意敌方", "frontmost_enemy":"最前排敌方", "front_two_enemy_rows":"前两排敌方", "same_or_adjacent_ally":"同排或相邻排友方"}.get(String(instance.get("range_pattern", "")), "依卡牌规则")]
 		card.disabled = controller.get("_combat_pending")

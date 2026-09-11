@@ -33,7 +33,10 @@ func refresh() -> void:
 		card.add_child(margin)
 		var column := VBoxContainer.new()
 		margin.add_child(column)
-		column.add_child(KIT.label("第 %d 天 · %s%s" % [date, PHASES[phase], " · 当前" if offset == 0 and snapshot.get("clock", {}).get("phase") == phase else ""], 17))
+		var heading := HBoxContainer.new()
+		column.add_child(heading)
+		heading.add_child(preload("res://scripts/ui/campus_ui_art.gd").emblem("phase_" + phase, 24))
+		heading.add_child(KIT.label("第 %d 天 · %s%s" % [date, PHASES[phase], " · 当前" if offset == 0 and snapshot.get("clock", {}).get("phase") == phase else ""], 17))
 		var count := 0
 		for row in rows:
 			if int(row.get("day", 0)) != date or row.get("phase") != phase: continue

@@ -6,6 +6,7 @@ const BLUE := Color("48c2ff")
 const MUTED := Color("bdcedb")
 const DANGER := Color("ffb5bc")
 const GAP := 12
+const ART = preload("res://scripts/ui/campus_ui_art.gd")
 
 static func label(text: String, size: int = 16) -> Label:
 	var control := Label.new()
@@ -21,6 +22,10 @@ static func button(text: String, callback: Callable, role: String = "secondary")
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	control.theme_type_variation = &"CampusPrimary" if role == "primary" else (&"CampusDanger" if role == "danger" else &"Button")
 	control.pressed.connect(callback)
+	if text.begins_with("返回") or text == "上一页": ART.apply_icon(control, "back")
+	elif text.begins_with("关闭") or text == "取消": ART.apply_icon(control, "close")
+	elif text.begins_with("保存"): ART.apply_icon(control, "saves")
+	elif text == "确认": ART.apply_icon(control, "check")
 	return control
 
 static func availability(control: Button, allowed: bool, reason: String = "") -> void:

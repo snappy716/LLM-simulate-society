@@ -1,5 +1,6 @@
 extends CanvasLayer
 const KIT = preload("res://scripts/ui/campus_ui_kit.gd")
+const ART = preload("res://scripts/ui/campus_ui_art.gd")
 
 var _overlay: ColorRect
 var _grid: GridContainer
@@ -61,6 +62,7 @@ func _build_ui() -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 26)
 	column.add_child(title)
+	ART.page_header(title, "map")
 	var hint := Label.new()
 	hint.text = "先查看地点，再确认前往 · 校园移动不消耗主要行动"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -100,6 +102,7 @@ func _build_ui() -> void:
 	column.add_child(_status)
 	var close := Button.new()
 	close.text = "关闭地图（M）"
+	ART.apply_icon(close, "close")
 	close.pressed.connect(_set_open.bind(false))
 	column.add_child(close)
 	_rebuild_buttons()
@@ -117,6 +120,8 @@ func _rebuild_buttons() -> void:
 		]
 		button.pressed.connect(_select_map.bind(String(entry.get("id", ""))))
 		_grid.add_child(button)
+		var symbols := {"campus_gate":"gate", "living_area":"living", "east_dormitory":"dorm", "west_dormitory":"dorm", "psychology_bridge":"bridge", "library":"library", "sports_field":"sport"}
+		ART.apply_icon(button, "place_" + String(symbols.get(entry.get("id"), "gate")), 26)
 
 
 func _fit_panel() -> void:

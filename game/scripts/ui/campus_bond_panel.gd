@@ -91,6 +91,7 @@ func refresh() -> void:
 					history.grab_focus()
 		)
 		overview.add_child(card)
+		preload("res://scripts/ui/campus_ui_art.gd").apply_icon(card, "romance" if row.kind == "romance" else "friendship")
 	if overview.get_child_count() == 0: overview.add_child(preload("res://scripts/ui/campus_ui_kit.gd").status("此分类没有已建立或待确认的关系。", "empty"))
 	history.clear()
 	for row in _rows:

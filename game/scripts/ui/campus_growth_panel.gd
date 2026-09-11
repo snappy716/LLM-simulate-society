@@ -204,7 +204,7 @@ func _details() -> void:
 			var row := HBoxContainer.new()
 			row.add_theme_constant_override("separation", 12)
 			margin.add_child(row)
-			row.add_child(art.emblem(art.card_kind(card.get("effect_ids", []))))
+			row.add_child(art.emblem(art.effect_kind(card.get("effect_ids", []))))
 			var description := preload("res://scripts/ui/campus_ui_kit.gd").label(card_lines[-1])
 			description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			row.add_child(description)

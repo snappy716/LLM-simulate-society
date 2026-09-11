@@ -23,7 +23,27 @@ func _run() -> void:
 	assert(badge.mouse_filter == Control.MOUSE_FILTER_IGNORE)
 	badge.free()
 	button.queue_free()
-	var moon: Texture2D = load("res://assets/ui/campus_atelier/moon_lake_v1.png")
-	assert(moon != null and moon.get_width() == 1536 and moon.get_height() == 1024)
-	print("CAMPUS_ART_ASSETS_OK 20 SVG icons, cached nine-patch frames, title texture")
+	var count := 0
+	for path in DirAccess.get_files_at(art.DIRECTORY + "icons"):
+		if not path.ends_with(".svg"): continue
+		var texture := art.icon(path.get_basename())
+		assert(texture != null and texture.get_size() == Vector2(64, 64))
+		count += 1
+	for name in ["campus", "study", "social"]:
+		var picture: Texture2D = load(art.DIRECTORY + name + "_day_v3.png")
+		assert(picture != null and picture.get_size() == Vector2(1536, 1024))
+	assert(art.effect_kind(["grant_guard"]) == "shield")
+	assert(art.effect_kind(["restore_health"]) == "health")
+	assert(art.effect_kind(["deal_technique"]) == "attack")
+	assert(art.effect_kind(["unknown"]) == "knowledge")
+	var title := Label.new()
+	root.add_child(title)
+	art.page_header(title, "courses")
+	assert(title.get_node("SectionPicture").visible)
+	assert(title.get_node("SectionPicture").mouse_filter == Control.MOUSE_FILTER_IGNORE)
+	art.page_header(title, "feed")
+	assert(not title.get_node("SectionPicture").visible)
+	assert(title.get_child_count() == 2)
+	title.queue_free()
+	print("CAMPUS_ART_ASSETS_OK %d SVG icons, frames, 3 daylight images, semantic effects, reusable headers" % count)
 	quit(0)

@@ -86,6 +86,36 @@ class CampusThemeTests(unittest.TestCase):
         self.assertIn("UI_TEXT.activity_name", phone)
         self.assertIn("node.custom_minimum_size.y = 160", phone)
 
+    def test_daylight_cover_and_shared_pictures_are_bundled(self):
+        import struct
+        directory = ROOT / "game/assets/ui/campus_atelier"
+        for name in ("campus", "study", "social"):
+            image = (directory / f"{name}_day_v3.png").read_bytes()
+            self.assertEqual(image[:8], b"\x89PNG\r\n\x1a\n")
+            self.assertEqual(struct.unpack(">II", image[16:24]), (1536, 1024))
+        menu = (ROOT / "game/scripts/ui/campus_system_menu.gd").read_text()
+        self.assertIn("campus_day_v3.png", menu)
+        self.assertNotIn("moon_lake_v1.png", menu)
+        self.assertNotIn("day_v2.png", menu)
+
+    def test_semantic_icons_cover_places_colleges_items_and_phases(self):
+        import json
+        import xml.etree.ElementTree as ET
+        directory = ROOT / "game/assets/ui/campus_atelier/icons"
+        for path in directory.glob("*.svg"):
+            self.assertEqual(ET.parse(path).getroot().attrib["viewBox"], "0 0 64 64")
+        for prefix, names in {
+            "place_": ["gate", "living", "dorm", "bridge", "library", "sport"],
+            "college_": ["math_physics", "biochemistry", "earth_space", "artificial_intelligence",
+                         "psychology", "humanities", "medicine", "sports"],
+            "item_": ["food", "medicine", "document", "tool", "equipment", "misc"],
+            "phase_": ["morning", "afternoon", "evening", "late_night"],
+        }.items():
+            for name in names:
+                self.assertTrue((directory / f"{prefix}{name}.svg").is_file())
+        maps = json.loads((ROOT / "game/data/campus_art_catalog.json").read_text())
+        self.assertEqual(len(maps["maps"]), 7)
+
     def test_hud_is_readable_and_actions_have_unavailability_reasons(self):
         hud = (ROOT / "game/scripts/ui/campus_phase_debug_panel.gd").read_text()
         self.assertIn("advance_button.tooltip_text", hud)

@@ -40,7 +40,7 @@ func _build() -> void:
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
 	var art := TextureRect.new()
-	art.texture = load("res://assets/ui/campus_atelier/moon_lake_v1.png")
+	art.texture = load("res://assets/ui/campus_atelier/campus_day_v3.png")
 	art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
@@ -61,7 +61,8 @@ func _build() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", KIT.GAP)
 	margin.add_child(column)
-	var eyebrow := KIT.label("C A M P U S   /   月下校园", 13)
+	var eyebrow := KIT.label("C A M P U S   /   青春校园", 13)
+	eyebrow.name = "MenuEyebrow"
 	eyebrow.add_theme_color_override("font_color", KIT.BLUE)
 	column.add_child(eyebrow)
 	heading = KIT.label("校园 · DEMO", 30)
@@ -133,8 +134,6 @@ func _open() -> void:
 			hud.hide()
 	overlay.show()
 	get_tree().paused = true
-	overlay.get_node("TitleArt").visible = title_mode
-	overlay.get_node("MenuShade").color = Color("0b22395c") if title_mode else Color("0b2239b8")
 
 func open_title() -> void:
 	title_mode = true
@@ -162,6 +161,11 @@ func close_menu() -> void:
 
 func _clear(title: String, description: String, id: String) -> void:
 	page = id
+	var cover := title_mode and id == "home"
+	overlay.get_node("TitleArt").visible = cover
+	overlay.get_node("MenuShade").color = Color("f4faff30") if cover else Color("12344eed")
+	for label in [heading, subtitle, feedback, overlay.find_child("MenuEyebrow", true, false)]:
+		label.add_theme_color_override("font_color", Color("164568") if cover else KIT.INK)
 	heading.text = title
 	subtitle.text = description
 	feedback.text = ""
@@ -173,6 +177,9 @@ func _clear(title: String, description: String, id: String) -> void:
 
 func _button(id: String, text: String, callback: Callable, role: String = "secondary") -> Button:
 	var control := KIT.button(text, callback, role)
+	if title_mode and page == "home":
+		preload("res://scripts/ui/campus_ui_art.gd").paper_button(control)
+		if role == "danger": control.add_theme_color_override("font_color", Color("963b53"))
 	if page == "home":
 		control.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		control.custom_minimum_size.x = 300

@@ -27,6 +27,18 @@ func _run() -> void:
 	map.call("_select_map", "living_area")
 	await _save(output, "map")
 	map.call("_set_open", false)
+	bridge.call("fast_travel_campus", "student_life_region")
+	var travel = await bridge.campus_fast_travel_completed
+	assert(travel[0])
+	for _i in range(12): await process_frame
+	var residents := current_scene.get_node("NpcMovementLayer")
+	assert(residents.get_child_count() > 0)
+	var npc := residents.get_child(0)
+	current_scene.get_node("Player").global_position = npc.global_position
+	var inspector := current_scene.get_node("CampusNpcInspectorUI")
+	inspector.call("inspect_npc", npc)
+	await _save(output, "npc")
+	inspector.call("_set_open", false)
 	root.get_node("SystemMenu").open_pause()
 	root.get_node("SystemMenu")._settings()
 	await _save(output, "settings")

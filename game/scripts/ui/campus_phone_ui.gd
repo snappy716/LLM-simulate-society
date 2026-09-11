@@ -234,7 +234,7 @@ func _build_ui() -> void:
 	var hint := Button.new()
 	_close_button = hint
 	hint.text = "T 关闭手机"
-	hint.icon = preload("res://assets/ui/kenney_game_icons/cross.png")
+	hint.icon = preload("res://scripts/ui/campus_ui_art.gd").icon("close")
 	hint.expand_icon = true
 	hint.add_theme_constant_override("icon_max_width", 16)
 	hint.pressed.connect(_set_open.bind(false))
@@ -339,7 +339,7 @@ func _build_app_page() -> VBoxContainer:
 	var back := Button.new()
 	_back_button = back
 	back.text = "‹ 返回"
-	back.icon = preload("res://assets/ui/kenney_game_icons/arrowLeft.png")
+	back.icon = preload("res://scripts/ui/campus_ui_art.gd").icon("back")
 	back.expand_icon = true
 	back.add_theme_constant_override("icon_max_width", 16)
 	back.pressed.connect(_show_home)
@@ -876,6 +876,7 @@ func _open_app(app_id: String, app_name: String) -> void:
 		InterfaceSettings.open_settings()
 		return
 	_app_title.text = app_name
+	preload("res://scripts/ui/campus_ui_art.gd").page_header(_app_title, app_id)
 	var is_character := app_id == "character"
 	_hud_tabs.visible = is_character
 	_character_summary.visible = is_character and _character_tab == "status"

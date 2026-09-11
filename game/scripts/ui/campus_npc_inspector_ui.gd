@@ -458,6 +458,8 @@ func _show_npc(npc: Node) -> void:
 	_chronicle_pages.clear()
 	_chronicle_loading = false
 	_title.text = _safe_text(_selected_profile.get("display_name"), _safe_text(_selected_profile.get("npc_id"), "校园成员"))
+	var college_id := _safe_text(_selected_profile.get("college_id"), "")
+	preload("res://scripts/ui/campus_ui_art.gd").page_header(_title, "character" if college_id.is_empty() else "college_" + college_id)
 	_awaken_feedback.text = ""
 	_contact_feedback.text = ""
 	_dialogue_feedback.text = ""

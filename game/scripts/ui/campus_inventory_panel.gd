@@ -119,6 +119,8 @@ func refresh() -> void:
 		if category.selected == 3 and (consumable or equipment): continue
 		var index := item_picker.item_count
 		item_picker.add_item(String(item.get("name", item_id)))
+		item_picker.set_item_icon(index, preload("res://scripts/ui/campus_ui_art.gd").icon("item_" + String(item.get("category", "misc"))))
+		item_picker.add_theme_constant_override("icon_max_width", 22)
 		item_picker.set_item_metadata(index, item_id)
 		if item_id == old_item:
 			item_picker.select(index)
