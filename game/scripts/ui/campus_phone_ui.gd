@@ -2,6 +2,8 @@ extends CanvasLayer
 
 const UI_TEXT = preload("res://scripts/ui/campus_ui_text.gd")
 const COMBAT_ITEM_PANEL = preload("res://scripts/ui/campus_combat_item_panel.gd")
+const KIT = preload("res://scripts/ui/campus_ui_kit.gd")
+const FEED = preload("res://scripts/ui/campus_activity_feed.gd")
 
 const APPS := [
 	{"id": "settings", "name": "接口设置"},
@@ -38,6 +40,10 @@ var _home_scroll: ScrollContainer
 var _home_sections: Array[Control] = []
 var _home_buttons: Array[Button] = []
 var _home_empty: Label
+var _home_brief: Button
+var _feed_root: VBoxContainer
+var _contact_search: LineEdit
+var _message_drafts: Dictionary = {}
 var _app_page: VBoxContainer
 var _app_scroll: ScrollContainer
 var _back_button: Button
@@ -240,10 +246,17 @@ func _fit_shell() -> void:
 
 func _build_home() -> Control:
 	var home := VBoxContainer.new()
+	var headline := HBoxContainer.new()
+	home.add_child(headline)
 	var heading := Label.new()
 	heading.text = "校园终端"
 	heading.add_theme_font_size_override("font_size", 22)
-	home.add_child(heading)
+	headline.add_child(heading)
+	_home_brief = KIT.button("通知与校园动态 ›", func(): _open_app("feed", "校园动态与通知"))
+	_home_brief.custom_minimum_size.y = 28
+	_home_brief.add_theme_font_size_override("font_size", 14)
+	_home_brief.name = "NotificationSummary"
+	headline.add_child(_home_brief)
 	_home_search = LineEdit.new()
 	_home_search.placeholder_text = "查找功能：聊天、背包、任务…"
 	_home_search.text_changed.connect(_filter_home)
@@ -264,7 +277,7 @@ func _build_home() -> Control:
 		_home_sections.append(section)
 		var label := Label.new()
 		label.text = group.title
-		label.add_theme_color_override("font_color", Color("edca88"))
+		label.add_theme_color_override("font_color", KIT.BLUE)
 		section.add_child(label)
 		var grid := GridContainer.new()
 		grid.columns = 1
@@ -336,6 +349,10 @@ func _build_app_page() -> VBoxContainer:
 	var body := VBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_app_scroll.add_child(body)
+	_feed_root = FEED.new()
+	_feed_root.visible = false
+	_feed_root.navigate.connect(_navigate_feed)
+	body.add_child(_feed_root)
 	_hud_tabs = HBoxContainer.new()
 	_hud_tabs.visible = false
 	body.add_child(_hud_tabs)
@@ -437,6 +454,8 @@ func _build_app_page() -> VBoxContainer:
 func _build_message_page() -> VBoxContainer:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 7)
+	_contact_search = KIT.search("搜索已添加的联系人", func(_text): _refresh_message_page())
+	root.add_child(_contact_search)
 	_message_contact_picker = OptionButton.new()
 	_message_contact_picker.item_selected.connect(_select_message_contact)
 	root.add_child(_message_contact_picker)
@@ -742,6 +761,7 @@ func _build_combat_page() -> VBoxContainer:
 func _build_forum_page() -> VBoxContainer:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 8)
+	root.add_child(KIT.button("校园动态 · 查看真实委托进展 ›", func(): _open_app("feed", "校园动态与通知")))
 	var channel_bar := HBoxContainer.new()
 	_forum_surface_button = Button.new()
 	_forum_surface_button.text = "表世界 · 校园广场"
@@ -836,6 +856,8 @@ func _build_forum_page() -> VBoxContainer:
 
 func _open_app(app_id: String, app_name: String) -> void:
 	_app_scroll.scroll_vertical = 0
+	_feed_root.visible = app_id == "feed"
+	if _feed_root.visible: _feed_root.call("refresh")
 	if app_id == "settings":
 		_set_open(false)
 		InterfaceSettings.open_settings()
@@ -886,7 +908,7 @@ func _open_app(app_id: String, app_name: String) -> void:
 	if is_inventory:
 		_inventory_root.call("refresh")
 	_content.visible = not is_save and not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health and not is_trade and not is_investigation and not is_growth and not is_assistance and not is_agenda
-	if app_id in ["relationships", "time"]: _content.visible = false
+	if app_id in ["relationships", "time", "feed"]: _content.visible = false
 	_forum_root.visible = is_forum
 	_club_root.visible = is_club
 	_party_root.visible = is_party
@@ -940,6 +962,8 @@ func _app_text(app_id: String) -> String:
 
 
 func _refresh_message_page() -> void:
+	if not _selected_message_contact_id.is_empty():
+		_message_drafts[_selected_message_contact_id] = _message_input.text
 	var messaging: Dictionary = SimulationBridge.campus_snapshot.get("messaging", {})
 	var contacts: Array = messaging.get("contacts", [])
 	var previous := _selected_message_contact_id
@@ -949,6 +973,7 @@ func _refresh_message_page() -> void:
 		if not contact is Dictionary:
 			continue
 		var contact_id := String(contact.get("actor_id", ""))
+		if not _contact_search.text.is_empty() and not String(contact.get("display_name", "")).containsn(_contact_search.text): continue
 		var unread := int(contact.get("unread_count", 0))
 		var prefix := "[%d条未读] " % unread if unread > 0 else ""
 		var index := _message_contact_picker.item_count
@@ -958,7 +983,8 @@ func _refresh_message_page() -> void:
 			selected_index = index
 	if _message_contact_picker.item_count == 0:
 		_selected_message_contact_id = ""
-		_message_log.text = "暂无联系人。请先在校园结识他人并交换联系方式。" if SimulationBridge.campus_snapshot.has("messaging") else "联系人数据尚未同步。"
+		_message_log.text = "没有匹配的联系人，请调整搜索。" if not _contact_search.text.is_empty() else ("暂无联系人。请先在校园结识他人并交换联系方式。" if SimulationBridge.campus_snapshot.has("messaging") else "联系人数据尚未同步。")
+		_message_input.text = ""
 		_message_send_action.disabled = true
 		_message_proposal_action.disabled = true
 		_refresh_incoming_proposals()
@@ -966,6 +992,7 @@ func _refresh_message_page() -> void:
 		return
 	_message_contact_picker.select(selected_index)
 	_selected_message_contact_id = String(_message_contact_picker.get_item_metadata(selected_index))
+	_message_input.text = String(_message_drafts.get(_selected_message_contact_id, ""))
 	_message_send_action.disabled = false
 	_message_proposal_action.disabled = false
 	_refresh_message_thread()
@@ -1090,7 +1117,9 @@ func _refresh_message_thread() -> void:
 
 
 func _select_message_contact(index: int) -> void:
+	if not _selected_message_contact_id.is_empty(): _message_drafts[_selected_message_contact_id] = _message_input.text
 	_selected_message_contact_id = String(_message_contact_picker.get_item_metadata(index))
+	_message_input.text = String(_message_drafts.get(_selected_message_contact_id, ""))
 	_message_feedback.text = ""
 	_refresh_message_thread()
 
@@ -1135,6 +1164,8 @@ func _on_phone_message_completed(
 		_message_pending = ""
 	if own_send:
 		_message_pending = ""
+		if success and String(_message_drafts.get(target_id, "")).strip_edges() == _message_sent_text:
+			_message_drafts.erase(target_id)
 	if target_id != _selected_message_contact_id:
 		_refresh_message_page()
 		return
@@ -1542,6 +1573,8 @@ func _on_campus_snapshot_updated(_snapshot: Dictionary) -> void:
 	if _character_summary.visible: _refresh_character_summary()
 	if not _opened:
 		return
+	if _home.visible: _refresh_home_brief()
+	if _feed_root.is_visible_in_tree(): _feed_root.call("refresh")
 	# Passive forum traffic must not rebuild a hand of cards or a chat form
 	# while the player is choosing a target or typing.
 	if SimulationBridge.last_campus_update_kind == "social_pulse" and not _forum_root.visible:
@@ -2458,6 +2491,7 @@ func _ability_lines(value: Variant) -> String:
 
 
 func _show_home() -> void:
+	_refresh_home_brief()
 	_home.visible = true
 	_app_page.visible = false
 	_forum_root.visible = false
@@ -2465,6 +2499,28 @@ func _show_home() -> void:
 	_party_root.visible = false
 	_combat_root.visible = false
 	_content.visible = true
+	_feed_root.visible = false
+
+
+func _refresh_home_brief() -> void:
+	var snapshot := SimulationBridge.campus_snapshot
+	var unread := int(snapshot.get("messaging", {}).get("unread_total", 0))
+	var notices: Array = FEED.project(snapshot, true)
+	_home_brief.text = "%d 条未读 · %d 项通知与约定 · 校园动态 ›" % [unread, notices.size()]
+
+
+func _navigate_feed(app_id: String, target_id: String) -> void:
+	if app_id == "messages" and not target_id.is_empty():
+		if not _selected_message_contact_id.is_empty(): _message_drafts[_selected_message_contact_id] = _message_input.text
+		_contact_search.text = ""
+		_selected_message_contact_id = target_id
+		_message_input.text = String(_message_drafts.get(target_id, ""))
+	_open_app(app_id, {"messages": "校园通讯", "forums": "双层论坛", "party": "行动小队", "agenda": "日程与约定"}.get(app_id, "校园事项"))
+	if app_id == "forums" and not target_id.is_empty():
+		var task: Dictionary = SimulationBridge.campus_snapshot.get("tasks", {}).get(target_id, {})
+		if not task.is_empty():
+			_set_forum_channel(String(task.get("forum", "surface")))
+			_open_task_detail(target_id)
 
 
 func _prepare_readable_forms(node: Node) -> void:

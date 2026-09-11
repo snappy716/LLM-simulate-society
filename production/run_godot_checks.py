@@ -17,6 +17,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 STANDARD = (
+    "activity_feed",
     "components", "navigation_flow", "collab_flow", "combat_round_flow", "departure_flow",
     "inventory_flow", "save_flow", "theme_flow", "inspector_layout", "hud_feedback",
     "operation_feedback", "phone_layout", "social_ui", "startup_flow", "ui_request_lifecycle", "overnight_flow", "agenda_flow", "movement_pacing", "minimal_hud", "system_menu",

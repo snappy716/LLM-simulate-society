@@ -1,10 +1,16 @@
 extends CanvasLayer
+const KIT = preload("res://scripts/ui/campus_ui_kit.gd")
 
 var _overlay: ColorRect
 var _grid: GridContainer
 var _status: Label
 var _opened := false
 var _pending_map_id := ""
+var _selected_map_id := ""
+var _preview: TextureRect
+var _detail: Label
+var _travel: Button
+var _panel: PanelContainer
 
 
 func _ready() -> void:
@@ -32,16 +38,17 @@ func is_open() -> bool:
 func _build_ui() -> void:
 	_overlay = ColorRect.new()
 	_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_overlay.color = Color(0.015, 0.025, 0.04, 0.9)
+	_overlay.color = Color(0.015, 0.035, 0.065, 0.68)
 	_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	_overlay.visible = false
 	add_child(_overlay)
 
 	var panel := PanelContainer.new()
+	_panel = panel
 	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.position = Vector2(-430, -245)
-	panel.size = Vector2(860, 490)
 	_overlay.add_child(panel)
+	_overlay.resized.connect(_fit_panel)
+	call_deferred("_fit_panel")
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
 		margin.add_theme_constant_override("margin_%s" % side, 20)
@@ -55,18 +62,38 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", 26)
 	column.add_child(title)
 	var hint := Label.new()
-	hint.text = "选择校园区域；校园移动不消耗分钟和主要行动。"
+	hint.text = "先查看地点，再确认前往 · 校园移动不消耗主要行动"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(hint)
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	column.add_child(scroll)
+	var split := HBoxContainer.new()
+	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(split)
+	var scroll := KIT.scroll_body()
+	scroll.size_flags_stretch_ratio = 0.8
+	split.add_child(scroll)
 	_grid = GridContainer.new()
-	_grid.columns = 3
+	_grid.columns = 1
 	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_grid.add_theme_constant_override("h_separation", 8)
 	_grid.add_theme_constant_override("v_separation", 8)
 	scroll.add_child(_grid)
+	var detail_scroll := KIT.scroll_body()
+	split.add_child(detail_scroll)
+	var details := VBoxContainer.new()
+	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_scroll.add_child(details)
+	_preview = TextureRect.new()
+	_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_preview.custom_minimum_size.y = 160
+	details.add_child(_preview)
+	_detail = KIT.label("选择区域查看入口、公开任务与本人约定。")
+	details.add_child(_detail)
+	_travel = KIT.button("前往所选区域", func():
+		if not _selected_map_id.is_empty() and _pending_map_id.is_empty(): _choose_map(_selected_map_id)
+	, "primary")
+	_travel.disabled = true
+	column.add_child(_travel)
 	_status = Label.new()
 	_status.text = "M 关闭校园地图"
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -83,13 +110,52 @@ func _rebuild_buttons() -> void:
 		child.queue_free()
 	for entry in get_node("/root/CampusPresentation").call("all_maps"):
 		var button := Button.new()
-		button.custom_minimum_size = Vector2(255, 54)
+		button.custom_minimum_size = Vector2(220, 54)
 		button.text = "%s\n%s" % [
 			String(entry.get("name", entry.get("id", ""))),
 			String(entry.get("group", "校园")),
 		]
-		button.pressed.connect(_choose_map.bind(String(entry.get("id", ""))))
+		button.pressed.connect(_select_map.bind(String(entry.get("id", ""))))
 		_grid.add_child(button)
+
+
+func _fit_panel() -> void:
+	var extent := Vector2(minf(1000, _overlay.size.x - 32), minf(720, _overlay.size.y - 32))
+	_panel.offset_left = -extent.x / 2
+	_panel.offset_right = extent.x / 2
+	_panel.offset_top = -extent.y / 2
+	_panel.offset_bottom = extent.y / 2
+
+
+func _select_map(map_id: String) -> void:
+	_selected_map_id = map_id
+	var entry: Dictionary = get_node("/root/CampusPresentation").call("get_map", map_id)
+	if entry.is_empty(): return
+	_preview.texture = load(String(entry.texture_path))
+	var regions: Array = entry.get("visible_region_ids", [])
+	var snapshot := SimulationBridge.campus_snapshot
+	var phase := String(snapshot.get("clock", {}).get("phase", "morning"))
+	var lines := PackedStringArray([String(entry.get("name", "校园区域")), "\n道路连接"])
+	for exit in entry.get("edge_exits", []): lines.append("› " + String(exit.get("label", "道路出口")))
+	lines.append("\n建筑与室内 · 开放不等于具备进入资格")
+	for place in snapshot.get("places", {}).values():
+		if place.get("region_id") not in regions or place.get("node_type") == "region": continue
+		if "private" in place.get("tags", []) or "main_story" in place.get("tags", []): continue
+		var opened: bool = phase in place.get("open_phases", [])
+		lines.append("%s · %s" % [place.get("name", "地点"), "当前开放" if opened else "当前未开放"])
+	lines.append("\n已知委托")
+	var count := 0
+	for task in snapshot.get("tasks", {}).values():
+		var place: Dictionary = snapshot.get("places", {}).get(task.get("scene_id", ""), {})
+		if place.get("region_id", task.get("scene_id")) in regions and task.get("state") in ["open", "viewed", "considering", "locked", "in_progress"]:
+			lines.append("%s%s" % ["我的 · " if task.get("owned_by_player", false) else "", task.get("title", "委托")])
+			count += 1
+	if count == 0: lines.append("暂无公开的进行中委托。")
+	for row in snapshot.get("agenda", {}).get("commitments", []):
+		var place: Dictionary = snapshot.get("places", {}).get(row.get("location_id", ""), {})
+		if place.get("region_id", row.get("location_id")) in regions: lines.append("约定 · 第 %d 天 · %s" % [int(row.day), row.label])
+	_detail.text = "\n".join(lines)
+	_travel.disabled = not _pending_map_id.is_empty()
 
 
 func _choose_map(map_id: String) -> void:
@@ -103,6 +169,7 @@ func _choose_map(map_id: String) -> void:
 		_set_open(false)
 		return
 	_pending_map_id = map_id
+	_travel.disabled = true
 	_status.text = "正在检查前往%s的校园路线……" % entry.get("name", map_id)
 	get_tree().paused = false
 	SimulationBridge.fast_travel_campus(destination_id)
@@ -115,6 +182,7 @@ func _on_fast_travel_completed(success: bool, result: Dictionary, _destination_i
 		_status.text = "无法前往：%s" % _result_message(result)
 		get_tree().paused = true
 		_pending_map_id = ""
+		_travel.disabled = false
 		return
 	var selected := _pending_map_id
 	_pending_map_id = ""
@@ -150,4 +218,5 @@ func _set_open(value: bool) -> void:
 	if value:
 		var current_map: Dictionary = get_node("/root/CampusPresentation").call("get_map")
 		_status.text = "当前：%s · M 关闭校园地图" % current_map.get("name", "未知地图")
+		_select_map(String(current_map.get("id", "")))
 	get_tree().paused = value
