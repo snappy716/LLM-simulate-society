@@ -4,7 +4,7 @@
 
 **UI 工作参考（2026-09-11）**：后续 UI 设计、开发和验收按 [UI_IMPLEMENTATION_OUTLINE.md](UI_IMPLEMENTATION_OUTLINE.md) 的模块范围与 U1～U7 工作包开展。当前 U1a 已接入用户确认的极简蓝色常驻 HUD、六个功能图标及对应现有内容，推进时间/夜相/镜头操作移入手机；不改动系统编号、行动规则或关系规则，不启动第 13 步主线。验收范围与证据见 `production/UI_MINIMAL_HUD_ACCEPTANCE.md`，其余内部页面仍分批优化。
 
-**U1a 视觉接续**：收到“与背景场景融合、避免生硬”的反馈后，常驻 HUD 改为 30 px 雾蓝图标（46 px 热区）、柔阴影和悬停渐亮，文字降低尺寸与硬阴影；使用原七张地图检查，不修改场景内容和业务规则。本轮记录见 `production/UI_SCENE_INK_ACCEPTANCE.md`。
+**U1a 视觉接续**：保持 30 px 图标（46 px 热区）、无底框和悬停渐亮。收到“太暗、看不出来”的反馈后，雾蓝透明版已替换为不透明亮白/清亮蓝，图标和文字加细暗边；保留原七张地图，不修改场景内容和业务规则。最新记录见 `production/UI_BRIGHT_HUD_ACCEPTANCE.md`，历史场景融合版见 `production/UI_SCENE_INK_ACCEPTANCE.md`。
 
 **当前执行点（2026-09-11，优先于下方历史接续）**：第 12 步比赛/节庆与整体基础收束已验收并交付开发分支：最终干净全量 95 模块 / 906 项 Python、65 条后台 Godot 全部通过，两组十四日综合生活样本含第七日真实存读档续跑通过。课程、社团晋升、相处/约会、多伴侣协议、兼职/购物、医疗和比赛共用实际行动与账本。详见 `STEP_12_CLOSURE_AUDIT.md`、`production/STEP_12_EVENTS_ACCEPTANCE.md`。代码提交 `cae37233b79a1493b45176884ea3197fbd2d0bdd` 已上传并核验远端 `codex/campus-demo-architecture`，未合并 main。目标在第 12 步交付处结束，不自动进入第 13 步主线；精细场景、长期故事质量、真实 API 十五秒目标和 Windows 原生发行仍属后续。
 

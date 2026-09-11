@@ -18,6 +18,10 @@ func _run() -> void:
 	var hud := current_scene.get_node("CampusHUD")
 	var phone := current_scene.get_node("CampusPhoneUI")
 	var before: Dictionary = bridge.campus_snapshot.duplicate(true)
+	assert(hud.clock.modulate.a == 1.0, "date must not fade into the background")
+	assert(hud.location.get_theme_color("font_color").r > 0.95)
+	assert(hud.clock.get_theme_constant("outline_size") == 2)
+	assert(hud.tracking.get_theme_constant("outline_size") == 2)
 	for size in [Vector2i(960, 540), Vector2i(1280, 720), Vector2i(1920, 1080)]:
 		root.size = size
 		for _frame in range(4): await process_frame
@@ -31,6 +35,7 @@ func _run() -> void:
 			assert(button.get_theme_stylebox("normal") is StyleBoxEmpty)
 			assert(button.get_theme_constant("icon_max_width") == 30)
 			assert(button.material is ShaderMaterial)
+			assert(button.get_theme_color("icon_normal_color") == Color.WHITE)
 			assert(button.custom_minimum_size.x >= 44, "small glyphs keep a usable hit target")
 		for id in ["party", "character", "cards", "relationships"]:
 			hud.open_entry(id)

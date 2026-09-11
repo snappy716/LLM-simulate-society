@@ -42,7 +42,6 @@ func _ready() -> void:
 	_chrome.add_child(column)
 	location = _label(column, 18)
 	clock = _label(column, 13)
-	clock.modulate.a = 0.85
 	var gap := Control.new()
 	gap.custom_minimum_size.y = 9
 	column.add_child(gap)
@@ -85,8 +84,10 @@ func _label(parent: Node, font_size: int) -> Label:
 	var label := Label.new()
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", Color("d9e6e9"))
-	label.add_theme_color_override("font_shadow_color", Color("102b3a99"))
+	label.add_theme_color_override("font_color", Color("f5fbff"))
+	label.add_theme_color_override("font_outline_color", Color("102536e6"))
+	label.add_theme_constant_override("outline_size", 2)
+	label.add_theme_color_override("font_shadow_color", Color("102536b3"))
 	label.add_theme_constant_override("shadow_offset_x", 1)
 	label.add_theme_constant_override("shadow_offset_y", 1)
 	parent.add_child(label)
@@ -108,10 +109,12 @@ func _text_button(parent: Node, title: String) -> Button:
 func _flat(button: Button) -> void:
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
-	button.add_theme_color_override("font_color", Color("c6dce3"))
-	button.add_theme_color_override("font_hover_color", Color("9cd6ef"))
-	button.add_theme_color_override("font_focus_color", Color("9cd6ef"))
-	button.add_theme_color_override("font_shadow_color", Color("102b3a99"))
+	button.add_theme_color_override("font_color", Color("f5fbff"))
+	button.add_theme_color_override("font_hover_color", Color("8cddff"))
+	button.add_theme_color_override("font_focus_color", Color("8cddff"))
+	button.add_theme_color_override("font_outline_color", Color("102536e6"))
+	button.add_theme_constant_override("outline_size", 2)
+	button.add_theme_color_override("font_shadow_color", Color("102536b3"))
 	button.add_theme_constant_override("shadow_offset_x", 1)
 	button.add_theme_constant_override("shadow_offset_y", 1)
 
@@ -125,6 +128,9 @@ func _icon_button(id: String, title: String) -> Button:
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.add_theme_constant_override("icon_max_width", 30)
 	button.custom_minimum_size = Vector2(46, 46)
+	# Do not let a parent theme dim the already calibrated icon palette.
+	for state in ["normal", "hover", "pressed", "focus"]:
+		button.add_theme_color_override("icon_" + state + "_color", Color.WHITE)
 	var ink := ShaderMaterial.new()
 	ink.shader = SCENE_INK
 	button.material = ink
