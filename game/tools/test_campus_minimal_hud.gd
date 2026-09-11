@@ -29,6 +29,9 @@ func _run() -> void:
 			assert(view.encloses(button.get_global_rect()), "right icon outside viewport")
 			assert(button.get_global_rect().position.x > view.size.x / 2)
 			assert(button.get_theme_stylebox("normal") is StyleBoxEmpty)
+			assert(button.get_theme_constant("icon_max_width") == 30)
+			assert(button.material is ShaderMaterial)
+			assert(button.custom_minimum_size.x >= 44, "small glyphs keep a usable hit target")
 		for id in ["party", "character", "cards", "relationships"]:
 			hud.open_entry(id)
 			assert(phone.is_open() and paused)
@@ -57,6 +60,19 @@ func _run() -> void:
 	assert(not current_scene.get_node("UI/PhasePanel").visible)
 	assert(not current_scene.get_node("UI/Instructions").visible)
 	assert(not current_scene.get_node("CameraControls").visible)
+	var focused_icon: Button = hud.entries.cards
+	assert(focused_icon.material != hud.entries.party.material, "icon feedback must be independent")
+	focused_icon.grab_focus()
+	await create_timer(0.22).timeout
+	assert(float(focused_icon.get_meta("ink_emphasis")) > 0.99)
+	assert(float(hud.entries.party.get_meta("ink_emphasis")) < 0.01)
+	if RenderingServer.get_current_rendering_method() != "":
+		assert(float(focused_icon.material.get_shader_parameter("emphasis")) > 0.99)
+	focused_icon.release_focus()
+	await create_timer(0.22).timeout
+	assert(float(focused_icon.get_meta("ink_emphasis")) < 0.01)
+	if RenderingServer.get_current_rendering_method() != "":
+		assert(float(focused_icon.material.get_shader_parameter("emphasis")) < 0.01)
 	hud.open_entry("phone")
 	phone._open_app("time", "时间与镜头")
 	assert(phone._time_root.is_visible_in_tree())

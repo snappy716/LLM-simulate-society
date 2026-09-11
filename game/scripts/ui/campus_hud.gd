@@ -9,6 +9,7 @@ const ICONS := {
 	"cards": preload("res://assets/ui/campus_moon/cards.svg"),
 	"relationships": preload("res://assets/ui/campus_moon/relationships.svg"),
 }
+const SCENE_INK := preload("res://assets/ui/campus_moon/scene_ink.gdshader")
 var location: Label
 var clock: Label
 var tracking: Button
@@ -35,14 +36,15 @@ func _ready() -> void:
 	_chrome.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_chrome)
 	var column := VBoxContainer.new()
-	column.position = Vector2(26, 20)
+	column.position = Vector2(26, 24)
 	column.custom_minimum_size.x = 340
 	column.add_theme_constant_override("separation", 4)
 	_chrome.add_child(column)
-	location = _label(column, 22)
-	clock = _label(column, 16)
+	location = _label(column, 18)
+	clock = _label(column, 13)
+	clock.modulate.a = 0.85
 	var gap := Control.new()
-	gap.custom_minimum_size.y = 12
+	gap.custom_minimum_size.y = 9
 	column.add_child(gap)
 	tracking = _text_button(column, "")
 	tracking.pressed.connect(func(): _expanded = not _expanded; _render_tracking())
@@ -58,8 +60,8 @@ func _ready() -> void:
 	)
 	var right := HBoxContainer.new()
 	right.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	right.position = Vector2(-322, 20)
-	right.add_theme_constant_override("separation", 6)
+	right.position = Vector2(-272, 20)
+	right.add_theme_constant_override("separation", 4)
 	_chrome.add_child(right)
 	for entry in [["map", "地图"], ["party", "队友"], ["character", "人物与物品"], ["cards", "卡牌库"], ["relationships", "关系 · 交友与恋爱"]]:
 		var button := _icon_button(entry[0], entry[1])
@@ -70,10 +72,10 @@ func _ready() -> void:
 	_chrome.add_child(phone)
 	phone.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	phone.offset_left = 24
-	phone.offset_top = -80
-	phone.offset_right = 76
-	phone.offset_bottom = -28
-	phone.pivot_offset = Vector2(26, 26)
+	phone.offset_top = -70
+	phone.offset_right = 70
+	phone.offset_bottom = -24
+	phone.pivot_offset = Vector2(23, 23)
 	phone.pressed.connect(open_entry.bind("phone"))
 	SimulationBridge.campus_snapshot_updated.connect(_render)
 	_render(SimulationBridge.campus_snapshot)
@@ -83,10 +85,10 @@ func _label(parent: Node, font_size: int) -> Label:
 	var label := Label.new()
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", Color("dff5ff"))
-	label.add_theme_color_override("font_shadow_color", Color("10223bee"))
+	label.add_theme_color_override("font_color", Color("d9e6e9"))
+	label.add_theme_color_override("font_shadow_color", Color("102b3a99"))
 	label.add_theme_constant_override("shadow_offset_x", 1)
-	label.add_theme_constant_override("shadow_offset_y", 2)
+	label.add_theme_constant_override("shadow_offset_y", 1)
 	parent.add_child(label)
 	return label
 
@@ -98,7 +100,7 @@ func _text_button(parent: Node, title: String) -> Button:
 	button.custom_minimum_size.x = 340
 	button.clip_text = true
 	_flat(button)
-	button.add_theme_font_size_override("font_size", 15)
+	button.add_theme_font_size_override("font_size", 13)
 	parent.add_child(button)
 	return button
 
@@ -106,12 +108,12 @@ func _text_button(parent: Node, title: String) -> Button:
 func _flat(button: Button) -> void:
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
-	button.add_theme_color_override("font_color", Color("dff5ff"))
-	button.add_theme_color_override("font_hover_color", Color("63c9ff"))
-	button.add_theme_color_override("font_focus_color", Color("63c9ff"))
-	button.add_theme_color_override("font_shadow_color", Color("10223b"))
+	button.add_theme_color_override("font_color", Color("c6dce3"))
+	button.add_theme_color_override("font_hover_color", Color("9cd6ef"))
+	button.add_theme_color_override("font_focus_color", Color("9cd6ef"))
+	button.add_theme_color_override("font_shadow_color", Color("102b3a99"))
 	button.add_theme_constant_override("shadow_offset_x", 1)
-	button.add_theme_constant_override("shadow_offset_y", 2)
+	button.add_theme_constant_override("shadow_offset_y", 1)
 
 
 func _icon_button(id: String, title: String) -> Button:
@@ -121,15 +123,34 @@ func _icon_button(id: String, title: String) -> Button:
 	button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	button.expand_icon = true
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	button.add_theme_constant_override("icon_max_width", 42)
-	button.custom_minimum_size = Vector2(52, 52)
+	button.add_theme_constant_override("icon_max_width", 30)
+	button.custom_minimum_size = Vector2(46, 46)
+	var ink := ShaderMaterial.new()
+	ink.shader = SCENE_INK
+	button.material = ink
+	_set_ink_emphasis(0.0, button)
 	button.tooltip_text = title
 	_flat(button)
-	button.mouse_entered.connect(func(): button.modulate = Color("79ccff"))
-	button.mouse_exited.connect(func(): button.modulate = Color.WHITE)
-	button.focus_entered.connect(func(): button.modulate = Color("79ccff"))
-	button.focus_exited.connect(func(): button.modulate = Color.WHITE)
+	button.mouse_entered.connect(_emphasize.bind(button))
+	button.mouse_exited.connect(_emphasize.bind(button))
+	button.focus_entered.connect(_emphasize.bind(button))
+	button.focus_exited.connect(_emphasize.bind(button))
 	return button
+
+
+func _emphasize(button: Button) -> void:
+	var old: Tween = button.get_meta("ink_tween") if button.has_meta("ink_tween") else null
+	if old != null: old.kill()
+	var active := button.has_focus() or button.get_global_rect().has_point(button.get_global_mouse_position())
+	var transition := create_tween()
+	# Method animation also works in headless builds without shader property reflection.
+	transition.tween_method(_set_ink_emphasis.bind(button), float(button.get_meta("ink_emphasis")), 1.0 if active else 0.0, 0.16)
+	button.set_meta("ink_tween", transition)
+
+
+func _set_ink_emphasis(value: float, button: Button) -> void:
+	button.set_meta("ink_emphasis", value)
+	button.material.set_shader_parameter("emphasis", value)
 
 
 func open_entry(id: String) -> void:
@@ -147,7 +168,7 @@ func _render(snapshot: Dictionary) -> void:
 	var day := int(date.get("day", 1))
 	var player: Dictionary = snapshot.get("player", {})
 	location.text = String(snapshot.get("places", {}).get(player.get("current_location_id", ""), {}).get("name", "校园 · 正在同步"))
-	clock.text = "第 %d 天  /  %s  /  %s" % [day, SimulationBridge.weekday_display_name((day - 1) % 7), SimulationBridge.phase_display_name(String(date.get("phase", "morning")))]
+	clock.text = "第 %d 天 · %s · %s" % [day, SimulationBridge.weekday_display_name((day - 1) % 7), SimulationBridge.phase_display_name(String(date.get("phase", "morning")))]
 	_rows.clear()
 	for task in snapshot.get("tasks", {}).values():
 		if task.get("owned_by_player", false) and task.get("state", "") in ["locked", "in_progress"]:

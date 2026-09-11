@@ -15,8 +15,20 @@ func _run() -> void:
 		await create_timer(0.05).timeout
 	assert(not bridge.campus_snapshot.is_empty())
 	change_scene_to_file("res://scenes/campus/campus_collab_test.tscn")
+	while current_scene == null:
+		await process_frame
+	# Avoid background mouse position causing edge-camera drift between UI captures.
+	current_scene.set_process(false)
 	for _i in range(30): await process_frame
 	await _save(output, "01-campus-hud")
+	var focused_icon: Button = current_scene.get_node("CampusHUD").entries.cards
+	focused_icon.grab_focus()
+	await create_timer(0.22).timeout
+	assert(float(focused_icon.material.get_shader_parameter("emphasis")) > 0.99)
+	await _save(output, "02-hud-focus")
+	focused_icon.release_focus()
+	await create_timer(0.22).timeout
+	assert(float(focused_icon.material.get_shader_parameter("emphasis")) < 0.01)
 	var phone := current_scene.get_node("CampusPhoneUI")
 	for id in ["character", "cards", "relationships"]:
 		phone.open_hud_page(id)
@@ -32,6 +44,14 @@ func _run() -> void:
 	for _i in range(10): await process_frame
 	await _save(output, "time")
 	phone._set_open(false)
+	if "--maps" in OS.get_cmdline_user_args():
+		var presentation := root.get_node("CampusPresentation")
+		for entry in presentation.all_maps():
+			presentation.select_map(entry.id)
+			# Explicit visual fixture: this does not pretend that the player travelled.
+			current_scene.get_node("CampusHUD").location.text = String(entry.name) + " · 画面适配测试"
+			for _i in range(8): await process_frame
+			await _save(output, "visual-only-" + String(entry.id))
 	print("CAMPUS_MINIMAL_HUD_CAPTURE_OK")
 	quit(0)
 
