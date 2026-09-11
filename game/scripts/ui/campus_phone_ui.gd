@@ -48,6 +48,11 @@ var _inventory_root: VBoxContainer
 var _investigation_root: VBoxContainer
 var _growth_root: VBoxContainer
 var _agenda_root: VBoxContainer
+var _hud_tabs: HBoxContainer
+var _character_summary: Label
+var _relationships_root: VBoxContainer
+var _time_root: VBoxContainer
+var _character_tab := "status"
 var _assistance_root: VBoxContainer
 var _trade_root: VBoxContainer
 var _health_root: VBoxContainer
@@ -190,6 +195,11 @@ func _build_ui() -> void:
 	var status_bar := HBoxContainer.new()
 	_time_label = Label.new()
 	status_bar.add_child(_time_label)
+	var time_menu := Button.new()
+	time_menu.name = "TimeAndCamera"
+	time_menu.text = "时间与镜头"
+	time_menu.pressed.connect(func(): _open_app("time", "时间与镜头"))
+	status_bar.add_child(time_menu)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	status_bar.add_child(spacer)
@@ -326,6 +336,44 @@ func _build_app_page() -> VBoxContainer:
 	var body := VBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_app_scroll.add_child(body)
+	_hud_tabs = HBoxContainer.new()
+	_hud_tabs.visible = false
+	body.add_child(_hud_tabs)
+	for entry in [["status", "人物状态"], ["inventory", "随身物品"]]:
+		var tab := Button.new()
+		tab.text = entry[1]
+		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tab.pressed.connect(func():
+			_character_tab = entry[0]
+			if _character_tab == "inventory" and _inventory_root.get("action_picker").selected == 0:
+				_inventory_root.get("action_picker").select(2) # Start with owned items, not a shop listing.
+			_open_app("character", "人物与物品")
+		)
+		_hud_tabs.add_child(tab)
+	_character_summary = Label.new()
+	_character_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_character_summary.visible = false
+	body.add_child(_character_summary)
+	_relationships_root = VBoxContainer.new()
+	_relationships_root.visible = false
+	body.add_child(_relationships_root)
+	_relationships_root.add_child(preload("res://scripts/ui/campus_bond_panel.gd").new())
+	_relationships_root.add_child(preload("res://scripts/ui/campus_outing_panel.gd").new())
+	_time_root = VBoxContainer.new()
+	_time_root.visible = false
+	body.add_child(_time_root)
+	var time_panel := preload("res://scenes/ui/campus_phase_debug_panel.tscn").instantiate()
+	_time_root.add_child(time_panel)
+	var camera_row := HBoxContainer.new()
+	_time_root.add_child(camera_row)
+	for multiplier in [1, 2, 3]:
+		var zoom := Button.new()
+		zoom.text = "镜头 %d×" % multiplier
+		zoom.pressed.connect(func():
+			var controller := get_tree().get_first_node_in_group("campus_art_camera")
+			if controller != null: controller.call("set_zoom_multiplier", multiplier)
+		)
+		camera_row.add_child(zoom)
 	_content = RichTextLabel.new()
 	_content.bbcode_enabled = true
 	_content.fit_content = true
@@ -793,6 +841,12 @@ func _open_app(app_id: String, app_name: String) -> void:
 		InterfaceSettings.open_settings()
 		return
 	_app_title.text = app_name
+	var is_character := app_id == "character"
+	_hud_tabs.visible = is_character
+	_character_summary.visible = is_character and _character_tab == "status"
+	if _character_summary.visible: _refresh_character_summary()
+	_relationships_root.visible = app_id == "relationships"
+	_time_root.visible = app_id == "time"
 	var is_save := app_id == "saves"
 	_save_root.visible = is_save
 	if is_save:
@@ -802,9 +856,9 @@ func _open_app(app_id: String, app_name: String) -> void:
 	var is_party := app_id == "party"
 	var is_combat := app_id == "combat"
 	var is_message := app_id == "messages"
-	var is_inventory := app_id == "market"
+	var is_inventory := app_id == "market" or (is_character and _character_tab == "inventory")
 	var is_investigation := app_id == "notes"
-	var is_growth := app_id == "courses"
+	var is_growth := app_id in ["courses", "cards"]
 	var is_agenda := app_id == "agenda"
 	_agenda_root.visible = is_agenda
 	if is_agenda:
@@ -815,6 +869,7 @@ func _open_app(app_id: String, app_name: String) -> void:
 		_assistance_root.call("refresh")
 	_growth_root.visible = is_growth
 	if is_growth:
+		_growth_root.call("set_cards_only", app_id == "cards")
 		_growth_root.call("refresh")
 	_investigation_root.visible = is_investigation
 	if is_investigation:
@@ -823,7 +878,7 @@ func _open_app(app_id: String, app_name: String) -> void:
 	_trade_root.visible = is_trade
 	if is_trade:
 		_trade_root.call("refresh")
-	var is_health := app_id == "health"
+	var is_health := app_id == "health" or (is_character and _character_tab == "status")
 	_health_root.visible = is_health
 	if is_health:
 		_health_root.call("refresh")
@@ -831,6 +886,7 @@ func _open_app(app_id: String, app_name: String) -> void:
 	if is_inventory:
 		_inventory_root.call("refresh")
 	_content.visible = not is_save and not is_forum and not is_club and not is_party and not is_combat and not is_message and not is_inventory and not is_health and not is_trade and not is_investigation and not is_growth and not is_assistance and not is_agenda
+	if app_id in ["relationships", "time"]: _content.visible = false
 	_forum_root.visible = is_forum
 	_club_root.visible = is_club
 	_party_root.visible = is_party
@@ -870,7 +926,7 @@ func _app_text(app_id: String) -> String:
 	if app_id == "album":
 		var presentation := get_node("/root/CampusPresentation")
 		var current_map: Dictionary = presentation.call("get_map")
-		return "[b]当前场景[/b]\n%s\n\n已接入校园正式候选场景：%d 张。\n按 M 可查看和切换校园区域。" % [current_map.get("name", "未知"), (presentation.call("all_maps") as Array).size()]
+		return "[b]当前场景[/b]\n%s\n\n已接入校园正式候选场景：%d 张。\n按 M 可查看和切换校园区域。\n\n开发联调素材：正式发布前需去除真实校名/品牌并补齐授权记录。" % [current_map.get("name", "未知"), (presentation.call("all_maps") as Array).size()]
 	if app_id == "notes":
 		var activity: Dictionary = player.get("current_activity", {})
 		return "[b]当前位置[/b]\n%s\n\n[b]最近活动[/b]\n%s\n%s" % [place.get("name", place_id), UI_TEXT.activity_name(String(activity.get("activity_id", ""))), UI_TEXT.activity_status(String(activity.get("status", "")))]
@@ -1483,6 +1539,7 @@ func _on_task_operation_completed(success: bool, result: Dictionary, _action_id:
 
 
 func _on_campus_snapshot_updated(_snapshot: Dictionary) -> void:
+	if _character_summary.visible: _refresh_character_summary()
 	if not _opened:
 		return
 	# Passive forum traffic must not rebuild a hand of cards or a chat form
@@ -2443,3 +2500,18 @@ func _refresh_clock() -> void:
 func _refresh_connection(connected: bool, _message: String) -> void:
 	_connection_label.text = "模拟已连接" if connected else "模拟未连接"
 	_connection_label.tooltip_text = "本地模拟服务连接状态；不表示 LLM 接口已配置或可用。"
+
+
+func open_hud_page(id: String) -> void:
+	_set_open(true)
+	if not _opened or id == "phone": return
+	var titles := {"party": "队友", "character": "人物与物品", "cards": "卡牌库", "relationships": "关系 · 交友与恋爱", "agenda": "日程与约定", "forums": "双层论坛"}
+	_open_app(id, String(titles.get(id, id)))
+
+
+func _refresh_character_summary() -> void:
+	var names := {"physique": "体魄", "dexterity": "灵巧", "focus": "专注", "insight": "洞察", "empathy": "共情", "expression": "表达"}
+	var parts := PackedStringArray()
+	for key in SimulationBridge.campus_snapshot.get("growth", {}).get("attributes", {}):
+		parts.append("%s %d" % [names.get(key, key), int(SimulationBridge.campus_snapshot.growth.attributes[key])])
+	_character_summary.text = "基础属性\n" + " · ".join(parts)

@@ -15,6 +15,8 @@ var _data: Dictionary = {}
 var _pending := false
 var _dirty := false
 var _loaded_actor := ""
+var _cards_only := false
+var _catalog_detail: RichTextLabel
 
 
 func _ready() -> void:
@@ -51,6 +53,11 @@ func _ready() -> void:
 	feedback = Label.new()
 	feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(feedback)
+	_catalog_detail = RichTextLabel.new()
+	_catalog_detail.fit_content = true
+	_catalog_detail.scroll_active = false
+	_catalog_detail.visible = false
+	add_child(_catalog_detail)
 	SimulationBridge.campus_snapshot_updated.connect(func(_snapshot):
 		if visible:
 			refresh()
@@ -169,6 +176,25 @@ func _details() -> void:
 	save_deck.disabled = busy or not _deck_actor().get("can_configure", false)
 	for picker in slots:
 		picker.disabled = save_deck.disabled
+	if _catalog_detail != null:
+		var card_lines := PackedStringArray(["该角色可用卡牌"])
+		var effects := {"grant_guard": "获得护盾", "restore_focus": "恢复专注", "reveal_pattern": "辨析规律", "apply_disruption": "施加干扰", "deal_physical": "物理攻击", "deal_technique": "技巧攻击", "restore_health": "恢复生命", "specialization_effect": "专业特效", "knowledge_insight": "知识洞察"}
+		var ranges := {"any_ally": "任意友方", "same_or_adjacent_ally": "同排或相邻排友方", "any_enemy": "任意敌方", "frontmost_enemy": "最前排敌方", "front_two_enemy_rows": "前两排敌方", "card_defined": "依卡牌情境"}
+		for card in _deck_actor().get("catalog", []):
+			var descriptions := PackedStringArray()
+			for effect in card.get("effect_ids", []): descriptions.append(String(effects.get(effect, "特殊效果")))
+			card_lines.append("%s · %d 费\n%s · 基础效力 %d · %s" % [card.name, int(card.command_cost), " / ".join(descriptions), int(card.get("base_power", 0)), ranges.get(card.get("range_pattern", ""), "依卡牌规则")])
+		card_lines.append("基础效力不等于最终伤害；实际数值由战斗状态、知识与目标共同结算。")
+		_catalog_detail.text = "\n\n".join(card_lines)
+
+
+func set_cards_only(value: bool) -> void:
+	_cards_only = value
+	for control in [topic, detail, reason, read.get_parent(), focus]:
+		control.visible = not value
+	_catalog_detail.visible = value
+	var courses := get_node_or_null("PublicCourses")
+	if courses != null: courses.visible = not value
 
 
 func _save_deck() -> void:

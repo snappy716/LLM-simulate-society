@@ -1,0 +1,187 @@
+# U1a 最终测试摘要
+
+日期：2026-09-11。无付费 API。以下来自各测试进程的实际成功标记。
+
+Python 全量最终进程退出 0：`GLOBAL_OK 95 906`。
+Godot 4.7.2 最终完整重跑退出 0：`GODOT_CHECKS_OK 66 flows`。
+Godot 运行器使用项目配置的 Python 3.12.14；Mac headless 逻辑测试及后台 OpenGL 实际渲染，非 Windows 原生验收。
+首次完整运行在 afterimage 夹具准备的 60 秒期限处超时；该次不计为完整通过。未修改等待上限、夹具或断言；单独重试通过，并完成以上一次完整干净重跑。
+最后补充的最小 HUD 测试额外验证真实推进时段只发送一次命令，单独运行通过。
+
+## Python 模块
+
+```text
+tests.test_action_economy:Ran 5 tests in 0.022s
+tests.test_architecture_contracts:Ran 2 tests in 0.010s
+tests.test_campus_abilities:Ran 6 tests in 0.147s
+tests.test_campus_activities:Ran 3 tests in 41.223s
+tests.test_campus_activity_effects:Ran 4 tests in 13.626s
+tests.test_campus_anomalies:Ran 10 tests in 43.946s
+tests.test_campus_anomaly_combat:Ran 8 tests in 143.643s
+tests.test_campus_anomaly_feedback:Ran 12 tests in 235.768s
+tests.test_campus_anomaly_meetings:Ran 13 tests in 78.159s
+tests.test_campus_assistance:Ran 23 tests in 41.380s
+tests.test_campus_autonomous_combat:Ran 9 tests in 76.012s
+tests.test_campus_bonds:Ran 16 tests in 85.139s
+tests.test_campus_clubs:Ran 9 tests in 53.662s
+tests.test_campus_cognition:Ran 8 tests in 33.008s
+tests.test_campus_combat_actions:Ran 7 tests in 90.187s
+tests.test_campus_combat_deployment:Ran 7 tests in 80.118s
+tests.test_campus_combat_items:Ran 10 tests in 59.851s
+tests.test_campus_combat_pollution:Ran 7 tests in 111.618s
+tests.test_campus_combat_rounds:Ran 8 tests in 130.051s
+tests.test_campus_commitment_disputes:Ran 6 tests in 48.716s
+tests.test_campus_commitments:Ran 8 tests in 17.505s
+tests.test_campus_contact_availability:Ran 10 tests in 135.332s
+tests.test_campus_contact_inquiries:Ran 11 tests in 174.240s
+tests.test_campus_contact_leads:Ran 6 tests in 31.695s
+tests.test_campus_content_split:Ran 10 tests in 22.586s
+tests.test_campus_daily_plans:Ran 3 tests in 27.618s
+tests.test_campus_decisions:Ran 4 tests in 150.816s
+tests.test_campus_demo_architecture:Ran 18 tests in 0.004s
+tests.test_campus_departures:Ran 12 tests in 107.976s
+tests.test_campus_disputes:Ran 9 tests in 12.932s
+tests.test_campus_emergent_tasks:Ran 3 tests in 15.736s
+tests.test_campus_enemy_turns:Ran 11 tests in 173.302s
+tests.test_campus_events:Ran 12 tests in 65.178s
+tests.test_campus_evidence_insight:Ran 11 tests in 61.359s
+tests.test_campus_expeditions:Ran 13 tests in 24.731s
+tests.test_campus_fieldwork:Ran 13 tests in 111.964s
+tests.test_campus_forum_attention:Ran 10 tests in 27.544s
+tests.test_campus_forum_tasks:Ran 4 tests in 53.643s
+tests.test_campus_free_errands:Ran 13 tests in 10.476s
+tests.test_campus_friend_focus:Ran 5 tests in 25.624s
+tests.test_campus_goals:Ran 16 tests in 99.998s
+tests.test_campus_growth:Ran 21 tests in 95.989s
+tests.test_campus_intelligence:Ran 4 tests in 51.663s
+tests.test_campus_interactions:Ran 3 tests in 55.434s
+tests.test_campus_inventory:Ran 22 tests in 38.772s
+tests.test_campus_investigation:Ran 18 tests in 28.981s
+tests.test_campus_kernel_bridge:Ran 5 tests in 11.343s
+tests.test_campus_life:Ran 18 tests in 118.118s
+tests.test_campus_locations:Ran 16 tests in 0.602s
+tests.test_campus_medical:Ran 12 tests in 55.188s
+tests.test_campus_messaging:Ran 6 tests in 37.170s
+tests.test_campus_night_forum:Ran 5 tests in 54.395s
+tests.test_campus_night_sites:Ran 14 tests in 274.603s
+tests.test_campus_night_world:Ran 5 tests in 39.004s
+tests.test_campus_outings:Ran 11 tests in 65.446s
+tests.test_campus_parties:Ran 7 tests in 8.024s
+tests.test_campus_population:Ran 8 tests in 0.629s
+tests.test_campus_proposals:Ran 12 tests in 86.635s
+tests.test_campus_regional_choices:Ran 5 tests in 29.048s
+tests.test_campus_relationship_anchors:Ran 12 tests in 79.747s
+tests.test_campus_retreats:Ran 4 tests in 52.352s
+tests.test_campus_saves:Ran 21 tests in 80.127s
+tests.test_campus_schedules:Ran 6 tests in 1.425s
+tests.test_campus_service_lifecycle:Ran 7 tests in 9.086s
+tests.test_campus_situations:Ran 8 tests in 65.165s
+tests.test_campus_social:Ran 5 tests in 52.189s
+tests.test_campus_social_coordination:Ran 6 tests in 54.331s
+tests.test_campus_social_pacing:Ran 6 tests in 1.686s
+tests.test_campus_social_planning:Ran 4 tests in 78.394s
+tests.test_campus_study_work:Ran 11 tests in 142.121s
+tests.test_campus_supply:Ran 17 tests in 22.512s
+tests.test_campus_support_followup:Ran 12 tests in 231.603s
+tests.test_campus_support_preparation:Ran 10 tests in 109.530s
+tests.test_campus_support_reservations:Ran 5 tests in 142.200s
+tests.test_campus_trade:Ran 30 tests in 48.482s
+tests.test_campus_ui_theme:Ran 10 tests in 0.022s
+tests.test_campus_vitals:Ran 18 tests in 82.472s
+tests.test_campus_welfare:Ran 9 tests in 114.629s
+tests.test_causal_comparison:Ran 15 tests in 433.836s
+tests.test_cognition_action_rules:Ran 7 tests in 2.217s
+tests.test_cognition_identity:Ran 4 tests in 20.977s
+tests.test_cognition_provider_options:Ran 3 tests in 14.484s
+tests.test_content_registry:Ran 6 tests in 0.309s
+tests.test_godot_campus_navigation:Ran 26 tests in 0.040s
+tests.test_godot_resource_integrity:Ran 4 tests in 0.063s
+tests.test_kernel_api_contracts:Ran 5 tests in 0.009s
+tests.test_kernel_persistence:Ran 9 tests in 0.620s
+tests.test_live_causal_audit:Ran 6 tests in 0.009s
+tests.test_live_cognition_audit:Ran 2 tests in 0.016s
+tests.test_npc_chronicles:Ran 11 tests in 5.395s
+tests.test_parallel_daily_plans:Ran 11 tests in 145.333s
+tests.test_player_npc_dialogue:Ran 3 tests in 4.567s
+tests.test_prompt_compaction:Ran 9 tests in 0.029s
+tests.test_runtime_retirement:Ran 4 tests in 0.109s
+tests.test_world_kernel:Ran 13 tests in 0.007s
+```
+
+## Godot 流程
+
+```text
+afterimage:CAMPUS_AFTERIMAGE_FLOW_OK real_day_support_and_card_victory anonymous_site actual_containment not_person_recovery no_duplicate visible_forum no_api
+agenda_flow:CAMPUS_AGENDA_FLOW_OK real_http phone_home calendar reserve_cancel original_management no_time_cost no_api
+anchors:CAMPUS_ANCHORS_FLOW_OK real_request_delivery confirmed_shared_memory private_view genuine_support_cost no_stacking no_api explicit_thresholds
+anomaly:CAMPUS_ANOMALY_FLOW_OK actual_npc_ui voluntary_private_evidence free_listen real_support_cost duplicate_guard no_time_advance explicit_fixture no_api
+assistance:CAMPUS_ASSISTANCE_FLOW_OK real_request explicit_player_choice no_goods_on_assent physical_delivery receipt free_time pending_rejection
+attention:CAMPUS_ATTENTION_FLOW_OK real_timer phone_open_and_closed staged_views_consideration_claims no_clock_or_action_cost
+autonomous:CAMPUS_AUTONOMOUS_FLOW_OK actual_npc_cards task_history no_player_help no_time_cost secret_forum_gate
+bonds:CAMPUS_BONDS_FLOW_OK two_explicit_consents two_active_partners independent_ending private_history unchanged_clock_and_budget three_sizes no_api
+collab_flow:CAMPUS_COLLAB_FLOW_OK
+combat_item:CAMPUS_COMBAT_ITEM_FLOW_OK real_pharmacy_stock healing command_cost pending_lock rendered_feedback
+combat_round_flow:CAMPUS_COMBAT_ROUND_FLOW_OK
+commitment:CAMPUS_COMMITMENT_FLOW_OK real_claim_expiry two_statements actual_public_record no_fake_completion free explicit_delay no_api
+components:CAMPUS_COMPONENTS_OK
+contact:CAMPUS_CONTACT_FLOW_OK real_phone_buttons unanswered_not_missing no_quota free real_dawn one_ack continued_dialogue explicit_incident no_api
+contact_leads:CAMPUS_CONTACT_LEADS_FLOW_OK actual_work_evidence permitted_share personal_basis public_points real_phone_request dated_not_live no_action_cost no_api explicit_incapacity
+coordination:CAMPUS_COORDINATION_FLOW_OK actual_inspector_button confirmed_not_tentative free_query private_ledger explicit_fixture no_api
+departure_flow:CAMPUS_DEPARTURE_FLOW_OK real_http reserve_cancel phase_hold pending_release visible_controls
+disputes:CAMPUS_DISPUTES_FLOW_OK actual_inspector_buttons two_statements existing_remote_contact consent cooldown free private explicit_fixture no_api
+enemy:CAMPUS_ENEMY_FLOW_OK explicit_one_hp_fixture real_intent damage defeat next_morning_full_recovery dorm_map
+events:CAMPUS_EVENTS_FLOW_OK life:3:observation_challenge real_scene_phone_http enrollment_actual_performance_end_phase_result private_breakdown no_auto_resource_spend no_duplicate no_api
+evidence:CAMPUS_EVIDENCE_FLOW_OK actual_shared_experience real_card_battle one_command skipped_attack no_remote_cure private_source no_api
+expedition:CAMPUS_EXPEDITION_FLOW_OK real_npc_cooperation shared_reward no_player_help forum_history
+festival:CAMPUS_EVENTS_FLOW_OK life:6:club_exchange_festival real_scene_phone_http enrollment_actual_performance_end_phase_result private_breakdown no_auto_resource_spend no_duplicate no_api
+fieldwork:CAMPUS_FIELDWORK_FLOW_OK real_site search_two_readings report no_combat reward no_extra_time pending
+followup:CAMPUS_FOLLOWUP_FLOW_OK real_support_real_dawn voluntary_continuing_study private_source_hidden free_inspection no_api explicit_initial_thresholds
+free_errands:CAMPUS_FREE_ERRANDS_FLOW_OK real_purchase_then_primary real_routes disclosed_log explicit_fixture no_paid_model
+friend:CAMPUS_FRIEND_FLOW_OK real_commands fake_provider relationship_gate ordinary_chat free_time base20_plus_friend overnight_all_deep no_budget_drop
+goals:CAMPUS_GOALS_FLOW_OK real_case volunteered_dated_plan private_ledger_hidden free_question pending_failure_release
+growth:CAMPUS_GROWTH_FLOW_OK real_reading theory_only action_cost owned_eight_card_deck failure_preserves_draft
+hud_feedback:CAMPUS_HUD_FEEDBACK_OK readable_vitals busy_reason invalid_response reconnect no_command_replay business_rejection
+inquiry:CAMPUS_INQUIRY_FLOW_OK actual_phone_publish actual_forum_claim private_target physical_report real_action_cost no_fake_missing explicit_incident no_api
+inspector_layout:CAMPUS_INSPECTOR_LAYOUT_OK real_npc three_sizes scroll keyboard fixed_close reset
+inventory_flow:CAMPUS_INVENTORY_FLOW_OK
+investigation:CAMPUS_INVESTIGATION_FLOW_OK observe search notes privacy share hypothesis pending failure_draft
+knowledge:CAMPUS_KNOWLEDGE_FLOW_OK explicit_threshold_fixture real_tactic cost enemy_attack_interrupted once_per_battle
+life:CAMPUS_LIFE_FLOW_OK actual_ui_http enrollment_cancel_rebook actual_attendance one_action duplicate_guard private_history three_sizes explicit_route_fixture no_api
+medical:CAMPUS_MEDICAL_FLOW_OK real_entrance actual_staff_shift actual_http_cash_heal no_patient_major private_receipt duplicate_guard three_sizes no_api
+meetings:CAMPUS_MEETINGS_FLOW_OK real_http rendered_options consensual_booking cancel phone_receipts no_time_no_recovery no_api
+meetings_phone:CAMPUS_MEETINGS_PHONE_FLOW_OK actual_incoming_request no_auto_accept phone_accept_cancel no_major_cost no_api
+minimal_hud:CAMPUS_MINIMAL_HUD_OK six_icons three_sizes direct_pages inventory_tabs cards relationships time_camera messages tracking indoor no_action_cost
+movement_pacing:CAMPUS_MOVEMENT_PACING_OK actual_phase_http stable_individual_speed staggered_four_walkers real_stationary_residents pause_waypoints pause_ui no_refresh_snap cancel_old_routes unchanged_authority no_api
+navigation_flow:CAMPUS_NAVIGATION_FLOW_OK
+operation_feedback:CAMPUS_OPERATION_FEEDBACK_OK explicit_ui_fixtures idle_isolation waiting refusal neutral_fallback no_world_mutation
+outings:CAMPUS_OUTINGS_FLOW_OK actual_incoming_invitation explicit_player_consent real_npc_arrival actual_shared_cost private_receipt three_sizes no_api
+overnight_flow:CAMPUS_OVERNIGHT_FLOW_OK real_dawn intraday_skip duplicate_guard animated_wait three_sizes input_block modal_pause focus_restore failure inconsistent_snapshot timeout reconnect no_replay
+parallel:CAMPUS_PARALLEL_FLOW_OK real_game_http real_loopback_model_http all20 four_slots no_fallback exact_billing duplicate_guard intraday_no_requests elapsed_ms=2470 no_paid_api
+phone_layout:CAMPUS_PHONE_LAYOUT_OK sixteen_apps three_sizes fixed_navigation readable_forms searchable_catalog keyboard_reachability no_action_cost
+pollution:CAMPUS_POLLUTION_FLOW_OK real_enemy_intent persistent_gain threshold_status rendered_feedback
+recovery:CAMPUS_RECOVERY_FLOW_OK explicit_wounded_fixture_not_enemy_AI
+retreat:CAMPUS_RETREAT_FLOW_OK real_http pursuit_damage surface_return task_reopened phase_unchanged time_skip_blocked
+routes:CAMPUS_ROUTES_FLOW_OK real_day_support real_card_victory fresh_report own_costs dated_not_live private_no_ids free_inspection three_sizes same_place_contact_priority unchanged_resident_cap no_api
+save_flow:CAMPUS_SAVE_FLOW_OK cancel save overwrite backup buy load scene_reset hud_message_baseline
+sites:CAMPUS_SITES_FLOW_OK actual_site actual_combat resolved_objective reward no_duplicate visible_detail
+situations:CAMPUS_SITUATIONS_FLOW_OK dual_forum_real_buttons actual_night_unlock natural_pressure actual_npc_choice_reason explicit_stock secret_filter no_api
+social_pacing:CAMPUS_SOCIAL_PACING_FLOW_OK natural_npc_shared_activity actual_scene_actor readable_inspector no_floating_status private_phone no_api
+social_ui:CAMPUS_SOCIAL_UI_OK explicit_projection_fixtures full_party pending_release refusal empty_lists no_commands
+startup_flow:CAMPUS_STARTUP_FLOW_OK campus_default campus_handshake offline_settings modal_guard stable_user_path
+study:CAMPUS_STUDY_FLOW_OK actual_course_platform_button actual_http_enroll_and_attend one_unit_one_action private_progress no_api
+supply:CAMPUS_SUPPLY_FLOW_OK explicit_empty_shelf paid_order next_day_delivery purchase
+support_preparation:CAMPUS_SUPPORT_PREPARATION_FLOW_OK actual_friend_request voluntary_plan_disclosure no_private_source_leak no_action_cost no_api
+support_reservations:CAMPUS_SUPPORT_RESERVATIONS_FLOW_OK real_booking visible_refusal no_cost explicit_phone_cancel actual_support unchanged_clock no_api
+theme_flow:CAMPUS_THEME_FLOW_OK shared_theme phone settings button_states truthful_connection modal_restore
+trade:CAMPUS_TRADE_FLOW_OK explicit_colocation_fixture incoming_accept unfair_refusal atomic_settlement
+ui_request_lifecycle:CAMPUS_UI_REQUEST_LIFECYCLE_OK explicit_ui_fixtures no_duplicate_commands drafts_preserved empty_contacts pending_release
+welfare:CAMPUS_WELFARE_FLOW_OK actual_npc_button true_injury no_healing free evidence privacy idempotent explicit_fixture no_api
+work:CAMPUS_WORK_FLOW_OK actual_reserved_shift actual_ui_http_cash_transfer private_receipt no_double_pay no_api
+```
+
+## 最终追加专项
+
+```text
+CAMPUS_MINIMAL_HUD_OK six_icons three_sizes direct_pages inventory_tabs cards relationships time_camera messages tracking indoor free_browsing one_real_phase_command
+CAMPUS_MINIMAL_HUD_CAPTURE_OK
+```

@@ -61,6 +61,7 @@ func _run() -> void:
 	assert(bool(saved[0]) and bool(saved[1].slots[0].backup.exists))
 	# Deliberately switch the old presentation; loading must rebuild from the save.
 	root.get_node("CampusPresentation").call("select_map", "library")
+	bridge.set_meta("hud_messages", {"seen": {"fixture-before-load": true}, "shaken_phase": "1:morning", "revision": 0})
 	(panel.get("load_button") as Button).pressed.emit()
 	dialog.confirmed.emit()
 	dialog.hide()
@@ -70,6 +71,8 @@ func _run() -> void:
 	assert(not is_instance_valid(phone), "old scene and selections must be discarded")
 	assert(root.get_node("CampusPresentation").get("current_map_id") == "living_area")
 	assert(int((bridge.get("campus_snapshot") as Dictionary).economy.balance) == 496)
+	assert(not bridge.get_meta("hud_messages", {}).get("seen", {}).has("fixture-before-load"), "loaded mail must replace the old notification baseline")
+	assert(current_scene.get_node("CampusHUD").pulse_count == 0, "loading history must not shake the rebuilt phone")
 	phone = current_scene.get_node("CampusPhoneUI")
 	phone.call("_set_open", true)
 	phone.call("_open_app", "saves", "存读档")
@@ -89,6 +92,6 @@ func _run() -> void:
 	phone.call("_set_open", true)
 	phone.call("_open_app", "saves", "存读档")
 	await bridge.campus_persistence_completed
-	print("CAMPUS_SAVE_FLOW_OK cancel save overwrite backup buy load scene_reset")
+	print("CAMPUS_SAVE_FLOW_OK cancel save overwrite backup buy load scene_reset hud_message_baseline")
 	if not "--keep-open" in OS.get_cmdline_user_args():
 		quit(0)

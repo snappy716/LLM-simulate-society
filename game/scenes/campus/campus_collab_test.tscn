@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/campus_collab_scene.gd" id="1_world"]
 [ext_resource type="Texture2D" path="res://assets/maps/campus_collab/campus_gate.png" id="2_map"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://scripts/ui/campus_phone_ui.gd" id="10_phone_ui"]
 [ext_resource type="Script" path="res://scripts/ui/campus_camera_controls.gd" id="11_camera_ui"]
 [ext_resource type="Script" path="res://scripts/ui/campus_npc_inspector_ui.gd" id="12_npc_ui"]
+[ext_resource type="Script" path="res://scripts/ui/campus_hud.gd" id="13_hud"]
 
 [node name="CampusCollabTest" type="Node2D"]
 y_sort_enabled = true
@@ -108,6 +109,7 @@ metadata/location_id = "psychology_center"
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="Instructions" type="Label" parent="UI"]
+visible = false
 offset_left = 18.0
 offset_top = 16.0
 offset_right = 550.0
@@ -121,6 +123,7 @@ text = "WASD 移动　E 人物　M 地图　T 校园终端"
 tooltip_text = "沿道路走到边缘进入相邻区域；楼梯和门口进入室内。\n画面上下边缘浏览；左下角切换镜头缩放。\n开发联调：R 随机人物模块（仅外观）。"
 
 [node name="CurrentMap" type="Label" parent="UI"]
+visible = false
 offset_left = 18.0
 offset_top = 52.0
 offset_right = 590.0
@@ -133,6 +136,7 @@ theme_override_font_sizes/font_size = 16
 text = "校园正门 · M 地图 · T 手机"
 
 [node name="PrototypeNotice" type="Label" parent="UI"]
+visible = false
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
@@ -153,8 +157,10 @@ text = "开发联调素材：正式发布前需去除真实校名/品牌并补�
 horizontal_alignment = 2
 
 [node name="PhasePanel" parent="UI" instance=ExtResource("8_phase")]
+visible = false
 
 [node name="CameraControls" type="CanvasLayer" parent="."]
+visible = false
 layer = 25
 script = ExtResource("11_camera_ui")
 
@@ -169,3 +175,6 @@ script = ExtResource("12_npc_ui")
 [node name="CampusPhoneUI" type="CanvasLayer" parent="."]
 layer = 32
 script = ExtResource("10_phone_ui")
+
+[node name="CampusHUD" type="CanvasLayer" parent="."]
+script = ExtResource("13_hud")

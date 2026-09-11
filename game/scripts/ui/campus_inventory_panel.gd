@@ -29,11 +29,14 @@ func _ready() -> void:
 	add_child(travel)
 	var row := HBoxContainer.new()
 	action_picker = OptionButton.new()
+	action_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_picker.custom_minimum_size.x = 140
 	for action in ACTIONS:
 		action_picker.add_item(action[1])
 	action_picker.item_selected.connect(func(_index): refresh())
 	row.add_child(action_picker)
 	quantity = SpinBox.new()
+	quantity.custom_minimum_size.x = 84
 	quantity.min_value = 1
 	quantity.max_value = 99
 	quantity.value = 1

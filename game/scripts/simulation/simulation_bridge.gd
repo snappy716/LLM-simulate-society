@@ -938,6 +938,9 @@ func _on_campus_request_completed(
 		var response: Dictionary = parsed if parsed is Dictionary else {"error": "存档服务未返回有效响应；请刷新存档槽确认结果。"}
 		var success := response_code == 200 and bool(response.get("ok", false))
 		if success and response.get("snapshot") is Dictionary:
+			# Loaded history is a notification baseline, never newly delivered mail.
+			if response.get("operation") == "load" and has_meta("hud_messages"):
+				remove_meta("hud_messages")
 			campus_snapshot = response.snapshot
 			last_campus_update_kind = "persistence"
 			campus_snapshot_updated.emit(campus_snapshot)
